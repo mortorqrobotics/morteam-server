@@ -1,10 +1,36 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8">
-    <title>Home</title>
-  </head>
-  <body>
-    <h1>This is the home page</h1>
-  </body>
+
+<head>
+  <meta charset="utf-8">
+  <title>Home</title>
+</head>
+
+<body>
+  <a href="/">home</a> | <a href="about">about</a>
+  <h1>This is the home page</h1>
+  <input class="textbox" id="firstname-text" type="text" placeholder="first name">
+  <input class="textbox" id="lastname-text" type="text" placeholder="last name">
+  <input type="button" value="send" id="send">
+  <br/>
+  <hr>
+  <span>Your name is </span>
+  <span class="text-display" id="firstname-display">unknown</span>
+  <span class="text-display" id="lastname-display">right now.</span>
+
+  <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+  <script>
+    $("#send").click(function() {
+      $.post("/f/returnFullName", JSON.stringify({
+        "firstname": $("#firstname-text").val(),
+        "lastname": $("#lastname-text").val()
+      }), function(responseText) {
+        var name = JSON.parse(responseText);
+        $("#firstname-display").html(name.firstname);
+        $("#lastname-display").html(name.lastname);
+      });
+    });
+  </script>
+</body>
+
 </html>
