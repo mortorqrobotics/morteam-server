@@ -2,8 +2,13 @@ var http = require('http');
 var fs = require('fs');
 var url = require('url');
 var qs = require('querystring');
-
+var mongoose = require('mongoose');
 var functions = [];
+
+//schemas
+var User = require('./User.js');
+
+mongoose.connect('mongodb://localhost:27017/hello1');
 
 function send404(response) {
   response.writeHead(404, {
@@ -81,7 +86,21 @@ var port = process.argv[2] || 8080;
 http.createServer(requestHandler).listen(port);
 console.log("Server is now running on port " + port);
 
-newFunc("returnFullName", "POST", function(request, response, get, post) {
+newFunc("createUser", "POST", function(request, response, get, post) {
   var data = parseJSON(post);
-  response.end(JSON.stringify(data));
+
+  User.create({ firstname: data.firstname, lastname: data.lastname }, function (err, user) {
+    if (err) return handleError(err);
+    console.log(data.firstname + " " + data.lastname + " was saved!");
+  });
+
+  response.end(JSON.stringify({
+    "firstname": data.firstname,
+    "lastname": data.lastname
+  }));
+});
+newFunc("getUsers", "POST", function(request, response, get, post) {
+  User.find({}, function(err, users){
+    response.end(JSON.stringify(users));
+  })
 });

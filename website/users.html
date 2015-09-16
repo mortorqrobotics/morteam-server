@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>About</title>
+</head>
+
+<body>
+  <a href="/">home</a> | <a href="about">about</a> | <a href="users">users</a>
+  <h2>This is the users page</h2>
+  <div id="users-table">
+
+  </div>
+
+
+
+  <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+  <script>
+    $(document).ready(function() {
+      $.post("/f/getUsers", function(responseText) {
+        var users = JSON.parse(responseText);
+        var table = document.createElement("table");
+        for (var i = 0; i < users.length; i++) {
+          var tr = document.createElement("tr");
+          var td1 = document.createElement("td");
+          var td2 = document.createElement("td");
+          td1.innerHTML = users[i].firstname;
+          td2.innerHTML = users[i].lastname;
+          tr.appendChild(td1);
+          tr.appendChild(td2);
+          table.appendChild(tr);
+        }
+        document.body.appendChild(table);
+      })
+    })
+  </script>
+</body>
+
+</html>

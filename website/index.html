@@ -7,7 +7,7 @@
 </head>
 
 <body>
-  <a href="/">home</a> | <a href="about">about</a>
+  <a href="/">home</a> | <a href="about">about</a> | <a href="users">users</a>
   <h1>This is the home page</h1>
   <input class="textbox" id="firstname-text" type="text" placeholder="first name">
   <input class="textbox" id="lastname-text" type="text" placeholder="last name">
@@ -21,7 +21,7 @@
   <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
   <script>
     $("#send").click(function() {
-      $.post("/f/returnFullName", JSON.stringify({
+      $.post("/f/createUser", JSON.stringify({
         "firstname": $("#firstname-text").val(),
         "lastname": $("#lastname-text").val()
       }), function(responseText) {
