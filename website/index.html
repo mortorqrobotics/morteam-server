@@ -4,30 +4,41 @@
 <head>
   <meta charset="utf-8">
   <title>Home</title>
-</head>
+  <link rel="stylesheet" type="text/css" href="css/index.css"></head>
 
 <body>
   <a href="/">home</a> | <a href="about">about</a> | <a href="users">users</a>
   <h1>This is the home page</h1>
-  <input class="textbox" id="firstname-text" type="text" placeholder="first name">
-  <input class="textbox" id="lastname-text" type="text" placeholder="last name">
-  <input type="button" value="send" id="send">
-  <br/>
+  <input class="textbox" id="username-text" type="text" placeholder="username"><br/>
+  <input class="textbox" id="password-text" type="password" placeholder="password"><br/>
+  <input class="textbox" id="firstname-text" type="text" placeholder="first name"><br/>
+  <input class="textbox" id="lastname-text" type="text" placeholder="last name"><br/>
+  <input class="textbox" id="email-text" type="email" placeholder="email"><br/>
+  <input class="textbox" id="phone-text" type="phone" placeholder="phone"><br/>
+  <input type="button" value="send" id="send"><br/>
   <hr>
-  <span>Your name is </span>
-  <span class="text-display" id="firstname-display">unknown</span>
-  <span class="text-display" id="lastname-display">right now.</span>
+  <span id="message"></span>
 
   <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
   <script>
     $("#send").click(function() {
       $.post("/f/createUser", JSON.stringify({
+        "id": Math.floor(Math.random() * (100000000000 - 10000000000)) + 10000000000,
+        "username": $("#username-text").val(),
+        "password": $("#password-text").val(),
         "firstname": $("#firstname-text").val(),
-        "lastname": $("#lastname-text").val()
+        "lastname": $("#lastname-text").val(),
+        "position": "member",
+        "email": $("#email-text").val(),
+        "phone": $("#phone-text").val()
       }), function(responseText) {
-        var name = JSON.parse(responseText);
-        $("#firstname-display").html(name.firstname);
-        $("#lastname-display").html(name.lastname);
+        if(responseText == "success"){
+          $("#message").html("saved :)");
+        }else if(responseText == "exists"){
+          alert("that username and/or email and/or phone number already exists");
+        }else{
+          $("#message").html("failed :(");
+        }
       });
     });
   </script>
