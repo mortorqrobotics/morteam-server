@@ -5,14 +5,26 @@
   <meta charset="utf-8">
   <title>About</title>
   <link rel="stylesheet" type="text/css" href="css/index.css">
+  <script type="text/javascript" src="js/main.js"></script>
 </head>
 
 <body>
   <a href="/">home</a> | <a href="about">about</a> | <a href="users">users</a>
+
+  <span id="logged-in-info" class="hidden">
+    <a href="#" class="logout-btn">Log Out</a>
+    <span class="user-display">Logged in as: <span id="username-display"></span></span>
+  </span>
+  <span id="logged-out-info" class="hidden">
+    <a href="login">login</a>
+  </span>
   <h2>This is the about page</h2>
   <p>
     This is the beginning of something great. Ghost spam is free of politics.
   </p>
+
+  <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+  <script type="text/javascript" src="js/main.js"></script>
 </body>
 
 </html>

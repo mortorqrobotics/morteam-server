@@ -4,23 +4,36 @@
 <head>
   <meta charset="utf-8">
   <title>Home</title>
-  <link rel="stylesheet" type="text/css" href="css/index.css"></head>
+  <link rel="stylesheet" type="text/css" href="css/index.css"/>
+</head>
 
 <body>
   <a href="/">home</a> | <a href="about">about</a> | <a href="users">users</a>
+
+  <span id="logged-in-info" class="hidden">
+    <a href="#" class="logout-btn">Log Out</a>
+    <span class="user-display">Logged in as: <span id="username-display"></span></span>
+  </span>
+  <span id="logged-out-info" class="hidden">
+    <a href="login">login</a>
+  </span>
+
   <h1>This is the home page</h1>
-  <input class="textbox" id="username-text" type="text" placeholder="username"><br/>
-  <input class="textbox" id="password-text" type="password" placeholder="password"><br/>
-  <input class="textbox" id="firstname-text" type="text" placeholder="first name"><br/>
-  <input class="textbox" id="lastname-text" type="text" placeholder="last name"><br/>
-  <input class="textbox" id="email-text" type="email" placeholder="email"><br/>
-  <input class="textbox" id="phone-text" type="phone" placeholder="phone"><br/>
+  <input class="textbox" id="username-text" type="text" placeholder="username"/><br/>
+  <input class="textbox" id="password-text" type="password" placeholder="password"/><br/>
+  <input class="textbox" id="firstname-text" type="text" placeholder="first name"/><br/>
+  <input class="textbox" id="lastname-text" type="text" placeholder="last name"/><br/>
+  <input class="textbox" id="email-text" type="email" placeholder="email"/><br/>
+  <input class="textbox" id="phone-text" type="phone" placeholder="phone"/><br/>
+  <input type="file" id="file"/><br/>
   <input type="button" value="send" id="send"><br/>
   <hr>
   <span id="message"></span>
 
   <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+  <script type="text/javascript" src="js/main.js"></script>
   <script>
+  $(document).ready(function(){
     $("#send").click(function() {
       $.post("/f/createUser", JSON.stringify({
         "id": Math.floor(Math.random() * (100000000000 - 10000000000)) + 10000000000,
@@ -28,9 +41,9 @@
         "password": $("#password-text").val(),
         "firstname": $("#firstname-text").val(),
         "lastname": $("#lastname-text").val(),
-        "position": "member",
         "email": $("#email-text").val(),
-        "phone": $("#phone-text").val()
+        "phone": $("#phone-text").val(),
+        "profpic": document.getElementById("file").files[0] //DOES NOT WORK
       }), function(responseText) {
         if(responseText == "success"){
           $("#message").html("saved :)");
@@ -41,6 +54,7 @@
         }
       });
     });
+  });
   </script>
 </body>
 

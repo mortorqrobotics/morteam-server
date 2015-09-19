@@ -7,7 +7,8 @@ var mongoose = require('mongoose');
 var functions = [];
 
 //schemas
-var User = require('./User.js');
+var User = require('./schemas/User.js');
+var Session = require('./schemas/Session.js');
 
 mongoose.connect('mongodb://localhost:27017/expressiment');
 
@@ -74,7 +75,14 @@ function parseJSON(str) {
     return JSON.parse(String(str));
   } catch (ex) {}
 }
-
+function getToken(size) {
+	var token = "";
+	for(var i = 0; i < size; i++) {
+		var rand = Math.floor(Math.random() * 62);
+		token += String.fromCharCode(rand + ((rand < 26) ? 97 : ((rand < 52) ? 39 : -4)));
+	}
+	return token;
+}
 function newFunc(url, method, callback) {
   functions.push({
     url: url,
@@ -105,7 +113,6 @@ newFunc("createUser", "POST", function(request, response, get, post) {
             password: data.password,
             firstname: data.firstname,
             lastname: data.lastname,
-            position: data.position,
             email: data.email,
             phone: data.phone
           }, function(err, user) {
@@ -124,7 +131,6 @@ newFunc("createUser", "POST", function(request, response, get, post) {
             password: data.password,
             firstname: data.firstname,
             lastname: data.lastname,
-            position: data.position,
             email: data.email,
             phone: data.phone
           }, function(err, user) {
@@ -162,4 +168,49 @@ newFunc("deleteUser", "POST", function(request, response, get, post) {
       response.end("success");
     }
   });
+});
+newFunc("login", "POST", function(request, response, get, post) {
+  var data = parseJSON(post);
+
+  User.findOne({username: data.username}, function(err, user){
+    if(user){
+      user.comparePassword(data.password, function(err, isMatch){
+        if(err){
+          console.error(err);
+        }else{
+          if(isMatch){
+            var generatedToken = getToken(32);
+            Session.create({user_id: user.id, token: generatedToken, isActive: true}, function(err, session){
+              if(err){
+                console.error(err);
+              }else{
+                var objarr = [user, session];
+                response.end(JSON.stringify(objarr));
+              }
+            });
+          }else{
+            response.end("inc/password");
+          }
+        }
+      })
+    }else{
+      response.end("inc/username")
+    }
+
+  });
+});
+newFunc("logout", "POST", function(request, response, get, post) {
+  var data = parseJSON(post);
+
+  Session.findOne({user_id: data.id, token: data.token, isActive: true}, function(err, session){
+    session.isActive = false;
+    session.save(function(err) {
+      if(err){
+        console.error(err);
+        response.end("fail");
+      }else{
+        response.end("success");
+      }
+    });
+  })
 });

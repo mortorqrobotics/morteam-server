@@ -18,3 +18,16 @@ th{
 .delete-col:hover{
   background-color: #cc4444;
 }
+.hidden{
+  display: none;
+}
+.logout-btn{
+  float: right;
+  margin-left: 10px;
+}
+.user-display{
+  float: right;
+}
+#logged-out-info{
+  float: right;
+}

@@ -5,14 +5,25 @@
   <meta charset="utf-8">
   <title>Users</title>
   <link rel="stylesheet" href="css/index.css" type="text/css">
+  <script type="text/javascript" src="js/main.js"></script>
 </head>
 
 <body>
   <a href="/">home</a> | <a href="about">about</a> | <a href="users">users</a>
+
+  <span id="logged-in-info" class="hidden">
+    <a href="#" class="logout-btn">Log Out</a>
+    <span class="user-display">Logged in as: <span id="username-display"></span></span>
+  </span>
+  <span id="logged-out-info" class="hidden">
+    <a href="login">login</a>
+  </span>
+
   <h2>This is the users page</h2>
 
 
   <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+  <script type="text/javascript" src="js/main.js"></script>
   <script>
     $(document).ready(function() {
       $.post("/f/getUsers", function(responseText) {
