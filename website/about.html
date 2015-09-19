@@ -22,9 +22,28 @@
   <p>
     This is the beginning of something great. Ghost spam is free of politics.
   </p>
+  <input id="join-team-text" type="text" placeholder="Team ID" />
+  <input id="join-team-btn" type="button" value="Join a Team" />
 
   <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
   <script type="text/javascript" src="js/main.js"></script>
+  <script>
+  $(document).ready(function(){
+    $("#join-team-btn").click(function(){
+      var team_id = $("#join-team-text").val();
+      $.post("/f/joinTeam", JSON.stringify({"id": getId(), "token": getToken(), "team_id": team_id}), function(responseText){
+        if(responseText == "success"){
+          var teams = JSON.parse(localStorage.teams);
+          teams.push(team_id);
+          localStorage.teams = JSON.stringify(teams);
+          alert("team added!");
+        }else{
+          alert(responseText);
+        }
+      });
+    });
+  });
+  </script>
 </body>
 
 </html>

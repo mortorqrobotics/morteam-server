@@ -33,6 +33,7 @@
           localStorage.lastname = user.lastname;
           localStorage.email = user.email;
           localStorage.phone = user.phone;
+          localStorage.teams = JSON.stringify(user.teams);
           localStorage.token = session.token;
           location="/";
         }else if(responseText == "inc/password"){

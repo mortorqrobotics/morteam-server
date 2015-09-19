@@ -83,6 +83,16 @@ function getToken(size) {
 	}
 	return token;
 }
+// function verifySession(user_id, token){
+//   var verified = false;
+//   Session.findOne({user_id: user_id, token: token, isActive: true}, function(err, session){
+//     if(err){
+//       console.error(err);
+//     } else if(session != null){
+//       verified = true;
+//     }
+//   });
+// }
 function newFunc(url, method, callback) {
   functions.push({
     url: url,
@@ -213,4 +223,33 @@ newFunc("logout", "POST", function(request, response, get, post) {
       }
     });
   })
+});
+newFunc("joinTeam", "POST", function(request, response, get, post) {
+  var data = parseJSON(post);
+  Session.findOne({user_id: data.id, token: data.token, isActive: true}, function(err, session){
+    if(err){
+      console.error(err);
+      response.end("fail");
+    } else if(session != null){
+      User.findOne({id: data.id}, function(err, user){
+        if(err){
+          console.error(err);
+          response.end("fail");
+        }else{
+          user.teams.push(data.team_id);
+          user.save(function(err){
+            if(err){
+              console.error(err);
+              response.end("fail");
+            }else{
+              console.log("Team " + data.team_id + " was added to user " + data.id);
+              response.end("success");
+            }
+          });
+        }
+      });
+    }else{
+      response.end("fail")
+    }
+  });
 });

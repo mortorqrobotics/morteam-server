@@ -13,7 +13,8 @@ var userSchema = new Schema({
   phone:       { type: Number, required: true, unique: true },
   created_at:  Date,
   updated_at:  Date,
-  profpicpath: String
+  profpicpath: String,
+  teams:       Array
 });
 
 userSchema.pre('save', function(next){

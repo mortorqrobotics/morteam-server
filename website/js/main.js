@@ -7,6 +7,9 @@ function getToken(){
 function getId(){
   return localStorage.id || sessionStorage.id;
 }
+function getTeams(){
+  return JSON.parse(localStorage.teams) || JSON.parse(sessionStorage.teams);
+}
 function removeFromStorage(key){
   if (localStorage.getItem(key) != null){
     localStorage.removeItem(key);
