@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="utf-8">
-  <title>Home</title>
+  <title>Login</title>
   <link rel="stylesheet" type="text/css" href="css/index.css" />
   <script type="text/javascript" src="js/main.js"></script>
 </head>
@@ -13,7 +13,8 @@
   <h1>This is the login page</h1>
   <input type="text" id="username-input" placeholder="username" />
   <input type="password" id="password-input" placeholder="password" />
-  <input type="button" id="login-btn" value="login" />
+  <input type="button" id="login-btn" value="login" /><br/><br/>
+  <a href="/signup">Don't have an account? Sign up!</a>
 
   <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
   <script type="text/javascript" src="js/main.js"></script>
@@ -22,19 +23,16 @@
     $("#login-btn").click(function(){
       var username = $("#username-input").val();
       var password = $("#password-input").val();
-      $.post("/f/login", JSON.stringify({"username": username, "password": password}), function(responseText){
+      $.post("/f/login", {"username": username, "password": password}, function(responseText){
         if(responseText != "inc/username" && responseText != "inc/password"){
-          var data = JSON.parse(responseText);
-          var user = data[0];
-          var session = data[1];
-          localStorage.id = user.id;
+          var user = JSON.parse(responseText)
           localStorage.username = user.username;
           localStorage.firstname = user.firstname;
           localStorage.lastname = user.lastname;
-          localStorage.email = user.email;
+          localStorage.id = user.id;
           localStorage.phone = user.phone;
+          localStorage.email = user.email;
           localStorage.teams = JSON.stringify(user.teams);
-          localStorage.token = session.token;
           location="/";
         }else if(responseText == "inc/password"){
           alert("incorrect password");

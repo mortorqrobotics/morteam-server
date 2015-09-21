@@ -4,11 +4,12 @@
 <head>
   <meta charset="utf-8">
   <title>Home</title>
-  <link rel="stylesheet" type="text/css" href="css/index.css"/>
+  <link rel="stylesheet" type="text/css" href="css/index.css">
+  <script type="text/javascript" src="js/main.js"></script>
 </head>
 
 <body>
-  <a href="/">home</a> | <a href="about">about</a> | <a href="users">users</a>
+  <a href="/">home</a> | <a href="users">users</a>
 
   <span id="logged-in-info" class="hidden">
     <a href="#" class="logout-btn">Log Out</a>
@@ -18,43 +19,38 @@
     <a href="login">login</a>
   </span>
 
-  <h1>This is the home page</h1>
-  <input class="textbox" id="firstname-text" type="text" placeholder="first name"/><br/>
-  <input class="textbox" id="lastname-text" type="text" placeholder="last name"/><br/>
-  <input class="textbox" id="username-text" type="text" placeholder="username"/><br/>
-  <input class="textbox" id="password-text" type="password" placeholder="password"/><br/>
-  <input class="textbox" id="email-text" type="email" placeholder="email"/><br/>
-  <input class="textbox" id="phone-text" type="phone" placeholder="phone"/><br/>
-  <input type="file" id="file"/><br/>
-  <input type="button" value="send" id="send"><br/>
-  <hr>
-  <span id="message"></span>
+  <h2>This is the Home page</h2>
+  <p>
+    This is the beginning of something great. Ghost spam is free of politics.
+  </p>
+  <!-- <input id="join-team-text" type="text" placeholder="Team ID" />
+  <input id="join-team-btn" type="button" value="Join a Team" /> -->
 
   <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
   <script type="text/javascript" src="js/main.js"></script>
   <script>
-  $(document).ready(function(){
-    $("#send").click(function() {
-      $.post("/f/createUser", JSON.stringify({
-        "id": Math.floor(Math.random() * (100000000000 - 10000000000)) + 10000000000,
-        "username": $("#username-text").val(),
-        "password": $("#password-text").val(),
-        "firstname": $("#firstname-text").val(),
-        "lastname": $("#lastname-text").val(),
-        "email": $("#email-text").val(),
-        "phone": $("#phone-text").val(),
-        "profpic": document.getElementById("file").files[0] //DOES NOT WORK
-      }), function(responseText) {
-        if(responseText == "success"){
-          $("#message").html("saved :)");
-        }else if(responseText == "exists"){
-          alert("that username and/or email and/or phone number already exists");
-        }else{
-          $("#message").html("failed :(");
-        }
-      });
+  // $(document).ready(function(){
+  //   $("#join-team-btn").click(function(){
+  //     var team_id = $("#join-team-text").val();
+  //     $.post("/f/joinTeam", JSON.stringify({"id": getId(), "token": getToken(), "team_id": team_id}), function(responseText){
+  //       if(responseText == "success"){
+  //         var teams = JSON.parse(localStorage.teams);
+  //         teams.push(team_id);
+  //         localStorage.teams = JSON.stringify(teams);
+  //         alert("team added!");
+  //       }else{
+  //         alert(responseText);
+  //       }
+  //     });
+  //   });
+  // });
+  $("#logout-btn").click(function(){
+    $.post("/f/logout", function(responseText){
+      if(responseText == "success"){
+        location="login";
+      }
     });
-  });
+  })
   </script>
 </body>
 

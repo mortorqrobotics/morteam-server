@@ -20,7 +20,7 @@ function removeFromStorage(key){
   }
 }
 $(document).ready(function(){
-  if(getToken()){
+  if(getId()){
     $("#logged-in-info").removeClass("hidden");
     $("#username-display").html(getUsername());
   }else{
@@ -31,12 +31,12 @@ $(document).ready(function(){
     $.post("/f/logout", JSON.stringify({"id": getId(), "token": getToken()}), function(responseText){
       if(responseText == "success"){
         removeFromStorage("id");
-        removeFromStorage("token");
         removeFromStorage("username");
         removeFromStorage("firstname");
         removeFromStorage("lastname");
         removeFromStorage("email");
         removeFromStorage("phone");
+        removeFromStorage("teams");
         location="login";
       }
     });

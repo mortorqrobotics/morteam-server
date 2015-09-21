@@ -1,14 +1,15 @@
-var http = require('http');
+var express = require('express'),
+    http = require('http');
 var fs = require('fs');
 var url = require('url');
 var qs = require('querystring');
+var bodyParser = require('body-parser')
 var mongoose = require('mongoose');
-// var bcrypt = require('bcrypt'),
-var functions = [];
-
+var session = require('client-sessions');
 //schemas
 var User = require('./schemas/User.js');
-var Session = require('./schemas/Session.js');
+
+app = express();
 
 mongoose.connect('mongodb://localhost:27017/expressiment');
 
@@ -18,58 +19,6 @@ function send404(response) {
   });
   response.end("404: Page Not Found");
 }
-
-function requestHandler(request, response) {
-
-  var requrl = url.parse(request.url).pathname;
-  var query = url.parse(request.url).query;
-  var get = qs.parse(query);
-
-  if (requrl.indexOf("/f/") == -1) {
-    if (request.method == "GET" && requrl == "/") {
-      fs.createReadStream("../website/index.html").pipe(response);
-    } else {
-      if (requrl.indexOf(".") > -1) {
-        fs.readFile("../website" + requrl, function(error, data) {
-          if (error) {
-            send404(response);
-          } else {
-            response.end(data);
-          }
-        });
-      } else {
-        fs.readFile("../website" + requrl + ".html", function(error, data) {
-          if (error) {
-            send404(response);
-          } else {
-            response.end(data);
-          }
-        });
-      }
-    }
-  } else {
-    for (var i = 0; i < functions.length; i++) {
-      if (requrl.toLowerCase() == "/f/" + functions[i].url.toLowerCase()) {
-        if (functions[i].method.toLowerCase() == "post") {
-          (function() {
-            var func = functions[i];
-            var data = new Buffer(0);
-            request.on("data", function(chunk) {
-              data = Buffer.concat([data, chunk]);
-            });
-            request.on("end", function() {
-              func.callback(request, response, get, data);
-            });
-          })();
-        } else if (functions[i].method.toLowerCase() == "get") {
-          functions[i].callback(request, response, get);
-        }
-        break;
-      }
-    }
-  }
-}
-
 function parseJSON(str) {
   try {
     return JSON.parse(String(str));
@@ -83,73 +32,129 @@ function getToken(size) {
 	}
 	return token;
 }
-// function verifySession(user_id, token){
-//   var verified = false;
-//   Session.findOne({user_id: user_id, token: token, isActive: true}, function(err, session){
-//     if(err){
-//       console.error(err);
-//     } else if(session != null){
-//       verified = true;
-//     }
-//   });
-// }
-function newFunc(url, method, callback) {
-  functions.push({
-    url: url,
-    method: method,
-    callback: callback
-  });
-}
+function requireLogin (req, res, next) {
+  if (!req.user) {
+    res.end("fail");
+  } else {
+    next();
+  }
+};
 
-var port = process.argv[2] || 8080;
-http.createServer(requestHandler).listen(port);
-console.log("Server is now running on port " + port);
+//for parsing bodies ;)
+app.use( bodyParser.json() );
+app.use(bodyParser.urlencoded({
+  extended: true
+}));
+app.use(session({
+  cookieName: 'session',
+  secret: 'temporary_secret',
+  duration: 30 * 60 * 1000,
+  activeDuration: 5 * 60 * 1000,
+  cookie: {
+    ephemeral: true,
+    httpOnly: true
+  }
+}));
+app.use(function(req, res, next) {
+  if (req.session && req.session.user) {
+    User.findOne({ username: req.session.user.username }, function(err, user) {
+      if (user) {
+        req.user = user;
+        delete req.user.password;
+        req.session.user = user;
+      }
+      next();
+    });
+  } else {
+    next();
+  }
+});
 
-newFunc("createUser", "POST", function(request, response, get, post) {
-  var data = parseJSON(post);
+app.use(function(request, response, next) {
+  var requrl = url.parse(request.url).pathname;
+  var query = url.parse(request.url).query;
+  var get = qs.parse(query);
 
-  User.find( { $or: [ { username: data.username }, { email: data.email }, { phone: data.phone } ] }, function(err, users){ //see if user exists
-    if( users.length != 0 ){
-      response.end("exists");
+  if (requrl.indexOf("/f/") == -1) {
+    if(request.method == "GET" && (requrl == "/login" || requrl == "/login.html")){
+      fs.createReadStream("../website/login.html").pipe(response);
+    }else if(request.method == "GET" && (requrl == "/signup" || requrl == "/signup.html")){
+      fs.createReadStream("../website/signup.html").pipe(response);
     }else{
-      User.find({id: data.id}, function(err, users){ //see if id exists
+      if(request.user){
+        if (request.method == "GET" && requrl == "/") {
+          fs.createReadStream("../website/index.html").pipe(response);
+        } else {
+          if (requrl.indexOf(".") > -1) {
+            fs.readFile("../website" + requrl, function(error, data) {
+              if (error) {
+                send404(response);
+              } else {
+                response.end(data);
+              }
+            });
+          } else {
+            fs.readFile("../website" + requrl + ".html", function(error, data) {
+              if (error) {
+                send404(response);
+              } else {
+                response.end(data);
+              }
+            });
+          }
+        }
+      }else{
+        response.redirect("/login");
+      }
+    }
+  }else{
+    next();
+  }
+});
+
+app.post("/f/createUser", function(req, res){
+  User.find( { $or: [ { username: req.body.username }, { email: req.body.email }, { phone: req.body.phone } ] }, function(err, users){ //see if user exists
+    if( users.length != 0 ){
+      res.end("exists");
+    }else{
+      User.find({id: req.body.id}, function(err, users){ //see if id exists
         if (err) {
           console.error(err);
         }
         if(users.length == 0){
           User.create({
-            id: data.id,
-            username: data.username,
-            password: data.password,
-            firstname: data.firstname,
-            lastname: data.lastname,
-            email: data.email,
-            phone: data.phone
+            id: req.body.id,
+            username: req.body.username,
+            password: req.body.password,
+            firstname: req.body.firstname,
+            lastname: req.body.lastname,
+            email: req.body.email,
+            phone: req.body.phone
           }, function(err, user) {
             if(err){
-              response.end("fail");
+              res.end("fail");
               console.error(err);
             }else{
-              console.log("User " + data.id + ", " + data.firstname + " " + data.lastname + " was saved!");
-              response.end("success");
+              console.log("User " + req.body.id + ", " + req.body.firstname + " " + req.body.lastname + " was saved!");
+              res.end("success");
             }
           });
         }else{
           User.create({
             id: Math.floor(Math.random() * (100000000000 - 10000000000)) + 10000000000, //create new id
-            username: data.username,
-            password: data.password,
-            firstname: data.firstname,
-            lastname: data.lastname,
-            email: data.email,
-            phone: data.phone
+            username: req.body.username,
+            password: req.body.password,
+            firstname: req.body.firstname,
+            lastname: req.body.lastname,
+            email: req.body.email,
+            phone: req.body.phone
           }, function(err, user) {
             if(err){
-              response.end("fail");
+              res.end("fail");
               console.error(err);
             }else{
-              console.log("User " + data.id + ", " + data.firstname + " " + data.lastname + " was saved!");
-              response.end("success");
+              console.log("User " + req.body.id + ", " + req.body.firstname + " " + req.body.lastname + " was saved!");
+              res.end("success");
             }
           });
         }
@@ -157,99 +162,52 @@ newFunc("createUser", "POST", function(request, response, get, post) {
     }
   });
 });
-newFunc("getUsers", "POST", function(request, response, get, post) {
+app.post("/f/getUsers", function(req, res){
   User.find({}, function(err, users) {
     if(err){
-      response.end("fail");
+      res.end("fail");
       console.error(err);
     }else{
-      response.end(JSON.stringify(users));
+      res.end(JSON.stringify(users));
     }
   })
 });
-newFunc("deleteUser", "POST", function(request, response, get, post) {
-  var data = parseJSON(post);
-  User.findOneAndRemove({id: data.id}, function(err){
+app.post("/f/deleteUser", function(req, res){
+  User.findOneAndRemove({id: req.body.id}, function(err){
     if(err){
-      response.end("fail");
+      res.end("fail");
       console.error(err);
     }else{
       console.log("User deleted");
-      response.end("success");
+      res.end("success");
     }
   });
 });
-newFunc("login", "POST", function(request, response, get, post) {
-  var data = parseJSON(post);
-
-  User.findOne({username: data.username}, function(err, user){
+app.post("/f/login", function(req, res){
+  User.findOne({username: req.body.username}, function(err, user){
     if(user){
-      user.comparePassword(data.password, function(err, isMatch){
+      user.comparePassword(req.body.password, function(err, isMatch){
         if(err){
           console.error(err);
         }else{
           if(isMatch){
-            var generatedToken = getToken(32);
-            Session.create({user_id: user.id, token: generatedToken, isActive: true}, function(err, session){
-              if(err){
-                console.error(err);
-              }else{
-                var objarr = [user, session];
-                response.end(JSON.stringify(objarr));
-              }
-            });
+            req.session.user = user;
+            res.end(JSON.stringify(user));
           }else{
-            response.end("inc/password");
+            res.end("inc/password");
           }
         }
       })
     }else{
-      response.end("inc/username")
-    }
-
-  });
-});
-newFunc("logout", "POST", function(request, response, get, post) {
-  var data = parseJSON(post);
-
-  Session.findOne({user_id: data.id, token: data.token, isActive: true}, function(err, session){
-    session.isActive = false;
-    session.save(function(err) {
-      if(err){
-        console.error(err);
-        response.end("fail");
-      }else{
-        response.end("success");
-      }
-    });
-  })
-});
-newFunc("joinTeam", "POST", function(request, response, get, post) {
-  var data = parseJSON(post);
-  Session.findOne({user_id: data.id, token: data.token, isActive: true}, function(err, session){
-    if(err){
-      console.error(err);
-      response.end("fail");
-    } else if(session != null){
-      User.findOne({id: data.id}, function(err, user){
-        if(err){
-          console.error(err);
-          response.end("fail");
-        }else{
-          user.teams.push(data.team_id);
-          user.save(function(err){
-            if(err){
-              console.error(err);
-              response.end("fail");
-            }else{
-              console.log("Team " + data.team_id + " was added to user " + data.id);
-              response.end("success");
-            }
-          });
-        }
-      });
-    }else{
-      response.end("fail")
+      res.end("inc/username")
     }
   });
 });
+app.post("/f/logout", function(req, res){
+  req.session.reset();
+  res.end("success");
+});
+
+var port = process.argv[2] || 8080;
+app.listen(port);
+console.log('server started on port %s', port);
