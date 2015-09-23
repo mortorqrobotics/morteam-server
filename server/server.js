@@ -8,6 +8,7 @@ var mongoose = require('mongoose');
 var session = require('client-sessions');
 //schemas
 var User = require('./schemas/User.js');
+var Team = require('./schemas/Team.js');
 
 app = express();
 
@@ -80,27 +81,37 @@ app.use(function(request, response, next) {
       fs.createReadStream("../website/login.html").pipe(response);
     }else if(request.method == "GET" && (requrl == "/signup" || requrl == "/signup.html")){
       fs.createReadStream("../website/signup.html").pipe(response);
+    }else if(request.method == "GET" && (requrl == "/void" || requrl == "/void.html")){
+      if(request.user.teams.length != 0){
+        response.redirect("/");
+      }else{
+        fs.createReadStream("../website/void.html").pipe(response);
+      }
     }else{
       if(request.user){
-        if (request.method == "GET" && requrl == "/") {
-          fs.createReadStream("../website/index.html").pipe(response);
-        } else {
-          if (requrl.indexOf(".") > -1) {
-            fs.readFile("../website" + requrl, function(error, data) {
-              if (error) {
-                send404(response);
-              } else {
-                response.end(data);
-              }
-            });
+        if (request.method == "GET" && request.user.teams.length == 0){
+          fs.createReadStream("../website/void.html").pipe(response);
+        }else{
+          if (request.method == "GET" && requrl == "/") {
+            fs.createReadStream("../website/index.html").pipe(response);
           } else {
-            fs.readFile("../website" + requrl + ".html", function(error, data) {
-              if (error) {
-                send404(response);
-              } else {
-                response.end(data);
-              }
-            });
+            if (requrl.indexOf(".") > -1) {
+              fs.readFile("../website" + requrl, function(error, data) {
+                if (error) {
+                  send404(response);
+                } else {
+                  response.end(data);
+                }
+              });
+            } else {
+              fs.readFile("../website" + requrl + ".html", function(error, data) {
+                if (error) {
+                  send404(response);
+                } else {
+                  response.end(data);
+                }
+              });
+            }
           }
         }
       }else{
@@ -162,8 +173,8 @@ app.post("/f/createUser", function(req, res){
     }
   });
 });
-app.post("/f/getUsers", function(req, res){
-  User.find({}, function(err, users) {
+app.post("/f/getUsersInTeam", function(req, res){
+  User.find({teams: {$elemMatch: {id: req.body.team_id}}}, function(err, users) {
     if(err){
       res.end("fail");
       console.error(err);
@@ -206,6 +217,38 @@ app.post("/f/login", function(req, res){
 app.post("/f/logout", function(req, res){
   req.session.reset();
   res.end("success");
+});
+app.post("/f/createTeam", function(req, res){
+  Team.create({
+    id: req.body.id,
+    name: req.body.name,
+    number: req.body.number
+  }, function(err, user){
+    if(err){
+      console.error(err);
+      res.end("fail");
+    }else{
+      res.end("success");
+    }
+  });
+});
+app.post("/f/joinTeam", function(req, res){
+  User.findOne({id: req.body.user_id}, function(err, user){
+    if(err){
+      console.error(err);
+      res.end("fail")
+    }else{
+      user.teams.push({id: req.body.team_id, subdivisions:[]});
+      user.save(function(err){
+        if(err){
+          console.error(err);
+          res.end("fail");
+        }else{
+          res.end("success");
+        }
+      })
+    }
+  })
 });
 
 var port = process.argv[2] || 8080;

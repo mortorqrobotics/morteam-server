@@ -26,7 +26,8 @@
   <script type="text/javascript" src="js/main.js"></script>
   <script>
     $(document).ready(function() {
-      $.post("/f/getUsers", function(responseText) {
+      var teams = JSON.parse(localStorage.teams);
+      $.post("/f/getUsersInTeam", {team_id: teams[0].id}, function(responseText) {
         var users = JSON.parse(responseText);
         var table = document.createElement("table");
         var th0 = document.createElement("th");

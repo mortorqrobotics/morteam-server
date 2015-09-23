@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>No Team?</title>
+  <link rel="stylesheet" type="text/css" href="css/index.css">
+  <script type="text/javascript" src="js/main.js"></script>
+</head>
+
+<body>
+  <h2>Looks like you're not part of a team</h2>
+
+  <input type="text" id="join-team-id-text" placeholder="Enter Team ID"/>
+  <input type="button" id="join-team-btn" value="Join Team"/><br/><br/>
+  <span>OR</span><br/><br/>
+  <input type="text" id="new-team-name-text" placeholder="Choose Team Name"/>
+  <input type="text" id="new-team-number-text" placeholder="Choose Team Number"/>
+  <input type="text" id="new-team-id-text" placeholder="Choose Team ID"/>
+  <input type="button" id="create-team-btn" value="Create Team"/><br/>
+
+
+  <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+  <script type="text/javascript" src="js/main.js"></script>
+  <script>
+  $(document).ready(function(){
+    $("#create-team-btn").click(function(){
+      $.post("/f/createTeam", {id: $("#new-team-id-text").val(), name: $("#new-team-name-text").val(), number: $("#new-team-number-text").val()}, function(responseText){
+        if(responseText=="success"){
+          $.post("/f/joinTeam", {team_id: $("#new-team-id-text").val(), user_id: localStorage.id}, function(responseText){
+            if(responseText == "success"){
+              var lsTeams = JSON.parse(localStorage.teams);
+              lsTeams.push({subdivisions:[], id: $("#new-team-id-text").val()});
+              localStorage.teams = JSON.stringify(lsTeams);
+              location="/";
+            }else{
+              alert("fail");
+            }
+          })
+        }
+      })
+    });
+    $("#join-team-btn").click(function(){
+      $.post("/f/joinTeam", {team_id: $("#join-team-id-text").val(), user_id: localStorage.id}, function(responseText){
+        if(responseText=="success"){
+          var lsTeams = JSON.parse(localStorage.teams);
+          lsTeams.push({subdivisions:[], id: $("#join-team-id-text").val()});
+          localStorage.teams = JSON.stringify(lsTeams);
+          location="/";
+        }else{
+          alert("fail");
+        }
+      })
+    });
+  });
+  </script>
+</body>
+
+</html>
