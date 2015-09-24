@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
 <html>
 
 <head>
   <meta charset="utf-8">
-  <title>Users</title>
+  <title>Subdivisions</title>
   <link rel="stylesheet" href="css/index.css" type="text/css">
   <script type="text/javascript" src="js/main.js"></script>
 </head>
@@ -19,8 +20,14 @@
     <a href="login">login</a>
   </span>
 
-  <h2>This is the users page</h2>
-
+  <h2>Make a subdivision</h2>
+  <input type="text" id="subdivision-name-text" placeholder="subdivision name"><br/>
+  <select id="public-private-select">
+    <option value="public">public</option>
+    <option value="public">private</option>
+  </select><br/><br/>
+  <div id="users-table-div"></div><br/>
+  <input type="button" id="create-subdivision-btn" value="create">
 
   <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
   <script type="text/javascript" src="js/main.js"></script>
@@ -48,8 +55,8 @@
           td0.innerHTML = i + 1;
           td1.innerHTML = users[i].firstname;
           td2.innerHTML = users[i].lastname;
-          td3.innerHTML = "Delete"
-          $(td3).addClass("delete-col");
+          td3.innerHTML = "Invite"
+          $(td3).addClass("invite-col");
           tr.appendChild(td0);
           tr.appendChild(td1);
           tr.appendChild(td2);
@@ -58,22 +65,38 @@
           $(table).attr("id", "users-table")
           table.appendChild(tr);
         }
-        document.body.appendChild(table);
-
-        $(".delete-col").click(function() {
-          var row = $(this).parent();
-          $.post("/f/deleteUser", {
-            id: $(this).parent().attr("data-userid")
-          }, function(responseText) {
-            if (responseText == "success") {
-              row.remove();
-            } else {
-              alert("fail");
+        document.getElementById("users-table-div").appendChild(table);
+      });
+      var selectedUsers = []
+      $(document).on("click", ".invite-col", function() {
+        var row = $(this).parent();
+        if( $(this).hasClass("selected") ){
+          selectedUsers.splice( selectedUsers.indexOf( row.attr("data-userid") ), 1 );
+          $(this).removeClass("selected");
+        }else{
+          selectedUsers.push(row.attr("data-userid"));
+          $(this).addClass("selected");
+        }
+      });
+      $(document).on("click", "#create-subdivision-btn", function() {
+        var subdivisionType = $("#public-private-select").val();
+        $.post("/f/createSubdivision", {name: $("#subdivision-name-text").val(), type: subdivisionType, team_id: localStorage.c_team}, function(responseText){
+          if(responseText != "fail"){
+            for(var i=0; i<selectedUsers.length; i++){
+              $.post("/f/inviteToSubdivision", {user_id: selectedUsers[i], team_id: localStorage.c_team, subdivision_id: responseText}, function(responseText){
+                if(responseText == "success"){
+                  console.log("invited");
+                }else{
+                  alert("fail");
+                }
+              });
             }
-          });
-        })
-      })
-    })
+          }else{
+            alert("failed to create");
+          }
+        });
+      });
+    });
   </script>
 </body>
 

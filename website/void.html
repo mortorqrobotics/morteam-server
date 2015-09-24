@@ -30,8 +30,9 @@
           $.post("/f/joinTeam", {team_id: $("#new-team-id-text").val(), user_id: localStorage.id}, function(responseText){
             if(responseText == "success"){
               var lsTeams = JSON.parse(localStorage.teams);
-              lsTeams.push({subdivisions:[], id: $("#new-team-id-text").val()});
+              lsTeams.push($("#new-team-id-text").val());
               localStorage.teams = JSON.stringify(lsTeams);
+              localStorage.c_team = $("#new-team-id-text").val();
               location="/";
             }else{
               alert("fail");
@@ -44,8 +45,9 @@
       $.post("/f/joinTeam", {team_id: $("#join-team-id-text").val(), user_id: localStorage.id}, function(responseText){
         if(responseText=="success"){
           var lsTeams = JSON.parse(localStorage.teams);
-          lsTeams.push({subdivisions:[], id: $("#join-team-id-text").val()});
+          lsTeams.push($("#join-team-id-text").val());
           localStorage.teams = JSON.stringify(lsTeams);
+          localStorage.c_team = $("#join-team-id-text").val();
           location="/";
         }else{
           alert("fail");

@@ -4,17 +4,18 @@ Schema = mongoose.Schema;
 SALT_WORK_FACTOR = 10;
 
 var userSchema = new Schema({
-  id:          { type: Number, required: true, unique: true },
-  username:    { type: String, required: true, unique: true },
-  password:    { type: String, required: true },
-  firstname:   { type: String, required: true },
-  lastname:    { type: String, required: true },
-  email:       { type: String, required: true, unique: true },
-  phone:       { type: Number, required: true, unique: true },
-  created_at:  Date,
-  updated_at:  Date,
-  profpicpath: String,
-  teams:       Array
+  id:           { type: Number, required: true, unique: true },
+  username:     { type: String, required: true, unique: true },
+  password:     { type: String, required: true },
+  firstname:    { type: String, required: true },
+  lastname:     { type: String, required: true },
+  email:        { type: String, required: true, unique: true },
+  phone:        { type: Number, required: true, unique: true },
+  created_at:   Date,
+  updated_at:   Date,
+  profpicpath:  String,
+  teams:        Array,
+  subdivisions: Array
 });
 
 userSchema.pre('save', function(next){

@@ -9,6 +9,7 @@ var session = require('client-sessions');
 //schemas
 var User = require('./schemas/User.js');
 var Team = require('./schemas/Team.js');
+var Subdivision = require('./schemas/Subdivision.js');
 
 app = express();
 
@@ -25,7 +26,7 @@ function parseJSON(str) {
     return JSON.parse(String(str));
   } catch (ex) {}
 }
-function getToken(size) {
+function createToken(size) {
 	var token = "";
 	for(var i = 0; i < size; i++) {
 		var rand = Math.floor(Math.random() * 62);
@@ -40,6 +41,13 @@ function requireLogin (req, res, next) {
     next();
   }
 };
+function searchForValueInObjectsArray(value, array){
+    for (var i=0; i < array.length; i++) {
+        if (array[i].id === value) {
+            return array[i];
+        }
+    }
+}
 
 //for parsing bodies ;)
 app.use( bodyParser.json() );
@@ -174,10 +182,10 @@ app.post("/f/createUser", function(req, res){
   });
 });
 app.post("/f/getUsersInTeam", function(req, res){
-  User.find({teams: {$elemMatch: {id: req.body.team_id}}}, function(err, users) {
+  User.find({teams: req.body.team_id }, function(err, users) {
     if(err){
-      res.end("fail");
       console.error(err);
+      res.end("fail");
     }else{
       res.end(JSON.stringify(users));
     }
@@ -223,7 +231,7 @@ app.post("/f/createTeam", function(req, res){
     id: req.body.id,
     name: req.body.name,
     number: req.body.number
-  }, function(err, user){
+  }, function(err, team){
     if(err){
       console.error(err);
       res.end("fail");
@@ -233,23 +241,97 @@ app.post("/f/createTeam", function(req, res){
   });
 });
 app.post("/f/joinTeam", function(req, res){
-  User.findOne({id: req.body.user_id}, function(err, user){
+  Team.findOne({id: req.body.team_id}, function(err, team){
     if(err){
       console.error(err);
-      res.end("fail")
+      res.end("fail");
     }else{
-      user.teams.push({id: req.body.team_id, subdivisions:[]});
-      user.save(function(err){
-        if(err){
-          console.error(err);
-          res.end("fail");
-        }else{
-          res.end("success");
-        }
-      })
+      if(team){
+        User.findOne({id: req.body.user_id}, function(err, user){
+          if(err){
+            console.error(err);
+            res.end("fail")
+          }else{
+            user.teams.push(req.body.team_id);
+            user.save(function(err){
+              if(err){
+                console.error(err);
+                res.end("fail");
+              }else{
+                res.end("success");
+              }
+            });
+          }
+        });
+      }
     }
-  })
+  });
 });
+app.post("/f/createSubdivision", function(req, res){
+  Subdivision.create({
+    id: Math.floor(Math.random() * (100000000000 - 10000000000)) + 10000000000,
+    name: req.body.name,
+    type: req.body.type,
+    team: req.body.team_id
+  }, function(err, subdivision){
+    if(err){
+      console.error(err);
+      res.end("fail");
+    }else{
+      res.end(subdivision.id);
+    }
+  });
+});
+app.post("/f/inviteToSubdivision", function(req, res){
+  Subdivision.findOne({id: req.body.subdivision_id}, function(err, subdivision){
+    if(err){
+      console.error(err);
+      res.end("fail");
+    }else{
+      if(subdivision){
+        User.findOne({id: req.body.user_id}, function(err, user){
+          if(err){
+            console.error(err);
+            res.end("fail");
+          }else{
+            // searchForValueInObjectsArray(req.body.team_id, user.teams).subdivisions.push(req.body.subdivision_id);
+            // for (var i=0; i < user.teams.length; i++) {
+            //   if (user.teams[i].id == req.body.team_id) {
+            //     user.teams[i].subdivisions.push(req.body.subdivision_id.toString());
+            //     console.log(user);
+            //     user.save(function(err){
+            //       if(err){
+            //         console.error(err);
+            //         res.end("fail");
+            //       }else{
+            //         res.end("success")
+            //       }
+            //     });
+            //     break;
+            //   }
+            // }
+            if(user){
+              user.subdivisions.push({id: req.body.subdivision_id, team: req.body.team_id});
+              user.save(function(err){
+                if(err){
+                  console.error(err);
+                  res.end("fail");
+                }else{
+                  res.end("success");
+                }
+              })
+            }else{
+              res.end("fail");
+            }
+          }
+        });
+      }else{
+        res.end("fail");
+      }
+    }
+  });
+});
+
 
 var port = process.argv[2] || 8080;
 app.listen(port);

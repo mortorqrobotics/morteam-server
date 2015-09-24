@@ -33,6 +33,9 @@
           localStorage.phone = user.phone;
           localStorage.email = user.email;
           localStorage.teams = JSON.stringify(user.teams);
+          if(user.teams && user.teams.length > 0){
+            localStorage.c_team = user.teams[0];
+          }
           location="/";
         }else if(responseText == "inc/password"){
           alert("incorrect password");

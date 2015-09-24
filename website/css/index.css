@@ -18,6 +18,18 @@ th{
 .delete-col:hover{
   background-color: #cc4444;
 }
+.invite-col{
+  background-color: #64779E;
+  color: white;
+  cursor: pointer;
+}
+.invite-col:hover{
+  background-color: #7787A7;
+}
+.invite-col.selected{
+  background-color: #9DA9BF;
+}
+
 .hidden{
   display: none;
 }

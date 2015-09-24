@@ -37,6 +37,7 @@ $(document).ready(function(){
         removeFromStorage("email");
         removeFromStorage("phone");
         removeFromStorage("teams");
+        removeFromStorage("c_team");
         location="login";
       }
     });
