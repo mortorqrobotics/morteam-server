@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>MorTeam</title>
+  <link href='http://fonts.googleapis.com/css?family=Open+Sans:700,300,400' rel='stylesheet' type='text/css'>
+  <link href='http://fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'>
+  <link href='http://fonts.googleapis.com/css?family=Titillium+Web' rel='stylesheet' type='text/css'>
+  <link href='http://fonts.googleapis.com/css?family=Exo+2:400,300,200' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
+  <link rel="stylesheet" href="css/index.css" type="text/css">
+</head>
+
+<body>
+  <div id="signup_area">
+    <div id="form">
+      <!-- <div class="col-lg-6 col-sm-6 col-xs-6"> -->
+      <div style="text-align: center;">
+        <input class="signup_item" type="text" placeholder="First Name" id="firstname"></input>
+        <input class="signup_item" type="text" placeholder="Last Name" id="lastname"></input>
+        <input class="signup_item" type="text" placeholder="Username" id="username_signup"></input>
+        <input class="signup_item" type="password" placeholder="Password" id="password_signup"></input>
+        <input class="signup_item" type="password" placeholder="Confirm Password" id="password_signup_confirm"></input>
+        <input class="signup_item" type="email" placeholder="Email" id="email_signup"></input>
+        <input class="signup_item" type="text" placeholder="Phone Number" id="phone_signup"></input>
+        <input type="file" class="hidden show_files" id="show_files" accept="image/*" />
+        <input type="button" class="pic_choose_button signup_item" value="Choose Profile Picture">
+      </div>
+      <input class="signup_item" type="submit" value="Submit" id="signup_buttonS"></input>
+    </div>
+  </div>
+
+  <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+  <script type="text/javascript" src="js/main.js"></script>
+  <script>
+  $(document).ready(function(){
+    $("#signup_buttonS").click(function() {
+      if($("#password_signup").val() == $("#password_signup_confirm").val()){
+        $.post("/f/createUser", {
+          "id": Math.floor(Math.random() * (100000000000 - 10000000000)) + 10000000000,
+          "username": $("#username_signup").val(),
+          "password": $("#password_signup").val(),
+          "firstname": $("#firstname").val(),
+          "lastname": $("#lastname").val(),
+          "email": $("#email_signup").val(),
+          "phone": $("#phone_signup").val(),
+          // "profpic": document.getElementById("file").files[0] //DOES NOT WORK TODO: FIX THIS
+        }, function(responseText) {
+          if(responseText == "success"){
+            location="/login";
+          }else if(responseText == "exists"){
+            alert("that username and/or email and/or phone number already exists");
+          }else{
+            alert("failed");
+          }
+        });
+      }else{
+        alert("passwords do not match");
+      }
+    });
+  });
+  </script>
+</body>
+
+</html>

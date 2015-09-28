@@ -4,28 +4,28 @@
 <head>
   <meta charset="utf-8">
   <title>Home</title>
-  <link rel="stylesheet" type="text/css" href="css/index.css">
-  <script type="text/javascript" src="js/main.js"></script>
+  <link rel="stylesheet" type="text/css" href="../css/index.css">
 </head>
 
 <body>
-  <a href="/">home</a> | <a href="users">users</a> | <a href="subdivisions">subdivisions</a>
+  <a href="/">home</a> | <a href="../users">users</a> | <a href="../subdivisions">subdivisions</a>
 
   <span id="logged-in-info" class="hidden">
     <a href="#" class="logout-btn">Log Out</a>
     <span class="user-display">Logged in as: <span id="username-display"></span></span>
   </span>
   <span id="logged-out-info" class="hidden">
-    <a href="login">login</a>
+    <a href="../login">login</a>
   </span>
 
-  <h2>This is the Home page</h2>
-  <p>
-    This is the beginning of something great. Ghost spam is free of politics.
-  </p>
+  <br/><br/><h1><%= firstname %> <%= lastname %></h1>
+  <p>username: <%= username %></p>
+  <p>email: <%= email %></p>
+  <p>phone: <%= phone %></p>
+
 
   <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
-  <script type="text/javascript" src="js/main.js"></script>
+  <script type="text/javascript" src="../js/main.js"></script>
   <script>
   $(document).ready(function(){
     $("#logout-btn").click(function(){
