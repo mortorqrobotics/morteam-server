@@ -6,6 +6,7 @@ var qs = require('querystring');
 var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
 var session = require('client-sessions');
+var nodemailer = require('nodemailer');
 publicDir = require("path").join(__dirname, "../website/public");
 //schemas
 var User = require('./schemas/User.js');
@@ -14,7 +15,9 @@ var Subdivision = require('./schemas/Subdivision.js');
 
 app = express();
 
-mongoose.connect('mongodb://localhost:27017/expressiment');
+mongoose.connect('mongodb://localhost:27017/morteam2');
+
+var transporter = nodemailer.createTransport();
 
 function send404(response) {
   response.writeHead(404, {
@@ -64,6 +67,18 @@ function subdivisionNotFound(response) {
 String.prototype.contains = function(arg) {
   return this.indexOf(arg) > -1;
 };
+
+String.prototype.capitalize = function() {
+  return this.charAt(0).toUpperCase() + this.slice(1);
+}
+
+function findTeamInUser(user, teamId){
+  for(var i = 0; i < user.teams.length; i++){
+    if(user.teams[i].id == teamId){
+      return user.teams[i];
+    }
+  }
+}
 
 app.use(function(err, req, res, next) {
   console.error(err.stack);
@@ -155,15 +170,21 @@ app.get("/", function(req, res) {
 app.get("/u/:id", function(req, res) {
   User.findOne({
     id: req.params.id,
-    teams: {
-      "$in": req.user.teams
-    }
+    teams: {$elemMatch: {'id': req.user.current_team.id }}
   }, function(err, user) {
     if (err) {
       send404(res);
     } else {
       if (user) {
-        res.render('user', user);
+        res.render('user', {
+          firstname: user.firstname,
+          lastname: user.lastname,
+          id: user.id,
+          email: user.email,
+          phone: user.phone,
+          viewedUserPosition: findTeamInUser(user, req.user.current_team.id).position,
+          viewerUserPosition: req.user.current_team.position
+        });
       } else {
         userNotFound(res);
       }
@@ -174,9 +195,7 @@ app.get("/s/:id", function(req, res) {
   var joined = false;
   Subdivision.findOne({
     id: req.params.id,
-    team: {
-      "$in": req.user.teams
-    }
+    team: req.user.current_team.id
   }, function(err, subdivision) {
     if (err) {
       send404(res);
@@ -200,8 +219,10 @@ app.get("/s/:id", function(req, res) {
                     name: subdivision.name,
                     type: subdivision.type,
                     team: subdivision.team,
+                    admin: req.user.current_team.position=="admin",
                     joined: true,
-                    members: users
+                    members: users,
+                    current_user_id: req.user.id
                   });
                   break;
                 }
@@ -219,8 +240,10 @@ app.get("/s/:id", function(req, res) {
                 name: subdivision.name,
                 type: subdivision.type,
                 team: subdivision.team,
+                admin: req.user.current_team.position=="admin",
                 joined: joined,
-                members: users
+                members: users,
+                current_user_id: req.user.id
               });
             }
           }
@@ -246,59 +269,67 @@ app.post("/f/createUser", function(req, res) {
       phone: req.body.phone
     }]
   }, function(err, users) { //see if user exists
-    if (users.length != 0) {
-      res.end("exists");
-    } else {
-      User.find({
-        id: req.body.id
-      }, function(err, users) { //see if id exists
-        if (err) {
-          console.error(err);
-        }
-        if (users.length == 0) {
-          User.create({
-            id: req.body.id,
-            username: req.body.username,
-            password: req.body.password,
-            firstname: req.body.firstname,
-            lastname: req.body.lastname,
-            email: req.body.email,
-            phone: req.body.phone
-          }, function(err, user) {
-            if (err) {
-              res.end("fail");
-              console.error(err);
-            } else {
-              console.log("User " + req.body.id + ", " + req.body.firstname + " " + req.body.lastname + " was saved!");
-              res.end("success");
-            }
-          });
+    if(err){
+      console.error(err);
+      res.end("fail");
+    }else{
+      if(users){
+        if (users.length != 0) {
+          res.end("exists");
         } else {
-          User.create({
-            id: Math.floor(Math.random() * (100000000000 - 10000000000)) + 10000000000, //create new id
-            username: req.body.username,
-            password: req.body.password,
-            firstname: req.body.firstname,
-            lastname: req.body.lastname,
-            email: req.body.email,
-            phone: req.body.phone
-          }, function(err, user) {
+          User.find({
+            id: req.body.id
+          }, function(err, users) { //see if id exists
             if (err) {
-              res.end("fail");
               console.error(err);
-            } else {
-              console.log("User " + req.body.id + ", " + req.body.firstname + " " + req.body.lastname + " was saved!");
-              res.end("success");
+              res.end("fail");
             }
-          });
+            if (users.length == 0) {
+              User.create({
+                id: req.body.id,
+                username: req.body.username,
+                password: req.body.password,
+                firstname: req.body.firstname,
+                lastname: req.body.lastname,
+                email: req.body.email,
+                phone: req.body.phone
+              }, function(err, user) {
+                if (err) {
+                  res.end("fail");
+                  console.error(err);
+                } else {
+                  console.log("User " + req.body.id + ", " + req.body.firstname + " " + req.body.lastname + " was saved!");
+                  res.end("success");
+                }
+              });
+            } else {
+              User.create({
+                id: Math.floor(Math.random() * (100000000000 - 10000000000)) + 10000000000, //create new id
+                username: req.body.username,
+                password: req.body.password,
+                firstname: req.body.firstname,
+                lastname: req.body.lastname,
+                email: req.body.email,
+                phone: req.body.phone
+              }, function(err, user) {
+                if (err) {
+                  res.end("fail");
+                  console.error(err);
+                } else {
+                  console.log("User " + req.body.id + ", " + req.body.firstname + " " + req.body.lastname + " was saved!");
+                  res.end("success");
+                }
+              });
+            }
+          })
         }
-      })
+      }
     }
   });
 });
-app.post("/f/getUsersInTeam", function(req, res) {
+app.post("/f/getUsersInTeam", requireLogin, function(req, res) {
   User.find({
-    teams: req.body.team_id
+    teams: {$elemMatch: {id: req.user.current_team.id }}
   }, function(err, users) {
     if (err) {
       console.error(err);
@@ -308,7 +339,7 @@ app.post("/f/getUsersInTeam", function(req, res) {
     }
   })
 });
-app.post("/f/deleteUser", function(req, res) {
+app.post("/f/deleteUser", requireLogin, function(req, res) {
   User.findOneAndRemove({
     id: req.body.id
   }, function(err) {
@@ -343,25 +374,36 @@ app.post("/f/login", function(req, res) {
     }
   });
 });
-app.post("/f/logout", function(req, res) {
+app.post("/f/logout", requireLogin, function(req, res) {
   req.session.reset();
   res.end("success");
 });
-app.post("/f/createTeam", function(req, res) {
-  Team.create({
-    id: req.body.id,
-    name: req.body.name,
-    number: req.body.number
-  }, function(err, team) {
-    if (err) {
+app.post("/f/createTeam", requireLogin, function(req, res) {
+  Team.find({id: req.body.id}, function(err, teams){
+    if(err){
       console.error(err);
       res.end("fail");
-    } else {
-      res.end("success");
+    }else{
+      if(teams.length == 0){
+        Team.create({
+          id: req.body.id,
+          name: req.body.name,
+          number: req.body.number
+        }, function(err, team) {
+          if (err) {
+            console.error(err);
+            res.end("fail");
+          } else {
+            res.end("success");
+          }
+        });
+      }else{
+        res.end("fail");
+      }
     }
   });
 });
-app.post("/f/joinTeam", function(req, res) {
+app.post("/f/joinTeam", requireLogin, function(req, res) {
   Team.findOne({
     id: req.body.team_id
   }, function(err, team) {
@@ -377,27 +419,65 @@ app.post("/f/joinTeam", function(req, res) {
             console.error(err);
             res.end("fail")
           } else {
-            user.teams.push(req.body.team_id);
-            user.save(function(err) {
-              if (err) {
-                console.error(err);
-                res.end("fail");
-              } else {
-                res.end("success");
+            if(user){
+              if(user.teams.length > 0){
+                User.find({teams: {$elemMatch: {"id": req.body.team_id} } }, function(err, users){
+                  if(err){
+                    console.error(err);
+                    res.end("fail");
+                  }else{
+                    if(users.length > 0){
+                      user.teams.push({id: req.body.team_id, position: "member"});
+                    }else{
+                      user.teams.push({id: req.body.team_id, position: "admin"});
+                    }
+                    user.save(function(err) {
+                      if (err) {
+                        console.error(err);
+                        res.end("fail");
+                      } else {
+                        res.end("success");
+                      }
+                    });
+                  }
+                });
+              }else{
+                User.find({teams: {$elemMatch: {"id": req.body.team_id} } }, function(err, users){
+                  if(err){
+                    console.error(err);
+                    res.end("fail");
+                  }else{
+                    if(users.length > 0){
+                      user.teams.push({id: req.body.team_id, position: "member"});
+                      user.current_team = {id: req.body.team_id, position: "member"};
+                    }else{
+                      user.teams.push({id: req.body.team_id, position: "admin"});
+                      user.current_team = {id: req.body.team_id, position: "admin"};
+                    }
+                    user.save(function(err) {
+                      if (err) {
+                        console.error(err);
+                        res.end("fail");
+                      } else {
+                        res.end("success");
+                      }
+                    });
+                  }
+                });
               }
-            });
+            }
           }
         });
       }
     }
   });
 });
-app.post("/f/createSubdivision", function(req, res) {
+app.post("/f/createSubdivision", requireLogin, function(req, res) {
   Subdivision.create({
     id: Math.floor(Math.random() * (100000000000 - 10000000000)) + 10000000000,
     name: req.body.name,
     type: req.body.type,
-    team: req.body.team_id
+    team: req.user.current_team.id
   }, function(err, subdivision) {
     if (err) {
       console.error(err);
@@ -407,7 +487,7 @@ app.post("/f/createSubdivision", function(req, res) {
     }
   });
 });
-app.post("/f/inviteToSubdivision", function(req, res) {
+app.post("/f/inviteToSubdivision", requireLogin, function(req, res) {
   Subdivision.findOne({
     id: req.body.subdivision_id
   }, function(err, subdivision) {
@@ -426,7 +506,7 @@ app.post("/f/inviteToSubdivision", function(req, res) {
             if (user) {
               user.subdivisions.push({
                 id: req.body.subdivision_id,
-                team: req.body.team_id,
+                team: req.user.current_team.id, //P
                 accepted: false
               });
               user.save(function(err) {
@@ -448,8 +528,8 @@ app.post("/f/inviteToSubdivision", function(req, res) {
     }
   });
 });
-app.post("/f/getPublicSubdivisions", function(req, res) {
-  Subdivision.find({team: req.body.team_id, type: "public"}, function(err, subdivisions) {
+app.post("/f/getPublicSubdivisions", requireLogin, function(req, res) {
+  Subdivision.find({team: req.user.current_team.id, type: "public"}, function(err, subdivisions) {
     if (err) {
       console.error(err);
       res.end("fail")
@@ -458,48 +538,43 @@ app.post("/f/getPublicSubdivisions", function(req, res) {
     }
   })
 });
-app.post("/f/getAllSubdivisionsForUserInTeam", function(req, res) {
+app.post("/f/getAllSubdivisionsForUserInTeam", requireLogin, function(req, res) {
   var userSubdivisionIds = []
   for(var i = 0; i < req.user.subdivisions.length; i++){
-    if(req.user.subdivisions[i].accepted == true){
+    if(req.user.subdivisions[i].accepted == true && req.user.subdivisions[i].team == req.user.current_team.id){
       userSubdivisionIds.push(req.user.subdivisions[i].id);
     }
   }
-  Subdivision.find({id: { "$in": userSubdivisionIds } }, function(err, subdivisions){
+  Subdivision.find({id: { "$in": userSubdivisionIds }, team: req.user.current_team.id }, function(err, subdivisions){
     res.end( JSON.stringify(subdivisions.map(function(subdivision) {return {name: subdivision.name, id: subdivision.id} })) );
   })
 });
 
-app.post("/f/loadSubdivisionInvitations", function(req, res) {
+app.post("/f/loadSubdivisionInvitations", requireLogin, function(req, res) {
   var invitedSubdivisions = [];
   if(req.user.subdivisions.length > 0){
     for (var i = 0; i < req.user.subdivisions.length; i++) {
-      if (req.user.subdivisions[i].accepted == false && req.user.subdivisions[i].team == req.body.team_id){
-        Subdivision.findOne({id: req.user.subdivisions[i].id, team: req.body.team_id}, function(err, subdivision){
-          if(err){
-            console.error(err);
-            res.end("fail");
-          }else{
-            if(subdivision){
-              invitedSubdivisions.push({
-                name: subdivision.name,
-                id: subdivision.id
-              });
-            }
-          }
-        })
-      }
-      if(i == req.user.subdivisions.length - 1){
-        setTimeout(function(){
-          res.end(JSON.stringify(invitedSubdivisions));
-        }, 100) //TODO: FIND A BETTER WAY TO DO THIS
+      if (req.user.subdivisions[i].accepted == false && req.user.subdivisions[i].team == req.user.current_team.id){
+        invitedSubdivisions.push(req.user.subdivisions[i].id);
       }
     }
+    Subdivision.find({id: { "$in": invitedSubdivisions }, team: req.user.current_team.id}, function(err, subdivisions){
+      if(err){
+        console.error(err);
+        res.end("fail");
+      }else{
+        if(subdivisions){
+          res.end(JSON.stringify(subdivisions));
+        }else{
+          res.end("fail");
+        }
+      }
+    })
   }else{
     res.end("[]");
   }
 })
-app.post("/f/acceptSubdivisionInvitation", function(req, res){
+app.post("/f/acceptSubdivisionInvitation", requireLogin, function(req, res){
   User.update({id: req.user.id, 'subdivisions.id': req.body.subdivision_id}, {'$set': {
     'subdivisions.$.accepted': true
   }}, function(err){
@@ -511,6 +586,161 @@ app.post("/f/acceptSubdivisionInvitation", function(req, res){
     }
   });
 });
+app.post("/f/joinPublicSubdivision", requireLogin, function(req, res){
+  User.update({id: req.user.id}, {'$pull': {
+    'subdivisions': {id: req.body.subdivision_id, team: req.user.current_team.id, accepted: false}
+  }}, function(err){
+    if(err){
+      console.error(err);
+      res.end("fail");
+    }else{
+      User.update({id: req.user.id}, {'$push': {
+        'subdivisions': {id: req.body.subdivision_id, team: req.user.current_team.id, accepted: true}
+      }}, function(err){
+        if(err){
+          console.error(err);
+          res.end("fail");
+        }else{
+          res.end("success");
+        }
+      });
+    }
+  });
+})
+app.post("/f/ignoreSubdivisionInvite", requireLogin, function(req, res){
+  User.update({id: req.user.id}, {'$pull': {
+    'subdivisions': {id: req.body.subdivision_id, team: req.user.current_team.id}
+  }}, function(err, model){
+    if(err){
+      console.error(err);
+      res.end("fail");
+    }else{
+      res.end("success");
+    }
+  });
+})
+app.post("/f/leaveSubdivision", requireLogin, function(req, res){
+  User.update({id: req.user.id}, {'$pull': {
+    'subdivisions': {id: req.body.subdivision_id, team: req.user.current_team.id}
+  }}, function(err, model){
+    if(err){
+      console.error(err);
+      res.end("fail");
+    }else{
+      res.end("success");
+    }
+  });
+})
+app.post("/f/deleteSubdivision", requireLogin, function(req, res){
+  User.findOne({id: req.user.id}, function(err, user){
+    if(err){
+      console.error(err);
+      res.end("fail");
+    }else{
+      if(user){
+        if(req.user.current_team.position == "admin"){
+          Subdivision.findOneAndRemove({id: req.body.subdivison_id, team: req.user.current_team.id}, function(err){
+            if(err){
+              console.error(err);
+              res.end("fail");
+            }else{
+              // User.update( {team: req.body.team_id, subdivisions: {$elemMatch: {id: req.body.subdivision_id, team: req.body.team_id}} }, {'$pull': {
+              //   'subdivisions': {id: req.body.subdivision_id, team: req.body.team_id, accepted: true}
+              // }}, function(err, model){
+              //   if(err){
+              //     console.error(err);
+              //     res.end("fail");
+              //   }else{
+              //     console.log(model);
+              //     res.end("success");
+              //   }
+              // });
+
+              User.update( {team: req.user.current_team.id}, {'$pull': { //TODO: FIX THIS, it wont remove subdivision from user
+                'subdivisions': {id: req.body.subdivision_id, team: req.user.current_team.id, accepted: true}
+              }}, function(err, model){
+                if(err){
+                  console.error(err);
+                  res.end("fail");
+                }else{
+                  console.log(model);
+                  res.end("success");
+                }
+              });
+
+            }
+          });
+        }else{
+          transporter.sendMail({
+              from: 'rafezyfarbod@gmail.com',
+              to: 'rafezyfarbod@gmail.com',
+              subject: 'Security Alert!',
+              text: 'The user ' + req.user.firstname + req.user.lastname + ' tried to perform administrator tasks. User ID: ' + req.user.id
+          });
+          res.end("hax");
+        }
+      }
+    }
+  })
+})
+app.post("/f/removeUserFromSubdivision", requireLogin, function(req, res){
+  if(req.user.current_team.position == "admin"){
+    User.update({id: req.body.user_id, teams: { $elemMatch: { "id": req.user.current_team.id } } }, { "$pull": {
+      'subdivisions' : {id: req.body.subdivison_id, team: req.user.current_team.id, accepted: true}
+    }}, function(err, model){
+      if(err){
+        console.error(err);
+        res.end("fail");
+      }else{
+        res.end("success")
+      }
+    });
+  }else{
+    transporter.sendMail({
+        from: 'rafezyfarbod@gmail.com',
+        to: 'rafezyfarbod@gmail.com',
+        subject: 'Security Alert!',
+        text: 'The user ' + req.user.firstname + req.user.lastname + ' tried to perform administrator tasks. User ID: ' + req.user.id
+    });
+    res.end("hax");
+  }
+});
+app.post("/f/changePosition", requireLogin, function(req, res){
+  var positionHA = {
+    "member": 0,
+    "leader": 1,
+    "admin": 2
+  }
+  var current_position;
+  User.findOne({id: req.body.user_id}, function(err, user){
+    if(err){
+      console.error(err);
+      res.end("fail");
+    }else{
+      if(user){
+        current_position = findTeamInUser(user, req.user.current_team.id).position;
+        if( positionHA[req.user.current_team.position] >= positionHA[req.body.target_position] && positionHA[req.user.current_team.position] >= positionHA[current_position] ){
+          User.update({id: req.body.user_id, 'teams.id': req.user.current_team.id}, {'$set': {
+            'teams.$.position': req.body.target_position, //P (find out what .$. means and if it means selected "teams" element then keep it like this)
+            'current_team.position': req.body.target_position //P (make sure in the future current_team.position is checked with "teams" array of the document when user is logging in as opposed to doing this)
+          }}, function(err){
+            if(err){
+              console.error(err);
+              res.end("fail");
+            }else{
+              res.end("success");
+            }
+          });
+        }else{
+          res.end("fail");
+        }
+      }else{
+        res.end("fail");
+      }
+    }
+  })
+});
+
 
 var port = process.argv[2] || 8080;
 app.listen(port);

@@ -84,6 +84,7 @@ $(document).ready(function(){
         removeFromStorage("phone");
         removeFromStorage("teams");
         removeFromStorage("c_team");
+        removeFromStorage("c_team_position");
         location="login";
       }
     });
@@ -109,5 +110,8 @@ $(document).ready(function(){
         }, 200);
     }
   });
+  $(document).on("click", ".user-link", function(){
+    location="/u/"+$(this).attr("data-userid");
+  })
 
 });

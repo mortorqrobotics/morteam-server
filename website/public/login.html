@@ -45,7 +45,10 @@
           localStorage.email = user.email;
           localStorage.teams = JSON.stringify(user.teams);
           if(user.teams && user.teams.length > 0){
-            localStorage.c_team = user.teams[0];
+            if(user.current_team){
+              localStorage.c_team = user.current_team.id;
+              localStorage.c_team_position = user.current_team.position;
+            }
           }
           location="/";
         }else if(responseText == "inc/password"){

@@ -1246,6 +1246,17 @@ html { overflow-x: hidden; }
 	box-shadow: 1.5px 3px 8px -2px #a9a9a9;
 	border-radius: 1px;
 }
+.done_button{
+	width: 91.5%;
+	height: 37px;
+	background-color: #ffc547;
+	border: none;
+	color: black;
+	position: absolute;
+	bottom: 15px;
+	box-shadow: 1.5px 3px 8px -2px #a9a9a9;
+	border-radius: 1px;
+}
 .save_options, .delete_group, .leave_group, .submit_task, .modal_button{
 	width: 100%;
 	height: 37px;
@@ -1296,7 +1307,27 @@ html { overflow-x: hidden; }
 	box-shadow: 1.5px 3px 8px -2px #a9a9a9;
 	border-radius: 1px;
 }
+.members_search{
+	width: 100%;
+	margin-top: 10px;
+	border: none;
+	padding: 8px 4px 8px 4px;
+	font-size: 15px;
+	margin-bottom: 15px;
+	box-shadow: 1.5px 3px 8px -2px #a9a9a9;
+	border-radius: 1px;
+}
 #group_name, .folder_name, .event_name, .scope_name, .change_name, .task_name, .modal_textbox{
+	width: 100%;
+	margin-top: 5px;
+	border: none;
+	padding: 8px 4px 8px 4px;
+	font-size: 15px;
+	margin-bottom: 10px;
+	box-shadow: 1.5px 3px 8px -2px #a9a9a9;
+	border-radius: 1px;
+}
+.name_input{
 	width: 100%;
 	margin-top: 5px;
 	border: none;
@@ -1313,6 +1344,21 @@ html { overflow-x: hidden; }
 	padding: 2px 3px 2px 3px;
 	box-shadow: 1.5px 2px 8px -2px #a9a9a9;
 	border-radius: 1px;
+}
+.potential_member{
+	margin: 2px 4px 2px 4px;
+	background-color: #ffd16e;
+	display: inline-block;
+	padding: 2px 3px 2px 3px;
+	box-shadow: 1.5px 2px 8px -2px #a9a9a9;
+	border-radius: 1px;
+	cursor: pointer;
+}
+.potential_member:hover{
+	background-color: orange;
+}
+.potential_member.clicked{
+	background-color: #53CF29;
 }
 #selected_names_div, #selected_folder_members, #selected_event_members, #selected_scope_members, #selected_present_members, #selected_audience_member{
 	height: 130px;
@@ -1339,6 +1385,27 @@ html { overflow-x: hidden; }
 .selected_group_name.clicked, .selected_folder_member.clicked, .isPresent, .selected_event_member.clicked, .selected_scope_member.clicked, .selected_present_member.clicked, .selected_audience_member.clicked{
 	background-color: #53CF29;
 }
+
+.potential_members{
+	height: 130px;
+	overflow-y: auto;
+}
+.potential_members.tall{
+	height: 230px;
+}
+.potential_members::-webkit-scrollbar{
+	-webkit-appearance: none;
+}
+.potential_members::-webkit-scrollbar:vertical{
+	width: 11px;
+}
+.potential_members::-webkit-scrollbar-thumb{
+	border-radius: 8px;
+	border: 2px solid #e9e9e9; /* should match background, can't be transparent */
+	background-color: rgba(0, 0, 0, .3);
+}
+
+
 .isPresent:hover{
 	background-color: #53CF29;
 }
@@ -1440,6 +1507,10 @@ html { overflow-x: hidden; }
 	width: 100%;
 	padding: 5px;
 	text-align: center;
+}
+.change_position.disabled:hover{
+	background-color: #ffb524;
+	cursor: default;
 }
 .dropdown-menu{
 	min-width: 80px !important;
@@ -1818,19 +1889,31 @@ li.drop_item:hover{
 .general_info, .scope_members{
 	text-align: center;
 }
-.scope_join_btn{
+.subdivision_join_btn{
 	font-size: 28px;
 	width: 300px;
 	margin-top: 70px;
 }
-.scope_join_btn:disabled{
+.subdivision_leave_btn, .subdivision_delete_btn{
+	font-size: 28px;
+	width: 300px;
+	margin-top: 70px;
+	background-color: #C71111;
+	color: white;
+}
+.subdivision_leave_btn:hover, .subdivision_delete_btn:hover{
+	background-color: #D91212;
+}
+
+
+/*.scope_join_btn:disabled{
 	background-color: orange;
 	cursor: default;
 }
 .scope_join_btn:disabled:hover{
 	background-color: orange;
 	cursor: default;
-}
+}*/
 .general_info h1{
 	padding-top: 50px;
 	margin-top: 0px;
@@ -1846,19 +1929,46 @@ li.drop_item:hover{
 	margin-top: 20px;
 	padding-bottom: 50px;
 }
-.scope_members > ul > li{
+.scope_members > ul > li:not(.user_remove_btn){
 	font-size: 20px;
 	line-height: 50px;
-	background-color: #d9d9d9;
+	/*background-color: #d9d9d9;*/
 	border-bottom: 1px solid #999999;
-	max-width: 300px;
+	width: 250px;
 	margin: auto;
 	list-style: none;
 	cursor: pointer;
+	display: inline-block;
+}.scope_members > ul > li.full-width{
+	font-size: 20px;
+	line-height: 50px;
+	/*background-color: #d9d9d9;*/
+	border-bottom: 1px solid #999999;
+	width: 300px !important;
+	margin: auto;
+	list-style: none;
+	cursor: pointer;
+	display: inline-block;
+}
+.scope_members > ul > li.user_remove_btn{
+	font-size: 20px;
+	line-height: 50px;
+	background-color: #C71111;
+	border-bottom: 1px solid #D91212;
+	width: 50px;
+	margin: auto;
+	list-style: none;
+	cursor: pointer;
+	display: inline-block;
+	color: white !important;
 }
 .scope_members > ul > li:hover{
-	background-color: #ffc547;
+	background-color: #d9d9d9;
 }
+.scope_members > ul > li.user_remove_btn:hover{
+	background-color: #D91212;
+}
+
 .scope_members > ul{
 	margin: auto;
 }
@@ -1891,7 +2001,7 @@ li.drop_item:hover{
 	width: 200px;
 	margin: auto;
 }
-.scope_type{
+.subdivision_type{
 	display: inline-block;
 	margin-top: 5px;
 	padding: 0 4px 0 4px;
@@ -1899,7 +2009,7 @@ li.drop_item:hover{
 	background-color: #ffcc80;
 	cursor: pointer;
 }
-.scope_help{
+.subdivision_help{
 	color: #555555;
 	cursor: pointer;
 }
@@ -1917,7 +2027,7 @@ li.drop_item:hover{
 	margin-bottom: 7px;
 	box-shadow: 0 2px 8px -5px black;
 }
-.team_code_btn, .create_team_btn, .create_team_btn_done{
+.team_join_btn, .team_create_btn, .show_join, .show_create{
 	width: 100%;
 	max-width: 270px;
 	height: 40px;
@@ -1974,12 +2084,12 @@ li.drop_item:hover{
 	}
 }
 
-.team_num{
+/*.team_num{
 	display: none;
-}
-.team_code, .team_name, .create_team_btn_done{
+}*/
+/*.team_code, .team_name, .create_team_btn_done{
 	display: none;
-}
+}*/
 .data_title{
 	margin: 5px 10px 5px 10px;
 	font-size: 26px;
@@ -2243,6 +2353,14 @@ li.drop_item:hover{
 }
 .devteam_member > span> p{
 	width: 80%; max-width: 350px; margin: 0 auto;
+}
+.subdivision_member, .subdivision_member_add{
+	padding-left: 20px;
+	text-align: left;
+}
+.subdivision_member_add{
+	border-top: 1px solid #999999;
+	width: 303px !important;
 }
 
 

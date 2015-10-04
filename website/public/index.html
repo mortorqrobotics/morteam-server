@@ -32,33 +32,6 @@
 </head>
 
 <body>
-  <!-- <a href="/">home</a> | <a href="users">users</a> | <a href="subdivisions">subdivisions</a>
-
-  <span id="logged-in-info" class="hidden">
-    <a href="#" class="logout-btn">Log Out</a>
-    <span class="user-display">Logged in as: <span id="username-display"></span></span>
-  </span>
-  <span id="logged-out-info" class="hidden">
-    <a href="login">login</a>
-  </span>
-
-  <h2>This is the Home page</h2>
-  <p>
-    This is the beginning of something great. Ghost spam is free of politics.
-  </p>
-  <hr>
-  <h2>Invited subdivisions</h2>
-  <ul id="invited-subdivisions">
-  </ul>
-  <hr>
-  <h2>Your subdivisions</h2>
-  <ul id="your-subdivisions">
-  </ul>
-  <hr>
-  <h2>List of public subdivisions</h2>
-  <ul id="subdivisions-list">
-  </ul> -->
-
   <div id="audio-files" style="display: none;">
     <audio id="click-sound">
         <source src="jbox/audio/bling2.wav" type="audio/wav" />
@@ -162,7 +135,7 @@
             <h5 style="margin-bottom: 15px;">Subdivision Invites</h5>
         </div>
         <hr>
-        <p class="new_pu_scope"><span class="glyphicon glyphicon-plus"></span> Make a Subdivision</p>
+        <p class="new_subdivision"><span class="glyphicon glyphicon-plus"></span> Make a Subdivision</p>
         <hr>
         <p id="aboutus_link">About Us</p>
         <span>© 2015 MorTeam</span>
@@ -203,8 +176,69 @@
 
 
   <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+  <script src="jbox/jBox.min.js"></script>
+  <script type="text/javascript" src="js/socket.io.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.isotope/2.2.1/isotope.pkgd.min.js"></script>
+  <script type="text/javascript" src="js/velocity.min.js"></script>
+  <script type="text/javascript" src="js/autosize.js"></script>
   <script type="text/javascript" src="js/main.js"></script>
+  <script type="text/javascript">
+      autosize(document.querySelectorAll('textarea'));
+  </script>
+
   <script>
+  function newSubdivisionModal(title, instructions){
+    var new_modal = new jBox('Modal', {
+      width: 350,
+      height: 373,
+      title: title
+    });
+    $.post("/f/getUsersInTeam", function(responseText){
+      var span = document.createElement("span");
+      var subdivision_name = '<input type="text" class="name_input" id="subdivision_name" placeholder="Subdivision Name">';
+      var public_option = '<p class="subdivision_type public selected">Public</p>';
+      var private_option = '<p class="subdivision_type private">Private</p>';
+      var help = '<span class="glyphicon glyphicon-question-sign subdivision_help" title="A public subdivision can be seen and<br/> joined by anyone in the team, but joining<br/> a private subdivision requires an invitation."></span>';
+      var user_search = '<input type="text" placeholder="Search Names..." class="members_search" id="subdivision_members_search">';
+      var potential_members = document.createElement("div");
+      $(potential_members).attr("id", "potential_subdivision_members");
+      $(potential_members).addClass("potential_members");
+      var create_btn = '<input type="button" id="make_subdivision_btn" class="button done_button" value="Make Subdivision">'
+      var users = JSON.parse(responseText);
+      for(var i = 0; i < users.length; i++){
+        var user = document.createElement("p");
+        $(user).addClass("potential_member");
+        $(user).attr("data-userid", users[i].id);
+        $(user).html(users[i].firstname + " " + users[i].lastname);
+        $(potential_members).append(user);
+      }
+      $(span).append($(subdivision_name));
+      $(span).append("<br/>");
+      $(span).append($(public_option));
+      $(span).append($(private_option));
+      $(span).append($(help));
+      $(span).append("<br/>");
+      $(span).append(instructions);
+      $(span).append("<br/>");
+      $(span).append($(user_search));
+      $(span).append("<br/>");
+      $(span).append($(potential_members));
+      $(span).append("<br/>");
+      $(span).append($(create_btn));
+      new_modal.setContent( $(span) );
+      $('.subdivision_help').jBox('Tooltip', {
+          delayOpen: 0,
+          delayClose: 300,
+          theme: "TooltipDark",
+          position: {
+              y: 'bottom'
+          }
+      });
+      new_modal.open();
+    })
+    return new_modal;
+  }
   $(document).ready(function(){
     $.post("/f/getAllSubdivisionsForUserInTeam", function(responseText){
       var subdivisions = JSON.parse(responseText);
@@ -224,15 +258,10 @@
         $("#your_subdivisions").append( "none" );
       }
     });
-    $.post("/f/getPublicSubdivisions", {team_id: localStorage.c_team}, function(responseText){
+    $.post("/f/getPublicSubdivisions", function(responseText){
       var subdivisions = JSON.parse(responseText);
       if(subdivisions.length != 0){
         for(var i = 0 ; i < subdivisions.length; i++){
-          // var li = document.createElement("li");
-          // li.innerHTML = subdivisions[i].name;
-          // $(li).attr("data-subdivisionid", subdivisions[i].id);
-          // $(li).addClass("subdivision-link");
-          // $("#subdivisions-list").append(li);
           var p = document.createElement("p");
           $(p).addClass("subdivision-link");
           $(p).attr("data-subdivisionid", subdivisions[i].id);
@@ -248,22 +277,17 @@
         $("#public_subdivisions").append( "none" );
       }
     });
-    $.post("/f/loadSubdivisionInvitations", {team_id: localStorage.c_team}, function(responseText){
+    $.post("/f/loadSubdivisionInvitations", function(responseText){
       var invites = JSON.parse(responseText);
       if(invites.length != 0){
         for (var i = 0; i < invites.length; i++){
-          // var li = document.createElement("li");
-          // li.innerHTML = invites[i].name;
-          // li.innerHTML += "<input type='button' value='accept' class='accept-invite' />"
-          // $(li).attr("data-subdivisionid", invites[i].id);
-          // $("#invited-subdivisions").append( $(li) );
-
           var p = document.createElement("p");
           $(p).addClass("subdivision-invite");
           $(p).attr("data-subdivisionid", invites[i].id);
           var glyphSpan = "<span class='glyphicon glyphicon-screenshot'></span>"
           var nameSpan = document.createElement("span");
           $(nameSpan).html(" " + invites[i].name);
+          $(nameSpan).addClass("nameSpan");
           $(p).append(glyphSpan);
           $(p).append(nameSpan);
           $("#invited_subdivisions").append( $(p) );
@@ -283,9 +307,107 @@
         }
       })
     });
+    var subdivision_invite_modal = new jBox('Modal', {
+      width: 'auto',
+      height: 'auto',
+      title: 'Subdivison Invitation',
+    });
+
     $(document).on("click", ".subdivision-link", function(){
       location = "/s/" + $(this).attr("data-subdivisionid");
     });
+    $(document).on("click", ".subdivision-invite", function(){
+      subdivision_invite_modal.setContent('<span><span class="inviter"></span> You have been invited to the subdivison: <span class="invited_scope_name">'+$(this).find(".nameSpan").html()+'</span></span><br/><div style="text-align: center"><input type="button" class="button invite_btn accept_invite_btn" data-subdivisionid="'+$(this).attr("data-subdivisionid")+'" value="Accept"></input><input type="button" class="button invite_btn ignore_invite_btn" data-subdivisionid="'+$(this).attr("data-subdivisionid")+'" value="Hide"></input></div>')
+      subdivision_invite_modal.open();
+    });
+    $(document).on("click", ".accept_invite_btn", function(){
+      var $this = $(this);
+      $.post("/f/acceptSubdivisionInvitation", {subdivision_id: $(this).attr("data-subdivisionid")}, function(responseText){
+        if(responseText=="success"){
+          subdivision_invite_modal.close();
+          var acceptedSubdivision = $("#invited_subdivisions p[data-subdivisionid='"+ $this.attr("data-subdivisionid") +"']").clone();
+          acceptedSubdivision.removeClass("subdivision-invite");
+          acceptedSubdivision.addClass("subdivision-link");
+          if( $("#your_subdivisions")[0].innerHTML.indexOf("none") > -1 ){
+            $("#your_subdivisions").empty();
+            $("#your_subdivisions").append('<h5 style="margin-bottom: 15px;">Your Subdivisions</h5>');
+          }
+          $("#your_subdivisions").append(acceptedSubdivision);
+          $("#invited_subdivisions p[data-subdivisionid='"+ $this.attr("data-subdivisionid") +"']").remove();
+        }else{
+          alert("fail");
+        }
+      });
+    });
+    $(document).on("click", ".ignore_invite_btn", function(){
+      var $this = $(this);
+      $.post("/f/ignoreSubdivisionInvite", {subdivision_id: $(this).attr("data-subdivisionid")}, function(responseText){
+        if(responseText=="success"){
+          subdivision_invite_modal.close();
+          $("#invited_subdivisions p[data-subdivisionid='"+ $this.attr("data-subdivisionid") +"']").remove();
+        }else{
+          alert("fail");
+        }
+      });
+    });
+
+
+    //general modal stuff
+    $(document).on("click", ".potential_member", function(){
+      if($(this).hasClass("clicked")){
+        $(this).removeClass("clicked");
+      }else{
+        $(this).addClass("clicked");
+      }
+    });
+    $(document).on("keyup", '.members_search', function() {
+      var val = $.trim($(this).val()).replace(/ +/g, ' ').toLowerCase();
+      $('.potential_members p').show().filter(function() {
+          var text = $(this).text().replace(/\s+/g, ' ').toLowerCase();
+          console.log(!~text.indexOf(val));
+          return !~text.indexOf(val);
+      }).hide();
+    });
+
+    //new subdivison modal
+    $(document).on("click", ".new_subdivision", function(){
+      new_subdivision_modal = newSubdivisionModal("New Subdivison", "Please select some initial members");
+    })
+    $(document).on("click", ".subdivision_type", function(){
+      $(".subdivision_type").removeClass("selected");
+      $(this).addClass("selected");
+    });
+    $(document).on("click", '#make_subdivision_btn', function() {
+      var type;
+      if ($(".public").hasClass("selected")){
+        type = "public";
+      }else{
+        type = "private";
+      }
+      var p_selected_users = $("p.clicked");
+      var selectedUsers = [];
+      for (var i = 0; i < p_selected_users.length; i++) {
+        selectedUsers.push($(p_selected_users[i]).attr("data-userid"));
+      }
+      $.post("/f/createSubdivision", {name: $("#subdivision_name").val(), type: type}, function(responseText){
+        if(responseText != "fail"){
+          for(var i=0; i<selectedUsers.length; i++){
+            $.post("/f/inviteToSubdivision", {user_id: selectedUsers[i], subdivision_id: responseText}, function(responseText){
+              if(responseText == "success"){
+                //
+              }else{
+                alert("fail");
+              }
+            });
+          }
+          new_subdivision_modal.close();
+          location="/";
+        }else{
+          alert("failed to create");
+        }
+      });
+    });
+
 
   });
   </script>

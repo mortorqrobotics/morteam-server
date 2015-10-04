@@ -15,10 +15,16 @@ var userSchema = new Schema({
   updated_at:   Date,
   profpicpath:  String,
   teams:        Array,
-  subdivisions: Array
+  subdivisions: Array,
+  current_team: {
+    id: String,
+    position: String
+  }
 });
 
 userSchema.pre('save', function(next){
+  if (this.isModified('current_team')) return next();
+
   now = new Date();
   this.updated_at = now;
   if ( !this.created_at ) {

@@ -1,42 +1,235 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
-<head>
-  <meta charset="utf-8">
-  <title>Home</title>
-  <link rel="stylesheet" type="text/css" href="../css/index.css">
-</head>
+  <head>
+  	<meta charset="utf-8" />
+  	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+  	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>MorTeam</title>
+  	<link href='http://fonts.googleapis.com/css?family=Open+Sans:700,300,400' rel='stylesheet' type='text/css'>
+  	<link href='http://fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'>
+  	<link href='http://fonts.googleapis.com/css?family=Exo+2:400,300,200' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Titillium+Web' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
+    <link rel="stylesheet" href="../css/index.css" type="text/css">
+    <link href="../jbox/jBox.css" rel="stylesheet">
+    <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
 
-<body>
-  <a href="/">home</a> | <a href="../users">users</a> | <a href="../subdivisions">subdivisions</a>
+  </head>
+  <body>
+      <div id="audio-files" style="display: none;">
+          <audio id="click-sound">
+              <source src="../jbox/audio/bling2.wav" type="audio/wav" />
+          </audio>
+      </div>
+    <!-- NAVIGATION BAR -->
+    <div class="nav_dropdown">
+      <p onclick="location='../index'">Home</p>
+      <p onclick="location='../chat'">Chat</p>
+      <p onclick="location='../drive'">Drive</p>
+      <p onclick="location='../cal'">Calendar</p>
+      <p onclick="location='../networks'">Networks</p>
+    </div>
+    <div class="navigation_bar">
+        <ul id="navbar_list">
+          <li class="navbar_item navbar_title" onclick="location='../index'">
+              MorTeam
+          </li>
+          <li class="navbar_item searchbox_list_item">
+              <input type="text" placeholder="search" class="searchbox"></input>
+              <div class="search_drop">
+                <ul class="search_drop_items">
+                  <!-- <li>
+                    under<br/>
+                    construction
+                  </li>
+                  <li>
+                    under<br/>
+                    construction
+                  </li>
+                  <li>
+                    under<br/>
+                    construction
+                  </li>
+                  <li>
+                    under<br/>
+                    construction
+                  </li> -->
+                </ul>
+              </div>
+          </li>
+          <li class="navbar_item glyph_link chat_btn menu_btn" onclick="location='../chat'">
+              <span class="glyphicon glyphicon-comment"></span>
+          </li>
+          <li class="navbar_item glyph_link drive_btn menu_btn" onclick="location='../drive'">
+              <span class="glyphicon glyphicon-hdd"></span>
+          </li>
+          <li class="navbar_item glyph_link cal_btn menu_btn" onclick="location='../cal'">
+              <span class="glyphicon glyphicon-calendar"></span>
+          </li>
+          <li class="navbar_item glyph_link networks_btn menu_btn" onclick="location='../networks'">
+              <span class="glyphicon glyphicon-globe"></span>
+          </li>
+          <div class="navbar_item right_links">
+            <li class="navbar_item glyph_link menu">
+                <span class="glyphicon glyphicon-menu-hamburger"></span>
+            </li>
+            <li class="navbar_item glyph_link" id="notif_button">
+                <span class="glyphicon glyphicon-inbox"></span>
+            </li>
+            <img class="profile_id" id="small_prof_pic" src="../images/user.jpg"></img>
+            <span class="profile_name" id="name_link"></span>
+          </div>
+        </ul>
+    </div>
+    <div id="notif_drop" class="hidden">
+      <ul>
+        <li class="notif_list_item">hey</li>
+        <li class="notif_list_item">hi</li>
+        <li class="notif_list_item">ho</li>
+      </ul>
+    </div>
+    <div id="prof_drop" class="hidden">
+      <ul>
+        <li class="notif_list_item" id="view_prof_button_ejs">View Profile and Settings</li>
+        <li class="notif_list_item" id="logout_button">Log Out</li>
+      </ul>
+    </div>
+    <div id="darken" class="hidden"></div>
+    <!-- END OF NAVIGATION BAR -->
 
-  <span id="logged-in-info" class="hidden">
-    <a href="#" class="logout-btn">Log Out</a>
-    <span class="user-display">Logged in as: <span id="username-display"></span></span>
-  </span>
-  <span id="logged-out-info" class="hidden">
-    <a href="../login">login</a>
-  </span>
+    <!-- BODY -->
+    <div class="wrapper container-fluid"> <!-- class="profother_wrapper" also -->
+      <!-- <div class="user_actions">
+        <div class="user_action_btns">
+          <input type="button" value="Message" class="message_user user_action button"></input>
+          <input type="button" value="Assign Task" class="assign_task_user user_action button"></input>
+          <input type="button" value="Change Position" class="change_position_user user_action button"></input>
+          <input type="button" value="View Attendance" class="view_attendance_user user_action button"></input>
+        </div>
+      </div> -->
+      <div class="row">
+        <div class="col-md-6">
+          <div class="attendance_data">
+            <span class="data_title bold">Attendance</span><br/>
+            <span class="data_point">Number of absences:</span><span class="data_answer">1</span><br/>
+            <span class="data_point">Presence percentage:</span><span class="data_answer">89%</span><br/>
+            <hr class="hr_small_margin">
+            <span class="data_point">Dates of absences:</span><br/>
+            <div class="absences_list_scroll">
+              <ul class="data_list absences_list">
 
-  <br/><br/><h1><%= firstname %> <%= lastname %></h1>
-  <p>username: <%= username %></p>
-  <p>email: <%= email %></p>
-  <p>phone: <%= phone %></p>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="tasks_data">
+            <span class="data_title bold">Pending Tasks</span>
+            <ul class="task_list">
+              <li class="data_point">Cut part</li>
+              <li class="data_point">Send form to SC</li>
+              <li class="data_point">Clean out vacuum cleaner</li>
+            </ul>
+            <hr class="hr_small_margin">
+            <span class="data_title bold">Completed Tasks</span>
+            <ul class="task_list">
+              <li class="data_point">Screw in talons</li>
+              <li class="data_point">Buy wood for tests</li>
+              <li class="data_point">Destroy Gabe</li>
+              <li class="data_point">Cut part</li>
+              <li class="data_point">Send form to SC</li>
+              <li class="data_point">Clean out vacuum cleaner</li>
+              <li class="data_point">Cut part</li>
+              <li class="data_point">Send form to SC</li>
+              <li class="data_point">Clean out vacuum cleaner</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- END OF BODY -->
 
+    <!-- LEFTBAR -->
+    <div class="leftbar">
+      <img class="profile_pic" src="../images/user.jpg"></img>
+      <div class="leftbar_item" id="leftbar_name"><%= firstname %> <%= lastname %></div>
+      <!-- <div class="leftbar_item" id="leftbar_title">Vice President of Programming</div> -->
+      <div class="leftbar_item"><span id="leftbar_email"><%= email %></span></div>
+      <div class="leftbar_item"><span id="leftbar_phone"><%= phone %></span></div>
+      <div class="others_only">
+        <div class="leftbar_item"><input id="message_user" type="button" class="button leader_action" value="Message"></input></div>
+        <div class="leftbar_item"><input id="assign_task" type="button" class="button leader_action" value="Assign Task"></input></div>
+      </div>
+      <!-- <div class="leftbar_item"><input id="change_position" type="button" class="button leader_action" value="Change Position"></input></div> -->
+      <div class="change_position_div">
+        <div data-userid="<%= id %>" class=" change_position_dropdown_btn btn-group">
+            <button class="button dropdown-toggle change_position" data-toggle="dropdown"><span class="position_selection"><%= viewedUserPosition.capitalize() %></span>
+                <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu position_drop">
+                <% if(viewerUserPosition == "admin"){ %>
+                  <li id="position_member" class="position_item">Member</li>
+                  <li id="position_leader" class="position_item">Leader</li>
+                  <li id="position_admin" class="position_item">Admin</li>
+                <% } else if(viewerUserPosition == "leader"){ %>
+                  <% if(viewedUserPosition == "admin"){ %>
+                    <script type="text/javascript">$(".caret").hide(); $(".change_position").addClass("disabled");</script>
+                  <% }else{ %>
+                    <li id="position_member" class="position_item">Member</li>
+                    <li id="position_leader" class="position_item">Leader</li>
+                  <% } %>
+                <% } else if(viewerUserPosition == "member"){ %>
+                  <script type="text/javascript">$(".caret").hide(); $(".change_position").addClass("disabled");</script>
+                <% } %>
+                <% if(viewedUserPosition == "member"){ %>
+                  <script type="text/javascript">$(".position_item:contains('Member')").addClass("selected")</script>
+                <% }else if(viewedUserPosition == "leader") { %>
+                  <script type="text/javascript">$(".position_item:contains('Leader')").addClass("selected")</script>
+                <% }else if(viewedUserPosition == "admin") { %>
+                  <script type="text/javascript">$(".position_item:contains('Admin')").addClass("selected")</script>
+                <% } %>
 
-  <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
-  <script type="text/javascript" src="../js/main.js"></script>
-  <script>
-  $(document).ready(function(){
-    $("#logout-btn").click(function(){
-      $.post("/f/logout", function(responseText){
-        if(responseText == "success"){
-          location="login";
+            </ul>
+        </div>
+      </div>
+    </div>
+    <!-- END OF LEFTBAR -->
+
+    <% String.prototype.capitalize = function() { %>
+      <% return this.charAt(0).toUpperCase() + this.slice(1); %>
+    <% } %>
+    <script src="../jbox/jBox.min.js"></script>
+    <script type="text/javascript" src="../js/socket.io.js"></script>
+    <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../js/velocity.min.js"></script>
+    <script type="text/javascript" src="../js/main.js"></script>
+    <script>
+      function findTeamInTeamArray(teams, teamId){
+        for(var team in teams){
+          if(team.id == teamId){
+            return team;
+          }
         }
+      }
+      $(document).ready(function(){
+        $(document).on("click", ".position_item", function(){
+          if (window.confirm("Are you sure?")) {
+            var $this = $(this);
+            $.post("/f/changePosition", {user_id: $this.parent().parent().attr("data-userid"), target_position: $this.text().toLowerCase()}, function(responseText){
+              if(responseText == "success"){
+                $(".position_item").removeClass("selected");
+                $this.addClass("selected");
+                $this.parent().prev().html($this.text() + '<span class="caret"></span>');
+              }else{
+                alert(responseText);
+              }
+            });
+          }
+        });
       });
-    });
-  });
-  </script>
-</body>
-
+    </script>
+  </body>
 </html>
