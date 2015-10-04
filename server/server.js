@@ -12,10 +12,11 @@ publicDir = require("path").join(__dirname, "../website/public");
 var User = require('./schemas/User.js');
 var Team = require('./schemas/Team.js');
 var Subdivision = require('./schemas/Subdivision.js');
+var Announcement = require('./schemas/Announcement.js');
 
 app = express();
 
-mongoose.connect('mongodb://localhost:27017/morteam2');
+mongoose.connect('mongodb://localhost:27017/morteam3');
 
 var transporter = nodemailer.createTransport();
 
@@ -639,7 +640,7 @@ app.post("/f/deleteSubdivision", requireLogin, function(req, res){
     }else{
       if(user){
         if(req.user.current_team.position == "admin"){
-          Subdivision.findOneAndRemove({id: req.body.subdivison_id, team: req.user.current_team.id}, function(err){
+          Subdivision.findOneAndRemove({id: req.body.subdivision_id, team: req.user.current_team.id}, function(err){
             if(err){
               console.error(err);
               res.end("fail");
@@ -686,7 +687,7 @@ app.post("/f/deleteSubdivision", requireLogin, function(req, res){
 app.post("/f/removeUserFromSubdivision", requireLogin, function(req, res){
   if(req.user.current_team.position == "admin"){
     User.update({id: req.body.user_id, teams: { $elemMatch: { "id": req.user.current_team.id } } }, { "$pull": {
-      'subdivisions' : {id: req.body.subdivison_id, team: req.user.current_team.id, accepted: true}
+      'subdivisions' : {id: req.body.subdivision_id, team: req.user.current_team.id, accepted: true}
     }}, function(err, model){
       if(err){
         console.error(err);
@@ -740,7 +741,118 @@ app.post("/f/changePosition", requireLogin, function(req, res){
     }
   })
 });
+app.post("/f/postAnnouncement", requireLogin, function(req, res){
+  if(typeof(req.body.audience) == "object"){
+    Announcement.create({
+      id: Math.floor(Math.random() * (100000000000 - 10000000000)) + 10000000000,
+      author: req.user.id,
+      author_fn: req.user.firstname,
+      author_ln: req.user.lastname,
+      content: req.body.content,
+      team: req.user.current_team.id,
+      timestamp: new Date(),
+      subdivisionAudience: req.body.audience.subdivisionMembers,
+      userAudience: req.body.audience.userMembers
+    }, function(err, announcement){
+      if(err){
+        console.error(err);
+        res.end("fail");
+      }else{
+        res.end("success");
+      }
+    });
+  }else{
+    if(req.body.audience == "everyone"){
+      Announcement.create({
+        id: Math.floor(Math.random() * (100000000000 - 10000000000)) + 10000000000,
+        author: req.user.id,
+        author_fn: req.user.firstname,
+        author_ln: req.user.lastname,
+        content: req.body.content,
+        team: req.user.current_team.id,
+        timestamp: new Date(),
+        entireTeam: true
+      }, function(err, announcement){
+        if(err){
+          console.error(err);
+          res.end("fail");
+        }else{
+          res.end("success");
+        }
+      });
+    }else{
+      //with subdivision id
+      Announcement.create({
+        id: Math.floor(Math.random() * (100000000000 - 10000000000)) + 10000000000,
+        author: req.user.id,
+        author_fn: req.user.firstname,
+        author_ln: req.user.lastname,
+        content: req.body.content,
+        team: req.user.current_team.id,
+        timestamp: new Date(),
+        subdivisionAudience: [ req.body.audience ]
+      }, function(err, announcement){
+        if(err){
+          console.error(err);
+          res.end("fail");
+        }else{
+          res.end("success");
+        }
+      });
 
+    }
+  }
+});
+app.post("/f/getAnnouncementsForUser", requireLogin, function(req, res) {
+  var finalAnnouncements = [];
+  var userSubdivisionIds = req.user.subdivisions.map(function(subdivision) {return subdivision.id;});
+  Announcement.find({
+    team: req.user.current_team.id,
+    $or: [
+      {
+        entireTeam: true
+      },
+      {
+        userAudience: req.user.id
+      },
+      {
+        subdivisionAudience: {
+          "$in": userSubdivisionIds
+        }
+      }
+    ]
+  },
+  {
+    id: 1,
+    author: 1,
+    author_fn: 1,
+    author_ln: 1,
+    content: 1,
+    timestamp: 1
+  }).sort('-timestamp').limit(20).exec(function(err, announcements){
+    if(err){
+      console.error(err);
+      res.end("fail");
+    }else{
+      res.end(JSON.stringify(announcements));
+    }
+  })
+  // {
+  //   skip: 0, // Starting Row
+  //   limit: 10, // Ending Row
+  //   sort: {
+  //     date_added: -1 //Sort by Date Added DESC
+  //   }
+  // },
+  // function(err, announcements) {
+  //   if(err){
+  //     console.error(err);
+  //     res.end("fail");
+  //   }else{
+  //     res.end(JSON.stringify(announcements));
+  //   }
+  // })
+})
 
 var port = process.argv[2] || 8080;
 app.listen(port);

@@ -886,7 +886,7 @@ html { overflow-x: hidden; }
 .announcement_poster{
 	font-size: 20px;
 	margin-left: 8px;
-
+	cursor: pointer;
 }
 .announcement_top{
 	margin-bottom: -15px;
@@ -1354,10 +1354,19 @@ html { overflow-x: hidden; }
 	border-radius: 1px;
 	cursor: pointer;
 }
-.potential_member:hover{
+.potential_subdivision{
+	margin: 2px 4px 2px 4px;
+	background-color: #FFBC59;
+	display: inline-block;
+	padding: 2px 3px 2px 3px;
+	box-shadow: 1.5px 2px 8px -2px #a9a9a9;
+	border-radius: 1px;
+	cursor: pointer;
+}
+.potential_member:hover, .potential_subdivision:hover{
 	background-color: orange;
 }
-.potential_member.clicked{
+.potential_member.clicked, .potential_subdivision.clicked{
 	background-color: #53CF29;
 }
 #selected_names_div, #selected_folder_members, #selected_event_members, #selected_scope_members, #selected_present_members, #selected_audience_member{

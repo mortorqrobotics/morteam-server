@@ -119,7 +119,7 @@
   <div class="announcements_container" style="margin-top: 60px;">
 
       <div class="announcements_left">
-        <p onclick="location='profile'">View Profile</p>
+        <p id="view_prof_button">View Profile</p>
         <p id="logout_button">Log Out</p>
         <p id="team_button">MorTorq</p>
         <hr>
@@ -150,22 +150,21 @@
                 </button>
                 <ul class="dropdown-menu audience_drop">
                     <li class="audience_item selected first_audience">Everyone</li>
-                    <li class="audience_item">Build</li>
-                    <li class="audience_item">Programming</li>
-                    <li class="audience_item">Business</li>
                     <li class="audience_item custom_audience"><span class="glyphicon glyphicon-cog"></span>&nbsp;Custom</li>
                 </ul>
             </div>
         </div>
         <div class="announcements_list">
-            <!-- <div class="announcement" data-postNum="1">
+          <!--
+          <div class="announcement" data-postNum="1">
             <div class="announcement_top">
               <img id="medium_prof_pic" src="./images/user.jpg"></img>
               <span class="announcement_poster">Farbod Rafezy</span>
             </div>
             <span class="glyphicon glyphicon-remove delete_icon"></span><br>
             the words go here
-          </div> -->
+          </div>
+          -->
         </div>
       </div>
       <div class="announcements_right">
@@ -239,6 +238,55 @@
     })
     return new_modal;
   }
+  function customAudienceModal(title){
+    var new_modal = new jBox('Modal', {
+      width: 350,
+      height: 373,
+      title: title
+    });
+    var span = document.createElement("span");
+    var user_search = '<input type="text" placeholder="Search Names..." class="members_search" id="audience_members_search">';
+    var potential_members = document.createElement("div");
+    $(potential_members).attr("id", "potential_audience_members");
+    $(potential_members).addClass("potential_members");
+    $(potential_members).addClass("tall");
+    var add_btn = '<input type="button" id="choose_audience_btn" class="button done_button" value="Done">'
+    $.ajax({
+      type: 'POST',
+      url: "/f/getAllSubdivisionsForUserInTeam",
+      async: false,
+      success: function(responseText){
+        var subdivisions = JSON.parse(responseText);
+        for(var i = 0; i < subdivisions.length; i++){
+          var subdivision = document.createElement("p");
+          $(subdivision).addClass("potential_subdivision");
+          $(subdivision).attr("data-subdivisionid", subdivisions[i].id);
+          $(subdivision).html(subdivisions[i].name);
+          $(potential_members).append(subdivision);
+        }
+
+      }
+    });
+    $.post("/f/getUsersInTeam", function(responseText){
+      var users = JSON.parse(responseText);
+      for(var i = 0; i < users.length; i++){
+        var user = document.createElement("p");
+        $(user).addClass("potential_member");
+        $(user).attr("data-userid", users[i].id);
+        $(user).html(users[i].firstname + " " + users[i].lastname);
+        $(potential_members).append(user);
+      }
+      $(span).append($(user_search));
+      $(span).append("<br/>");
+      $(span).append($(potential_members));
+      $(span).append("<br/>");
+      $(span).append($(add_btn));
+      new_modal.setContent( $(span) );
+      new_modal.open();
+    })
+    return new_modal;
+  }
+  var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
   $(document).ready(function(){
     $.post("/f/getAllSubdivisionsForUserInTeam", function(responseText){
       var subdivisions = JSON.parse(responseText);
@@ -253,6 +301,12 @@
           $(p).append(glyphSpan);
           $(p).append(nameSpan);
           $("#your_subdivisions").append( $(p) );
+
+          var li = document.createElement("li")
+          $(li).addClass("audience_item");
+          $(li).attr("data-subdivisionid", subdivisions[i].id);
+          $(li).html(subdivisions[i].name);
+          $(li).insertAfter( $(".first_audience") );
         }
       }else{
         $("#your_subdivisions").append( "none" );
@@ -301,7 +355,6 @@
       var subdivision_id = $(this).parent().attr("data-subdivisionid");
       var invite = $(this).parent();
       $.post("/f/acceptSubdivisionInvitation", {subdivision_id: subdivision_id}, function(responseText){
-        console.log(responseText);
         if(responseText == "success"){
           invite.remove();
         }
@@ -310,14 +363,14 @@
     var subdivision_invite_modal = new jBox('Modal', {
       width: 'auto',
       height: 'auto',
-      title: 'Subdivison Invitation',
+      title: 'subdivision Invitation',
     });
 
     $(document).on("click", ".subdivision-link", function(){
       location = "/s/" + $(this).attr("data-subdivisionid");
     });
     $(document).on("click", ".subdivision-invite", function(){
-      subdivision_invite_modal.setContent('<span><span class="inviter"></span> You have been invited to the subdivison: <span class="invited_scope_name">'+$(this).find(".nameSpan").html()+'</span></span><br/><div style="text-align: center"><input type="button" class="button invite_btn accept_invite_btn" data-subdivisionid="'+$(this).attr("data-subdivisionid")+'" value="Accept"></input><input type="button" class="button invite_btn ignore_invite_btn" data-subdivisionid="'+$(this).attr("data-subdivisionid")+'" value="Hide"></input></div>')
+      subdivision_invite_modal.setContent('<span><span class="inviter"></span> You have been invited to the subdivision: <span class="invited_scope_name">'+$(this).find(".nameSpan").html()+'</span></span><br/><div style="text-align: center"><input type="button" class="button invite_btn accept_invite_btn" data-subdivisionid="'+$(this).attr("data-subdivisionid")+'" value="Accept"></input><input type="button" class="button invite_btn ignore_invite_btn" data-subdivisionid="'+$(this).attr("data-subdivisionid")+'" value="Hide"></input></div>')
       subdivision_invite_modal.open();
     });
     $(document).on("click", ".accept_invite_btn", function(){
@@ -351,9 +404,106 @@
       });
     });
 
+    $(document).on("click", "#team_button", function(){
+      location="team";
+    });
+    $(document).on("click", ".announcement_poster", function(){
+      location="/u/" + $(this).attr("data-userid");
+    })
+
+    //audience stuff
+    subdivisionAudience = [];
+    userAudience = [];
+    $(document).on("click", ".audience_item:not(.custom_audience)", function(){
+      $(".audience_item").removeClass("selected");
+      $(this).addClass("selected");
+      $(".audience_selection").html( $(this).html() );
+    });
+    $(document).on("click", ".custom_audience", function(){
+      custom_audience_modal = customAudienceModal("Custom Audience");
+    });
+    $(document).on("click", "#choose_audience_btn", function(){
+      var p_selected_users = $(".potential_member.clicked");
+      var p_selected_subdivisions = $(".potential_subdivision.clicked");
+
+      subdivisionAudience = [];
+      userAudience = []
+
+      for (var i = 0; i < p_selected_users.length; i++) {
+        userAudience.push($(p_selected_users[i]).attr("data-userid"));
+      }
+      for (var i = 0; i < p_selected_subdivisions.length; i++) {
+        subdivisionAudience.push($(p_selected_subdivisions[i]).attr("data-subdivisionid"));
+      }
+
+      $(".audience_item").removeClass("selected");
+      $(".custom_audience").addClass("selected");
+      $(".audience_selection").html( "Custom" );
+
+      $(".potential_member").removeClass("clicked");
+      $(".potential_subdivision").removeClass("clicked");
+      custom_audience_modal.close();
+    });
+    $(document).on("click", ".announcement_post_button", function(){
+      if($(".audience_item.selected").hasClass("first_audience")){
+        var targetAudience = "everyone"
+      }else if ($(".audience_item.selected").hasClass("custom_audience")) {
+        var targetAudience = {
+          userMembers: userAudience,
+          subdivisionMembers: subdivisionAudience
+        }
+
+      }else{
+        var targetAudience = $(".audience_item.selected").attr("data-subdivisionid");
+      }
+      var message = (new nicEditors.findEditor('main_textarea')).getContent();
+      var filteredMessage = message.replace("(<((?!br|a|/a|img|b|/b|i|/i|u|/u|div|/div|hr)[^>]+)>)", "").replace(/(<div\s+.*?class=").*?(".*)/gi, "");
+      nicEditors.findEditor('main_textarea').setContent('');
+      $.post("/f/postAnnouncement", {audience: targetAudience, content: filteredMessage}, function(responseText){
+        if(responseText=="success"){
+          var announcementDiv = document.createElement("div");
+          $(announcementDiv).addClass("announcement");
+          var announcementTopDiv = document.createElement("div");
+          $(announcementTopDiv).addClass("announcement_top");
+          var img = document.createElement("img");
+          $(img).attr("id", "medium_prof_pic");
+          $(img).attr("src", "images/user.jpg");
+          var span = document.createElement("span");
+          $(span).addClass("announcement_poster");
+          $(span).attr("data-userid", localStorage.id);
+          var now = new Date()
+          $(span).html( localStorage.firstname + " " + localStorage.lastname + " - " + "just now" + " - " + months[now.getMonth()] + " " + now.getDate() + ", " + now.getFullYear() );
+          $(announcementTopDiv).append( img );
+          $(announcementTopDiv).append( span );
+          $(announcementDiv).append( announcementTopDiv );
+          var deleteButton = document.createElement("span")
+          $(deleteButton).addClass("glyphicon");
+          $(deleteButton).addClass("glyphicon-remove");
+          $(deleteButton).addClass("delete_icon");
+          $(announcementDiv).append(deleteButton);
+          $(announcementDiv).append("<br/>");
+          $(announcementDiv).append( filteredMessage );
+
+          $('.announcements_list').prepend(announcementDiv).isotope('prepended', announcementDiv)
+          document.getElementById('main_textarea').value = "";
+          $('#main_textarea').css("height", "56px");
+        }else{
+          alert(responseText);
+        }
+      });
+    });
+
+
 
     //general modal stuff
     $(document).on("click", ".potential_member", function(){
+      if($(this).hasClass("clicked")){
+        $(this).removeClass("clicked");
+      }else{
+        $(this).addClass("clicked");
+      }
+    });
+    $(document).on("click", ".potential_subdivision", function(){
       if($(this).hasClass("clicked")){
         $(this).removeClass("clicked");
       }else{
@@ -369,9 +519,9 @@
       }).hide();
     });
 
-    //new subdivison modal
+    //new subdivision modal
     $(document).on("click", ".new_subdivision", function(){
-      new_subdivision_modal = newSubdivisionModal("New Subdivison", "Please select some initial members");
+      new_subdivision_modal = newSubdivisionModal("New subdivision", "Please select some initial members");
     })
     $(document).on("click", ".subdivision_type", function(){
       $(".subdivision_type").removeClass("selected");
@@ -401,7 +551,7 @@
             });
           }
           new_subdivision_modal.close();
-          location="/";
+          location="/"; //TODO: possibly make this better
         }else{
           alert("failed to create");
         }
@@ -410,6 +560,61 @@
 
 
   });
+  $(window).load(function(){
+    $.post("/f/getAnnouncementsForUser", function(responseText){
+      if(responseText != "fail"){
+        var announcements = JSON.parse(responseText);
+        for (var i = 0; i < announcements.length; i++) {
+          var announcementDiv = document.createElement("div");
+          $(announcementDiv).addClass("announcement");
+          var announcementTopDiv = document.createElement("div");
+          $(announcementTopDiv).addClass("announcement_top");
+          var img = document.createElement("img");
+          $(img).attr("id", "medium_prof_pic");
+          $(img).attr("src", "images/user.jpg");
+          var span = document.createElement("span");
+          $(span).addClass("announcement_poster");
+          $(span).attr("data-userid", announcements[i].author);
+          var shownDate = new Date( announcements[i].timestamp );
+          $(span).html( announcements[i].author_fn + " " + announcements[i].author_ln + " - " + standardizeTime(shownDate) + " - " + months[shownDate.getMonth()] + " " + shownDate.getDate() + ", " + shownDate.getFullYear() );
+          $(announcementTopDiv).append( img );
+          $(announcementTopDiv).append( span );
+          $(announcementDiv).append( announcementTopDiv );
+          var deleteButton = document.createElement("span")
+          $(deleteButton).addClass("glyphicon");
+          $(deleteButton).addClass("glyphicon-remove");
+          $(deleteButton).addClass("delete_icon");
+          $(announcementDiv).append(deleteButton);
+          $(announcementDiv).append("<br/>");
+          $(announcementDiv).append( announcements[i].content );
+          $('.announcements_list').append( announcementDiv );
+          document.getElementById('main_textarea').value = "";
+          $('#main_textarea').css("height", "56px");
+        }
+        setTimeout(function(){
+            $ann = $(".announcements_list").isotope({
+                itemSelector: ".announcement",
+                layoutMode: "vertical"
+            });
+        }, 1);
+
+      }else{
+        alert("failed to load announcements");
+      }
+    });
+
+    $("div.nicEdit-main").addClass('wordwrap');
+    var textareaWidthNum;
+    var textareaWidth;
+    $(window).resize(function(){
+      textareaWidthNum = $(".post_announcement").width();
+      textareaWidth = textareaWidthNum + "px";
+      $(".nicEdit-main").css("width", textareaWidth);
+      $(".post_announcement").children().not(".announcement_post_button").not(".announcement_audience_button").css("width", textareaWidth);
+      console.log($(".nicEdit-main").css("width"));
+    });
+
+  })
   </script>
 </body>
 

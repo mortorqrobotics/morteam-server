@@ -154,10 +154,6 @@
       });
       $.post("/f/getUsersInTeam", function(responseText){
         var span = document.createElement("span");
-        // var subdivision_name = '<input type="text" class="name_input" id="subdivision_name" placeholder="Subdivision Name">';
-        // var public_option = '<p class="subdivision_type public selected">Public</p>';
-        // var private_option = '<p class="subdivision_type private">Private</p>';
-        // var help = '<span class="glyphicon glyphicon-question-sign subdivision_help" title="A public subdivision can be seen and<br/> joined by anyone in the team, but joining<br/> a private subdivision requires an invitation."></span>';
         var user_search = '<input type="text" placeholder="Search Names..." class="members_search" id="subdivision_members_search">';
         var potential_members = document.createElement("div");
         $(potential_members).attr("id", "potential_subdivision_members");
@@ -221,7 +217,7 @@
         if (window.confirm("Are you sure?")) {
           $.post("/f/deleteSubdivision", {
             team_id: localStorage.c_team,
-            subdivison_id: window.location.pathname.substring(window.location.pathname.lastIndexOf("/") + 1)
+            subdivision_id: window.location.pathname.substring(window.location.pathname.lastIndexOf("/") + 1)
           }, function(responseText) {
             if(responseText == "success"){
               location="/";

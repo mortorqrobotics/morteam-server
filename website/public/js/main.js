@@ -19,6 +19,41 @@ function removeFromStorage(key){
     console.log("item was not found in storage");
   }
 }
+function getTimeNow() {
+    var now = new Date();
+    var Hours = now.getHours();
+    var suffix;
+    if (parseInt(Hours) > 12) {
+        Hours = (parseInt(Hours) - 12).toString();
+        suffix = "PM";
+    } else if (Hours == "12") {
+        suffix = "PM";
+    } else {
+        suffix = "AM";
+    }
+    var Minutes = now.getMinutes();
+    if (parseInt(Minutes) < 10) {
+        Minutes = "0" + Minutes;
+    }
+    return Hours + ":" + Minutes + " " + suffix;
+}
+function standardizeTime(date) {
+    var Hours = date.getHours();
+    var suffix;
+    if (parseInt(Hours) > 12) {
+        Hours = (parseInt(Hours) - 12).toString();
+        suffix = "PM";
+    } else if (Hours == "12") {
+        suffix = "PM";
+    } else {
+        suffix = "AM";
+    }
+    var Minutes = date.getMinutes();
+    if (parseInt(Minutes) < 10) {
+        Minutes = "0" + Minutes;
+    }
+    return Hours + ":" + Minutes + " " + suffix;
+}
 $(document).ready(function(){
   $('#name_link').html(localStorage.firstname);
 
@@ -73,7 +108,7 @@ $(document).ready(function(){
           });
       });
   });
-  $("#logout_button").click(function(){
+  $(document).on("click", "#logout_button", function(){
     $.post("/f/logout", JSON.stringify({"id": getId(), "token": getToken()}), function(responseText){
       if(responseText == "success"){
         removeFromStorage("id");
@@ -89,7 +124,7 @@ $(document).ready(function(){
       }
     });
   });
-  $("#view_prof_button").click(function(){
+  $(document).on("click", "#view_prof_button", function(){
     location="u/"+localStorage.id;
   });
   $("#view_prof_button_ejs").click(function(){
