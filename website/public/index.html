@@ -187,6 +187,10 @@
   </script>
 
   <script>
+
+  var socket = io();
+  socket.emit("add to clients", {_id: localStorage._id});
+
   function newSubdivisionModal(title, instructions){
     var new_modal = new jBox('Modal', {
       width: 350,
@@ -198,7 +202,7 @@
       var subdivision_name = '<input type="text" class="name_input" id="subdivision_name" placeholder="Subdivision Name">';
       var public_option = '<p class="subdivision_type public selected">Public</p>';
       var private_option = '<p class="subdivision_type private">Private</p>';
-      var help = '<span class="glyphicon glyphicon-question-sign subdivision_help" title="A public subdivision can be seen and<br/> joined by anyone in the team, but joining<br/> a private subdivision requires an invitation."></span>';
+      var help = '<span class="glyphicon glyphicon-question-sign subdivision_help" title="A public subdivision can be viewed and joined<br/> by anyone in the team, but viewing and joining<br/> a private subdivision requires an invitation."></span>';
       var user_search = '<input type="text" placeholder="Search Names..." class="members_search" id="subdivision_members_search">';
       var potential_members = document.createElement("div");
       $(potential_members).attr("id", "potential_subdivision_members");
@@ -208,7 +212,7 @@
       for(var i = 0; i < users.length; i++){
         var user = document.createElement("p");
         $(user).addClass("potential_member");
-        $(user).attr("data-userid", users[i].id);
+        $(user).attr("data-userid", users[i]._id);
         $(user).html(users[i].firstname + " " + users[i].lastname);
         $(potential_members).append(user);
       }
@@ -260,7 +264,7 @@
         for(var i = 0; i < subdivisions.length; i++){
           var subdivision = document.createElement("p");
           $(subdivision).addClass("potential_subdivision");
-          $(subdivision).attr("data-subdivisionid", subdivisions[i].id);
+          $(subdivision).attr("data-subdivisionid", subdivisions[i]._id);
           $(subdivision).html(subdivisions[i].name);
           $(potential_members).append(subdivision);
         }
@@ -272,7 +276,7 @@
       for(var i = 0; i < users.length; i++){
         var user = document.createElement("p");
         $(user).addClass("potential_member");
-        $(user).attr("data-userid", users[i].id);
+        $(user).attr("data-userid", users[i]._id);
         $(user).html(users[i].firstname + " " + users[i].lastname);
         $(potential_members).append(user);
       }
@@ -288,13 +292,14 @@
   }
   var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
   $(document).ready(function(){
+
     $.post("/f/getAllSubdivisionsForUserInTeam", function(responseText){
       var subdivisions = JSON.parse(responseText);
       if(subdivisions.length != 0){
         for (var i = 0; i < subdivisions.length; i++){
           var p = document.createElement("p");
           $(p).addClass("subdivision-link");
-          $(p).attr("data-subdivisionid", subdivisions[i].id);
+          $(p).attr("data-subdivisionid", subdivisions[i]._id);
           var glyphSpan = "<span class='glyphicon glyphicon-screenshot'></span>"
           var nameSpan = document.createElement("span");
           $(nameSpan).html(" " + subdivisions[i].name);
@@ -304,7 +309,7 @@
 
           var li = document.createElement("li")
           $(li).addClass("audience_item");
-          $(li).attr("data-subdivisionid", subdivisions[i].id);
+          $(li).attr("data-subdivisionid", subdivisions[i]._id);
           $(li).html(subdivisions[i].name);
           $(li).insertAfter( $(".first_audience") );
         }
@@ -318,7 +323,7 @@
         for(var i = 0 ; i < subdivisions.length; i++){
           var p = document.createElement("p");
           $(p).addClass("subdivision-link");
-          $(p).attr("data-subdivisionid", subdivisions[i].id);
+          $(p).attr("data-subdivisionid", subdivisions[i]._id);
           var glyphSpan = "<span class='glyphicon glyphicon-screenshot'></span>"
           var nameSpan = document.createElement("span");
           $(nameSpan).html(" " + subdivisions[i].name);
@@ -337,7 +342,7 @@
         for (var i = 0; i < invites.length; i++){
           var p = document.createElement("p");
           $(p).addClass("subdivision-invite");
-          $(p).attr("data-subdivisionid", invites[i].id);
+          $(p).attr("data-subdivisionid", invites[i]._id);
           var glyphSpan = "<span class='glyphicon glyphicon-screenshot'></span>"
           var nameSpan = document.createElement("span");
           $(nameSpan).html(" " + invites[i].name);
@@ -403,6 +408,19 @@
         }
       });
     });
+    $(document).on("click", ".delete_icon", function(){
+      if (window.confirm("Are you sure?")) {
+        var announcement = $(this).parent();
+        var postid = $(this).parent().attr("data-postid");
+        $.post("/f/deleteAnnouncement", {_id: postid}, function(responseText){
+          if(responseText == "success"){
+            $ann.isotope('remove', announcement).isotope();
+          }else{
+            alert(responseText);
+          }
+        })
+      }
+    });
 
     $(document).on("click", "#team_button", function(){
       location="team";
@@ -460,21 +478,28 @@
       var filteredMessage = message.replace("(<((?!br|a|/a|img|b|/b|i|/i|u|/u|div|/div|hr)[^>]+)>)", "").replace(/(<div\s+.*?class=").*?(".*)/gi, "");
       nicEditors.findEditor('main_textarea').setContent('');
       $.post("/f/postAnnouncement", {audience: targetAudience, content: filteredMessage}, function(responseText){
-        if(responseText=="success"){
+        if(responseText!="fail"){
           var announcementDiv = document.createElement("div");
           $(announcementDiv).addClass("announcement");
+          $(announcementDiv).attr("data-postid", responseText);
           var announcementTopDiv = document.createElement("div");
           $(announcementTopDiv).addClass("announcement_top");
           var img = document.createElement("img");
           $(img).attr("id", "medium_prof_pic");
-          $(img).attr("src", "images/user.jpg");
+          $(img).attr("src", localStorage.profpicpath);
+          $(img).addClass("user-link")
+          $(img).attr("data-userid", localStorage._id)
           var span = document.createElement("span");
           $(span).addClass("announcement_poster");
-          $(span).attr("data-userid", localStorage.id);
+          $(span).attr("data-userid", localStorage._id);
           var now = new Date()
-          $(span).html( localStorage.firstname + " " + localStorage.lastname + " - " + "just now" + " - " + months[now.getMonth()] + " " + now.getDate() + ", " + now.getFullYear() );
+          var timestamp = document.createElement("span");
+          $(timestamp).addClass("announcement_timestamp")
+          $(span).html( localStorage.firstname + " " + localStorage.lastname )
+          $(timestamp).html( " - " + "just now");
           $(announcementTopDiv).append( img );
           $(announcementTopDiv).append( span );
+          $(announcementTopDiv).append( timestamp );
           $(announcementDiv).append( announcementTopDiv );
           var deleteButton = document.createElement("span")
           $(deleteButton).addClass("glyphicon");
@@ -560,34 +585,64 @@
 
 
   });
-  $(window).load(function(){
-    $.post("/f/getAnnouncementsForUser", function(responseText){
+  function appendLater(announcementDiv){
+    $('.announcements_list').append(announcementDiv).isotope('appended', announcementDiv);
+  }
+  function appendFirst(announcementDiv){
+    $('.announcements_list').append( announcementDiv );
+  }
+
+  function loadAnnouncements(callback){
+    $.post("/f/getAnnouncementsForUser", {skip: 20*localStorage.page},function(responseText){
       if(responseText != "fail"){
         var announcements = JSON.parse(responseText);
+        // var announcementsArr = JSON.parse(responseText);
+        // var announcements = announcementsArr.map(function(ann) {
+        //   return ann.obj;
+        // });
+        // var announcement_fns = announcementsArr.map(function(ann) {
+        //   return ann.author_fn;
+        // });
+        // var announcement_lns = announcementsArr.map(function(ann) {
+        //   return ann.author_ln;
+        // });
+        // var profpics = announcementsArr.map(function(ann){
+        //   return ann.profpicpath;
+        // })
+
         for (var i = 0; i < announcements.length; i++) {
           var announcementDiv = document.createElement("div");
           $(announcementDiv).addClass("announcement");
+          $(announcementDiv).attr("data-postid", announcements[i]._id);
           var announcementTopDiv = document.createElement("div");
           $(announcementTopDiv).addClass("announcement_top");
           var img = document.createElement("img");
           $(img).attr("id", "medium_prof_pic");
-          $(img).attr("src", "images/user.jpg");
+          $(img).attr("src", announcements[i].author.profpicpath);
+          $(img).addClass("user-link")
+          $(img).attr("data-userid", announcements[i].author._id)
           var span = document.createElement("span");
           $(span).addClass("announcement_poster");
-          $(span).attr("data-userid", announcements[i].author);
+          $(span).attr("data-userid", announcements[i].author._id);
           var shownDate = new Date( announcements[i].timestamp );
-          $(span).html( announcements[i].author_fn + " " + announcements[i].author_ln + " - " + standardizeTime(shownDate) + " - " + months[shownDate.getMonth()] + " " + shownDate.getDate() + ", " + shownDate.getFullYear() );
+          var timestamp = document.createElement("span");
+          $(timestamp).addClass("announcement_timestamp")
+          $(span).html( announcements[i].author.firstname + " " + announcements[i].author.lastname )
+          $(timestamp).html( " - " + standardizeTime(shownDate) + " - " + months[shownDate.getMonth()] + " " + shownDate.getDate() + ", " + shownDate.getFullYear() );
           $(announcementTopDiv).append( img );
           $(announcementTopDiv).append( span );
+          $(announcementTopDiv).append( timestamp );
           $(announcementDiv).append( announcementTopDiv );
-          var deleteButton = document.createElement("span")
-          $(deleteButton).addClass("glyphicon");
-          $(deleteButton).addClass("glyphicon-remove");
-          $(deleteButton).addClass("delete_icon");
-          $(announcementDiv).append(deleteButton);
+          if(localStorage._id == announcements[i].author || localStorage.c_team_position == "admin"){
+            var deleteButton = document.createElement("span")
+            $(deleteButton).addClass("glyphicon");
+            $(deleteButton).addClass("glyphicon-remove");
+            $(deleteButton).addClass("delete_icon");
+            $(announcementDiv).append(deleteButton);
+          }
           $(announcementDiv).append("<br/>");
           $(announcementDiv).append( announcements[i].content );
-          $('.announcements_list').append( announcementDiv );
+          callback( announcementDiv );
           document.getElementById('main_textarea').value = "";
           $('#main_textarea').css("height", "56px");
         }
@@ -597,11 +652,25 @@
                 layoutMode: "vertical"
             });
         }, 1);
-
+        localStorage.page++;
       }else{
         alert("failed to load announcements");
       }
     });
+  }
+
+  $(window).load(function(){
+    localStorage.page = 0;
+     loadAnnouncements(appendFirst);
+
+     function bindScroll(){
+       if($(window).scrollTop() + $(window).height() > $(document).height() - 300) {
+         $(window).unbind('scroll');
+         loadAnnouncements(appendLater);
+       }
+     }
+
+    $(window).scroll(bindScroll);
 
     $("div.nicEdit-main").addClass('wordwrap');
     var textareaWidthNum;

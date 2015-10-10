@@ -5,7 +5,7 @@ function getToken(){
   return localStorage.token || sessionStorage.token;
 }
 function getId(){
-  return localStorage.id || sessionStorage.id;
+  return localStorage._id || sessionStorage._id;
 }
 function getTeams(){
   return JSON.parse(localStorage.teams) || JSON.parse(sessionStorage.teams);
@@ -18,6 +18,14 @@ function removeFromStorage(key){
   }else{
     console.log("item was not found in storage");
   }
+}
+function createToken(size) {
+  var token = "";
+  for (var i = 0; i < size; i++) {
+    var rand = Math.floor(Math.random() * 62);
+    token += String.fromCharCode(rand + ((rand < 26) ? 97 : ((rand < 52) ? 39 : -4)));
+  }
+  return token;
 }
 function getTimeNow() {
     var now = new Date();
@@ -56,6 +64,7 @@ function standardizeTime(date) {
 }
 $(document).ready(function(){
   $('#name_link').html(localStorage.firstname);
+  $(".profile_id").not(".ejs").attr("src", localStorage.profpicpath);
 
   var fade_speed = 200;
   $('#notif_button').click(function() {
@@ -125,10 +134,10 @@ $(document).ready(function(){
     });
   });
   $(document).on("click", "#view_prof_button", function(){
-    location="u/"+localStorage.id;
+    location="u/"+localStorage._id;
   });
   $("#view_prof_button_ejs").click(function(){
-    location="../u/"+localStorage.id;
+    location="../u/"+localStorage._id;
   });
 
   $("#aboutus_link").click(function(){

@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>MorTeam</title>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:700,300,400' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Exo+2:400,300,200' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Titillium+Web' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
+    <link rel='stylesheet' href='css/perfect-scrollbar.min.css' />
+    <link href="jbox/jBox.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/index.css" type="text/css">
+    <script src="js/spin.js"></script>
+    <script type="text/javascript">
+        var loadingDiv = document.createElement("div");
+        loadingDiv.className = "loading_circle";
+        loadingDiv.id = "loading_circle";
+    </script>
+
+</head>
+
+<body class="chat_body">
+    <!-- NAVIGATION BAR -->
+    <div id="audio-files" style="display: none;">
+        <audio id="click-sound">
+            <source src="jbox/audio/bling2.wav" type="audio/wav" />
+        </audio>
+    </div>
+    <div class="nav_dropdown">
+      <p onclick="location='index'">Home</p>
+      <p onclick="location='chat'" style="background-color: orange">Chat</p>
+      <p onclick="location='drive'">Drive</p>
+      <p onclick="location='cal'">Calendar</p>
+      <p onclick="location='networks'">Networks</p>
+    </div>
+    <div class="navigation_bar">
+        <ul id="navbar_list">
+          <li class="navbar_item navbar_title" onclick="location='index'">
+              MorTeam
+          </li>
+          <li class="navbar_item searchbox_list_item">
+              <input type="text" placeholder="search" class="searchbox"></input>
+          </li>
+          <li class="navbar_item glyph_link chat_btn menu_btn active" onclick="location='chat'">
+              <span class="glyphicon glyphicon-comment"></span>
+          </li>
+          <li class="navbar_item glyph_link drive_btn menu_btn" onclick="location='drive'">
+              <span class="glyphicon glyphicon-hdd"></span>
+          </li>
+          <li class="navbar_item glyph_link cal_btn menu_btn" onclick="location='cal'">
+              <span class="glyphicon glyphicon-calendar"></span>
+          </li>
+          <li class="navbar_item glyph_link networks_btn menu_btn" onclick="location='networks'">
+              <span class="glyphicon glyphicon-globe"></span>
+          </li>
+          <div class="navbar_item right_links">
+            <li class="navbar_item glyph_link menu">
+                <span class="glyphicon glyphicon-menu-hamburger"></span>
+            </li>
+            <li class="navbar_item glyph_link" id="notif_button">
+                <span class="glyphicon glyphicon-inbox"></span>
+            </li>
+            <img class="profile_id" id="small_prof_pic" src="./images/user.jpg"></img>
+            <span class="profile_name" id="name_link"></span>
+          </div>
+        </ul>
+    </div>
+    <div id="notif_drop" class="hidden">
+        <ul>
+            <li class="notif_list_item">hey</li>
+            <li class="notif_list_item">hi</li>
+            <li class="notif_list_item">ho</li>
+        </ul>
+    </div>
+    <div id="prof_drop" class="hidden">
+        <ul>
+            <li class="notif_list_item" id="view_prof_button">View Profile and Settings</li>
+            <li class="notif_list_item" id="logout_button">Log Out</li>
+        </ul>
+    </div>
+    <div class="hidden" id="darken"></div>
+    <!-- END OF NAVIGATION BAR -->
+
+    <!-- BODY -->
+    <div class="wrapper chat_wrapper">
+      <div class="chat_area" id="chat_area"></div>
+      <div class="reply_box">
+          <textarea rows="1" class="reply_textarea"></textarea>
+          <input type="button" class="send_button" value="send"></input>
+      </div>
+    </div>
+    <div class="ads">
+      <div class="ad"></div>
+      <div class="ad2"></div>
+    </div>
+    <!-- END OF BODY -->
+
+    <!-- LEFTBAR -->
+    <div class="leftbar">
+      <ul class="users_list">
+        <li class="chat_name compose"><span id="compose" class="glyphicon glyphicon-pencil"></span>Compose</li>
+      </ul>
+    </div>
+    <span class="glyphicon glyphicon-chevron-left hide_leftbar"></span>
+
+    <!-- END OF LEFTBAR -->
+    <script src="https://cdn.socket.io/socket.io-1.3.5.js"></script>
+    <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    <script src="js/clamp.min.js"></script>
+    <script src="jbox/jBox.min.js"></script>
+    <script type="text/javascript" src="js/socket.io.js"></script>
+    <script type="text/javascript" src="js/main.js"></script>
+    <script type="text/javascript" src="js/autosize.js"></script>
+    <script type="text/javascript" src="js/velocity.min.js"></script>
+    <script src='js/perfect-scrollbar.jquery.min.js'></script>
+
+    <script type="text/javascript">
+        var ta = document.querySelectorAll('textarea');
+        autosize(ta);
+    </script>
+    <script type="text/javascript">
+
+      var socket = io();
+      socket.emit("add to clients", {_id: localStorage._id});
+
+      function getUserOtherThanSelf(twoUsers){
+        if(twoUsers[0]._id == localStorage._id){
+          return twoUsers[1];
+        }else{
+          return twoUsers[0];
+        }
+      }
+      function composeModal(title){
+        var new_modal = new jBox('Modal', {
+          width: 350,
+          height: 373,
+          title: title
+        });
+        var span = document.createElement("span");
+        var user_search = '<input type="text" placeholder="Search Names..." class="members_search" id="audience_members_search">';
+        var potential_members = document.createElement("div");
+        $(potential_members).attr("id", "potential_audience_members");
+        $(potential_members).addClass("potential_members");
+        $(potential_members).addClass("tall");
+        var add_btn = '<input type="button" id="compose_done_btn" class="button done_button" value="Done">'
+        $.ajax({
+          type: 'POST',
+          url: "/f/getAllSubdivisionsForUserInTeam",
+          async: false,
+          success: function(responseText){
+            var subdivisions = JSON.parse(responseText);
+            for(var i = 0; i < subdivisions.length; i++){
+              var subdivision = document.createElement("p");
+              $(subdivision).addClass("potential_subdivision");
+              $(subdivision).attr("data-subdivisionid", subdivisions[i]._id);
+              $(subdivision).html(subdivisions[i].name);
+              $(potential_members).append(subdivision);
+            }
+
+          }
+        });
+        $.post("/f/getUsersInTeam", function(responseText){
+          var users = JSON.parse(responseText);
+          for(var i = 0; i < users.length; i++){
+            var user = document.createElement("p");
+            $(user).addClass("potential_member");
+            $(user).attr("data-userid", users[i]._id);
+            $(user).html(users[i].firstname + " " + users[i].lastname);
+            $(potential_members).append(user);
+          }
+          $(span).append($(user_search));
+          $(span).append("<br/>");
+          $(span).append($(potential_members));
+          $(span).append("<br/>");
+          $(span).append($(add_btn));
+          new_modal.setContent( $(span) );
+          new_modal.open();
+        })
+        return new_modal;
+      }
+      $(document).ready(function() {
+        document.body.appendChild(loadingDiv);
+
+        spinnerOpts = {
+            lines: 13 // The number of lines to draw
+                ,
+            length: 0 // The length of each line
+                ,
+            width: 20 // The line thickness
+                ,
+            radius: 42 // The radius of the inner circle
+                ,
+            scale: .5 // Scales overall size of the spinner
+                ,
+            corners: 1 // Corner roundness (0..1)
+                ,
+            color: 'orange' // #rgb or #rrggbb or array of colors
+                ,
+            opacity: 0.25 // Opacity of the lines
+                ,
+            rotate: 0 // The rotation offset
+                ,
+            direction: 1 // 1: clockwise, -1: counterclockwise
+                ,
+            speed: 1 // Rounds per second
+                ,
+            trail: 60 // Afterglow percentage
+                ,
+            fps: 20 // Frames per second when using setTimeout() as a fallback for CSS
+                ,
+            zIndex: 2e9 // The z-index (defaults to 2000000000)
+                ,
+            className: 'spinner' // The CSS class to assign to the spinner
+                ,
+            top: '50%' // Top position relative to parent
+                ,
+            left: '50%' // Left position relative to parent
+                ,
+            shadow: false // Whether to render a shadow
+                ,
+            hwaccel: false // Whether to use hardware acceleration
+                ,
+            position: 'absolute' // Element positioning
+        }
+
+        $(document).on("click", ".compose", function(){
+          new_convo_modal = composeModal("Compose");
+        })
+        $(document).on("click", "#compose_done_btn", function(){
+          var p_selected_users = $(".potential_member.clicked");
+          var p_selected_subdivisions = $(".potential_subdivision.clicked");
+
+          subdivisionMembers = [];
+          userMembers = []
+
+          for (var i = 0; i < p_selected_users.length; i++) {
+            userMembers.push($(p_selected_users[i]).attr("data-userid"));
+          }
+          for (var i = 0; i < p_selected_subdivisions.length; i++) {
+            subdivisionMembers.push($(p_selected_subdivisions[i]).attr("data-subdivisionid"));
+          }
+
+          $(".potential_member").removeClass("clicked");
+          $(".potential_subdivision").removeClass("clicked");
+
+          if(userMembers.length == 2 && subdivisionMembers.length == 0){
+            //private
+            $.post("/f/createChat", {userMembers: userMembers, type: "private", user2: getUserOtherThanSelf(userMembers)}, function(responseText){
+              if(responseText != "fail" && responseText != "exists"){
+                //append new chat to leftbar
+                var user2 = JSON.parse(responseText);
+                var li = document.createElement("li");
+                $(li).addClass("chat_name");
+                var img = document.createElement("img");
+                $(img).addClass("small_prof_pic");
+                $(img).addClass("temp");
+                $(img).attr("id", "small_prof_pic");
+                $(img).attr("src", user2.profpicpath);
+                var span = document.createElement("span");
+                $(span).html(user2.fn + " " + user2.ln);
+                $(li).append( $(img) );
+                $(li).append( $(span) );
+                $(li).attr("data-chatid", user2.chat_id);
+                $(".compose").after( $(li) );
+                $(li).trigger("click");
+              }else{
+                alert(responseText);
+              }
+            })
+            new_convo_modal.close();
+          }else{
+            //group
+
+            var span = document.createElement("span");
+            var group_chat_name = '<input type="text" class="name_input" id="group_chat_name" placeholder="Choose Name For Group Chat">';
+            var create_btn = '<input type="button" id="make_chat_btn" class="button" value="Done">'
+
+            sessionStorage.userMembers = JSON.stringify(userMembers);
+            sessionStorage.subdivisionMembers = JSON.stringify(subdivisionMembers);
+
+            $(span).append( $(group_chat_name) );
+            $(span).append( $(create_btn) );
+            new_convo_modal.setHeight(120);
+            new_convo_modal.setContent( $(span) );
+          }
+
+        })
+        $(document).on("click", "#make_chat_btn", function(){
+          var $this = $(this);
+          $.post("/f/createChat", {
+            userMembers: sessionStorage.userMembers,
+            subdivisionMembers: sessionStorage.subdivisionMembers,
+            type: "group",
+            name: $this.prev().val()
+          }, function(responseText){
+            if(responseText != "fail"){
+              var chat = JSON.parse(responseText);
+              var li = document.createElement("li");
+              $(li).addClass("chat_name");
+              var img = document.createElement("img");
+              $(img).addClass("small_prof_pic");
+              $(img).addClass("temp");
+              $(img).attr("id", "small_prof_pic");
+              $(img).attr("src", "images/group.png");
+              var span = document.createElement("span");
+              $(span).html(chat.name);
+              $(li).append( $(img) );
+              $(li).append( $(span) );
+              $(li).attr("data-chatid", chat._id);
+              $(".compose").after( $(li) );
+              $(li).trigger("click");
+            }else{
+              alert(responseText);
+            }
+          })
+          sessionStorage.removeItem("userMembers");
+          sessionStorage.removeItem("subdivisionMembers");
+          new_convo_modal.close();
+        });
+
+
+        //general modal stuff
+        $(document).on("click", ".potential_member", function(){
+          if($(this).hasClass("clicked")){
+            $(this).removeClass("clicked");
+          }else{
+            $(this).addClass("clicked");
+          }
+        });
+        $(document).on("click", ".potential_subdivision", function(){
+          if($(this).hasClass("clicked")){
+            $(this).removeClass("clicked");
+          }else{
+            $(this).addClass("clicked");
+          }
+        });
+        $(document).on("keyup", '.members_search', function() {
+          var val = $.trim($(this).val()).replace(/ +/g, ' ').toLowerCase();
+          $('.potential_members p').show().filter(function() {
+              var text = $(this).text().replace(/\s+/g, ' ').toLowerCase();
+              console.log(!~text.indexOf(val));
+              return !~text.indexOf(val);
+          }).hide();
+        });
+
+      });
+      $(window).load(function(){
+        $.post("/f/getChatsForUser", function(responseText){
+          if(responseText != "fail"){
+            var chats = JSON.parse(responseText);
+            for(var i = 0; i < chats.length; i++){
+              var li = document.createElement("li")
+              $(li).addClass("chat_name");
+              var img = document.createElement("img");
+              var span = document.createElement("span");
+              $(img).addClass("small_prof_pic");
+              $(img).addClass("temp");
+              // $(img).addClass("offline");
+              $(img).attr("id", "small_prof_pic");
+              if(chats[i].group == true){
+                $(span).html(chats[i].name)
+                $(img).attr("src", "images/group.png")
+              }else{
+                var user2 = getUserOtherThanSelf(chats[i].userMembers)
+                $(span).html(user2.firstname + " " + user2.lastname);
+                $(img).attr("src", user2.profpicpath);
+              }
+              $(li).append( img );
+              $(li).append( span );
+              $(li).attr("data-chatid", chats[i]._id);
+
+              $(".users_list").append( li );
+              if(i == 0){
+                $(li).trigger("click");
+              }
+            }
+          }
+        })
+
+
+        $(document).on("click", ".chat_name:not(.compose)", function(){
+          if( !$(this).hasClass("selected") ){
+            receivers = [];
+            var $this = $(this);
+            $(".chat_name:not(.compose)").removeClass("selected");
+            $this.addClass("selected");
+            $("#chat_area").empty();
+            //load receivers
+            $.post("/f/getUsersInChat", {chat_id: $this.attr("data-chatid")}, function(responseText){
+              var users = JSON.parse(responseText);
+              for(var i = 0; i < users.length; i++){
+                if(users[i]._id.toString() != localStorage._id){
+                  receivers.push(users[i]._id.toString());
+                }
+              }
+            });
+            //load messages
+            $.post("/f/loadMessagesForChat", {chat_id: $this.attr("data-chatid")}, function(responseText){
+              var messages = JSON.parse(responseText);
+              for(var i = 0; i < messages.length; i++){
+                if(messages[i].author._id.toString() != localStorage._id){
+                  $('.chat_area').append("<div class='bubble_wrapper'><div class='other_bubble'><img class='show' id='small_prof_pic' src='/images/user.jpg'></img>" + "<p class='chat_opponent'>" + messages[i].author.firstname + ": </p class='chat_opponent'>" + messages[i].content + "</div></div>")
+                }else{
+                  // $('.chat_area').append("<div class='bubble_wrapper'><div class='self_bubble'><p class='chat_opponent'>" + messages[i].author.firstname + ": </p class='chat_opponent'>" + messages[i].content + "</div></div>")
+                  $('.chat_area').append("<div class='bubble_wrapper'><div class='self_bubble'>" + messages[i].content + "</div></div>");
+
+                }
+                $(".chat_area").animate({
+                    scrollTop: $('.chat_area')[0].scrollHeight
+                }, 0);
+              }
+            });
+          }
+        });
+        $(document).on("click", ".send_button", function(){
+          $.post("/f/sendMessage", {chat_id: $(".chat_name.selected").attr("data-chatid"), content: $(".reply_textarea").val()}, function(responseText){
+            if(responseText == "success"){
+              var newMsg = {
+                author: localStorage._id,
+                content: $(".reply_textarea").val(),
+                timestamp: new Date()
+              }
+              $('.chat_area').append("<div class='bubble_wrapper'><div class='self_bubble'>" + newMsg.content + "</div></div>");
+              $(".chat_area").animate({
+                  scrollTop: $('.chat_area')[0].scrollHeight
+              }, 400);
+
+              $(".reply_textarea").val("");
+              socket.emit("message", {receivers: receivers, chat_id: $(".chat_name.selected").attr("data-chatid"), author_fn: localStorage.firstname, content: newMsg.content, timestamp: newMsg.timestamp})
+            }
+          })
+        });
+        socket.on('message', function(msg){
+          if(msg.chat_id == $(".chat_name.selected").attr("data-chatid")){
+            $('.chat_area').append("<div class='bubble_wrapper'><div class='other_bubble'><img class='show' id='small_prof_pic' src='/images/user.jpg'></img>" + "<p class='chat_opponent'>" + msg.author_fn + ": </p class='chat_opponent'>" + msg.content + "</div></div>")
+            $(".chat_area").animate({
+                scrollTop: $('.chat_area')[0].scrollHeight
+            }, 400);
+          }
+        })
+      })
+    </script>
+</body>
+
+</html>

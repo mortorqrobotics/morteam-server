@@ -4,7 +4,6 @@ Schema = mongoose.Schema;
 SALT_WORK_FACTOR = 10;
 
 var userSchema = new Schema({
-  id:           { type: Number, required: true, unique: true },
   username:     { type: String, required: true, unique: true },
   password:     { type: String, required: true },
   firstname:    { type: String, required: true },
@@ -15,7 +14,11 @@ var userSchema = new Schema({
   updated_at:   Date,
   profpicpath:  String,
   teams:        Array,
-  subdivisions: Array,
+  subdivisions: [{
+    _id: { type: Schema.Types.ObjectId, ref: 'Subdivision' },
+    team: String,
+    accepted: Boolean
+  }],
   current_team: {
     id: String,
     position: String

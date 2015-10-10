@@ -2,7 +2,6 @@ var mongoose = require('mongoose');
 Schema = mongoose.Schema;
 
 var subdivisionSchema = new Schema({
-  id:          { type: String, required: true, unique: true },
   name:        { type: String, required: true },
   type:        { type: String, required: true },
   team:        { type: String, required: true },

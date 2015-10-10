@@ -31,6 +31,7 @@
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
   <script>
   $(document).ready(function(){
+    $("#username_box").focus();
     $("#login_button").click(function(){
       var username = $("#username_box").val();
       var password = $("#password_box").val();
@@ -40,10 +41,11 @@
           localStorage.username = user.username;
           localStorage.firstname = user.firstname;
           localStorage.lastname = user.lastname;
-          localStorage.id = user.id;
+          localStorage._id = user._id;
           localStorage.phone = user.phone;
           localStorage.email = user.email;
           localStorage.teams = JSON.stringify(user.teams);
+          localStorage.profpicpath = user.profpicpath;
           if(user.teams && user.teams.length > 0){
             if(user.current_team){
               localStorage.c_team = user.current_team.id;
@@ -58,6 +60,17 @@
         }
       });
     });
+
+    $(document).keypress(function(e) {
+      if(e.which == 13) {
+        if($("#password_box").is(":focus")){
+          $("#login_button").trigger("click");
+        }else if ($("#username_box").is(":focus")) {
+          $("#password_box").focus();
+        }
+      }
+    });
+
   });
   </script>
 </body>

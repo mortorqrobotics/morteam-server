@@ -2,14 +2,11 @@ var mongoose = require('mongoose');
 Schema = mongoose.Schema;
 
 var announcementSchema = new Schema({
-  id:          { type: String, required: true, unique: true },
-  author:      { type: String, required: true },
-  author_fn:   { type: String, required: true },
-  author_ln:   { type: String, required: true },
+  author:      { type: Schema.Types.ObjectId, required: true, ref: 'User' },
   content:     { type: String, required: true },
   team:        { type: String, required: true },
-  userAudience: [String],
-  subdivisionAudience: [String],
+  userAudience: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+  subdivisionAudience: [{ type: Schema.Types.ObjectId, ref: 'Subdivision' }],
   timestamp:   { type: Date, required: true },
   entireTeam: Boolean,
   created_at:  Date,

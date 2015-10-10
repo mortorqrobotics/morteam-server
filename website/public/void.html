@@ -1,22 +1,3 @@
-<!-- <!DOCTYPE html>
-<html>
-
-<head>
-  <meta charset="utf-8">
-  <title>No Team?</title>
-  <link rel="stylesheet" type="text/css" href="css/index.css">
-</head>
-
-<body>
-  <h2>Looks like you're not part of a team</h2>
-
-  <input type="text" id="join-team-id-text" placeholder="Enter Team ID"/>
-  <input type="button" id="join-team-btn" value="Join Team"/><br/><br/>
-  <span>OR</span><br/><br/>
-  <input type="text" id="new-team-name-text" placeholder="Choose Team Name"/>
-  <input type="text" id="new-team-number-text" placeholder="Choose Team Number"/>
-  <input type="text" id="new-team-id-text" placeholder="Choose Team ID"/>
-  <input type="button" id="create-team-btn" value="Create Team"/><br/> -->
 <!DOCTYPE html>
 <html lang="en">
 
@@ -89,7 +70,7 @@
       $(document).on("click", ".team_create_btn", function(){
         $.post("/f/createTeam", {id: $(".team_id").val(), name: $(".team_name").val(), number: $(".team_num").val()}, function(responseText){
           if(responseText=="success"){
-            $.post("/f/joinTeam", {team_id: $(".team_id").val(), user_id: localStorage.id}, function(responseText){
+            $.post("/f/joinTeam", {team_id: $(".team_id").val()}, function(responseText){
               if(responseText == "success"){
                 var lsTeams = JSON.parse(localStorage.teams);
                 lsTeams.push({id: $(".team_id").val(), position: "admin"});
@@ -107,7 +88,7 @@
         })
       });
       $(document).on("click", ".team_join_btn", function(){
-        $.post("/f/joinTeam", {team_id: $(".team_join_id").val(), user_id: localStorage.id}, function(responseText){
+        $.post("/f/joinTeam", {team_id: $(".team_join_id").val(), user_id: localStorage._id}, function(responseText){
           if(responseText=="success"){
             var lsTeams = JSON.parse(localStorage.teams);
             lsTeams.push({id: $(".team_join_id").val(), position: "member"});

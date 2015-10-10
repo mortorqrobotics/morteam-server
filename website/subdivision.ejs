@@ -57,7 +57,7 @@
         <li class="navbar_item glyph_link" id="notif_button">
           <span class="glyphicon glyphicon-inbox"></span>
         </li>
-        <img class="profile_id" id="small_prof_pic" src="../images/user.jpg"></img>
+        <img class="profile_id ejs" id="small_prof_pic" src="../images/user.jpg"></img>
         <span class="profile_name" id="name_link"></span>
       </div>
     </ul>
@@ -108,15 +108,15 @@
             <li class="subdivision_member_add"><span class="glyphicon glyphicon-plus"></span> Invite member(s)</li><br/>
           <% } %>
           <% members.forEach(function(member) { %>
-            <% if(member.id != current_user_id){ %>
-              <li class="user-link subdivision_member" data-userid="<%= member.id %>" id="<%= member.id %>">
+            <% if(member._id != current_user_id){ %>
+              <li class="user-link subdivision_member" data-userid="<%= member._id %>" id="<%= member._id %>">
                 <img src="../images/user.jpg" onerror="this.src='../images/user.jpg'" class="small_prof_pic show" id="small_prof_pic"><%= member.firstname %> <%= member.lastname %>
               </li>
-              <li class="user_remove_btn" data-userid="<%= member.id %>">
+              <li class="user_remove_btn" data-userid="<%= member._id %>">
                 <span class="glyphicon glyphicon-trash"></span>
               </li><br>
             <% } else { %>
-              <li class="user-link subdivision_member full-width" data-userid="<%= member.id %>" id="<%= member.id %>">
+              <li class="user-link subdivision_member full-width" data-userid="<%= member._id %>" id="<%= member._id %>">
                 <img src="../images/user.jpg" onerror="this.src='../images/user.jpg'" class="small_prof_pic show" id="small_prof_pic"><%= member.firstname %> <%= member.lastname %>
               </li>
               <br>
@@ -127,7 +127,7 @@
             <li class="subdivision_member_add"><span class="glyphicon glyphicon-plus"></span> Invite member(s)</li><br/>
           <% } %>
           <% members.forEach(function(member) { %>
-            <li class="user-link subdivision_member full-width" data-userid="<%= member.id %>" id="<%= member.id %>">
+            <li class="user-link subdivision_member full-width" data-userid="<%= member._id %>" id="<%= member._id %>">
               <img src="../images/user.jpg" onerror="this.src='../images/user.jpg'" class="small_prof_pic show" id="small_prof_pic"><%= member.firstname %> <%= member.lastname %>
             </li>
             <br>
@@ -164,7 +164,7 @@
         for(var i = 0; i < users.length; i++){
           var user = document.createElement("p");
           $(user).addClass("potential_member");
-          $(user).attr("data-userid", users[i].id);
+          $(user).attr("data-userid", users[i]._id);
           $(user).html(users[i].firstname + " " + users[i].lastname);
           $(potential_members).append(user);
         }
@@ -180,6 +180,11 @@
     }
 
     $(document).ready(function() {
+      if( localStorage.profpicpath == "images/user.jpg" ){
+        $(".profile_id.ejs").attr("src", "../"+localStorage.profpicpath);
+      }else{
+        $(".profile_id.ejs").attr("src", localStorage.profpicpath);
+      }
 
       $(document).on("click", ".subdivision_join_btn", function() {
         $.post("/f/joinPublicSubdivision", {
@@ -189,7 +194,7 @@
           if (responseText == "success") {
             $(".subdivision_join_btn").remove();
             $("#join-leave").append('<input type="button" class="button subdivision_leave_btn" value="Leave"></input>');
-            $("#subdivision_members").append('<li class="user-link subdivision_member full-width" data-userid="' + localStorage.id + '" id="' + localStorage.id + '"><img src="../images/user.jpg" onerror="this.src=\'../images/user.jpg\'" class="small_prof_pic show" id="small_prof_pic">' + localStorage.firstname + ' ' +
+            $("#subdivision_members").append('<li class="user-link subdivision_member full-width" data-userid="' + localStorage._id + '" id="' + localStorage._id + '"><img src="../images/user.jpg" onerror="this.src=\'../images/user.jpg\'" class="small_prof_pic show" id="small_prof_pic">' + localStorage.firstname + ' ' +
               localStorage.lastname + '</li>');
           } else {
             alert("fail");
@@ -205,8 +210,8 @@
             if (responseText == "success") {
               $(".subdivision_leave_btn").remove();
               $("#join-leave").append('<input type="button" class="button subdivision_join_btn" value="Join"></input>');
-              $("#subdivision_members").find("#" + localStorage.id).next().remove();
-              $("#subdivision_members").find("#" + localStorage.id).remove();
+              $("#subdivision_members").find("#" + localStorage._id).next().remove();
+              $("#subdivision_members").find("#" + localStorage._id).remove();
             } else {
               alert("fail");
             }
@@ -230,7 +235,7 @@
       $(document).on("click", ".user_remove_btn", function(){
         if (window.confirm("Are you sure?")) {
           var $this = $(this);
-          $.post("/f/removeUserFromSubdivision", {user_id: $this.attr("data-userid")}, function(responseText){
+          $.post("/f/removeUserFromSubdivision", {user_id: $this.attr("data-userid"), subdivision_id: window.location.pathname.substring(window.location.pathname.lastIndexOf("/") + 1)}, function(responseText){
             if(responseText == "success"){
               $("#subdivision_members").find("#" + $this.attr("data-userid")).next().remove();
               $("#subdivision_members").find("#" + $this.attr("data-userid")).next().remove();

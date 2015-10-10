@@ -373,6 +373,10 @@ li.active{
 	-moz-user-select: none; /* Firefox */
 	-ms-user-select: none; /* IE10+ */
 }
+.chat_name:hover{
+	background-color: #FFB524;
+	cursor: pointer;
+}
 .chat_name_display, .folder_name_display{
 	max-height: 23px !important;
 	max-width: 155px;
@@ -414,7 +418,7 @@ li.active{
 .temp{
 	margin-top: -6px;
 	margin-right: 7px;
-	visibility: hidden;
+	/*visibility: hidden;  TODO: ADD UNCOMMENT THIS LATER   */
 }
 #hovered{
 	background-color: #FFB524;
@@ -454,10 +458,14 @@ li.active{
   	bottom: 15%;
   	width: 22.06%;
 }
-#make_group{
-	font-size: 23px;
+#compose{
+	font-size: 20px;
 	margin-left: 5px;
 	margin-right: 8px;
+}
+.compose:hover{
+	background-color: #FFB524;
+	cursor: pointer;
 }
 #make_drive{
 	font-size: 23px;
@@ -884,12 +892,23 @@ html { overflow-x: hidden; }
 	word-wrap: break-word;      /* IE */
 }
 .announcement_poster{
-	font-size: 20px;
+	font-size: 18px;
 	margin-left: 8px;
 	cursor: pointer;
 }
+.announcement_poster:hover{
+	/*text-decoration: underline;*/
+	border-bottom: 1px solid #777;
+}
+.announcement_timestamp{
+	font-size: 15px;
+	color: #888888
+}
 .announcement_top{
 	margin-bottom: -15px;
+}
+.user-link{
+	cursor: pointer;
 }
 .post_announcement{
 	max-width: 700px;
@@ -1256,6 +1275,18 @@ html { overflow-x: hidden; }
 	bottom: 15px;
 	box-shadow: 1.5px 3px 8px -2px #a9a9a9;
 	border-radius: 1px;
+}
+#make_group_chat_btn{
+	width: 100%;
+	height: 37px;
+	background-color: #ffc547;
+	border: none;
+	color: black;
+	box-shadow: 1.5px 3px 8px -2px #a9a9a9;
+	border-radius: 1px;
+}
+#make_group_chat_btn:hover{
+	background-color: orange;
 }
 .save_options, .delete_group, .leave_group, .submit_task, .modal_button{
 	width: 100%;

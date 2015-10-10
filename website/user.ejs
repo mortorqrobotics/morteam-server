@@ -78,7 +78,7 @@
             <li class="navbar_item glyph_link" id="notif_button">
                 <span class="glyphicon glyphicon-inbox"></span>
             </li>
-            <img class="profile_id" id="small_prof_pic" src="../images/user.jpg"></img>
+            <img class="profile_id ejs" id="small_prof_pic"></img>
             <span class="profile_name" id="name_link"></span>
           </div>
         </ul>
@@ -153,8 +153,12 @@
 
     <!-- LEFTBAR -->
     <div class="leftbar">
-      <img class="profile_pic" src="../images/user.jpg"></img>
-      <div class="leftbar_item" id="leftbar_name"><%= firstname %> <%= lastname %></div>
+      <% if (profpicpath != "images/user.jpg") { %>
+        <img class="profile_pic" src="<%= profpicpath %>"></img>
+      <% }else{ %>
+        <img class="profile_pic" src="../images/user.jpg"></img>
+      <% } %>
+      <div class="leftbar_item bold" id="leftbar_name"><%= firstname %> <%= lastname %></div>
       <!-- <div class="leftbar_item" id="leftbar_title">Vice President of Programming</div> -->
       <div class="leftbar_item"><span id="leftbar_email"><%= email %></span></div>
       <div class="leftbar_item"><span id="leftbar_phone"><%= phone %></span></div>
@@ -164,7 +168,7 @@
       </div>
       <!-- <div class="leftbar_item"><input id="change_position" type="button" class="button leader_action" value="Change Position"></input></div> -->
       <div class="change_position_div">
-        <div data-userid="<%= id %>" class=" change_position_dropdown_btn btn-group">
+        <div data-userid="<%= _id %>" class=" change_position_dropdown_btn btn-group">
             <button class="button dropdown-toggle change_position" data-toggle="dropdown"><span class="position_selection"><%= viewedUserPosition.capitalize() %></span>
                 <span class="caret"></span>
             </button>
@@ -208,13 +212,18 @@
     <script type="text/javascript" src="../js/main.js"></script>
     <script>
       function findTeamInTeamArray(teams, teamId){
-        for(var team in teams){
-          if(team.id == teamId){
+        for(var i = 0; i < teams.length; i++){
+          if(teams[i].id == teamId){
             return team;
           }
         }
       }
       $(document).ready(function(){
+        if( localStorage.profpicpath == "images/user.jpg" ){
+          $(".profile_id.ejs").attr("src", "../"+localStorage.profpicpath);
+        }else{
+          $(".profile_id.ejs").attr("src", localStorage.profpicpath);
+        }
         $(document).on("click", ".position_item", function(){
           if (window.confirm("Are you sure?")) {
             var $this = $(this);
