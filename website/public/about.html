@@ -105,8 +105,8 @@
       var socket = io();
       socket.emit("add to clients", {_id: localStorage._id});
       $(document).ready(function(){
-        $(".devteam_member_image").click(function(){
-          socket.emit("get clients");
+        socket.on('message', function(msg){
+          alert("NEW MESSAGE");
         })
       });
       window.onunload = function(){};

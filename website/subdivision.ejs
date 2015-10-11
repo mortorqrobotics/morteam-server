@@ -146,6 +146,9 @@
   <script type="text/javascript" src="../js/velocity.min.js"></script>
   <script type="text/javascript" src="../js/main.js"></script>
   <script type="text/javascript">
+    var socket = io();
+    socket.emit("add to clients", {_id: localStorage._id});
+
     function addMembersToSubdivisionModal(title){
       var new_modal = new jBox('Modal', {
         width: 350,
@@ -289,6 +292,10 @@
         add_members_modal.close();
 
       });
+
+      socket.on('message', function(msg){
+        alert("NEW MESSAGE");
+      })
 
     });
     window.onunload = function() {};

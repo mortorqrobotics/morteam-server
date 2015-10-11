@@ -211,6 +211,9 @@
     <script type="text/javascript" src="../js/velocity.min.js"></script>
     <script type="text/javascript" src="../js/main.js"></script>
     <script>
+      var socket = io();
+      socket.emit("add to clients", {_id: localStorage._id});
+
       function findTeamInTeamArray(teams, teamId){
         for(var i = 0; i < teams.length; i++){
           if(teams[i].id == teamId){
@@ -238,6 +241,11 @@
             });
           }
         });
+
+        socket.on('message', function(msg){
+          alert("NEW MESSAGE");
+        })
+
       });
     </script>
   </body>

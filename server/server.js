@@ -185,8 +185,8 @@ var upload = multer({
   storage: s3({
     dirname: '/',
     bucket: 'profilepics.morteam.com',
-    secretAccessKey: 'Mj0Fzkde4lORoMPr8abJhAABpUlB1SjlGkSRFBgk',
-    accessKeyId: 'AKIAI3D54IZI2HMGS5NQ',
+    secretAccessKey: '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',
+    accessKeyId: 'AKIAJ2SYCLPBZXUYIOPA',
     region: 'us-west-2',
     filename: function (req, file, cb) {
       cb(null, req.body.username + "." + file.mimetype.substring(file.mimetype.indexOf("/")+1) )
@@ -1032,27 +1032,63 @@ var online_clients = {};
 io.on('connection', function(socket){
   socket.on("add to clients", function(data){
     if(online_clients[data._id] == undefined){
-      online_clients[data._id] = socket.id;
+      User.findOne({_id: data._id}, function(err, user){
+        if(err){
+          console.error(err);
+          res.end("fail");
+        }else{
+          online_clients[data._id] = {socket: socket.id, firstname: user.firstname, profpicpath: user.profpicpath};
+          socket.broadcast.emit("joined", {_id: data._id} );
+        }
+      })
     }
   })
   socket.on("disconnect", function(){
     for(var user_id in online_clients) {
-      if(online_clients[user_id] == socket.id) {
+      if(online_clients[user_id].socket == socket.id) {
         delete online_clients[user_id];
+        socket.broadcast.emit("left", {_id: user_id} );
       }
     }
   })
   socket.on('message', function(msg){
-    for(var i = 0; i < msg.receivers.length; i++){
-      if( online_clients[ msg.receivers[i] ] != undefined){
-        io.to( online_clients[ msg.receivers[i] ] ).emit("message", msg);
+    if(socket.id == online_clients[msg.author_id].socket && msg.author_fn == online_clients[msg.author_id].firstname && msg.author_profpicpath == online_clients[msg.author_id].profpicpath){
+      for(var i = 0; i < msg.receivers.length; i++){
+        if( online_clients[ msg.receivers[i] ] != undefined){
+          io.to( online_clients[ msg.receivers[i] ].socket ).emit("message", msg);
+        }
       }
     }
   })
   socket.on('get clients', function(){
-    console.log("");
-    console.log(online_clients);
-    console.log("");
+    socket.emit('get clients', online_clients)
+  })
+  socket.on('new chat', function(data){
+    if(data.type == "private"){
+      io.to( online_clients[ data.receiver ].socket ).emit('new chat', data);
+    }else if (data.type == "group") {
+      User.find({
+        $or: [
+          {
+            _id: { "$in": data.userMembers }
+          },
+          {
+            subdivisions: { $elemMatch: { _id: {"$in": data.subdivisionMembers} } }
+          }
+        ]
+      }, function(err, users){
+        if(err){
+          console.error(err);
+          res.end("fail");
+        }else{
+          for(var i = 0; i < users.length; i++){
+            if( online_clients[ users[i]._id.toString() ] != undefined ){
+              io.to( online_clients[ users[i]._id.toString() ].socket ).emit('new chat', data)
+            }
+          }
+        }
+      });
+    }
   })
 });
 

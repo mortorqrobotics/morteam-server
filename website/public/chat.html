@@ -174,6 +174,10 @@
             $(user).attr("data-userid", users[i]._id);
             $(user).html(users[i].firstname + " " + users[i].lastname);
             $(potential_members).append(user);
+            if(users[i]._id == localStorage._id){
+              $(user).addClass("clicked");
+              $(user).addClass("hidden");
+            }
           }
           $(span).append($(user_search));
           $(span).append("<br/>");
@@ -187,6 +191,10 @@
       }
       $(document).ready(function() {
         document.body.appendChild(loadingDiv);
+
+        if (navigator.platform.indexOf("Mac") == -1) {
+            $('.chat_area').perfectScrollbar();
+        }
 
         spinnerOpts = {
             lines: 13 // The number of lines to draw
@@ -270,6 +278,7 @@
                 $(li).attr("data-chatid", user2.chat_id);
                 $(".compose").after( $(li) );
                 $(li).trigger("click");
+                socket.emit('new chat', {type: "private", user_id: localStorage._id, receiver: user2._id, firstname: localStorage.firstname, lastname: localStorage.lastname, profpicpath: localStorage.profpicpath, chat_id: user2.chat_id});
               }else{
                 alert(responseText);
               }
@@ -316,6 +325,7 @@
               $(li).attr("data-chatid", chat._id);
               $(".compose").after( $(li) );
               $(li).trigger("click");
+              socket.emit('new chat', {type: "group", user_id: localStorage._id, userMembers: chat.userMembers, subdivisionMembers: chat.subdivisionMembers, name: chat.name, chat_id: chat._id});
             }else{
               alert(responseText);
             }
@@ -352,36 +362,49 @@
 
       });
       $(window).load(function(){
-        $.post("/f/getChatsForUser", function(responseText){
-          if(responseText != "fail"){
-            var chats = JSON.parse(responseText);
-            for(var i = 0; i < chats.length; i++){
-              var li = document.createElement("li")
-              $(li).addClass("chat_name");
-              var img = document.createElement("img");
-              var span = document.createElement("span");
-              $(img).addClass("small_prof_pic");
-              $(img).addClass("temp");
-              // $(img).addClass("offline");
-              $(img).attr("id", "small_prof_pic");
-              if(chats[i].group == true){
-                $(span).html(chats[i].name)
-                $(img).attr("src", "images/group.png")
-              }else{
-                var user2 = getUserOtherThanSelf(chats[i].userMembers)
-                $(span).html(user2.firstname + " " + user2.lastname);
-                $(img).attr("src", user2.profpicpath);
-              }
-              $(li).append( img );
-              $(li).append( span );
-              $(li).attr("data-chatid", chats[i]._id);
+        socket.emit("get clients");
+        socket.on('get clients', function(online_clients){
+          $.post("/f/getChatsForUser", function(responseText){
+            if(responseText != "fail"){
+              chat_users = []
+              var chats = JSON.parse(responseText);
+              for(var i = 0; i < chats.length; i++){
+                var li = document.createElement("li")
+                $(li).addClass("chat_name");
+                var img = document.createElement("img");
+                var span = document.createElement("span");
+                $(img).addClass("small_prof_pic");
+                $(img).addClass("temp");
+                // $(img).addClass("offline");
+                $(img).attr("id", "small_prof_pic");
+                if(chats[i].group == true){
+                  $(span).html(chats[i].name)
+                  $(img).attr("src", "images/group.png")
+                }else{
+                  var user2 = getUserOtherThanSelf(chats[i].userMembers)
+                  $(span).html(user2.firstname + " " + user2.lastname);
+                  $(img).attr("src", user2.profpicpath);
+                  chat_users.push({
+                    user_id: user2._id.toString(),
+                    chat_id: chats[i]._id.toString()
+                  });
+                  if( online_clients[user2._id.toString()] != undefined ){
+                    $(img).addClass("online");
+                  }else{
+                    $(img).addClass("offline");
+                  }
+                }
+                $(li).append( img );
+                $(li).append( span );
+                $(li).attr("data-chatid", chats[i]._id);
 
-              $(".users_list").append( li );
-              if(i == 0){
-                $(li).trigger("click");
+                $(".users_list").append( li );
+                if(i == 0){
+                  $(li).trigger("click");
+                }
               }
             }
-          }
+          })
         })
 
 
@@ -406,7 +429,7 @@
               var messages = JSON.parse(responseText);
               for(var i = 0; i < messages.length; i++){
                 if(messages[i].author._id.toString() != localStorage._id){
-                  $('.chat_area').append("<div class='bubble_wrapper'><div class='other_bubble'><img class='show' id='small_prof_pic' src='/images/user.jpg'></img>" + "<p class='chat_opponent'>" + messages[i].author.firstname + ": </p class='chat_opponent'>" + messages[i].content + "</div></div>")
+                  $('.chat_area').append("<div class='bubble_wrapper'><div class='other_bubble'><img class='show' id='small_prof_pic' src='"+ messages[i].author.profpicpath +"'></img>" + "<p class='chat_opponent'>" + messages[i].author.firstname + ": </p class='chat_opponent'>" + messages[i].content + "</div></div>")
                 }else{
                   // $('.chat_area').append("<div class='bubble_wrapper'><div class='self_bubble'><p class='chat_opponent'>" + messages[i].author.firstname + ": </p class='chat_opponent'>" + messages[i].content + "</div></div>")
                   $('.chat_area').append("<div class='bubble_wrapper'><div class='self_bubble'>" + messages[i].content + "</div></div>");
@@ -420,6 +443,7 @@
           }
         });
         $(document).on("click", ".send_button", function(){
+          var $this = $(this);
           $.post("/f/sendMessage", {chat_id: $(".chat_name.selected").attr("data-chatid"), content: $(".reply_textarea").val()}, function(responseText){
             if(responseText == "success"){
               var newMsg = {
@@ -433,16 +457,91 @@
               }, 400);
 
               $(".reply_textarea").val("");
-              socket.emit("message", {receivers: receivers, chat_id: $(".chat_name.selected").attr("data-chatid"), author_fn: localStorage.firstname, content: newMsg.content, timestamp: newMsg.timestamp})
+              autosize.update(ta); // resizes reply text box
+              $('.chat_area').css('height', "calc(100vh - 58px - " + $this.height() + "px)"); // resizes div.chat_area according to changes that
+
+              socket.emit("message", {author_id: localStorage._id, author_profpicpath: localStorage.profpicpath, receivers: receivers, chat_id: $(".chat_name.selected").attr("data-chatid"), author_fn: localStorage.firstname, content: newMsg.content, timestamp: newMsg.timestamp})
             }
           })
         });
-        socket.on('message', function(msg){
-          if(msg.chat_id == $(".chat_name.selected").attr("data-chatid")){
-            $('.chat_area').append("<div class='bubble_wrapper'><div class='other_bubble'><img class='show' id='small_prof_pic' src='/images/user.jpg'></img>" + "<p class='chat_opponent'>" + msg.author_fn + ": </p class='chat_opponent'>" + msg.content + "</div></div>")
+        var replyInitialHeight = $('.reply_textarea').height(); // initial height of reply text box, it's used to check for height changes later
+        $('.reply_textarea').bind("input", function() { //checks for height change of reply text box and adjusts height of chat area accordingly
+            if ($(this).height() != replyInitialHeight) {
+                replyInitialHeight = $(this).height();
+                $('.chat_area').css('height', "calc(100% - 30px - " + $(this).height() + "px)");
+                $(".chat_area").animate({
+                    scrollTop: $('.chat_area')[0].scrollHeight
+                }, 400); // scrolls to bottom of conversation
+            }
+        });
+        $('.reply_textarea').focus(function() { // scrolls to bottom of conversation when reply box is focused
             $(".chat_area").animate({
                 scrollTop: $('.chat_area')[0].scrollHeight
             }, 400);
+        });
+        $('.reply_textarea').keypress(function(e) { // changes events for enter and shift+enter to send and add line break respectively
+          if (e.shiftKey && e.which == 13) {
+            // creates new line
+          } else if (e.which == 13) {
+            e.preventDefault();
+            $('.send_button').trigger("click");
+            autosize.update(ta);
+            $('.chat_area').css('height', "calc(100% - 30px - " + $(this).height() + "px)");
+          }
+        });
+
+        socket.on('message', function(msg){
+          if(msg.chat_id == $(".chat_name.selected").attr("data-chatid")){
+            $('.chat_area').append("<div class='bubble_wrapper'><div class='other_bubble'><img class='show' id='small_prof_pic' src='"+msg.author_profpicpath+"'></img>" + "<p class='chat_opponent'>" + msg.author_fn + ": </p class='chat_opponent'>" + msg.content + "</div></div>")
+            $(".chat_area").animate({
+                scrollTop: $('.chat_area')[0].scrollHeight
+            }, 400);
+          }else{
+            alert("NEW MESSAGE");
+          }
+        })
+        socket.on('joined', function(data){
+          for(var i = 0; i < chat_users.length; i++){
+            if(data._id.toString() == chat_users[i].user_id){
+              $(".chat_name[data-chatid='"+ chat_users[i].chat_id +"']").children().first().removeClass("offline");
+              $(".chat_name[data-chatid='"+ chat_users[i].chat_id +"']").children().first().addClass("online");
+            }
+          }
+        });
+        socket.on('left', function(data){
+          for(var i = 0; i < chat_users.length; i++){
+            if(data._id.toString() == chat_users[i].user_id){
+              $(".chat_name[data-chatid='"+ chat_users[i].chat_id +"']").children().first().removeClass("online");
+              $(".chat_name[data-chatid='"+ chat_users[i].chat_id +"']").children().first().addClass("offline");
+            }
+          }
+        })
+        socket.on('new chat', function(data){
+          if(data.user_id != localStorage._id){
+            var li = document.createElement("li")
+            $(li).addClass("chat_name");
+            var img = document.createElement("img");
+            var span = document.createElement("span");
+            $(img).addClass("small_prof_pic");
+            $(img).addClass("temp");
+            $(img).attr("id", "small_prof_pic");
+            if(data.type == "group"){
+              $(span).html(data.name)
+              $(img).attr("src", "images/group.png")
+            }else{
+              $(span).html(data.firstname + " " + data.lastname);
+              $(img).attr("src", data.profpicpath);
+              $(img).addClass("online");
+              chat_users.push({
+                user_id: data.user_id.toString(),
+                chat_id: data.chat_id.toString()
+              });
+            }
+            $(li).append( img );
+            $(li).append( span );
+            $(li).attr("data-chatid", data.chat_id);
+
+            $(".compose").after( $(li) );
           }
         })
       })
