@@ -15,6 +15,7 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
     <link rel='stylesheet' href='css/perfect-scrollbar.min.css' />
     <link href="jbox/jBox.css" rel="stylesheet">
+    <link href="jbox/themes/TooltipDark.css" rel="stylesheet">
     <link rel="stylesheet" href="css/index.css" type="text/css">
     <script src="js/spin.js"></script>
     <script type="text/javascript">
@@ -89,10 +90,11 @@
 
     <!-- BODY -->
     <div class="wrapper chat_wrapper">
-      <div class="chat_area" id="chat_area"></div>
+      <div class="chat_area hidden" id="chat_area">
+      </div>
       <div class="reply_box">
-          <textarea rows="1" class="reply_textarea"></textarea>
-          <input type="button" class="send_button" value="send"></input>
+          <textarea rows="1" class="reply_textarea hidden"></textarea>
+          <input type="button" class="send_button hidden" value="send"></input>
       </div>
     </div>
     <div class="ads">
@@ -128,7 +130,6 @@
     <script type="text/javascript">
 
       var socket = io();
-      socket.emit("add to clients", {_id: localStorage._id});
 
       function getUserOtherThanSelf(twoUsers){
         if(twoUsers[0]._id == localStorage._id){
@@ -137,11 +138,48 @@
           return twoUsers[0];
         }
       }
+      function removeDuplicates(arr) {
+        var seen = {};
+        var out = [];
+        var len = arr.length;
+        var j = 0;
+        for(var i = 0; i < len; i++) {
+          var item = arr[i];
+          if(seen[item] !== 1) {
+            seen[item] = 1;
+            out[j++] = item;
+          }
+         }
+        return out;
+      }
+      function parseDate(dateString){
+        var date = new Date(dateString);
+        var now = new Date();
+        var result = "";
+        var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+        var month = date.getMonth();
+        var day = date.getDate();
+        var year = date.getFullYear();
+        var time = standardizeTime(date);
+        if( now.getFullYear() == year ){
+          if( now.getDate() == day && now.getMonth() == month ){
+            result += "Today";
+          }else if ( now.getDate() == day + 1 && now.getMonth() == month) {
+            result += "Yesterday";
+          }else{
+            result += months[month] + ' ' + day;
+          }
+        }else{
+          result += months[month] + ' ' + day + ' ' + year;
+        }
+        result += ' ' + time;
+        return result;
+      }
       function composeModal(title){
         var new_modal = new jBox('Modal', {
           width: 350,
           height: 373,
-          title: title
+          title: title,
         });
         var span = document.createElement("span");
         var user_search = '<input type="text" placeholder="Search Names..." class="members_search" id="audience_members_search">';
@@ -258,7 +296,9 @@
           $(".potential_member").removeClass("clicked");
           $(".potential_subdivision").removeClass("clicked");
 
-          if(userMembers.length == 2 && subdivisionMembers.length == 0){
+          if(removeDuplicates(userMembers).length == 1 && subdivisionMembers.length == 0){
+            new_convo_modal.close();
+          }else if(removeDuplicates(userMembers).length == 2 && subdivisionMembers.length == 0){
             //private
             $.post("/f/createChat", {userMembers: userMembers, type: "private", user2: getUserOtherThanSelf(userMembers)}, function(responseText){
               if(responseText != "fail" && responseText != "exists"){
@@ -278,7 +318,7 @@
                 $(li).attr("data-chatid", user2.chat_id);
                 $(".compose").after( $(li) );
                 $(li).trigger("click");
-                socket.emit('new chat', {type: "private", user_id: localStorage._id, receiver: user2._id, firstname: localStorage.firstname, lastname: localStorage.lastname, profpicpath: localStorage.profpicpath, chat_id: user2.chat_id});
+                socket.emit('new chat', {type: "private", receiver: user2._id, chat_id: user2.chat_id});
               }else{
                 alert(responseText);
               }
@@ -325,7 +365,7 @@
               $(li).attr("data-chatid", chat._id);
               $(".compose").after( $(li) );
               $(li).trigger("click");
-              socket.emit('new chat', {type: "group", user_id: localStorage._id, userMembers: chat.userMembers, subdivisionMembers: chat.subdivisionMembers, name: chat.name, chat_id: chat._id});
+              socket.emit('new chat', {type: "group", userMembers: chat.userMembers, subdivisionMembers: chat.subdivisionMembers, name: chat.name, chat_id: chat._id});
             }else{
               alert(responseText);
             }
@@ -362,45 +402,50 @@
 
       });
       $(window).load(function(){
+
         socket.emit("get clients");
         socket.on('get clients', function(online_clients){
           $.post("/f/getChatsForUser", function(responseText){
             if(responseText != "fail"){
               chat_users = []
               var chats = JSON.parse(responseText);
-              for(var i = 0; i < chats.length; i++){
-                var li = document.createElement("li")
-                $(li).addClass("chat_name");
-                var img = document.createElement("img");
-                var span = document.createElement("span");
-                $(img).addClass("small_prof_pic");
-                $(img).addClass("temp");
-                // $(img).addClass("offline");
-                $(img).attr("id", "small_prof_pic");
-                if(chats[i].group == true){
-                  $(span).html(chats[i].name)
-                  $(img).attr("src", "images/group.png")
-                }else{
-                  var user2 = getUserOtherThanSelf(chats[i].userMembers)
-                  $(span).html(user2.firstname + " " + user2.lastname);
-                  $(img).attr("src", user2.profpicpath);
-                  chat_users.push({
-                    user_id: user2._id.toString(),
-                    chat_id: chats[i]._id.toString()
-                  });
-                  if( online_clients[user2._id.toString()] != undefined ){
-                    $(img).addClass("online");
+              if(chats.length == 0){
+                //TODO: Do something to notify them that they dont have any chats
+              }else{
+                for(var i = 0; i < chats.length; i++){
+                  var li = document.createElement("li")
+                  $(li).addClass("chat_name");
+                  var img = document.createElement("img");
+                  var span = document.createElement("span");
+                  $(img).addClass("small_prof_pic");
+                  $(img).addClass("temp");
+                  // $(img).addClass("offline");
+                  $(img).attr("id", "small_prof_pic");
+                  if(chats[i].group == true){
+                    $(span).html(chats[i].name)
+                    $(img).attr("src", "images/group.png")
                   }else{
-                    $(img).addClass("offline");
+                    var user2 = getUserOtherThanSelf(chats[i].userMembers)
+                    $(span).html(user2.firstname + " " + user2.lastname);
+                    $(img).attr("src", user2.profpicpath);
+                    chat_users.push({
+                      user_id: user2._id.toString(),
+                      chat_id: chats[i]._id.toString()
+                    });
+                    if( online_clients[user2._id.toString()] != undefined ){
+                      $(img).addClass("online");
+                    }else{
+                      $(img).addClass("offline");
+                    }
                   }
-                }
-                $(li).append( img );
-                $(li).append( span );
-                $(li).attr("data-chatid", chats[i]._id);
+                  $(li).append( img );
+                  $(li).append( span );
+                  $(li).attr("data-chatid", chats[i]._id);
 
-                $(".users_list").append( li );
-                if(i == 0){
-                  $(li).trigger("click");
+                  $(".users_list").append( $(li) );
+                  if(i == 0){
+                    $(li).trigger("click");
+                  }
                 }
               }
             }
@@ -409,6 +454,12 @@
 
 
         $(document).on("click", ".chat_name:not(.compose)", function(){
+          socket.emit('stop typing', {chat_id: $(".chat_name.selected").attr("data-chatid") });
+          $(".send_button").show().removeClass("hidden");
+          $(".reply_textarea").show().removeClass("hidden");
+          $(".chat_area").show().removeClass("hidden");
+          $(".chat_area").unbind("scroll");
+          sessionStorage.chatPage = 0;
           if( !$(this).hasClass("selected") ){
             receivers = [];
             var $this = $(this);
@@ -425,33 +476,67 @@
               }
             });
             //load messages
-            $.post("/f/loadMessagesForChat", {chat_id: $this.attr("data-chatid")}, function(responseText){
+            $.post("/f/loadMessagesForChat", {chat_id: $this.attr("data-chatid"), skip: 20*parseInt(sessionStorage.chatPage)}, function(responseText){
               var messages = JSON.parse(responseText);
               for(var i = 0; i < messages.length; i++){
                 if(messages[i].author._id.toString() != localStorage._id){
-                  $('.chat_area').append("<div class='bubble_wrapper'><div class='other_bubble'><img class='show' id='small_prof_pic' src='"+ messages[i].author.profpicpath +"'></img>" + "<p class='chat_opponent'>" + messages[i].author.firstname + ": </p class='chat_opponent'>" + messages[i].content + "</div></div>")
+                  $('.chat_area').prepend("<div class='bubble_wrapper'><div class='other_bubble'><img title='" + messages[i].author.firstname + " " +  messages[i].author.lastname + ", " + parseDate(messages[i].timestamp) + "' class='show tt' id='small_prof_pic' src='"+ messages[i].author.profpicpath +"'></img>" + "<p data-userid='" + messages[i].author._id + "' class='chat_opponent user-link'>" + messages[i].author.firstname + ": </p class='chat_opponent'>" + messages[i].content + "</div></div>")
                 }else{
                   // $('.chat_area').append("<div class='bubble_wrapper'><div class='self_bubble'><p class='chat_opponent'>" + messages[i].author.firstname + ": </p class='chat_opponent'>" + messages[i].content + "</div></div>")
-                  $('.chat_area').append("<div class='bubble_wrapper'><div class='self_bubble'>" + messages[i].content + "</div></div>");
+                  $('.chat_area').prepend("<div class='bubble_wrapper'><div class='self_bubble'>" + messages[i].content + "</div></div>");
 
                 }
                 $(".chat_area").animate({
                     scrollTop: $('.chat_area')[0].scrollHeight
                 }, 0);
               }
+              $('.tt').jBox('Tooltip', {
+                  delayOpen: 100,
+                  delayClose: 0,
+                  theme: "TooltipDark"
+              });
+              $('.chat_area').scroll(function() {
+                  var pos = $('.chat_area').scrollTop();
+                  if (pos == 0) {
+                      sessionStorage.chatPage++;
+                      $.post("/f/loadMessagesForChat", {chat_id: $this.attr("data-chatid"), skip: 20*parseInt(sessionStorage.chatPage)}, function(responseText){
+                        var messages = JSON.parse(responseText);
+                        for (var i = 0; i < messages.length; i++){
+                          if(messages[i].author._id.toString() != localStorage._id){
+                            var appendedMsg = $("<div class='bubble_wrapper'><div class='other_bubble'><img title='" + messages[i].author.firstname + " " +  messages[i].author.lastname + ", " + parseDate(messages[i].timestamp) + "' class='show tt' id='small_prof_pic' src='"+ messages[i].author.profpicpath +"'></img>" + "<p data-userid='" + messages[i].author._id + "' class='chat_opponent user-link'>" + messages[i].author.firstname + ": </p class='chat_opponent'>" + messages[i].content + "</div></div>").prependTo($('.chat_area'));
+                            $(".chat_area").animate({
+                                scrollTop: "+="+appendedMsg.height()
+                            }, 0);
+                          }else{
+                            var appendedMsg = $("<div class='bubble_wrapper'><div class='self_bubble'>" + messages[i].content + "</div></div>").prependTo($('.chat_area'))
+                            $(".chat_area").animate({
+                                scrollTop: "+="+appendedMsg.height()
+                            }, 0);
+                          }
+                        }
+                        $('.tt').jBox('Tooltip', {
+                            delayOpen: 100,
+                            delayClose: 0,
+                            theme: "TooltipDark"
+                        });
+                      })
+                  }
+              });
             });
           }
         });
         $(document).on("click", ".send_button", function(){
           var $this = $(this);
+
+
           $.post("/f/sendMessage", {chat_id: $(".chat_name.selected").attr("data-chatid"), content: $(".reply_textarea").val()}, function(responseText){
             if(responseText == "success"){
-              var newMsg = {
-                author: localStorage._id,
-                content: $(".reply_textarea").val(),
-                timestamp: new Date()
+              var newMsgContent = $(".reply_textarea").val();
+              if( $('.bubble_wrapper.istyping').length != 0 ){
+                $('.bubble_wrapper.istyping').before("<div class='bubble_wrapper'><div class='self_bubble'>" + newMsgContent + "</div></div>");
+              }else{
+                $('.chat_area').append("<div class='bubble_wrapper'><div class='self_bubble'>" + newMsgContent + "</div></div>");
               }
-              $('.chat_area').append("<div class='bubble_wrapper'><div class='self_bubble'>" + newMsg.content + "</div></div>");
               $(".chat_area").animate({
                   scrollTop: $('.chat_area')[0].scrollHeight
               }, 400);
@@ -460,7 +545,14 @@
               autosize.update(ta); // resizes reply text box
               $('.chat_area').css('height', "calc(100vh - 58px - " + $this.height() + "px)"); // resizes div.chat_area according to changes that
 
-              socket.emit("message", {author_id: localStorage._id, author_profpicpath: localStorage.profpicpath, receivers: receivers, chat_id: $(".chat_name.selected").attr("data-chatid"), author_fn: localStorage.firstname, content: newMsg.content, timestamp: newMsg.timestamp})
+              socket.emit("message", {chat_id: $(".chat_name.selected").attr("data-chatid"), content: newMsgContent})
+              socket.emit('stop typing', {chat_id: $(".chat_name.selected").attr("data-chatid") });
+
+
+              if( $(".chat_name:not(.compose)").get(0) != $(".chat_name.selected") ){
+                $(".compose").after( $(".chat_name.selected") );
+              }
+
             }
           })
         });
@@ -489,30 +581,46 @@
             $('.chat_area').css('height', "calc(100% - 30px - " + $(this).height() + "px)");
           }
         });
+        $(document).on("keyup", '.reply_textarea', function() {
+          if( $('.reply_textarea').val() == '' ){
+            socket.emit('stop typing', {chat_id: $(".chat_name.selected").attr("data-chatid") });
+          }else{
+            socket.emit('start typing', {chat_id: $(".chat_name.selected").attr("data-chatid") });
+          }
+        });
 
         socket.on('message', function(msg){
           if(msg.chat_id == $(".chat_name.selected").attr("data-chatid")){
-            $('.chat_area').append("<div class='bubble_wrapper'><div class='other_bubble'><img class='show' id='small_prof_pic' src='"+msg.author_profpicpath+"'></img>" + "<p class='chat_opponent'>" + msg.author_fn + ": </p class='chat_opponent'>" + msg.content + "</div></div>")
+            $('.chat_area').append("<div class='bubble_wrapper'><div class='other_bubble'><img title='" + msg.author_fn + " " + msg.author_ln + ", " + parseDate(msg.timestamp) + "' class='show tt' id='small_prof_pic' src='"+msg.author_profpicpath+"'></img>" + "<p data-userid='" + msg.author_id + "' class='chat_opponent user-link'>" + msg.author_fn + ": </p class='chat_opponent'>" + msg.content + "</div></div>")
             $(".chat_area").animate({
                 scrollTop: $('.chat_area')[0].scrollHeight
             }, 400);
+            $('.tt').jBox('Tooltip', {
+                delayOpen: 100,
+                delayClose: 0,
+                theme: "TooltipDark"
+            });
           }else{
             alert("NEW MESSAGE");
           }
         })
         socket.on('joined', function(data){
-          for(var i = 0; i < chat_users.length; i++){
-            if(data._id.toString() == chat_users[i].user_id){
-              $(".chat_name[data-chatid='"+ chat_users[i].chat_id +"']").children().first().removeClass("offline");
-              $(".chat_name[data-chatid='"+ chat_users[i].chat_id +"']").children().first().addClass("online");
+          if(chat_users != undefined){
+            for(var i = 0; i < chat_users.length; i++){
+              if(data._id.toString() == chat_users[i].user_id){
+                $(".chat_name[data-chatid='"+ chat_users[i].chat_id +"']").children().first().removeClass("offline");
+                $(".chat_name[data-chatid='"+ chat_users[i].chat_id +"']").children().first().addClass("online");
+              }
             }
           }
         });
         socket.on('left', function(data){
-          for(var i = 0; i < chat_users.length; i++){
-            if(data._id.toString() == chat_users[i].user_id){
-              $(".chat_name[data-chatid='"+ chat_users[i].chat_id +"']").children().first().removeClass("online");
-              $(".chat_name[data-chatid='"+ chat_users[i].chat_id +"']").children().first().addClass("offline");
+          if(chat_users != undefined){
+            for(var i = 0; i < chat_users.length; i++){
+              if(data._id.toString() == chat_users[i].user_id){
+                $(".chat_name[data-chatid='"+ chat_users[i].chat_id +"']").children().first().removeClass("online");
+                $(".chat_name[data-chatid='"+ chat_users[i].chat_id +"']").children().first().addClass("offline");
+              }
             }
           }
         })
@@ -543,8 +651,29 @@
 
             $(".compose").after( $(li) );
           }
+        });
+        socket.on('start typing', function(data){
+          if( $(".bubble_wrapper.istyping").length == 0 ){
+            if( $(".chat_name.selected").attr("data-chatid") == data.chat_id ){
+              $(".chat_area").append( "<div class='bubble_wrapper istyping'><div class='other_bubble'> ... </div></div>" )
+              $(".chat_area").animate({
+                  scrollTop: $('.chat_area')[0].scrollHeight
+              }, 400);
+            }
+          }
+        })
+        socket.on('stop typing', function(data){
+          if( $(".chat_name.selected").attr("data-chatid") == data.chat_id ){
+            $('.bubble_wrapper.istyping').remove();
+          }
         })
       })
+      window.onbeforeunload = function(){
+        socket.emit('stop typing', {chat_id: $(".chat_name.selected").attr("data-chatid") });
+      };
+      $(window).blur(function() {
+        socket.emit('stop typing', {chat_id: $(".chat_name.selected").attr("data-chatid") });
+      });
     </script>
 </body>
 

@@ -5,7 +5,8 @@ var url = require('url');
 var qs = require('querystring');
 var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
-var session = require('client-sessions');
+var session = require('express-session');
+var MongoStore = require('connect-mongo')(session);
 var nodemailer = require('nodemailer');
 var multer = require('multer');
 var s3 = require('multer-s3');
@@ -80,6 +81,23 @@ String.prototype.contains = function(arg) {
 String.prototype.capitalize = function() {
   return this.charAt(0).toUpperCase() + this.slice(1);
 }
+Array.prototype.hasAnythingFrom = function(arr){
+  var result = false;
+  var r = [], o = {}, l = arr.length, i, v;
+  for (i = 0; i < l; i++) {
+      o[arr[i]] = true;
+  }
+  l = this.length;
+  for (i = 0; i < l; i++) {
+      v = this[i];
+      if (v in o) {
+          result = true;
+          break;
+      }
+  }
+  return result;
+}
+
 
 function findTeamInUser(user, teamId){
   for(var i = 0; i < user.teams.length; i++){
@@ -87,6 +105,14 @@ function findTeamInUser(user, teamId){
       return user.teams[i];
     }
   }
+}
+
+function getIdsFromObjects(objects){
+  result = [];
+  for(var i = 0; i < objects.length; i++){
+    result.push( objects[i]._id );
+  }
+  return result;
 }
 
 function getUserOtherThanSelf(twoUsers, selfId){
@@ -106,16 +132,19 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
   extended: true
 }));
-app.use(session({
-  cookieName: 'session',
+
+var sessionMiddleware = session({
   secret: 'temporary_secret',
-  duration: 30 * 60 * 1000,
-  activeDuration: 5 * 60 * 1000,
-  cookie: {
-    ephemeral: true,
-    httpOnly: true
-  }
-}));
+  saveUninitialized: false,
+  resave: false,
+  store: new MongoStore({ mongooseConnection: mongoose.connection })
+});
+
+io.use(function(socket, next){
+  sessionMiddleware(socket.request, socket.request.res, next);
+});
+app.use(sessionMiddleware);
+
 app.use(function(req, res, next) {
   if (req.session && req.session.user) {
     User.findOne({
@@ -402,8 +431,14 @@ app.post("/f/login", function(req, res) {
   });
 });
 app.post("/f/logout", requireLogin, function(req, res) {
-  req.session.reset();
-  res.end("success");
+  req.session.destroy(function(err) {
+    if(err){
+      console.error(err);
+      res.end("fail");
+    }else{
+      res.end("success");
+    }
+  })
 });
 app.post("/f/createTeam", requireLogin, function(req, res) {
   Team.find({id: req.body.id}, function(err, teams){
@@ -975,12 +1010,14 @@ app.post("/f/getChatsForUser", requireLogin, function(req, res){
       console.error(err);
       res.end("fail");
     }else{
+      // online_clients[req.user._id.toString()]["chats"] =  getIdsFromObjects(chats);
       res.end(JSON.stringify(chats));
     }
   })
 });
 app.post("/f/loadMessagesForChat", requireLogin, function(req, res){ //TODO: maybe in the future combine this with getUsersInChat to improve performance
-  Chat.findOne( {_id: req.body.chat_id} ).slice('messages', [-20, 20]).populate('messages.author').exec(function(err, chat){
+  var skip = parseInt(req.body.skip)
+  Chat.findOne( {_id: req.body.chat_id} ).slice('messages', [skip, 20]).populate('messages.author').exec(function(err, chat){
     if (err) {
       console.error(err);
       res.end("fail");
@@ -1015,10 +1052,25 @@ app.post("/f/getUsersInChat", function(req, res){
     }
   });
 });
+// app.post("/f/sendMessage", function(req, res){
+//   Chat.update({_id: req.body.chat_id}, { '$push': {
+//     'messages': {author: new ObjectId(req.user._id), content: req.body.content, timestamp: new Date()}
+//   }, updated_at: new Date()}, function(err, model){
+//     if(err){
+//       console.error(err);
+//       res.end("fail");
+//     }else{
+//       res.end("success");
+//     }
+//   });
+// });
 app.post("/f/sendMessage", function(req, res){
   Chat.update({_id: req.body.chat_id}, { '$push': {
-    'messages': {author: new ObjectId(req.user._id), content: req.body.content, timestamp: new Date()}
-  }}, function(err, model){
+    'messages': {
+      "$each": [ {author: new ObjectId(req.user._id), content: req.body.content, timestamp: new Date()} ],
+      "$position": 0
+    }
+  }, updated_at: new Date()}, function(err, model){
     if(err){
       console.error(err);
       res.end("fail");
@@ -1030,42 +1082,90 @@ app.post("/f/sendMessage", function(req, res){
 
 var online_clients = {};
 io.on('connection', function(socket){
-  socket.on("add to clients", function(data){
-    if(online_clients[data._id] == undefined){
-      User.findOne({_id: data._id}, function(err, user){
-        if(err){
-          console.error(err);
-          res.end("fail");
-        }else{
-          online_clients[data._id] = {socket: socket.id, firstname: user.firstname, profpicpath: user.profpicpath};
-          socket.broadcast.emit("joined", {_id: data._id} );
+
+  var sess = socket.request.session.user;
+  if(sess && online_clients[sess._id] == undefined){
+    var userSubdivisionIds = sess.subdivisions.map(function(subdivision) {return subdivision._id;});
+    Chat.find({
+      team: sess.current_team.id,
+      $or: [
+        {
+          userMembers: new ObjectId(sess._id)
+        },
+        {
+          subdivisionMembers: {
+            "$in": userSubdivisionIds
+          }
         }
-      })
-    }
-  })
-  socket.on("disconnect", function(){
-    for(var user_id in online_clients) {
-      if(online_clients[user_id].socket == socket.id) {
-        delete online_clients[user_id];
-        socket.broadcast.emit("left", {_id: user_id} );
+      ]
+    },
+    {
+      _id: 1
+    }).exec(function(err, chats){
+      if(err){
+        console.error(err);
+        res.end("fail");
+      }else{
+        var chatIds = chats.map(function(chat){ return chat._id.toString() });
+        online_clients[sess._id] = {socket: socket.id, chats: chatIds};
+        for( var user_id in online_clients ){
+          if( online_clients[user_id].chats.hasAnythingFrom( online_clients[sess._id].chats && user_id != sess._id ) ){
+            io.to( online_clients[user_id].socket ).emit("joined", {_id: sess._id});
+          }
+        }
+      }
+    })
+  }else{
+    for( var user_id in online_clients ){
+      if( online_clients[user_id].chats.hasAnythingFrom( online_clients[sess._id].chats && user_id != sess._id ) ){
+        io.to( online_clients[user_id].socket ).emit("joined", {_id: sess._id});
       }
     }
+  }
+
+  socket.on("disconnect", function(){
+    for( var user_id in online_clients ){
+      if(online_clients[sess._id]){ //TODO: sometimes online_clients[sess._id] doesnt exist
+        if( online_clients[user_id].chats.hasAnythingFrom( online_clients[sess._id].chats && user_id != sess._id ) ){
+          io.to( online_clients[user_id].socket ).emit("left", {_id: sess._id});
+        }
+      }
+    }
+    delete online_clients[sess._id];
   })
   socket.on('message', function(msg){
-    if(socket.id == online_clients[msg.author_id].socket && msg.author_fn == online_clients[msg.author_id].firstname && msg.author_profpicpath == online_clients[msg.author_id].profpicpath){
-      for(var i = 0; i < msg.receivers.length; i++){
-        if( online_clients[ msg.receivers[i] ] != undefined){
-          io.to( online_clients[ msg.receivers[i] ].socket ).emit("message", msg);
+      for( var user_id in online_clients ){
+        var client_chats = online_clients[user_id].chats.map(function(chat_id){
+          return chat_id.toString();
+        })
+        if( ~client_chats.indexOf( msg.chat_id ) && user_id != sess._id ){
+          io.to( online_clients[user_id].socket ).emit("message", {
+            chat_id: msg.chat_id,
+            author_id: sess._id,
+            author_fn: sess.firstname,
+            author_ln: sess.lastname,
+            author_profpicpath: sess.profpicpath,
+            content: msg.content,
+            timestamp: new Date()
+          });
         }
       }
-    }
   })
+
   socket.on('get clients', function(){
     socket.emit('get clients', online_clients)
   })
   socket.on('new chat', function(data){
     if(data.type == "private"){
-      io.to( online_clients[ data.receiver ].socket ).emit('new chat', data);
+      online_clients[data.receiver].chats.push( data.chat_id );
+      io.to( online_clients[ data.receiver ].socket ).emit('new chat', {
+        type: "private",
+        chat_id: data.chat_id,
+        user_id: sess._id,
+        firstname: sess.firstname,
+        lastname: sess.lastname,
+        profpicpath: sess.profpicpath
+      });
     }else if (data.type == "group") {
       User.find({
         $or: [
@@ -1083,40 +1183,33 @@ io.on('connection', function(socket){
         }else{
           for(var i = 0; i < users.length; i++){
             if( online_clients[ users[i]._id.toString() ] != undefined ){
-              io.to( online_clients[ users[i]._id.toString() ].socket ).emit('new chat', data)
+              online_clients[users[i]._id.toString()].chats.push( data.chat_id );
+              io.to( online_clients[ users[i]._id.toString() ].socket ).emit('new chat', {
+                type: "group",
+                user_id: sess._id,
+                userMembers: data.userMembers,
+                subdivisionMembers: data.subdivisionMembers,
+                name: data.name,
+                chat_id: data.chat_id
+              })
             }
           }
         }
       });
     }
   })
+  socket.on('start typing', function(data){
+    for( var user_id in online_clients ){
+      if( ~online_clients[user_id].chats.indexOf( data.chat_id ) && user_id != sess._id ){
+        io.to( online_clients[user_id].socket ).emit('start typing', data)
+      }
+    }
+  })
+  socket.on('stop typing', function(data){
+    for( var user_id in online_clients ){
+      if( ~online_clients[user_id].chats.indexOf( data.chat_id ) && user_id != sess._id ){
+        io.to( online_clients[user_id].socket ).emit('stop typing', data)
+      }
+    }
+  })
 });
-
-
-// var done = 0;
-// var arr = new Array(announcements.length);
-// for( var i = 0; i < announcements.length; i++ ){
-//   (function(index) {
-//     User.findOne({id: announcements[index].author}, function(err, user){
-//       if(err){
-//         console.error(err);
-//         res.end("fail");
-//       }else{
-//         if(user){
-//           arr[index] = {
-//             obj: announcements[index],
-//             author_fn: user.firstname,
-//             author_ln: user.lastname,
-//             profpicpath: user.profpicpath
-//           };
-//           done++;
-//           if( done == announcements.length){
-//             res.end(JSON.stringify(arr));
-//           }
-//         }else{
-//           res.end("fail");
-//         }
-//       }
-//     });
-//   })(i);
-// }
