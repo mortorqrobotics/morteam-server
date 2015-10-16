@@ -401,6 +401,75 @@
         });
 
       });
+      function hideLeftbar(time, button){
+        $(".leftbar").velocity({left: "-260px"}, { duration: time, queue: false });
+        $(".wrapper").velocity({left: "0px"}, { duration: time, queue: false });
+        $(".wrapper").velocity({width: "+=260px"}, { duration: time, queue: false });
+        $(button).removeClass("glyphicon-chevron-left").addClass("glyphicon-chevron-right");
+        $(button).velocity({left: "10px"}, { duration: time, queue: false });
+        setTimeout(function(){
+          $(".wrapper").css("width", "calc(100vw - 200px)");
+          fixAdLayout();
+        }, time + time)
+      }
+      function showLeftbar(time, button){
+        $(".leftbar").velocity({left: "0px"}, { duration: time, queue: false });
+        $(".wrapper").velocity({left: "260px"}, { duration: time, queue: false });
+        $(".wrapper").velocity({width: "-=260px"}, { duration: time, queue: false });
+        $(button).removeClass("glyphicon-chevron-right").addClass("glyphicon-chevron-left");
+        $(button).velocity({left: "220px"}, { duration: time, queue: false });
+        setTimeout(function(){
+          $(".wrapper").css("width", "calc(100vw - 460px)");
+          fixAdLayout();
+        }, time + time)
+      }
+      $(".hide_leftbar").click(function(){
+        if($(this).hasClass("glyphicon-chevron-left")){
+          hideLeftbar(300, this);
+        }else{
+          showLeftbar(300, this);
+        }
+      });
+      if($(window).width() < 825){
+        hideLeftbar(0, ".hide_leftbar");
+      }
+
+      // $(".searchbox").keyup(function(){
+      //   var val = $.trim($(this).val()).replace(/ +/g, ' ').toLowerCase();
+      //   $('li.chat_name').show().filter(function() {
+      //       var text = $(this).find(".chat_name > span").text().replace(/\s+/g, ' ').toLowerCase();
+      //       console.log(!~text.indexOf(val));
+      //       return !~text.indexOf(val);
+      //   }).hide();
+      // })
+
+      // $(window).resize(function(){
+      //   if( collision( $(".ads"), $(".chat_wrapper") ) ){
+      //     $(".ad").hide();
+      //   }else{
+      //     $(".ad").show();
+      //   }
+      // })
+      $(window).resize(function(){
+        if( $(".ad").css("display") == "none" ){
+          if($(".hide_leftbar").hasClass("glyphicon-chevron-left")){
+            console.log("no ad, sidebar");
+            $(".chat_wrapper").css("width", "calc(100vw - 260px)");
+          }else{
+            $(".chat_wrapper").css("width", "100vw");
+            console.log("no ad, no sidebar");
+          }
+        }else{
+          if($(".hide_leftbar").hasClass("glyphicon-chevron-left")){
+            $(".chat_wrapper").css("width", "calc(100vw - 460px)");
+            console.log("ad, sidebar");
+          }else{
+            $(".chat_wrapper").css("width", "calc(100vw - 200px)");
+            console.log("ad, no sidebar");
+          }
+        }
+      });
+
       $(window).load(function(){
 
         socket.emit("get clients");
@@ -667,6 +736,32 @@
             $('.bubble_wrapper.istyping').remove();
           }
         })
+
+        function fixAdLayout(){
+          if( $(".ad").css("display") == "none" ){
+            if($(".hide_leftbar").hasClass("glyphicon-chevron-left")){
+              console.log("no ad, sidebar");
+              $(".chat_wrapper").css("width", "calc(100vw - 260px)");
+            }else{
+              $(".chat_wrapper").css("width", "100vw");
+              console.log("no ad, no sidebar");
+            }
+          }else{
+            if($(".hide_leftbar").hasClass("glyphicon-chevron-left")){
+              $(".chat_wrapper").css("width", "calc(100vw - 460px)");
+              console.log("ad, sidebar");
+            }else{
+              $(".chat_wrapper").css("width", "calc(100vw - 200px)");
+              console.log("ad, no sidebar");
+            }
+          }
+        }
+        fixAdLayout();
+        setTimeout(function(){
+          fixAdLayout();
+        }, 200)
+
+
       })
       window.onbeforeunload = function(){
         socket.emit('stop typing', {chat_id: $(".chat_name.selected").attr("data-chatid") });

@@ -212,7 +212,6 @@
     <script type="text/javascript" src="../js/main.js"></script>
     <script>
       var socket = io();
-      socket.emit("add to clients", {_id: localStorage._id});
 
       function findTeamInTeamArray(teams, teamId){
         for(var i = 0; i < teams.length; i++){

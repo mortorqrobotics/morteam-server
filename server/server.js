@@ -20,6 +20,7 @@ var Team = require('./schemas/Team.js');
 var Subdivision = require('./schemas/Subdivision.js');
 var Announcement = require('./schemas/Announcement.js');
 var Chat = require('./schemas/Chat.js');
+var Event = require('./schemas/Event.js');
 
 mongoose.connect('mongodb://localhost:27017/morteamtest');
 
@@ -1079,6 +1080,63 @@ app.post("/f/sendMessage", function(req, res){
     }
   });
 });
+app.post("/f/getEventsForUserInTeamInMonth", function(req, res){
+  var userSubdivisionIds = req.user.subdivisions.map(function(subdivision) {return subdivision._id;});
+  var numberOfDays = new Date(req.body.year, req.body.month+1, 0).getDate(); //month is 1 based
+  var start = new Date(req.body.year, req.body.month, 1); //month is 0 based
+  var end = new Date(req.body.year, req.body.month, numberOfDays); //month is 0 based
+  Event.find({
+    team: req.user.current_team.id,
+    $or: [
+      { userAttendees: req.user._id },
+      { subdivisionAttendees: { "$in": userSubdivisionIds } }
+    ],
+    date: {$gte: start, $lt: end}
+  }, function(err, events){
+    if(err){
+      console.error(err);
+      res.end("fail");
+    }else{
+      res.end( JSON.stringify(events) );
+    }
+  });
+});
+app.post("/f/createEvent", function(req, res){
+  if(req.body.description != ""){
+    Event.create({
+      name: req.body.name,
+      description: req.body.description,
+      userAttendees: req.body.userAttendees,
+      subdivisionAttendees: req.body.subdivisionAttendees,
+      date: new Date(req.body.date),
+      team: req.user.current_team.id,
+      creator: req.user._id
+    }, function(err, event){
+      if(err){
+        console.error(err);
+        res.end("fail");
+      }else{
+        res.end( JSON.stringify(event) )
+      }
+    });
+  }else{
+    Event.create({
+      name: req.body.name,
+      userAttendees: req.body.userAttendees,
+      subdivisionAttendees: req.body.subdivisionAttendees,
+      date: new Date(req.body.date),
+      team: req.user.current_team.id,
+      creator: req.user._id
+    }, function(err, event){
+      if(err){
+        console.error(err);
+        res.end("fail");
+      }else{
+        res.end( JSON.stringify(event) )
+      }
+    });
+  }
+});
 
 var online_clients = {};
 io.on('connection', function(socket){
@@ -1125,7 +1183,7 @@ io.on('connection', function(socket){
 
   socket.on("disconnect", function(){
     for( var user_id in online_clients ){
-      if(online_clients[sess._id]){ //TODO: sometimes online_clients[sess._id] doesnt exist
+      if(online_clients[sess._id]){ //TODO: sometimes online_clients[sess._id] doesnt exist (maybe because it takes time for the mongo query to execute and add user chats to the online_clients object at the sess._id index)
         if( online_clients[user_id].chats.hasAnythingFrom( online_clients[sess._id].chats && user_id != sess._id ) ){
           io.to( online_clients[user_id].socket ).emit("left", {_id: sess._id});
         }

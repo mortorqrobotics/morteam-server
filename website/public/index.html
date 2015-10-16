@@ -189,7 +189,7 @@
   <script>
 
   var socket = io();
-  socket.emit("add to clients", {_id: localStorage._id});
+  // socket.emit("add to clients", {_id: localStorage._id});
 
   function newSubdivisionModal(title, instructions){
     var new_modal = new jBox('Modal', {
@@ -664,7 +664,7 @@
 
   $(window).load(function(){
     localStorage.page = 0;
-     loadAnnouncements(appendFirst);
+    loadAnnouncements(appendFirst);
 
      function bindScroll(){
        if($(window).scrollTop() + $(window).height() > $(document).height() - 300) {
