@@ -190,7 +190,29 @@
 
   var socket = io();
   // socket.emit("add to clients", {_id: localStorage._id});
-
+  function showNewMessageNotice(title, content, chatid) {
+    var newMessageNotice = new jBox('Notice', {
+        attributes: {
+            x: 'right',
+            y: 'bottom'
+        },
+        theme: 'NoticeBorder',
+        volume: 100,
+        animation: {
+            open: 'slide:bottom',
+            close: 'slide:right'
+        },
+        content: content,
+        maxWidth: 300,
+        maxHeight: 105,
+        title: title,
+        closeOnClick: false,
+        onOpen: function() {
+            // $($(this)[0].content).attr("data-author", author._id);
+            $($(this)[0].content).attr("data-chatid", chatid);
+        }
+    });
+  };
   function newSubdivisionModal(title, instructions){
     var new_modal = new jBox('Modal', {
       width: 350,
@@ -584,7 +606,13 @@
     });
 
     socket.on('message', function(msg){
-      alert("NEW MESSAGE");
+      if(msg.type == "group"){
+        showNewMessageNotice(msg.author_fn+" "+msg.author_ln+" in "+msg.chat_name, msg.content, msg.chat_id);
+      }else{
+        showNewMessageNotice(msg.author_fn+" "+msg.author_ln, msg.content, msg.chat_id);
+      }
+      $('#audio-files').find('audio#click-sound')[0].play();
+      $('#audio-files').find('audio#click-sound')[0].currentTime = 0;
     })
 
   });

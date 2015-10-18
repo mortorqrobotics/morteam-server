@@ -78,7 +78,7 @@
     </div>
     <div id="prof_drop" class="hidden">
       <ul>
-        <li class="notif_list_item" onclick="location='user?user='+localStorage.username;">View Profile and Settings</li>
+        <li class="notif_list_item" id="view_prof_button">View Profile and Settings</li>
         <li class="notif_list_item" id="logout_button">Log Out</li>
       </ul>
     </div>
@@ -212,8 +212,75 @@
     <script type="text/javascript" src="js/main.js"></script>
     <script type="text/javascript">
 
+    var socket = io();
     var daysInWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     var months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+    function showNewMessageNotice(title, content, chatid) {
+      var newMessageNotice = new jBox('Notice', {
+          attributes: {
+              x: 'right',
+              y: 'bottom'
+          },
+          theme: 'NoticeBorder',
+          volume: 100,
+          animation: {
+              open: 'slide:bottom',
+              close: 'slide:right'
+          },
+          content: content,
+          maxWidth: 300,
+          maxHeight: 105,
+          title: title,
+          closeOnClick: false,
+          onOpen: function() {
+              // $($(this)[0].content).attr("data-author", author._id);
+              $($(this)[0].content).attr("data-chatid", chatid);
+          }
+      });
+    };
+    function showAttendance(title, event_id){
+      var new_modal = new jBox('Modal', {
+        width: 350,
+        height: 373,
+        title: title,
+        onClose: function(){
+          setTimeout(function(){
+            attendance_modal.destroy(); //keyword "this" does not work. make sure to name the modal "attendance_modal".
+          }, 100)
+        }
+      });
+      $.post("/f/getEventAttendees", {event_id: event_id}, function(responseText){
+        var span = document.createElement("span");
+        var user_search = '<input type="text" placeholder="Search Names..." class="members_search" id="subdivision_members_search">';
+        var select_all_link = '<a class="select_all_link">Select All</a>';
+        var potential_members = document.createElement("div");
+        $(potential_members).attr("id", "attendance_list");
+        $(potential_members).addClass("potential_members");
+        $(potential_members).addClass("tall");
+        var save_btn = '<input type="button" data-eventid="'+event_id+'" id="save_attendance" class="button done_button" value="Save">'
+        var attendees = JSON.parse(responseText);
+        for(var i = 0; i < attendees.length; i++){
+          var attendee = document.createElement("p");
+          $(attendee).addClass("potential_member");
+          $(attendee).attr("data-userid", attendees[i].user._id);
+          $(attendee).html(attendees[i].user.firstname + " " + attendees[i].user.lastname);
+          if(attendees[i].status == "present"){
+            $(attendee).addClass("clicked");
+          }
+          $(potential_members).append(attendee);
+        }
+        $(span).append($(user_search));
+        $(span).append("<br/>");
+        $(span).append($(select_all_link));
+        $(span).append("<br/>");
+        $(span).append($(potential_members));
+        $(span).append("<br/>");
+        $(span).append($(save_btn));
+        new_modal.setContent( $(span) );
+        new_modal.open();
+      })
+      return new_modal;
+    }
     function daysInMonth(month,year) {
       return new Date(year, month, 0).getDate();
     }
@@ -351,15 +418,17 @@
             var day_of_month = document.createElement("div");
             $(day_of_month).addClass("day_of_month");
             $(day_of_month).html(i);
-            var add_event = document.createElement("input");
-            $(add_event).attr("type", "button");
-            $(add_event).addClass("add_event");
-            $(add_event).attr("value", "+");
-            $(add_event).attr("title", "Add Event");
             var day_content = document.createElement("div");
             $(day_content).addClass("day_content");
             $(day_div).append( $(day_of_month) );
-            $(day_div).append( $(add_event) );
+            if(localStorage.c_team_position == "leader" || localStorage.c_team_position == "admin"){
+              var add_event = document.createElement("input");
+              $(add_event).attr("type", "button");
+              $(add_event).addClass("add_event");
+              $(add_event).attr("value", "+");
+              $(add_event).attr("title", "Add Event");
+              $(day_div).append( $(add_event) );
+            }
             $(day_div).append( $(day_content) );
             var day_name = document.createElement("h4");
             $(day_name).addClass("day_name");
@@ -391,6 +460,13 @@
                 $(event_description_display).addClass("indented");
                 $(event_description_display).html(events[i].description);
                 $(li).append( $(event_name_display) );
+                if(localStorage.c_team_position == "leader" || localStorage.c_team_position == "admin"){
+                  var attendance_btn = '<span title="Record Attendance" class="glyphicon glyphicon-list-alt leaders_only attendance"></span>';
+                  var delete_event_btn = '<span class="glyphicon glyphicon-trash list_right delete_event"></span>';
+                  $(li).append(" ");
+                  $(li).append(attendance_btn);
+                  $(li).append(delete_event_btn);
+                }
                 $(li).append( "<br/>" )
                 $(li).append( $(event_description_display) );
                 $(".day_list[data-day='"+ day +"']").append( $(li) );
@@ -408,6 +484,63 @@
           event_modal = eventModal("New Event", newDate.toString());
         });
 
+        $(document).on("click", ".delete_event", function(){
+          var $this = $(this);
+          if (window.confirm("Are you sure?")) {
+            $.post("/f/deleteEvent", {event_id: $this.parent().attr("data-eventid")}, function(responseText){
+              if(responseText == "success"){
+                $this.parent().remove();
+              }else {
+                alert(responseText)
+              }
+            })
+          }
+        });
+
+        $(document).on("click", ".attendance", function(){
+          attendance_modal = showAttendance("Attendance for " + $(this).prev().html(), $(this).parent().attr("data-eventid"));
+        });
+        updatedAttendees = [];
+        $(document).on("click", "#save_attendance", function(){
+          var p_attendees = $("#attendance_list > .potential_member");
+          console.log($("#attendance_list > .potential_member"));
+          updatedAttendees.length = 0;
+          for (var i = 0; i < p_attendees.length; i++) {
+            if( $(p_attendees[i]).hasClass("clicked") ){
+              updatedAttendees.push({
+                user: $(p_attendees[i]).attr("data-userid"),
+                status: "present"
+              })
+            }else{
+              updatedAttendees.push({
+                user: $(p_attendees[i]).attr("data-userid"),
+                status: "absent"
+              })
+            }
+          }
+          console.log(updatedAttendees);
+          $.post("/f/updateAttendanceForEvent", {event_id: $(this).attr("data-eventid"), updatedAttendees: updatedAttendees}, function(responseText){
+            if(responseText == "success"){
+              $("p.clicked").removeClass("clicked");
+              attendance_modal.close();
+              attendance_modal.destroy();
+            }else{
+              alert(responseText);
+            }
+          });
+        });
+
+        $(document).on("click", ".select_all_link", function() {
+          if($(this).html() == "Select All"){
+            $("#attendance_list > .potential_member").addClass("clicked");
+            $(this).html("Unselect All")
+          }else{
+            $("#attendance_list > .potential_member").removeClass("clicked");
+            $(this).html("Select All");
+          }
+        });
+
+
         $(document).on("click", "#event_done_btn", function(){
           var $this = $(this);
           var p_selected_users = $(".potential_member.clicked");
@@ -424,6 +557,7 @@
           }
           if(removeDuplicates(userAttendees).length == 1 && subdivisionAttendees.length == 0){
             event_modal.close();
+            event_modal.destroy();
           }else{
             $.post("/f/createEvent", {
               name: $("#event_name").val(),
@@ -441,10 +575,15 @@
                 $(event_name_display).addClass("bold");
                 $(event_name_display).html(newEvent.name);
                 // TODO: add attendance and delete buttons
+                var attendance_btn = '<span title="Record Attendance" class="glyphicon glyphicon-list-alt leaders_only attendance"></span>';
+                var delete_event_btn = '<span class="glyphicon glyphicon-trash list_right delete_event"></span>';
                 var event_description_display = document.createElement("div");
                 $(event_description_display).addClass("indented");
                 $(event_description_display).html(newEvent.description);
                 $(li).append( $(event_name_display) );
+                $(li).append( " " );
+                $(li).append( attendance_btn );
+                $(li).append( delete_event_btn );
                 $(li).append( "<br/>" )
                 $(li).append( $(event_description_display) );
 
@@ -508,6 +647,15 @@
               return !~text.indexOf(val);
           }).hide();
         });
+        socket.on('message', function(msg){
+          if(msg.type == "group"){
+            showNewMessageNotice(msg.author_fn+" "+msg.author_ln+" in "+msg.chat_name, msg.content, msg.chat_id);
+          }else{
+            showNewMessageNotice(msg.author_fn+" "+msg.author_ln, msg.content, msg.chat_id);
+          }
+          $('#audio-files').find('audio#click-sound')[0].play();
+          $('#audio-files').find('audio#click-sound')[0].currentTime = 0;
+        })
 
       });
     </script>

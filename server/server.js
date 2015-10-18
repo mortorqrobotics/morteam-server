@@ -1,5 +1,5 @@
-var express = require('express'),
-  http = require('http');
+var express = require('express');
+var http = require('http');
 var fs = require('fs');
 var url = require('url');
 var qs = require('querystring');
@@ -21,6 +21,7 @@ var Subdivision = require('./schemas/Subdivision.js');
 var Announcement = require('./schemas/Announcement.js');
 var Chat = require('./schemas/Chat.js');
 var Event = require('./schemas/Event.js');
+var AttendanceHandler = require('./schemas/AttendanceHandler.js');
 
 mongoose.connect('mongodb://localhost:27017/morteamtest');
 
@@ -59,6 +60,33 @@ function requireLogin(req, res, next) {
     next();
   }
 }
+function requireAdmin(req, res, next) {
+  if (req.user.current_team.position != "admin") {
+    transporter.sendMail({
+        from: 'rafezyfarbod@gmail.com',
+        to: 'rafezyfarbod@gmail.com',
+        subject: 'Security Alert!',
+        text: 'The user ' + req.user.firstname + req.user.lastname + ' tried to perform administrator tasks. User ID: ' + req.user._id
+    });
+    res.end("fail");
+  } else {
+    next();
+  }
+}
+function requireLeader(req, res, next) {
+  if (req.user.current_team.position == "admin" || req.user.current_team.position == "leader") {
+    next();
+  } else {
+    transporter.sendMail({
+        from: 'rafezyfarbod@gmail.com',
+        to: 'rafezyfarbod@gmail.com',
+        subject: 'Security Alert!',
+        text: 'The user ' + req.user.firstname + req.user.lastname + ' tried to perform administrator tasks. User ID: ' + req.user._id
+    });
+    res.end("fail");
+  }
+}
+
 
 function userNotFound(response) {
   response.writeHead(200, {
@@ -123,6 +151,32 @@ function getUserOtherThanSelf(twoUsers, selfId){
     return twoUsers[0];
   }
 }
+function removeDuplicates(arr) {
+  var result = [];
+  for(var i = 0; i < arr.length; i++) {
+    var dup = false;
+    for(var j = 0; j < i; j++) {
+      if( JSON.stringify( arr[i] ) == JSON.stringify( arr[j] ) ) {
+        dup = true;
+        break;
+      }
+    }
+    if(!dup) {
+      result.push(arr[i]);
+    }
+  }
+  return result;
+}
+// function equal(val1, val2) {
+//   if(typeof(val1) != typeof(val2)) return false;
+//   else if(~["number", "string", "boolean", "function"].indexOf(typeof(val1))) return val1 == val2;
+//   else if(typeof(val1) == "object") {
+//     for(var key in val1) if(!equal(val1[key], val2[key])) return false;
+//     return true;
+//   }
+//   else return false;
+// }
+
 
 app.use(function(err, req, res, next) {
   console.error(err.stack);
@@ -657,7 +711,32 @@ app.post("/f/acceptSubdivisionInvitation", requireLogin, function(req, res){
       console.error(err);
       res.end("fail");
     }else{
-      res.end("success");
+      Event.find({ subdivisionAttendees: req.body.subdivision_id }, function(err, events){
+        if(err){
+          console.error(err);
+          res.end("fail");
+        }else{
+          var done = 0;
+          for(var i = 0; i < events.length; i++){
+            AttendanceHandler.update({event: events[i]._id, event_date: {"$gt": new Date()}}, { "$push": {
+              attendees: {
+                user: req.user._id,
+                status: "absent"
+              }
+            }}, function(err, model){
+              if(err){
+                console.error(err);
+                res.end("fail");
+              }else{
+                done++;
+                if(done == events.length){
+                  res.end("success");
+                }
+              }
+            })
+          }
+        }
+      });
     }
   });
 });
@@ -676,7 +755,32 @@ app.post("/f/joinPublicSubdivision", requireLogin, function(req, res){
           console.error(err);
           res.end("fail");
         }else{
-          res.end("success");
+          Event.find({ subdivisionAttendees: req.body.subdivision_id }, function(err, events){
+            if(err){
+              console.error(err);
+              res.end("fail");
+            }else{
+              var done = 0;
+              for(var i = 0; i < events.length; i++){
+                AttendanceHandler.update({event: events[i]._id, event_date: {"$gt": new Date()}}, { "$push": {
+                  attendees: {
+                    user: req.user._id,
+                    status: "absent"
+                  }
+                }}, function(err, model){
+                  if(err){
+                    console.error(err);
+                    res.end("fail");
+                  }else{
+                    done++;
+                    if(done == events.length){
+                      res.end("success");
+                    }
+                  }
+                })
+              }
+            }
+          });
         }
       });
     }
@@ -702,7 +806,31 @@ app.post("/f/leaveSubdivision", requireLogin, function(req, res){
       console.error(err);
       res.end("fail");
     }else{
-      res.end("success");
+      Event.find({ subdivisionAttendees: req.body.subdivision_id }, function(err, events){
+        if(err){
+          console.error(err);
+          res.end("fail");
+        }else{
+          var done = 0;
+          for(var i = 0; i < events.length; i++){
+            AttendanceHandler.update({event: events[i]._id}, { "$pull": {
+              'attendees': {
+                user: req.user._id,
+              }
+            }}, function(err, model){
+              if(err){
+                console.error(err);
+                res.end("fail");
+              }else{
+                done++;
+                if(done == events.length){
+                  res.end("success");
+                }
+              }
+            })
+          }
+        }
+      });
     }
   });
 })
@@ -752,33 +880,47 @@ app.post("/f/deleteSubdivision", requireLogin, function(req, res){
               subject: 'Security Alert!',
               text: 'The user ' + req.user.firstname + req.user.lastname + ' tried to perform administrator tasks. User ID: ' + req.user._id
           });
-          res.end("hax");
+          res.end("fail");
         }
       }
     }
   })
 })
-app.post("/f/removeUserFromSubdivision", requireLogin, function(req, res){
-  if(req.user.current_team.position == "admin"){
-    User.update({_id: req.body.user_id, teams: { $elemMatch: { "id": req.user.current_team.id } } }, { "$pull": { //TODO: maybe add new objectid
-      'subdivisions' : {_id: new ObjectId(req.body.subdivision_id), team: req.user.current_team.id, accepted: true}
-    }}, function(err, model){
-      if(err){
-        console.error(err);
-        res.end("fail");
-      }else{
-        res.end("success")
-      }
-    });
-  }else{
-    transporter.sendMail({
-        from: 'rafezyfarbod@gmail.com',
-        to: 'rafezyfarbod@gmail.com',
-        subject: 'Security Alert!',
-        text: 'The user ' + req.user.firstname + req.user.lastname + ' tried to perform administrator tasks. User ID: ' + req.user._id
-    });
-    res.end("hax");
-  }
+app.post("/f/removeUserFromSubdivision", requireLogin, requireAdmin, function(req, res){
+  User.update({_id: req.body.user_id, teams: { $elemMatch: { "id": req.user.current_team.id } } }, { "$pull": { //TODO: maybe add new objectid
+    'subdivisions' : {_id: new ObjectId(req.body.subdivision_id), team: req.user.current_team.id, accepted: true}
+  }}, function(err, model){
+    if(err){
+      console.error(err);
+      res.end("fail");
+    }else{
+      Event.find({ subdivisionAttendees: req.body.subdivision_id }, function(err, events){
+        if(err){
+          console.error(err);
+          res.end("fail");
+        }else{
+          var done = 0;
+          for(var i = 0; i < events.length; i++){
+            AttendanceHandler.update({event: events[i]._id}, { "$pull": {
+              'attendees': {
+                user: req.body.user_id,
+              }
+            }}, function(err, model){
+              if(err){
+                console.error(err);
+                res.end("fail");
+              }else{
+                done++;
+                if(done == events.length){
+                  res.end("success");
+                }
+              }
+            })
+          }
+        }
+      });
+    }
+  });
 });
 app.post("/f/changePosition", requireLogin, function(req, res){
   var positionHA = {
@@ -1027,7 +1169,7 @@ app.post("/f/loadMessagesForChat", requireLogin, function(req, res){ //TODO: may
     }
   });
 });
-app.post("/f/getUsersInChat", function(req, res){
+app.post("/f/getUsersInChat", requireLogin, function(req, res){
   Chat.findOne({_id: req.body.chat_id}, {userMembers: 1, subdivisionMembers: 1}, function(err, chat){
     if(err){
       console.error(err);
@@ -1065,7 +1207,7 @@ app.post("/f/getUsersInChat", function(req, res){
 //     }
 //   });
 // });
-app.post("/f/sendMessage", function(req, res){
+app.post("/f/sendMessage", requireLogin, function(req, res){
   Chat.update({_id: req.body.chat_id}, { '$push': {
     'messages': {
       "$each": [ {author: new ObjectId(req.user._id), content: req.body.content, timestamp: new Date()} ],
@@ -1080,7 +1222,7 @@ app.post("/f/sendMessage", function(req, res){
     }
   });
 });
-app.post("/f/getEventsForUserInTeamInMonth", function(req, res){
+app.post("/f/getEventsForUserInTeamInMonth", requireLogin, function(req, res){
   var userSubdivisionIds = req.user.subdivisions.map(function(subdivision) {return subdivision._id;});
   var numberOfDays = new Date(req.body.year, req.body.month+1, 0).getDate(); //month is 1 based
   var start = new Date(req.body.year, req.body.month, 1); //month is 0 based
@@ -1101,7 +1243,7 @@ app.post("/f/getEventsForUserInTeamInMonth", function(req, res){
     }
   });
 });
-app.post("/f/createEvent", function(req, res){
+app.post("/f/createEvent", requireLogin, requireLeader, function(req, res){
   if(req.body.description != ""){
     Event.create({
       name: req.body.name,
@@ -1116,7 +1258,28 @@ app.post("/f/createEvent", function(req, res){
         console.error(err);
         res.end("fail");
       }else{
-        res.end( JSON.stringify(event) )
+        var attendees = [];
+        for(var i = 0; i < req.body.userAttendees.length; i++){
+          attendees.push( { user: req.body.userAttendees[i], status: "absent" } );
+        }
+        User.find({ subdivisions: { $elemMatch: { _id: {"$in": req.body.subdivisionAttendees} } } }, function(err, users){
+          for(var i = 0; i < users.length; i++){
+            attendees.push( { user: users[i]._id, status: "absent" } );
+          }
+          attendees = removeDuplicates(attendees);
+          AttendanceHandler.create({
+            event: event._id,
+            event_date: event.date,
+            attendees: attendees
+          }, function(err, attendanceHandler){
+            if(err){
+              console.error(err);
+              res.end("fail");
+            }else{
+              res.end( JSON.stringify(event) )
+            }
+          });
+        });
       }
     });
   }else{
@@ -1132,10 +1295,68 @@ app.post("/f/createEvent", function(req, res){
         console.error(err);
         res.end("fail");
       }else{
-        res.end( JSON.stringify(event) )
+        var attendees = [];
+        for(var i = 0; i < req.body.userAttendees.length; i++){
+          attendees.push( { user: req.body.userAttendees[i], status: "absent" } );
+        }
+        User.find({ subdivisions: { $elemMatch: { _id: {"$in": req.body.subdivisionAttendees} } } }, function(err, users){
+          for(var i = 0; i < users.length; i++){
+            attendees.push( { user: users[i]._id, status: "absent" } );
+          }
+          attendees = removeDuplicates(attendees);
+          AttendanceHandler.create({
+            event: event._id,
+            event_date: event.date,
+            attendees: attendees
+          }, function(err, attendanceHandler){
+            if(err){
+              console.error(err);
+              res.end("fail");
+            }else{
+              res.end( JSON.stringify(event) )
+            }
+          });
+        });
       }
     });
   }
+});
+app.post("/f/deleteEvent", requireLogin, requireLeader, function(req, res){
+  Event.findOneAndRemove({_id: req.body.event_id}, function(err){
+    if(err){
+      console.error(err);
+      res.end("fail")
+    }else{
+      AttendanceHandler.findOneAndRemove({event: req.body.event_id}, function(err){
+        if(err){
+          console.error(err);
+          res.end("fail");
+        }else{
+          res.end("success");
+        }
+      })
+    }
+  });
+});
+app.post("/f/getEventAttendees", requireLogin, requireLeader, function(req, res){
+  AttendanceHandler.findOne({event: req.body.event_id}).populate('attendees.user').exec(function(err, attendanceHandler){
+    if(err){
+      console.error(err);
+      res.end("fail");
+    }else{
+      res.end(JSON.stringify(attendanceHandler.attendees));
+    }
+  });
+});
+app.post("/f/updateAttendanceForEvent", requireLogin, requireLeader, function(req, res){
+  AttendanceHandler.update({event: req.body.event_id}, {"$set": {attendees: req.body.updatedAttendees}}, function(err, model){
+    if(err){
+      console.error(err);
+      res.end("fail");
+    }else{
+      res.end("success");
+    }
+  });
 });
 
 var online_clients = {};
@@ -1160,6 +1381,7 @@ io.on('connection', function(socket){
     {
       _id: 1
     }).exec(function(err, chats){
+
       if(err){
         console.error(err);
         res.end("fail");
@@ -1167,7 +1389,7 @@ io.on('connection', function(socket){
         var chatIds = chats.map(function(chat){ return chat._id.toString() });
         online_clients[sess._id] = {socket: socket.id, chats: chatIds};
         for( var user_id in online_clients ){
-          if( online_clients[user_id].chats.hasAnythingFrom( online_clients[sess._id].chats && user_id != sess._id ) ){
+          if( online_clients[user_id].chats.hasAnythingFrom( online_clients[sess._id].chats ) && user_id != sess._id  ){
             io.to( online_clients[user_id].socket ).emit("joined", {_id: sess._id});
           }
         }
@@ -1175,7 +1397,7 @@ io.on('connection', function(socket){
     })
   }else{
     for( var user_id in online_clients ){
-      if( online_clients[user_id].chats.hasAnythingFrom( online_clients[sess._id].chats && user_id != sess._id ) ){
+      if( online_clients[user_id].chats.hasAnythingFrom( online_clients[sess._id].chats ) && user_id != sess._id  ){
         io.to( online_clients[user_id].socket ).emit("joined", {_id: sess._id});
       }
     }
@@ -1183,13 +1405,15 @@ io.on('connection', function(socket){
 
   socket.on("disconnect", function(){
     for( var user_id in online_clients ){
-      if(online_clients[sess._id]){ //TODO: sometimes online_clients[sess._id] doesnt exist (maybe because it takes time for the mongo query to execute and add user chats to the online_clients object at the sess._id index)
-        if( online_clients[user_id].chats.hasAnythingFrom( online_clients[sess._id].chats && user_id != sess._id ) ){
+      if(sess && online_clients[sess._id]){ //TODO: sometimes online_clients[sess._id] doesnt exist (maybe because it takes time for the mongo query to execute and add user chats to the online_clients object at the sess._id index)
+        if( online_clients[user_id].chats.hasAnythingFrom( online_clients[sess._id].chats ) && user_id != sess._id  ){
           io.to( online_clients[user_id].socket ).emit("left", {_id: sess._id});
         }
       }
     }
-    delete online_clients[sess._id];
+    if(sess){
+      delete online_clients[sess._id];
+    }
   })
   socket.on('message', function(msg){
       for( var user_id in online_clients ){
@@ -1197,15 +1421,30 @@ io.on('connection', function(socket){
           return chat_id.toString();
         })
         if( ~client_chats.indexOf( msg.chat_id ) && user_id != sess._id ){
-          io.to( online_clients[user_id].socket ).emit("message", {
-            chat_id: msg.chat_id,
-            author_id: sess._id,
-            author_fn: sess.firstname,
-            author_ln: sess.lastname,
-            author_profpicpath: sess.profpicpath,
-            content: msg.content,
-            timestamp: new Date()
-          });
+          if(msg.type == "private"){
+            io.to( online_clients[user_id].socket ).emit("message", {
+              chat_id: msg.chat_id,
+              author_id: sess._id,
+              author_fn: sess.firstname,
+              author_ln: sess.lastname,
+              author_profpicpath: sess.profpicpath,
+              content: msg.content,
+              timestamp: new Date(),
+              type: "private"
+            });
+          }else{
+            io.to( online_clients[user_id].socket ).emit("message", {
+              chat_id: msg.chat_id,
+              author_id: sess._id,
+              author_fn: sess.firstname,
+              author_ln: sess.lastname,
+              author_profpicpath: sess.profpicpath,
+              content: msg.content,
+              timestamp: new Date(),
+              chat_name: msg.chat_name,
+              type: "group"
+            });
+          }
         }
       }
   })
