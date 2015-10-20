@@ -9,9 +9,12 @@ var session = require('express-session');
 var MongoStore = require('connect-mongo')(session);
 var nodemailer = require('nodemailer');
 var multer = require('multer');
-var s3 = require('multer-s3');
+var AWS = require('aws-sdk');
 var ObjectId = require('mongoose').Types.ObjectId;
+var request = require('request').defaults({ encoding: null });
+var lwip = require('lwip');
 app = express();
+AWS.config.loadFromPath('./aws-config.json');
 publicDir = require("path").join(__dirname, "../website/public");
 profpicDir = 'http://profilepics.morteam.com.s3.amazonaws.com/'
 //schemas
@@ -87,7 +90,6 @@ function requireLeader(req, res, next) {
   }
 }
 
-
 function userNotFound(response) {
   response.writeHead(200, {
     "Content-Type": "text/plain"
@@ -126,7 +128,6 @@ Array.prototype.hasAnythingFrom = function(arr){
   }
   return result;
 }
-
 
 function findTeamInUser(user, teamId){
   for(var i = 0; i < user.teams.length; i++){
@@ -167,15 +168,24 @@ function removeDuplicates(arr) {
   }
   return result;
 }
-// function equal(val1, val2) {
-//   if(typeof(val1) != typeof(val2)) return false;
-//   else if(~["number", "string", "boolean", "function"].indexOf(typeof(val1))) return val1 == val2;
-//   else if(typeof(val1) == "object") {
-//     for(var key in val1) if(!equal(val1[key], val2[key])) return false;
-//     return true;
-//   }
-//   else return false;
-// }
+var profPicBucket = new AWS.S3({params: {Bucket: 'profilepics.morteam.com'}});
+var driveBucket = new AWS.S3({params: {Bucket: 'drive.morteam.com'}});
+function uploadToProfPics(file, destFileName, callback) {
+  profPicBucket.upload({
+    ACL: 'public-read',
+    Body: file,
+    Key: destFileName.toString(),
+    ContentType: 'application/octet-stream'
+  }).send(callback);
+}
+function uploadToDrive(file, destFileName, callback) {
+  driveBucket.upload({
+    ACL: 'public-read',
+    Body: fs.createReadStream(file.path),
+    Key: destFileName.toString(),
+    ContentType: 'application/octet-stream'
+  }).send(callback);
+}
 
 
 app.use(function(err, req, res, next) {
@@ -264,19 +274,6 @@ app.use(express.static(publicDir));
 
 app.set('view engine', 'ejs');
 app.set('views', __dirname + '/../website');
-
-var upload = multer({
-  storage: s3({
-    dirname: '/',
-    bucket: 'profilepics.morteam.com',
-    secretAccessKey: 'sIRsaKafvfrA2A4XQymztQSfgYpRB46BODTRHGSw',
-    accessKeyId: 'AKIAJ2SYCLPBZXUYIOPA',
-    region: 'us-west-2',
-    filename: function (req, file, cb) {
-      cb(null, req.body.username + "." + file.mimetype.substring(file.mimetype.indexOf("/")+1) )
-    }
-  })
-})
 
 app.get("/", function(req, res) {
   fs.createReadStream("../website/public/index.html").pipe(res);
@@ -369,12 +366,20 @@ app.get("/s/:id", function(req, res) {
     }
   })
 });
-
+app.get("/images/user.jpg-60", function(req, res){
+  res.sendFile(publicDir+"/images/user.jpg");
+})
+app.get("/images/user.jpg-300", function(req, res){
+  res.sendFile(publicDir+"/images/user.jpg");
+})
+app.get('/pp/:path', function(req, res){
+  res.redirect(profpicDir+req.params.path);
+})
 app.get('*', function(req, res) {
   send404(res);
 });
-
-app.post("/f/createUser", upload.single('profpic'), function(req, res) {
+// app.post("/f/createUser", upload.single('profpic'), function(req, res) {
+app.post("/f/createUser", multer({limits: {fileSize:10*1024*1024}}).single('profpic'), function(req, res) {
   User.find({
     $or: [{
       username: req.body.username
@@ -394,6 +399,109 @@ app.post("/f/createUser", upload.single('profpic'), function(req, res) {
         } else {
           if(req.body.password == req.body.password_confirm){
             if(req.file){
+              var suffix = req.file.originalname.substring(req.file.originalname.indexOf(".")+1).toLowerCase();
+              lwip.open(req.file.buffer, suffix, function(err, image){
+                if(err){
+                  console.error(err);
+                  res.end("fail");
+                }else{
+                  var hToWRatio = image.height()/image.width();
+                  if(hToWRatio >= 1){
+                    image.resize(60, 60*hToWRatio, function(err, image){
+                      if(err){
+                        console.error(err);
+                        res.end("fail");
+                      }else{
+                        image.toBuffer(suffix, function(err, buffer){
+                          if(err){
+                            console.error(err);
+                            res.end("fail");
+                          }else{
+                            uploadToProfPics(buffer, req.body.username + "-60", function(err, data){
+                              if(err){
+                                console.error(err);
+                                res.end("fail");
+                              }
+                            });
+                          }
+                        })
+                      }
+                    })
+                  }else{
+                    image.resize(60/hToWRatio, 60, function(err, image){
+                      if(err){
+                        console.error(err);
+                        res.end("fail");
+                      }else{
+                        image.toBuffer(suffix, function(err, buffer){
+                          if(err){
+                            console.error(err);
+                            res.end("fail");
+                          }else{
+                            uploadToProfPics(buffer, req.body.username + "-60", function(err, data){
+                              if(err){
+                                console.error(err);
+                                res.end("fail");
+                              }
+                            });
+                          }
+                        })
+                      }
+                    })
+                  }
+                }
+              });
+              lwip.open(req.file.buffer, suffix, function(err, image){
+                if(err){
+                  console.error(err);
+                  res.end("fail");
+                }else{
+                  var hToWRatio = image.height()/image.width();
+                  if(hToWRatio >= 1){
+                    image.resize(300, 300*hToWRatio, function(err, image){
+                      if(err){
+                        console.error(err);
+                        res.end("fail");
+                      }else{
+                        image.toBuffer(suffix, function(err, buffer){
+                          if(err){
+                            console.error(err);
+                            res.end("fail");
+                          }else{
+                            uploadToProfPics(buffer, req.body.username + "-300", function(err, data){
+                              if(err){
+                                console.error(err);
+                                res.end("fail");
+                              }
+                            });
+                          }
+                        })
+                      }
+                    })
+                  }else{
+                    image.resize(300/hToWRatio, 300, function(err, image){
+                      if(err){
+                        console.error(err);
+                        res.end("fail");
+                      }else{
+                        image.toBuffer(suffix, function(err, buffer){
+                          if(err){
+                            console.error(err);
+                            res.end("fail");
+                          }else{
+                            uploadToProfPics(buffer, req.body.username + "-300", function(err, data){
+                              if(err){
+                                console.error(err);
+                                res.end("fail");
+                              }
+                            });
+                          }
+                        })
+                      }
+                    })
+                  }
+                }
+              });
               User.create({
                 username: req.body.username,
                 password: req.body.password,
@@ -401,14 +509,14 @@ app.post("/f/createUser", upload.single('profpic'), function(req, res) {
                 lastname: req.body.lastname,
                 email: req.body.email,
                 phone: req.body.phone,
-                profpicpath: profpicDir + req.file.key.substring( 2 )
+                profpicpath: "/pp/" + /*req.file.key.substring( 2 )*/ req.body.username
               }, function(err, user) {
                 if (err) {
                   res.end("fail");
                   console.error(err);
                 } else {
-                  console.log("User " + user._id + ", " + user.firstname + " " + user.lastname + " was saved!");
                   res.end("success");
+                  console.log("User " + user._id + ", " + user.firstname + " " + user.lastname + " was saved!");
                 }
               });
             }else{
@@ -1243,6 +1351,24 @@ app.post("/f/getEventsForUserInTeamInMonth", requireLogin, function(req, res){
     }
   });
 });
+app.post("/f/getUpcomingEventsForUser", requireLogin, function(req, res){
+  var userSubdivisionIds = req.user.subdivisions.map(function(subdivision) {return subdivision._id;});
+  Event.find({
+    team: req.user.current_team.id,
+    $or: [
+      { userAttendees: req.user._id },
+      { subdivisionAttendees: { "$in": userSubdivisionIds } }
+    ],
+    date: {$gte: new Date()}
+  }).sort('date').exec(function(err, events){
+    if(err){
+      console.error(err);
+      res.end("fail");
+    }else{
+      res.end( JSON.stringify(events) );
+    }
+  });
+});
 app.post("/f/createEvent", requireLogin, requireLeader, function(req, res){
   if(req.body.description != ""){
     Event.create({
@@ -1358,10 +1484,48 @@ app.post("/f/updateAttendanceForEvent", requireLogin, requireLeader, function(re
     }
   });
 });
+app.post("/f/getUserAbsences", requireLogin, function(req, res){
+  AttendanceHandler.find({event_date:{ "$lte": new Date() }, 'attendees.user': req.body.user_id}).populate('event').exec(function(err, attendanceHandlers){
+    if(err){
+      console.error(err);
+      res.end("fail");
+    }else{
+      var absences = [];
+      var present = 0;
+      for(var i = 0; i < attendanceHandlers.length; i++){
+        for(var j = 0; j < attendanceHandlers[i].attendees.length; j++){
+          if(attendanceHandlers[i].attendees[j].user == req.body.user_id && attendanceHandlers[i].attendees[j].status == "absent"){
+            absences.push(attendanceHandlers[i].event);
+          }else if (attendanceHandlers[i].attendees[j].user == req.body.user_id && attendanceHandlers[i].attendees[j].status == "present") {
+            present++;
+          }
+        }
+      }
+      res.end(JSON.stringify({present: present, absences: absences}));
+    }
+  })
+})
+app.post("/f/excuseAbsence", requireLogin, requireLeader, function(req, res){
+  //
+})
+app.post("/f/getTeamFolders", requireLogin, function(req, res){
+  Folder.find({team: req.user.current_team.id, parentFolder: "/"}, function(err, folders){
+    //
+  })
+})
+app.post("/f/getSubFolders", requireLogin, function(req, res){
+  Folder.find({team: req.user.current_team.id, parentFolder: req.body.folder_id}, function(err, folders){
+    //
+  })
+})
+app.post("/f/getFilesInFolder", requireLogin, function(req, res){
+  File.find({team: req.user.current_team.id, parentFolder: req.body.folder_id}, function(err, files){
+    //
+  })
+})
 
 var online_clients = {};
 io.on('connection', function(socket){
-
   var sess = socket.request.session.user;
   if(sess && online_clients[sess._id] == undefined){
     var userSubdivisionIds = sess.subdivisions.map(function(subdivision) {return subdivision._id;});
@@ -1454,15 +1618,17 @@ io.on('connection', function(socket){
   })
   socket.on('new chat', function(data){
     if(data.type == "private"){
-      online_clients[data.receiver].chats.push( data.chat_id );
-      io.to( online_clients[ data.receiver ].socket ).emit('new chat', {
-        type: "private",
-        chat_id: data.chat_id,
-        user_id: sess._id,
-        firstname: sess.firstname,
-        lastname: sess.lastname,
-        profpicpath: sess.profpicpath
-      });
+      if( online_clients[data.receiver] ){
+        online_clients[data.receiver].chats.push( data.chat_id );
+        io.to( online_clients[ data.receiver ].socket ).emit('new chat', {
+          type: "private",
+          chat_id: data.chat_id,
+          user_id: sess._id,
+          firstname: sess.firstname,
+          lastname: sess.lastname,
+          profpicpath: sess.profpicpath
+        });
+      }
     }else if (data.type == "group") {
       User.find({
         $or: [

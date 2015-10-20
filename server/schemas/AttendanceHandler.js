@@ -2,7 +2,7 @@ var mongoose = require('mongoose');
 Schema = mongoose.Schema;
 
 var attendanceHandlerSchema = new Schema({
-  event:  { type: Schema.Types.ObjectId, ref: 'User' }, //TODO: Can i use the word event?
+  event:  { type: Schema.Types.ObjectId, ref: 'Event' }, //TODO: Can i use the word event?
   event_date: Date,
   attendees: [{
     user: { type: Schema.Types.ObjectId, ref: 'User' },

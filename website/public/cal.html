@@ -109,8 +109,8 @@
             <div class="events_overview">
               <h3 class="u_events_title">Upcoming Events</h3>
               <div class="events_container">
-                <ul class="events_list">
-                  <li>Under Construction</li>
+                <ul class="events_list upcoming_events">
+                  <!-- <li>Under Construction</li>
                   <li>All newbies will take quiz</li>
                   <li>Programming meeting in 285</li>
                   <li>All newbies will take quiz</li>
@@ -132,7 +132,7 @@
                   <li>Programming meeting in 285</li>
                   <li>All newbies will take quiz</li>
                   <li>Programming meeting in 285</li>
-                  <li>All newbies will take quiz</li>
+                  <li>All newbies will take quiz</li> -->
                 </ul>
               </div>
             </div>
@@ -266,6 +266,8 @@
           $(attendee).html(attendees[i].user.firstname + " " + attendees[i].user.lastname);
           if(attendees[i].status == "present"){
             $(attendee).addClass("clicked");
+          }else if (attendees[i].status == "excused") {
+            $(attendee).addClass("excused");
           }
           $(potential_members).append(attendee);
         }
@@ -280,6 +282,10 @@
         new_modal.open();
       })
       return new_modal;
+    }
+    function readableDate(datestr){
+      var date = new Date(datestr);
+      return months[date.getMonth()] + " " + date.getDate() + ", " + date.getFullYear();
     }
     function daysInMonth(month,year) {
       return new Date(year, month, 0).getDate();
@@ -303,6 +309,11 @@
         width: 350,
         height: 445,
         title: title,
+        onClose: function(){
+          setTimeout(function(){
+            event_modal.destroy();
+          }, 100)
+        }
       });
       var span = document.createElement("span");
       var event_name = '<input type="text" id="event_name" class="name_input" placeholder="Title">';
@@ -383,6 +394,15 @@
         //       });
         //   }
         // });
+
+        $.post("/f/getUpcomingEventsForUser", function(responseText){
+          var upcomingEvents = JSON.parse(responseText);
+          for(var i = 0; i < upcomingEvents.length; i++){
+            var li = document.createElement("li");
+            $(li).html(upcomingEvents[i].name + " (" + readableDate(upcomingEvents[i].date) + ")");
+            $(".upcoming_events").append( $(li) );
+          }
+        });
 
         $(".selected_year").html( year );
         for( i=-1 ; i<5 ; i++){
@@ -503,13 +523,17 @@
         updatedAttendees = [];
         $(document).on("click", "#save_attendance", function(){
           var p_attendees = $("#attendance_list > .potential_member");
-          console.log($("#attendance_list > .potential_member"));
           updatedAttendees.length = 0;
           for (var i = 0; i < p_attendees.length; i++) {
             if( $(p_attendees[i]).hasClass("clicked") ){
               updatedAttendees.push({
                 user: $(p_attendees[i]).attr("data-userid"),
                 status: "present"
+              })
+            }else if( $(p_attendees[i]).hasClass("excused") ){
+              updatedAttendees.push({
+                user: $(p_attendees[i]).attr("data-userid"),
+                status: "excused"
               })
             }else{
               updatedAttendees.push({
@@ -518,7 +542,6 @@
               })
             }
           }
-          console.log(updatedAttendees);
           $.post("/f/updateAttendanceForEvent", {event_id: $(this).attr("data-eventid"), updatedAttendees: updatedAttendees}, function(responseText){
             if(responseText == "success"){
               $("p.clicked").removeClass("clicked");
@@ -567,6 +590,7 @@
               date: $this.attr("data-date")
             }, function(responseText){
               event_modal.close();
+              event_modal.destroy();
               if(responseText != "fail"){
                 var newEvent = JSON.parse(responseText);
                 var li = document.createElement("li");

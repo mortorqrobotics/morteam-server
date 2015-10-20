@@ -64,7 +64,7 @@ function standardizeTime(date) {
 }
 $(document).ready(function(){
   $('#name_link').html(localStorage.firstname);
-  $(".profile_id").not(".ejs").attr("src", localStorage.profpicpath);
+  $(".profile_id").not(".ejs").attr("src", localStorage.profpicpath + "-60");
 
   var fade_speed = 200;
   $('#notif_button').click(function() {

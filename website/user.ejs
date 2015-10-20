@@ -113,8 +113,8 @@
         <div class="col-md-6">
           <div class="attendance_data">
             <span class="data_title bold">Attendance</span><br/>
-            <span class="data_point">Number of absences:</span><span class="data_answer">1</span><br/>
-            <span class="data_point">Presence percentage:</span><span class="data_answer">89%</span><br/>
+            <span class="data_point">Number of absences:</span><span id="absences_num" class="data_answer"></span><br/>
+            <span class="data_point">Presence percentage:</span><span id="presence_percent" class="data_answer"></span><br/>
             <hr class="hr_small_margin">
             <span class="data_point">Dates of absences:</span><br/>
             <div class="absences_list_scroll">
@@ -154,7 +154,7 @@
     <!-- LEFTBAR -->
     <div class="leftbar">
       <% if (profpicpath != "images/user.jpg") { %>
-        <img class="profile_pic" src="<%= profpicpath %>"></img>
+        <img class="profile_pic" src="<%= profpicpath %>-300"></img>
       <% }else{ %>
         <img class="profile_pic" src="../images/user.jpg"></img>
       <% } %>
@@ -236,6 +236,11 @@
             }
         });
       };
+      var months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+      function readableDate(datestr){
+        var date = new Date(datestr);
+        return months[date.getMonth()] + " " + date.getDate() + ", " + date.getFullYear();
+      }
       function findTeamInTeamArray(teams, teamId){
         for(var i = 0; i < teams.length; i++){
           if(teams[i].id == teamId){
@@ -244,10 +249,25 @@
         }
       }
       $(document).ready(function(){
+        $.post("/f/getUserAbsences", {user_id: window.location.pathname.substring(window.location.pathname.lastIndexOf("/") + 1)}, function(responseText){
+          var data = JSON.parse(responseText);
+          var absences = data.absences;
+          var present = data.present;
+          for(var i = 0; i < absences.length; i++){
+            $(".absences_list").append('<li class="absence_date">'+ absences[i].name + ' (' + readableDate(absences[i].date) + ')' + '</li><input type="button" class="button" value="Excuse" style="float: right;" /><br/>')
+          }
+
+          $("#absences_num").html(absences.length);
+          if( !isNaN(100*present/(absences.length+present)) ){
+            $("#presence_percent").html( Math.round(100*present/(absences.length+present)) + "%" );
+          }else{
+            $("#presence_percent").html( "N/A" );
+          }
+        })
         if( localStorage.profpicpath == "images/user.jpg" ){
-          $(".profile_id.ejs").attr("src", "../"+localStorage.profpicpath);
+          $(".profile_id.ejs").attr("src", "../"+localStorage.profpicpath + "-60");
         }else{
-          $(".profile_id.ejs").attr("src", localStorage.profpicpath);
+          $(".profile_id.ejs").attr("src", localStorage.profpicpath + "-60");
         }
         $(document).on("click", ".position_item", function(){
           if (window.confirm("Are you sure?")) {

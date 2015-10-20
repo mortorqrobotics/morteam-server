@@ -1415,6 +1415,9 @@ html { overflow-x: hidden; }
 .potential_member.clicked, .potential_subdivision.clicked{
 	background-color: #53CF29;
 }
+.potential_member.excused{
+	background-color: #FFF500;
+}
 #selected_names_div, #selected_folder_members, #selected_event_members, #selected_scope_members, #selected_present_members, #selected_audience_member{
 	height: 130px;
 	overflow-y: auto;
@@ -1460,7 +1463,34 @@ html { overflow-x: hidden; }
 	background-color: rgba(0, 0, 0, .3);
 }
 
+.chat_search{
+	width: 100%;
+	background-color: orange;
+	border: 0px;
+	font-size: 20px;
+	border-radius: 15px;
+	margin: 5px 0px 5px 0px;
+	padding: 2px 9px 2px 9px;
+	color: white;
+}
+.chat_search_li{
+	border-bottom: 1px solid black;
+}
+.chat_search::-webkit-input-placeholder {
+   color: #FFDD78;
+}
 
+.chat_search:-moz-placeholder { /* Firefox 18- */
+	color: #FFDD78;
+}
+
+.chat_search::-moz-placeholder {  /* Firefox 19+ */
+	color: #FFDD78;
+}
+
+.chat_search:-ms-input-placeholder {
+	color: #FFDD78;
+}
 .isPresent:hover{
 	background-color: #53CF29;
 }
@@ -2192,13 +2222,15 @@ li.drop_item:hover{
 	font-size: 16px;
 	padding: 4px;
 	background-color: #ffcc80;
-	cursor: pointer;
+	/*cursor: pointer;*/ /* TODO: maybe */
 	margin-left: 5px;
 	margin-right: 5px;
+	margin-bottom: 8px;
+	list-style: none;
 }
-.absences_list > li:hover{
+/*.absences_list > li:hover{ TODO: maybe
 	background-color: orange;
-}
+}*/
 .absences_list{
 	white-space: nowrap;
 }
@@ -2207,7 +2239,6 @@ li.drop_item:hover{
 	margin-top: 5px;
 }
 .absences_list_scroll{
-	height: 50px;
 	width: 100%;
 	overflow: auto;
 	white-space: nowrap;

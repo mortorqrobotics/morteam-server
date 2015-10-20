@@ -508,7 +508,7 @@
           $(announcementTopDiv).addClass("announcement_top");
           var img = document.createElement("img");
           $(img).attr("id", "medium_prof_pic");
-          $(img).attr("src", localStorage.profpicpath);
+          $(img).attr("src", localStorage.profpicpath + "-60");
           $(img).addClass("user-link")
           $(img).attr("data-userid", localStorage._id)
           var span = document.createElement("span");
@@ -649,7 +649,7 @@
           $(announcementTopDiv).addClass("announcement_top");
           var img = document.createElement("img");
           $(img).attr("id", "medium_prof_pic");
-          $(img).attr("src", announcements[i].author.profpicpath);
+          $(img).attr("src", announcements[i].author.profpicpath + "-60");
           $(img).addClass("user-link")
           $(img).attr("data-userid", announcements[i].author._id)
           var span = document.createElement("span");
