@@ -1415,6 +1415,9 @@ html { overflow-x: hidden; }
 .potential_member.clicked, .potential_subdivision.clicked{
 	background-color: #53CF29;
 }
+.excused-btn, .excused-btn:hover{
+	background-color: #53CF29 !important;
+}
 .potential_member.excused{
 	background-color: #FFF500;
 }

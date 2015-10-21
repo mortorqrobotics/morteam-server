@@ -181,6 +181,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.isotope/2.2.1/isotope.pkgd.min.js"></script>
   <script type="text/javascript" src="js/velocity.min.js"></script>
   <script type="text/javascript" src="js/autosize.js"></script>
+  <script src="js/Autolinker.min.js"></script>
   <script type="text/javascript" src="js/main.js"></script>
   <script type="text/javascript">
       autosize(document.querySelectorAll('textarea'));
@@ -497,7 +498,7 @@
         var targetAudience = $(".audience_item.selected").attr("data-subdivisionid");
       }
       var message = (new nicEditors.findEditor('main_textarea')).getContent();
-      var filteredMessage = message.replace("(<((?!br|a|/a|img|b|/b|i|/i|u|/u|div|/div|hr)[^>]+)>)", "").replace(/(<div\s+.*?class=").*?(".*)/gi, "");
+      var filteredMessage = Autolinker.link( message.replace("(<((?!br|a|/a|img|b|/b|i|/i|u|/u|div|/div|hr)[^>]+)>)", "").replace(/(<div\s+.*?class=").*?(".*)/gi, "") );
       nicEditors.findEditor('main_textarea').setContent('');
       $.post("/f/postAnnouncement", {audience: targetAudience, content: filteredMessage}, function(responseText){
         if(responseText!="fail"){

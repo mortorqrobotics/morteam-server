@@ -11,7 +11,6 @@ var nodemailer = require('nodemailer');
 var multer = require('multer');
 var AWS = require('aws-sdk');
 var ObjectId = require('mongoose').Types.ObjectId;
-var request = require('request').defaults({ encoding: null });
 var lwip = require('lwip');
 app = express();
 AWS.config.loadFromPath('./aws-config.json');
@@ -399,7 +398,7 @@ app.post("/f/createUser", multer({limits: {fileSize:10*1024*1024}}).single('prof
         } else {
           if(req.body.password == req.body.password_confirm){
             if(req.file){
-              var suffix = req.file.originalname.substring(req.file.originalname.indexOf(".")+1).toLowerCase();
+              var suffix = req.file.originalname.substring(req.file.originalname.lastIndexOf(".")+1).toLowerCase();
               lwip.open(req.file.buffer, suffix, function(err, image){
                 if(err){
                   console.error(err);
@@ -825,23 +824,27 @@ app.post("/f/acceptSubdivisionInvitation", requireLogin, function(req, res){
           res.end("fail");
         }else{
           var done = 0;
-          for(var i = 0; i < events.length; i++){
-            AttendanceHandler.update({event: events[i]._id, event_date: {"$gt": new Date()}}, { "$push": {
-              attendees: {
-                user: req.user._id,
-                status: "absent"
-              }
-            }}, function(err, model){
-              if(err){
-                console.error(err);
-                res.end("fail");
-              }else{
-                done++;
-                if(done == events.length){
-                  res.end("success");
+          if(events.length > 0){
+            for(var i = 0; i < events.length; i++){
+              AttendanceHandler.update({event: events[i]._id, event_date: {"$gt": new Date()}}, { "$push": {
+                attendees: {
+                  user: req.user._id,
+                  status: "absent"
                 }
-              }
-            })
+              }}, function(err, model){
+                if(err){
+                  console.error(err);
+                  res.end("fail");
+                }else{
+                  done++;
+                  if(done == events.length){
+                    res.end("success");
+                  }
+                }
+              })
+            }
+          }else{
+            res.end("success");
           }
         }
       });
@@ -1506,7 +1509,14 @@ app.post("/f/getUserAbsences", requireLogin, function(req, res){
   })
 })
 app.post("/f/excuseAbsence", requireLogin, requireLeader, function(req, res){
-  //
+  AttendanceHandler.update({event : req.body.event_id , "attendees.user": req.body.user_id} , {"$set": {"attendees.$.status": "excused"}}, function(err, model){
+    if(err){
+      console.error(err);
+      res.end("fail");
+    }else{
+      res.end("success");
+    }
+  })
 })
 app.post("/f/getTeamFolders", requireLogin, function(req, res){
   Folder.find({team: req.user.current_team.id, parentFolder: "/"}, function(err, folders){

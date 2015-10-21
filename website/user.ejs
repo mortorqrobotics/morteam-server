@@ -113,10 +113,10 @@
         <div class="col-md-6">
           <div class="attendance_data">
             <span class="data_title bold">Attendance</span><br/>
-            <span class="data_point">Number of absences:</span><span id="absences_num" class="data_answer"></span><br/>
+            <span class="data_point">Unexcused absences:</span><span id="absences_num" class="data_answer"></span><br/>
             <span class="data_point">Presence percentage:</span><span id="presence_percent" class="data_answer"></span><br/>
             <hr class="hr_small_margin">
-            <span class="data_point">Dates of absences:</span><br/>
+            <span class="data_point">Dates of unexcused absences:</span><br/>
             <div class="absences_list_scroll">
               <ul class="data_list absences_list">
 
@@ -254,7 +254,12 @@
           var absences = data.absences;
           var present = data.present;
           for(var i = 0; i < absences.length; i++){
-            $(".absences_list").append('<li class="absence_date">'+ absences[i].name + ' (' + readableDate(absences[i].date) + ')' + '</li><input type="button" class="button" value="Excuse" style="float: right;" /><br/>')
+            $(".absences_list").append('<li class="absence_date">'+ absences[i].name + ' (' + readableDate(absences[i].date) + ')' + '</li>')
+            if(localStorage.c_team_position == "leader" || localStorage.c_team_position == "admin"){
+              $(".absences_list").append('<input type="button" data-eventid="'+absences[i]._id+'" class="button excuse_btn" value="Excuse" style="float: right;" /><br/>');
+            }else{
+              $(".absences_list").append("<br/>");
+            }
           }
 
           $("#absences_num").html(absences.length);
@@ -279,6 +284,20 @@
                 $this.parent().prev().html($this.text() + '<span class="caret"></span>');
               }else{
                 alert(responseText);
+              }
+            });
+          }
+        });
+        $(document).on("click", ".excuse_btn", function(){
+          if(window.confirm("Are you sure?")){
+            var $this = $(this);
+            $.post("/f/excuseAbsence", {
+              event_id: $this.attr("data-eventid"),
+              user_id: window.location.pathname.substring(window.location.pathname.lastIndexOf("/") + 1)
+            }, function(responseText){
+              if(responseText == "success"){
+                $this.attr("value", "Excused!");
+                $this.addClass("excused-btn");
               }
             });
           }

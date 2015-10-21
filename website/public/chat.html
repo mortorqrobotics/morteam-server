@@ -119,6 +119,7 @@
     <script src="js/clamp.min.js"></script>
     <script src="jbox/jBox.min.js"></script>
     <script type="text/javascript" src="js/socket.io.js"></script>
+    <script src="js/Autolinker.min.js"></script>
     <script type="text/javascript" src="js/main.js"></script>
     <script type="text/javascript" src="js/autosize.js"></script>
     <script type="text/javascript" src="js/velocity.min.js"></script>
@@ -633,48 +634,49 @@
           }
         });
         $(document).on("click", ".send_button", function(){
-          var $this = $(this);
+          if($(".reply_textarea").val() != ""){
+            var $this = $(this);
+
+            $.post("/f/sendMessage", {chat_id: $(".chat_name.selected").attr("data-chatid"), content: normalizeDisplayedText( $(".reply_textarea").val() )}, function(responseText){
+              if(responseText == "success"){
+                var newMsgContent = normalizeDisplayedText( $(".reply_textarea").val() );
+                if( $('.bubble_wrapper.istyping').length != 0 ){
+                  $('.bubble_wrapper.istyping').before("<div class='bubble_wrapper'><div class='self_bubble'>" + newMsgContent + "</div></div>");
+                }else{
+                  $('.chat_area').append("<div class='bubble_wrapper'><div class='self_bubble'>" + newMsgContent + "</div></div>");
+                }
+                $(".chat_area").animate({
+                    scrollTop: $('.chat_area')[0].scrollHeight
+                }, 400);
+
+                $(".reply_textarea").val("");
+                autosize.update(ta); // resizes reply text box
+                $('.chat_area').css('height', "calc(100vh - 58px - " + $this.height() + "px)"); // resizes div.chat_area according to changes that
+
+                if( $(".chat_name.selected").hasClass("group_chat") ){
+                  socket.emit("message", {
+                    chat_id: $(".chat_name.selected").attr("data-chatid"),
+                    content: newMsgContent,
+                    chat_name: $(".chat_name.selected > span").html(),
+                    type: "group"
+                  });
+                }else{
+                  socket.emit("message", {
+                    chat_id: $(".chat_name.selected").attr("data-chatid"),
+                    content: newMsgContent,
+                    type: "private"
+                  })
+                }
+                socket.emit('stop typing', {chat_id: $(".chat_name.selected").attr("data-chatid") });
 
 
-          $.post("/f/sendMessage", {chat_id: $(".chat_name.selected").attr("data-chatid"), content: $(".reply_textarea").val()}, function(responseText){
-            if(responseText == "success"){
-              var newMsgContent = $(".reply_textarea").val();
-              if( $('.bubble_wrapper.istyping').length != 0 ){
-                $('.bubble_wrapper.istyping').before("<div class='bubble_wrapper'><div class='self_bubble'>" + newMsgContent + "</div></div>");
-              }else{
-                $('.chat_area').append("<div class='bubble_wrapper'><div class='self_bubble'>" + newMsgContent + "</div></div>");
+                if( $(".chat_name:not(.compose)").get(0) != $(".chat_name.selected") ){
+                  $(".chat_search_li").after( $(".chat_name.selected") );
+                }
+
               }
-              $(".chat_area").animate({
-                  scrollTop: $('.chat_area')[0].scrollHeight
-              }, 400);
-
-              $(".reply_textarea").val("");
-              autosize.update(ta); // resizes reply text box
-              $('.chat_area').css('height', "calc(100vh - 58px - " + $this.height() + "px)"); // resizes div.chat_area according to changes that
-
-              if( $(".chat_name.selected").hasClass("group_chat") ){
-                socket.emit("message", {
-                  chat_id: $(".chat_name.selected").attr("data-chatid"),
-                  content: newMsgContent,
-                  chat_name: $(".chat_name.selected > span").html(),
-                  type: "group"
-                });
-              }else{
-                socket.emit("message", {
-                  chat_id: $(".chat_name.selected").attr("data-chatid"),
-                  content: newMsgContent,
-                  type: "private"
-                })
-              }
-              socket.emit('stop typing', {chat_id: $(".chat_name.selected").attr("data-chatid") });
-
-
-              if( $(".chat_name:not(.compose)").get(0) != $(".chat_name.selected") ){
-                $(".chat_search_li").after( $(".chat_name.selected") );
-              }
-
-            }
-          })
+            })
+          }
         });
         var replyInitialHeight = $('.reply_textarea').height(); // initial height of reply text box, it's used to check for height changes later
         $('.reply_textarea').bind("input", function() { //checks for height change of reply text box and adjusts height of chat area accordingly

@@ -62,6 +62,12 @@ function standardizeTime(date) {
     }
     return Hours + ":" + Minutes + " " + suffix;
 }
+function removeHTML(text){
+  return text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+function normalizeDisplayedText(text){
+  return Autolinker.link(removeHTML(text));
+}
 $(document).ready(function(){
   $('#name_link').html(localStorage.firstname);
   $(".profile_id").not(".ejs").attr("src", localStorage.profpicpath + "-60");
