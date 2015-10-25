@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>MorTeam</title>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:700,300,400' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Exo+2:400,300,200' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Titillium+Web' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
+    <link href="jbox/jBox.css" rel="stylesheet">
+    <link href="jbox/themes/TooltipDark.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/index.css" type="text/css">
+    <script src="js/spin.js"></script>
+    <script type="text/javascript">
+        var loadingDiv = document.createElement("div");
+        loadingDiv.className = "loading_circle";
+        loadingDiv.id = "loading_circle";
+    </script>
+</head>
+
+<body>
+    <div id="audio-files" style="display: none;">
+        <audio id="click-sound">
+            <source src="jbox/audio/bling2.wav" type="audio/wav" />
+        </audio>
+    </div>
+    <!-- NAVIGATION BAR -->
+    <div class="nav_dropdown">
+      <p onclick="location='index'">Home</p>
+      <p onclick="location='chat'">Chat</p>
+      <p onclick="location='drive'" style="background-color: orange">Drive</p>
+      <p onclick="location='cal'">Calendar</p>
+      <p onclick="location='networks'">Networks</p>
+    </div>
+    <div class="navigation_bar">
+        <ul id="navbar_list">
+          <li class="navbar_item navbar_title" onclick="location='index'">
+              MorTeam
+          </li>
+          <li class="navbar_item searchbox_list_item">
+              <input type="text" placeholder="search" class="searchbox"></input>
+          </li>
+          <li class="navbar_item glyph_link chat_btn menu_btn" onclick="location='chat'">
+              <span class="glyphicon glyphicon-comment"></span>
+          </li>
+          <li class="navbar_item glyph_link drive_btn menu_btn active" onclick="location='drive'">
+              <span class="glyphicon glyphicon-hdd"></span>
+          </li>
+          <li class="navbar_item glyph_link cal_btn menu_btn" onclick="location='cal'">
+              <span class="glyphicon glyphicon-calendar"></span>
+          </li>
+          <li class="navbar_item glyph_link networks_btn menu_btn" onclick="location='networks'">
+              <span class="glyphicon glyphicon-globe"></span>
+          </li>
+          <div class="navbar_item right_links">
+            <li class="navbar_item glyph_link menu">
+                <span class="glyphicon glyphicon-menu-hamburger"></span>
+            </li>
+            <li class="navbar_item glyph_link" id="notif_button">
+                <span class="glyphicon glyphicon-inbox"></span>
+            </li>
+            <img class="profile_id" id="small_prof_pic" src="./images/user.jpg"></img>
+            <span class="profile_name" id="name_link"></span>
+          </div>
+        </ul>
+    </div>
+    <div id="notif_drop" class="hidden">
+        <ul>
+            <li class="notif_list_item">hey</li>
+            <li class="notif_list_item">hi</li>
+            <li class="notif_list_item">ho</li>
+        </ul>
+    </div>
+    <div id="prof_drop" class="hidden">
+        <ul>
+            <li class="notif_list_item" id="view_prof_button">View Profile and Settings</li>
+            <li class="notif_list_item" id="logout_button">Log Out</li>
+        </ul>
+    </div>
+    <div id="darken" class="hidden"></div>
+    <!-- END OF NAVIGATION BAR -->
+
+    <!-- BODY -->
+    <div class="container-fluid documents_list hidden">
+      <!-- <div id="drive_dir">
+        <span>Personal Files</span>/<span>test folder 1</span>
+      </div> -->
+        <div class="grid">
+            <div style="z-index:1;" class="doc_frame add_file">
+                <span id="add_file_sign" class="glyphicon glyphicon-plus"></span>
+            </div>
+            <!--<div style="z-index:1;" class="doc_frame image_doc">              // THIS IS A SAMPLE FILE (IMAGE) IN DRIVE
+                <div class="hidden confirm_del">
+                    <p>Are you sure?</p>
+                    <input type="button" value="yes" class="yes"></input>
+                    <input type="button" value="no" class="no"></input>
+                </div>
+                <img src="./images/sample2.jpg" class="doc_preview image_preview" />
+                <span class="doc_title">
+                    <span class="name">Flower Image</span>
+                    <span class="file_size">6.3 MB</span>
+                    <span class="glyphicon glyphicon-trash doc_delete"></span>
+                </span>
+            </div>-->
+        </div>
+    </div>
+    <!-- END OF BODY -->
+
+    <!-- LEFTBAR -->
+    <div class="leftbar">
+        <ul class="folders_list">
+            <li class="drive_name drive_options">
+                <div class="btn-group sort_by_dropdown">
+                    <button class="button dropdown-toggle" data-toggle="dropdown">Sort By
+                        <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li class="sort_by">Date</li>
+                        <li class="sort_by">Name</li>
+                        <li class="sort_by">Size</li>
+                        <li class="sort_by">Type</li>
+                    </ul>
+                </div>
+                <!-- <span class="glyphicon glyphicon-th grid_layout"></span>
+                <span class="glyphicon glyphicon-th-list list_layout"></span>  UN-COMMENT WHEN LIST LAYOUT IS READY   -->
+            </li>
+            <li class="drive_name new_folder"><span id="make_drive" class="glyphicon glyphicon-plus"></span>New Drive Group</li>
+            <!-- <li class="drive_name"><span id="make_drive" data-folderid="" class="glyphicon glyphicon-folder-open def_folder1"></span>All Your Files</li>
+            <li class="drive_name"><span id="make_drive" class="glyphicon glyphicon-folder-open def_folder2"></span>Team Files</li>
+            <li class="drive_name"><span id="make_drive" class="glyphicon glyphicon-folder-open def_folder3"></span>Personal Files</li> -->
+
+        </ul>
+    </div>
+    <span class="glyphicon glyphicon-chevron-left hide_leftbar"></span>
+    <!-- END OF LEFTBAR -->
+
+    <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script src="http://code.jquery.com/color/jquery.color-2.1.0.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    <script src="js/color-thief.js"></script>
+    <script src="jbox/jBox.min.js"></script>
+    <script src="js/dropzone.js"></script>
+    <script src="js/clamp.min.js"></script>
+    <script type="text/javascript" src="js/socket.io.js"></script>
+    <script type="text/javascript" src="js/velocity.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.isotope/2.2.1/isotope.pkgd.min.js"></script>
+    <script type="text/javascript" src="js/main.js"></script>
+    <script type="text/javascript" src="js/hex.js"></script>
+    <script src="/js/jquery.form.js"></script>
+    <script>
+
+      function removeDuplicates(arr) {
+        var seen = {};
+        var out = [];
+        var len = arr.length;
+        var j = 0;
+        for(var i = 0; i < len; i++) {
+          var item = arr[i];
+          if(seen[item] !== 1) {
+            seen[item] = 1;
+            out[j++] = item;
+          }
+         }
+        return out;
+      }
+      function debounce(fn, threshold) {
+          var timeout;
+          return function debounced() {
+              if (timeout) {
+                  clearTimeout(timeout);
+              }
+
+              function delayed() {
+                  fn();
+                  timeout = null;
+              }
+              timeout = setTimeout(delayed, threshold || 100);
+          }
+      }
+      function hideLeftbar(time, button) {
+          $(".leftbar").velocity({
+              left: "-260px"
+          }, time);
+          $(".documents_list").velocity({
+              left: "40px"
+          }, time);
+          $(button).removeClass("glyphicon-chevron-left").addClass("glyphicon-chevron-right");
+          $(button).velocity({
+              left: "10px"
+          }, time);
+          setTimeout(function() {
+              $(".documents_list").css("width", "calc(100vw - 60px)")
+              $grid.isotope();
+          }, time)
+      }
+      function showLeftbar(time, button) {
+          $(".leftbar").velocity({
+              left: "0px"
+          }, time);
+          $(".documents_list").velocity({
+              left: "300px"
+          }, time);
+          $(button).removeClass("glyphicon-chevron-right").addClass("glyphicon-chevron-left");
+          $(button).velocity({
+              left: "220px"
+          }, time);
+          setTimeout(function() {
+              $(".documents_list").css("width", "calc(100vw - 320px)")
+              $grid.isotope();
+          }, time);
+      }
+      jQuery.fn.flash = function(color, duration) {
+          var current = this.css('backgroundColor');
+          this.animate({
+                  backgroundColor: color
+              }, duration / 2)
+              .animate({
+                  backgroundColor: current
+              }, duration / 2);
+      }
+      function showDropHere() {
+          $("#add_file_sign").removeClass("glyphicon-plus")
+          $("#add_file_sign").html("Drop Here");
+          $(".add_file").css("background-color", "#f5f5f5");
+          $("#add_file_sign").css("font-size", "40px");
+      }
+      function hideDropHere() {
+          $("#add_file_sign").addClass("glyphicon-plus")
+          $("#add_file_sign").html("");
+          $(".add_file").css("background-color", "#e9e9e9")
+          $("#add_file_sign").css("font-size", "60px");
+      }
+      function loadTeamFolders(){
+        $.post("/f/getTeamFolders", function(responseText){
+          var folders = JSON.parse(responseText);
+          for (var i = 0; i < folders.length; i++) {
+            var li = document.createElement("li");
+            $(li).attr("data-folderid", folders[i]._id);
+            $(li).addClass("drive_name");
+            $(li).append('<span id="make_drive" class="glyphicon glyphicon-folder-open"></span>'+folders[i].name);
+            $(".folders_list").append( $(li) );
+          }
+          setTimeout(function(){ //finde better way
+            $(".folders_list").children().first().next().next().trigger("click")
+          },100)
+        });
+      }
+      function newTeamFolderModal(title){
+        var new_modal = new jBox('Modal', {
+          width: 350,
+          height: 373,
+          title: title,
+          onClose: function(){
+            setTimeout(function(){
+              team_folder_modal.destroy();
+            }, 100)
+          }
+        });
+        var span = document.createElement("span");
+        var folder_name = '<input type="text" id="folder_name" class="name_input" placeholder="Group Name" />';
+        var user_search = '<input type="text" placeholder="Search Names..." class="members_search" id="folder_members_search">';
+        var potential_members = document.createElement("div");
+        $(potential_members).attr("id", "potential_folder_members");
+        $(potential_members).addClass("potential_members");
+        $(potential_members).addClass("tall");
+        var make_team_folder = '<input type="button" id="make_team_folder" class="button done_button" value="Done">'
+        $.ajax({
+          type: 'POST',
+          url: "/f/getAllSubdivisionsForUserInTeam",
+          async: false,
+          success: function(responseText){
+            var subdivisions = JSON.parse(responseText);
+            for(var i = 0; i < subdivisions.length; i++){
+              var subdivision = document.createElement("p");
+              $(subdivision).addClass("potential_subdivision");
+              $(subdivision).attr("data-subdivisionid", subdivisions[i]._id);
+              $(subdivision).html(subdivisions[i].name);
+              $(potential_members).append(subdivision);
+            }
+
+          }
+        });
+        $.post("/f/getUsersInTeam", function(responseText){
+          var users = JSON.parse(responseText);
+          for(var i = 0; i < users.length; i++){
+            var user = document.createElement("p");
+            $(user).addClass("potential_member");
+            $(user).attr("data-userid", users[i]._id);
+            $(user).html(users[i].firstname + " " + users[i].lastname);
+            $(potential_members).append(user);
+            if(users[i]._id == localStorage._id){
+              $(user).addClass("clicked");
+              $(user).addClass("hidden");
+            }
+          }
+          $(span).append($(folder_name));
+          $(span).append($(user_search));
+          $(span).append("<br/>");
+          $(span).append($(potential_members));
+          $(span).append("<br/>");
+          $(span).append($(make_team_folder));
+          new_modal.setContent( $(span) );
+          new_modal.open();
+        })
+        return new_modal;
+      }
+      function addFileModal(title){
+        var new_modal = new jBox('Modal', {
+            width: 300,
+            height: 230,
+            title: 'Upload a File',
+            onOpen: function() {
+                $("#chosen_file").html("No File Selected");
+                $("#file").val("");
+                $(".file_name")[0].value = "";
+                document.getElementById("file").onchange = function() {
+                    uploads = this.files;
+                    if (this.files.length == 1) {
+                        document.getElementById("chosen_file").innerHTML = this.files[0].name;
+                        setTimeout(function() {
+                            $("#chosen_file").flash("#0099ff", 1000);
+                        }, 300);
+                    } else {
+                        document.getElementById("chosen_file").innerHTML = "Multiple Selected";
+                        setTimeout(function() {
+                            $("#chosen_file").flash("#0099ff", 1000);
+                        }, 300);
+                    }
+                };
+
+            }
+        });
+        new_modal.setContent("<form enctype='multipart/form-data' action='/f/uploadFile' method='post' id='upload_form'><input type='file' id='file' class='hidden' name='uploadedFile'></input><input type='button' class='button file_choose' value='Choose File'></input><p id='chosen_file'>No File Selected</p><input type='text' class='file_name' name='fileName' placeholder='File Name'></input><input type='submit' class='button upload_button' value='Upload'></input></form>");
+        new_modal.open();
+        return new_modal;
+      }
+      function bytesToSize(bytes){
+        if(bytes < 1000){
+          return bytes + " Bytes";
+        }else if (bytes < 1000000) {
+          return (bytes/1000)+" KB"
+        }else if (bytes < 1000000000) {
+          return (bytes/1000000)+" MB"
+        }else {
+          return bytes + " Bytes";
+        }
+      }
+
+      $(document).ready(function(){
+        document.body.appendChild(loadingDiv);
+        loadTeamFolders();
+
+        //general modal stuff
+        $(document).on("click", ".potential_member", function(){
+          if($(this).hasClass("clicked")){
+            $(this).removeClass("clicked");
+          }else{
+            $(this).addClass("clicked");
+          }
+        });
+        $(document).on("click", ".potential_subdivision", function(){
+          if($(this).hasClass("clicked")){
+            $(this).removeClass("clicked");
+          }else{
+            $(this).addClass("clicked");
+          }
+        });
+        $(document).on("keyup", '.members_search', function() {
+          var val = $.trim($(this).val()).replace(/ +/g, ' ').toLowerCase();
+          $('.potential_members p').show().filter(function() {
+              var text = $(this).text().replace(/\s+/g, ' ').toLowerCase();
+              console.log(!~text.indexOf(val));
+              return !~text.indexOf(val);
+          }).hide();
+        });
+
+        $(document).on("submit", "#upload_form", function(){
+          $('<input />').attr('type', 'hidden').attr('name', "currentFolderId").attr('value', currentFolder).appendTo(this);
+          $(this).ajaxSubmit({
+              error: function(xhr) {
+            		alert(xhr.status)
+              },
+              success: function(response) {
+                if(response != "fail"){
+                  add_file_modal.close();
+                  add_file_modal.destroy();
+                  var file = JSON.parse(response)
+                  var fileType = file.type;
+                  if(file.type == "image"){
+                    fileType = "/file/" + file._id + "-preview";
+                  }else{
+                    fileType = "images/"+file.type+'.png';
+                  }
+                  var $file = $('<div style="z-index:1;" class="doc_frame '+file.type+'" data-fileid="' + file._id + '" title="' + file.name +
+                      '"><div class="hidden confirm_del"><p>Are you sure?</p><input type="button" value="yes" class="yes"></input><input type="button" value="no" class="no"></input></div><img src="'+fileType+'" class="doc_preview"/><span class="doc_title"><span class="name">' + file.name + '</span><span class="glyphicon glyphicon-trash doc_delete"></span></span></div>');
+                  $grid.append($file).isotope("appended", $file);
+                }else{
+                  alert(response);
+                }
+              }
+  	      });
+
+        	return false;
+        });
+
+      });
+
+      var currentFolder;
+      $(window).load(function(){
+
+        var qsRegex;
+
+        $grid = $('.grid').isotope({
+          itemSelector: '.doc_frame',
+          layoutMode: 'fitRows',
+          transformEnabled: false,
+          isAnimated: false,
+          filter: function() {
+              return qsRegex ? $(this).text().match(qsRegex) : true;
+          },
+          getSortData: {
+              name: function(itemElem) {
+                var name =  $(itemElem).find(".name").html();
+                if(typeof(name) == "undefined"){
+                  return name;
+                }
+                return name.toLowerCase();
+              },
+              size: function(itemElem) {
+                  var size = $(itemElem).find('.file_size').text();
+                  if (size.indexOf("GB") > -1){
+                    size = size.substring(0, size.indexOf("GB"));
+                    return parseFloat(size.replace(/[\(\)]/g, '')) * 1000000000;
+                  } else if (size.indexOf("MB") > -1) {
+                      size = size.substring(0, size.indexOf("MB"));
+                      return parseFloat(size.replace(/[\(\)]/g, '')) * 1000000;
+                  } else if (size.indexOf("KB") > -1){
+                      size = size.substring(0, size.indexOf("KB"));
+                      return parseFloat(size.replace(/[\(\)]/g, '')) * 1000;
+                  }else{
+                      return parseFloat(size.replace(/[\(\)]/g, ''));
+                  }
+              },
+              type: function(itemElem) {
+                  if ($(itemElem).hasClass("add_file")) {
+                      return "a"
+                  } else if ($(itemElem).hasClass("word")) {
+                      return "a";
+                  } else if ($(itemElem).hasClass("pdf")) {
+                      return "b";
+                  } else if ($(itemElem).hasClass("keynote")) {
+                      return "c";
+                  } else if ($(itemElem).hasClass("spreadsheet")) {
+                      return "d";
+                  } else if ($(itemElem).hasClass("audio")) {
+                      return "e";
+                  } else if ($(itemElem).hasClass("unknown")) {
+                      return "f";
+                  } else if ($(itemElem).hasClass("image")) {
+                      return "g";
+                  } else {
+                      return "z";
+                  }
+              }
+          }
+        });
+
+        // var myDropzone = new Dropzone(".add_file", {
+        //     url: "#",
+        //     createImageThumbnails: false,
+        //     clickable: false,
+        //     previewTemplate: "<div id='preview-template' style='display: none;''>",
+        //     uploadMultiple: false
+        // });
+        // myDropzone.on("addedfile", function(file) {
+        //     $('<input />').attr('type', 'hidden').attr("type", "file").attr('name', "uploadedFile").attr('value', file).appendTo($("#upload_form"));
+        //     add_file_modal = addFileModal("Upload a File")
+        //     document.getElementById("chosen_file").innerHTML = file.name;
+        //     setTimeout(function() {
+        //         $("#chosen_file").flash("#0099ff", 1000);
+        //     }, 300);
+        // });
+
+        // $("html").on("dragenter", function(event) {
+        //     event.preventDefault();
+        //     event.stopPropagation();
+        //     showDropHere();
+        // });
+        // $("html").on("drop", function(event) {
+        //     event.preventDefault();
+        //     event.stopPropagation();
+        //     hideDropHere();
+        // });
+        // $(".add_file").on("drop", function(event) {
+        //     event.preventDefault();
+        //     event.stopPropagation();
+        //     hideDropHere();
+        // });
+        // $("html").on("mouseenter", function(event) {
+        //     event.stopPropagation();
+        //     event.preventDefault();
+        //     hideDropHere();
+        // })
+        // $("html").on('dragover', function() {
+        //     event.preventDefault();
+        // });
+        // $("html").mouseleave(function() {
+        //     hideDropHere();
+        // });
+
+        $(".hide_leftbar").click(function() {
+            if ($(this).hasClass("glyphicon-chevron-left")) {
+                hideLeftbar(300, this);
+            } else {
+                showLeftbar(300, this);
+            }
+        });
+        if ($(window).width() < 825) {
+            hideLeftbar(0, ".hide_leftbar");
+        }
+
+        $(document).on("mouseenter", ".doc_frame", function() {
+            $(this).css({
+                backgroundColor: "#" + rgb2hex($(this).css('backgroundColor')).darkenHexColorBy(25)
+            })
+        });
+        $(document).on("mouseleave", ".doc_frame", function() {
+            $(this).css({
+                backgroundColor: "#" + rgb2hex($(this).css('backgroundColor')).lightenHexColorBy(25)
+            })
+        });
+
+        $(document).on("click", ".drive_name:not(.new_folder, .drive_options)", function(e) {
+          var a = $(e.target);
+          var b = $(this).find(".list_right");
+          if (a[0] != b[0] && a[0] != b[1]){
+
+            if( !$(this).hasClass("selected") ){
+              var $this = $(this);
+              currentFolder = $this.attr("data-folderid");
+              if( $(".documents_list").hasClass("hidden") ){
+                $(".documents_list").fadeIn(400).removeClass("hidden");
+              }
+              $grid.isotope("remove", $(".doc_frame:not(.add_file)")).isotope()
+              $(".drive_name").removeClass("selected");
+              $(this).addClass("selected");
+
+              $.post("/f/getSubFolders", {folder_id: $this.attr("data-folderid")}, function(responseText){
+                var folders = JSON.parse(responseText);
+                for (var i = 0; i < folders.length; i++) {
+                  var $folder = $('<div style="z-index:1;" class="doc_frame folder_doc" data-folderid="' + folders[i]._id + '" title="' + folders[i].name +
+                      '"><div class="hidden confirm_del"><p>Are you sure?</p><input type="button" value="yes" class="yes"></input><input type="button" value="no" class="no"></input></div><img src="' +
+                      'images/folder.png' + '" class="doc_preview"/><span class="doc_title"><span class="name">' + folders[i].name + '</span><span class="glyphicon glyphicon-trash doc_delete"></span></span></div>');
+                  $grid.append($folder).isotope("appended", $folder);
+                  // $folder.jBox('Tooltip', {
+                  //     delayOpen: 700,
+                  //     delayClose: 300,
+                  //     theme: "TooltipDark",
+                  //     position: {
+                  //         y: 'bottom'
+                  //     }
+                  // });
+                }
+              });
+              $.post("/f/getFilesInFolder", {folder_id: $this.attr("data-folderid")}, function(responseText){
+                var files = JSON.parse(responseText);
+                for (var i = 0; i < files.length; i++) {
+                  var fileType = files[i].type;
+                  if(files[i].type == "image"){
+                    fileType = "/file/" + files[i]._id + "-preview";
+                  }else{
+                    fileType = "images/"+files[i].type+'.png';
+                  }
+                  var deleteButton = '';
+                  if(files[i].creator == localStorage._id){
+                    deleteButton = '<span class="glyphicon glyphicon-trash doc_delete"></span>'
+                  }
+                  var $file = $('<div style="z-index:1;" class="doc_frame '+files[i].type+'" data-fileid="' + files[i]._id + '" title="' + files[i].name +
+                      '"><div class="hidden confirm_del"><p>Are you sure?</p><input type="button" value="yes" class="yes"></input><input type="button" value="no" class="no"></input></div><img src="'+fileType+'" class="doc_preview"/><span class="doc_title"><span class="name">' + files[i].name + '</span><span class="file_size">' + bytesToSize(files[i].size) +
+                      '</span>'+deleteButton+'</span></div>');
+                  $grid.append($file).isotope("appended", $file);
+                  // $folder.jBox('Tooltip', {
+                  //     delayOpen: 700,
+                  //     delayClose: 300,
+                  //     theme: "TooltipDark",
+                  //     position: {
+                  //         y: 'bottom'
+                  //     }
+                  // });
+                }
+              });
+            }
+          }
+        });
+        $(document).on("click", ".doc_frame:not(.add_file)", function(e) {
+          var a = $(e.target);
+          var b = $(this).find(".doc_delete");
+          var c = $(this).find("input");
+          if (a[0] != b[0] && a[0] != c[0] && a[0] != c[1]) {
+              location = "/file/" + $(this).attr("data-fileid");
+          }
+        });
+        $(document).on("click", ".doc_delete", function(){
+          var frame = $(this).parent().parent();
+          frame.find(".confirm_del").css("background-color", frame.css("background-color"));
+          frame.find(".confirm_del").fadeIn(150).removeClass("hidden");
+          $(frame).click(function(e) {
+              var a = $(e.target);
+              var b = $(this).find(".doc_delete");
+              var c = $(this).find("input");
+              if (a[0] != b[0] && a[0] != c[0] && a[0] != c[1]) {
+                  frame.find(".confirm_del").fadeOut(150);
+              }
+          });
+          $(frame.find(".yes")).click(function() {
+            $.post("/f/deleteFile", {file_id: frame.attr("data-fileid")}, function(responseText){
+              console.log(responseText);
+              if(responseText == "success"){
+                $grid.isotope('remove', frame).isotope();
+              }else{
+                alert(responseText);
+              }
+            });
+          });
+          $(frame.find(".no")).click(function() {
+              frame.find(".confirm_del").fadeOut(150);
+          });
+        });
+        // $(document).on("click", ".folder_doc", function(e) {
+        //   var a = $(e.target);
+        //   var b = $(this).find(".list_right");
+        //   if (a[0] != b[0] && a[0] != b[1]){
+        //     var $this = $(this);
+        //     currentFolder = $this.attr("data-folderid");
+        //     if( $(".documents_list").hasClass("hidden") ){
+        //       $(".documents_list").fadeIn(400).removeClass("hidden");
+        //     }
+        //
+        //     $grid.isotope("remove", $(".doc_frame:not(.add_file)")).isotope()
+        //
+        //     $.post("/f/getSubFolders", {folder_id: $this.attr("data-folderid")}, function(responseText){
+        //       var folders = JSON.parse(responseText);
+        //       for (var i = 0; i < folders.length; i++) {
+        //         var $folder = $('<div style="z-index:1;" class="doc_frame folder_doc" data-folderid="' + folders[i]._id + '" title="' + folders[i].name +
+        //             '"><div class="hidden confirm_del"><p>Are you sure?</p><input type="button" value="yes" class="yes"></input><input type="button" value="no" class="no"></input></div><img src="' +
+        //             'images/folder.png' + '" class="doc_preview"/><span class="doc_title"><span class="name">' + folders[i].name + '</span><span class="glyphicon glyphicon-trash doc_delete"></span></span></div>');
+        //         $grid.append($folder).isotope("appended", $folder);
+        //         // $folder.jBox('Tooltip', {
+        //         //     delayOpen: 700,
+        //         //     delayClose: 300,
+        //         //     theme: "TooltipDark",
+        //         //     position: {
+        //         //         y: 'bottom'
+        //         //     }
+        //         // });
+        //       }
+        //     });
+        //     $.post("/f/getFilesInFolder", {folder_id: $this.attr("data-folderid")}, function(responseText){
+        //       var files = JSON.parse(responseText);
+        //       for (var i = 0; i < files.length; i++) {
+        //         // append files
+        //       }
+        //     });
+        //   }
+        // });
+
+        $(document).on("click", ".new_folder", function(){
+          team_folder_modal = newTeamFolderModal("New Group");
+        });
+        $(document).on("click", "#make_team_folder", function(){
+          var p_selected_users = $(".potential_member.clicked");
+          var p_selected_subdivisions = $(".potential_subdivision.clicked");
+
+          userMembers = [];
+          subdivisionMembers = [];
+
+          for (var i = 0; i < p_selected_users.length; i++) {
+            userMembers.push($(p_selected_users[i]).attr("data-userid"));
+          }
+          for (var i = 0; i < p_selected_subdivisions.length; i++) {
+            subdivisionMembers.push($(p_selected_subdivisions[i]).attr("data-subdivisionid"));
+          }
+
+          if(removeDuplicates(userMembers).length == 1 && subdivisionMembers.length == 0){
+            team_folder_modal.close();
+            team_folder_modal.destroy();
+          }else{
+            $.post("/f/createFolder", {type: "teamFolder", name: $("#folder_name").val(), userMembers: userMembers, subdivisionMembers: subdivisionMembers}, function(responseText){
+              if(responseText != "fail"){
+                var folder = JSON.parse(responseText);
+                var li = document.createElement("li");
+                $(li).attr("data-folderid", folder._id);
+                $(li).addClass("drive_name");
+                $(li).html('<span id="make_drive" class="glyphicon glyphicon-folder-open"></span> ' + folder.name)
+                $(".folders_list").append($(li));
+              }else {
+                alert(responseText);
+              }
+            });
+            team_folder_modal.close();
+            team_folder_modal.destroy();
+          }
+
+
+        });
+
+        $(document).on("click", ".add_file", function(){
+          add_file_modal = addFileModal("Upload a File");
+        })
+        $(document).on("click", ".file_choose", function() {
+          $("#file").trigger("click");
+        });
+        var ascending;
+
+        $(".sort_by").click(function() {
+
+           if( !$(this).hasClass("selected") ){
+              // if(ascending == undefined){
+              //   ascending = true;
+              // }
+              var chosenSort = "";
+              $(".sort_by").removeClass("selected");
+              $(this).addClass("selected");
+              chosenSort = $(this).html().toLowerCase();
+              if (chosenSort === "date") {
+                  chosenSort = "original-order";
+              }
+              // console.log(ascending);
+              $grid.isotope({
+                  sortBy: chosenSort,
+                  // sortAscending: ascending
+              })
+              // ascending = !ascending;
+              // console.log(ascending);
+            }else{
+              // if(ascending == undefined){
+              //   ascending = true;
+              // }
+              var chosenSort = "";
+              $(".sort_by").removeClass("selected");
+              $(this).addClass("selected");
+              chosenSort = $(this).html().toLowerCase();
+              if (chosenSort === "date") {
+                  chosenSort = "original-order";
+              }
+              console.log(ascending);
+              $grid.isotope({
+                  sortBy: chosenSort,
+                  // sortAscending: ascending
+              })
+              // ascending = !ascending;
+            }
+        });
+
+
+
+        var $quicksearch = $('.searchbox').keyup(debounce(function() {
+            qsRegex = new RegExp($quicksearch.val(), 'gi');
+            $grid.isotope();
+            if(currentFolderID == ""){
+               $(".add_file").hide();
+               $grid.isotope();
+            }
+        }, 200));
+      });
+    </script>
+</body>
+
+</html>

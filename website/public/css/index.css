@@ -1148,30 +1148,34 @@ html { overflow-x: hidden; }
 	box-shadow: 3px 3px 8px #a9a9a9;
 	display: inline-block;
 }
-.word_doc{
+.word_doc, .word{
 	background-color: #268dd7;
 }
 
-.pdf_doc{
+.pdf_doc, .pdf{
 	background-color: #FF5930;
 }
 
-.image_doc{
+.image_doc, .image{
 	background-color: #b9b9b9;
 }
 
-.excel_doc{
+.folder_doc{
+	background-color: #b9b9b9;
+}
+
+.excel_doc, .spreadsheet{
 	background-color: #33B533;
 }
 
-.keynote_doc{
+.keynote_doc, .keynote{
 	background-color: #c62400;
 }
 
-.default_doc{
+.default_doc, .unknown{
 	background-color: #ffc547;
 }
-.audio_doc{
+.audio_doc, .audio{
 	background-color: #ff6666;
 }
 .confirm_del{
@@ -2498,4 +2502,26 @@ th{
 }
 #logged-out-info{
   float: right;
+}
+#drive_dir{
+	width: calc(100% + 90px);
+	background-color: #f9f9f9;
+	margin-bottom: 15px;
+	padding: 8px;
+	padding-left: 15px;
+	margin-top: -20px;
+	margin-left: -55px;
+	font-size: 19px;
+	color: orange;
+	font-weight: 300;
+	box-shadow: 1px 1px 12px -9px black;
+}
+#drive_dir > span{
+	margin-left: 10px;
+	margin-right: 10px;
+	padding: 3px;
+	cursor: pointer;
+}
+#drive_dir > span:hover{
+	background-color: #e9e9e9;
 }

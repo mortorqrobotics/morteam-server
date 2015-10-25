@@ -103,7 +103,7 @@
     <script type="text/javascript" src="js/main.js"></script>
     <script type="text/javascript">
       var socket = io();
-      function showNewMessageNotice(title, content, chatid) {
+      function messageNotification(title, content, chatid) {
         var newMessageNotice = new jBox('Notice', {
             attributes: {
                 x: 'right',
@@ -130,9 +130,9 @@
       $(document).ready(function(){
         socket.on('message', function(msg){
           if(msg.type == "group"){
-            showNewMessageNotice(msg.author_fn+" "+msg.author_ln+" in "+msg.chat_name, msg.content, msg.chat_id);
+            messageNotification(msg.author_fn+" "+msg.author_ln+" in "+msg.chat_name, msg.content, msg.chat_id);
           }else{
-            showNewMessageNotice(msg.author_fn+" "+msg.author_ln, msg.content, msg.chat_id);
+            messageNotification(msg.author_fn+" "+msg.author_ln, msg.content, msg.chat_id);
           }
           $('#audio-files').find('audio#click-sound')[0].play();
           $('#audio-files').find('audio#click-sound')[0].currentTime = 0;

@@ -110,29 +110,6 @@
               <h3 class="u_events_title">Upcoming Events</h3>
               <div class="events_container">
                 <ul class="events_list upcoming_events">
-                  <!-- <li>Under Construction</li>
-                  <li>All newbies will take quiz</li>
-                  <li>Programming meeting in 285</li>
-                  <li>All newbies will take quiz</li>
-                  <li>Programming meeting in 285</li>
-                  <li>All newbies will take quiz</li>
-                  <li>Programming meeting in 285</li>
-                  <li>All newbies will take quiz</li>
-                  <li>Programming meeting in 285</li>
-                  <li>All newbies will take quiz</li>
-                  <li>Programming meeting in 285</li>
-                  <li>All newbies will take quiz</li>
-                  <li>All newbies will take quiz</li>
-                  <li>Programming meeting in 285</li>
-                  <li>All newbies will take quiz</li>
-                  <li>Programming meeting in 285</li>
-                  <li>All newbies will take quiz</li>
-                  <li>Programming meeting in 285</li>
-                  <li>All newbies will take quiz</li>
-                  <li>Programming meeting in 285</li>
-                  <li>All newbies will take quiz</li>
-                  <li>Programming meeting in 285</li>
-                  <li>All newbies will take quiz</li> -->
                 </ul>
               </div>
             </div>
@@ -215,7 +192,7 @@
     var socket = io();
     var daysInWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     var months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-    function showNewMessageNotice(title, content, chatid) {
+    function messageNotification(title, content, chatid) {
       var newMessageNotice = new jBox('Notice', {
           attributes: {
               x: 'right',
@@ -376,25 +353,6 @@
         var month = now.getMonth() + 1;
         var today = now.getDate();
 
-        // attendance_modal = new jBox('Modal', {
-        //   // attach: $('.add_event'),
-        //   title: 'Record Attendace',
-        //   width: 350,
-        //   height: 305,
-        //   onOpen: function() {
-        //       //didClickNew = false;
-        //       loadAttendanceModal(attendance_modal, currentAttendanceEvent);
-        //       $(document).on("keyup", '#select_present_members', function() {
-        //         var val = $.trim($(this).val()).replace(/ +/g, ' ').toLowerCase();
-        //         $('#selected_present_members p').show().filter(function() {
-        //             var text = $(this).text().replace(/\s+/g, ' ').toLowerCase();
-        //             //console.log(!~text.indexOf(val));
-        //             return !~text.indexOf(val);
-        //         }).hide();
-        //       });
-        //   }
-        // });
-
         $.post("/f/getUpcomingEventsForUser", function(responseText){
           var upcomingEvents = JSON.parse(responseText);
           for(var i = 0; i < upcomingEvents.length; i++){
@@ -421,8 +379,6 @@
           year = parseInt($(this).html());
           $(".month_name[data-month='"+month+"']").trigger("click");
         });
-
-
 
         $(".month_name:not(.year_select)").click(function(){
           $('.timeline').find('*').not('.current_month_display').remove();
@@ -556,7 +512,7 @@
         $(document).on("click", ".select_all_link", function() {
           if($(this).html() == "Select All"){
             $("#attendance_list > .potential_member").not(".excused").addClass("clicked");
-            $(this).html("Unselect All")
+            $(this).html("Deselect All")
           }else{
             $("#attendance_list > .potential_member").not(".excused").removeClass("clicked");
             $(this).html("Select All");
@@ -677,9 +633,9 @@
         });
         socket.on('message', function(msg){
           if(msg.type == "group"){
-            showNewMessageNotice(msg.author_fn+" "+msg.author_ln+" in "+msg.chat_name, msg.content, msg.chat_id);
+            messageNotification(msg.author_fn+" "+msg.author_ln+" in "+msg.chat_name, msg.content, msg.chat_id);
           }else{
-            showNewMessageNotice(msg.author_fn+" "+msg.author_ln, msg.content, msg.chat_id);
+            messageNotification(msg.author_fn+" "+msg.author_ln, msg.content, msg.chat_id);
           }
           $('#audio-files').find('audio#click-sound')[0].play();
           $('#audio-files').find('audio#click-sound')[0].currentTime = 0;

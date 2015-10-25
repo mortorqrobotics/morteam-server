@@ -24,8 +24,10 @@ var Announcement = require('./schemas/Announcement.js');
 var Chat = require('./schemas/Chat.js');
 var Event = require('./schemas/Event.js');
 var AttendanceHandler = require('./schemas/AttendanceHandler.js');
+var Folder = require('./schemas/Folder.js');
+var File = require('./schemas/File.js');
 
-mongoose.connect('mongodb://localhost:27017/morteamtest');
+mongoose.connect('mongodb://localhost:27017/morteamtest2');
 
 var transporter = nodemailer.createTransport();
 
@@ -111,6 +113,14 @@ String.prototype.contains = function(arg) {
 String.prototype.capitalize = function() {
   return this.charAt(0).toUpperCase() + this.slice(1);
 }
+function validPhoneNum(num) {
+  var phone = /^\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$/;
+  if(num.value.match(phone)){
+    return true;
+  }else{
+    return false;
+  }
+}
 Array.prototype.hasAnythingFrom = function(arr){
   var result = false;
   var r = [], o = {}, l = arr.length, i, v;
@@ -167,25 +177,69 @@ function removeDuplicates(arr) {
   }
   return result;
 }
+function extToType(ext){
+  var spreadsheet = ['xls', 'xlsx', 'numbers', '_xls', 'xlsb', 'xlsm', 'xltx', 'xlt'];
+  var word = ['doc', 'docx', 'rtf', 'pages', 'txt'];
+  var image = ['png', 'jpg', 'jpeg', 'jif', 'jfif', 'gif', 'raw', 'tiff', 'bmp', 'rif', 'tif', 'webp'];
+  var keynote = ['key', 'ppt', 'pptx'];
+  var audio = ['mp4', 'webm', 'mp3', 'wav', 'm4a', 'avi', 'wma', 'ogg', 'm4p', 'ra', 'ram', 'rm', 'mid', 'flv', 'mkv', 'ogv', 'mov', 'mpg'];
+  if(~spreadsheet.indexOf(ext)){
+    return "spreadsheet";
+  }else if (~word.indexOf(ext)) {
+    return "word";
+  }else if (~image.indexOf(ext)) {
+    return "image";
+  }else if (~keynote.indexOf(ext)) {
+    return "keynote";
+  }else if (~audio.indexOf(ext)) {
+    return "audio";
+  }else if(ext == "pdf"){
+    return "pdf";
+  }else{
+    return "unknown";
+  }
+}
 var profPicBucket = new AWS.S3({params: {Bucket: 'profilepics.morteam.com'}});
 var driveBucket = new AWS.S3({params: {Bucket: 'drive.morteam.com'}});
-function uploadToProfPics(file, destFileName, callback) {
+function uploadToProfPics(buffer, destFileName, callback) {
   profPicBucket.upload({
     ACL: 'public-read',
-    Body: file,
+    Body: buffer,
     Key: destFileName.toString(),
     ContentType: 'application/octet-stream'
   }).send(callback);
 }
-function uploadToDrive(file, destFileName, callback) {
+function uploadToDrive(buffer, destFileName, callback) {
   driveBucket.upload({
-    ACL: 'public-read',
-    Body: fs.createReadStream(file.path),
+    Body: buffer,
     Key: destFileName.toString(),
     ContentType: 'application/octet-stream'
   }).send(callback);
 }
-
+function getFileFromDrive(fileName, callback){
+  driveBucket.getObject({Key: fileName}).send(callback)
+}
+function deleteFileFromDrive(fileName, callback){
+  driveBucket.deleteObject({Key: fileName}).send(callback)
+}
+// function getFolderTree(folders, folder_id, callback) {
+//  Folder.findOne({_id: folder_id}, function(err, folder){
+//    if(err){
+//      console.error(err);
+//      res.end("fail");
+//    }else{
+//      if(folder){
+//        if(folder.parentFolder != undefined ) {
+//         console.log("HAS PARENT");
+//         getFolderTree(folders.concat([folder], folder.parentFolder, callback));
+//        }
+//        else {
+//         callback(folders.concat([folder]));
+//        }
+//      }
+//    }
+//  })
+// }
 
 app.use(function(err, req, res, next) {
   console.error(err.stack);
@@ -367,13 +421,49 @@ app.get("/s/:id", function(req, res) {
 });
 app.get("/images/user.jpg-60", function(req, res){
   res.sendFile(publicDir+"/images/user.jpg");
-})
+});
 app.get("/images/user.jpg-300", function(req, res){
   res.sendFile(publicDir+"/images/user.jpg");
-})
+});
 app.get('/pp/:path', function(req, res){
   res.redirect(profpicDir+req.params.path);
-})
+});
+var mimetypes = {
+  "word": "application/msword",
+  "spreadsheet": "application/vnd.ms-excel",
+  "keynote": "application/vnd.ms-powerpointtd",
+  "audio": "audio/mpeg",
+  "image": "application/octet-stream",
+  "pdf": "application/pdf"
+}
+app.get('/file/:fileId', requireLogin, function(req, res){
+  if(req.params.fileId.indexOf("-") > -1){
+    var fileId = req.params.fileId.substring(0, req.params.fileId.indexOf("-"));
+  }else{
+    var fileId = req.params.fileId;
+  }
+  getFileFromDrive(req.params.fileId, function(err, data){
+    if(err){
+      console.error(err);
+      res.end("fail");
+    }else{
+      File.findOne({_id: fileId}, function(err, file){
+        if(err){
+          console.error(err);
+          res.end("fail");
+        }else{
+          if(file){
+            res.writeHead(200, {
+              "Content-Type": mimetypes[file.type],
+              "Content-Disposition": "attachment; filename=" + file.name,
+            });
+            res.end(data.Body, 'binary');
+          }
+        }
+      })
+    }
+  })
+});
 app.get('*', function(req, res) {
   send404(res);
 });
@@ -618,7 +708,20 @@ app.post("/f/createTeam", requireLogin, function(req, res) {
             console.error(err);
             res.end("fail");
           } else {
-            res.end("success");
+            Folder.create({
+              name: "Team Files",
+              team: team.id,
+              entireTeam: true,
+              creator: req.user._id,
+              defaultFolder: true
+            }, function(err, folder){
+              if(err){
+                console.error(err);
+                res.end("fail");
+              }else{
+                res.end("success");
+              }
+            });
           }
         });
       }else{
@@ -660,7 +763,20 @@ app.post("/f/joinTeam", requireLogin, function(req, res) {
                         console.error(err);
                         res.end("fail");
                       } else {
-                        res.end("success");
+                        Folder.create({
+                          name: "Personal Files",
+                          team: req.body.team_id,
+                          userMembers: req.user._id,
+                          creator: req.user._id,
+                          defaultFolder: true
+                        }, function(err, folder){
+                          if(err){
+                            console.error(err);
+                            res.end("fail");
+                          }else{
+                            res.end("success");
+                          }
+                        });
                       }
                     });
                   }
@@ -683,7 +799,20 @@ app.post("/f/joinTeam", requireLogin, function(req, res) {
                         console.error(err);
                         res.end("fail");
                       } else {
-                        res.end("success");
+                        Folder.create({
+                          name: "Personal Files",
+                          team: req.body.team_id,
+                          userMembers: req.user._id,
+                          creator: req.user._id,
+                          defaultFolder: true
+                        }, function(err, folder){
+                          if(err){
+                            console.error(err);
+                            res.end("fail");
+                          }else{
+                            res.end("success");
+                          }
+                        });
                       }
                     });
                   }
@@ -871,24 +1000,28 @@ app.post("/f/joinPublicSubdivision", requireLogin, function(req, res){
               console.error(err);
               res.end("fail");
             }else{
-              var done = 0;
-              for(var i = 0; i < events.length; i++){
-                AttendanceHandler.update({event: events[i]._id, event_date: {"$gt": new Date()}}, { "$push": {
-                  attendees: {
-                    user: req.user._id,
-                    status: "absent"
-                  }
-                }}, function(err, model){
-                  if(err){
-                    console.error(err);
-                    res.end("fail");
-                  }else{
-                    done++;
-                    if(done == events.length){
-                      res.end("success");
+              if(events.length > 0){
+                var done = 0;
+                for(var i = 0; i < events.length; i++){
+                  AttendanceHandler.update({event: events[i]._id, event_date: {"$gt": new Date()}}, { "$push": {
+                    attendees: {
+                      user: req.user._id,
+                      status: "absent"
                     }
-                  }
-                })
+                  }}, function(err, model){
+                    if(err){
+                      console.error(err);
+                      res.end("fail");
+                    }else{
+                      done++;
+                      if(done == events.length){
+                        res.end("success");
+                      }
+                    }
+                  })
+                }
+              }else{
+                res.end("success");
               }
             }
           });
@@ -922,23 +1055,27 @@ app.post("/f/leaveSubdivision", requireLogin, function(req, res){
           console.error(err);
           res.end("fail");
         }else{
-          var done = 0;
-          for(var i = 0; i < events.length; i++){
-            AttendanceHandler.update({event: events[i]._id}, { "$pull": {
-              'attendees': {
-                user: req.user._id,
-              }
-            }}, function(err, model){
-              if(err){
-                console.error(err);
-                res.end("fail");
-              }else{
-                done++;
-                if(done == events.length){
-                  res.end("success");
+          if(events.length > 0){
+            var done = 0;
+            for(var i = 0; i < events.length; i++){
+              AttendanceHandler.update({event: events[i]._id}, { "$pull": {
+                'attendees': {
+                  user: req.user._id,
                 }
-              }
-            })
+              }}, function(err, model){
+                if(err){
+                  console.error(err);
+                  res.end("fail");
+                }else{
+                  done++;
+                  if(done == events.length){
+                    res.end("success");
+                  }
+                }
+              })
+            }
+          }else{
+            res.end("success");
           }
         }
       });
@@ -1519,20 +1656,197 @@ app.post("/f/excuseAbsence", requireLogin, requireLeader, function(req, res){
   })
 })
 app.post("/f/getTeamFolders", requireLogin, function(req, res){
-  Folder.find({team: req.user.current_team.id, parentFolder: "/"}, function(err, folders){
-    //
+  var userSubdivisionIds = req.user.subdivisions.map(function(subdivision) {return subdivision._id;});
+  Folder.find({team: req.user.current_team.id, parentFolder: { "$exists": false }, $or: [
+    {entireTeam: true},
+    {userMembers: req.user._id},
+    {subdivisionMembers: {"$in": userSubdivisionIds} }
+  ]}, function(err, folders){
+    if(err){
+      console.error(err);
+      res.end("fail");
+    }else{
+      res.end(JSON.stringify(folders));
+    }
   })
 })
 app.post("/f/getSubFolders", requireLogin, function(req, res){
-  Folder.find({team: req.user.current_team.id, parentFolder: req.body.folder_id}, function(err, folders){
-    //
+  var userSubdivisionIds = req.user.subdivisions.map(function(subdivision) {return subdivision._id;});
+  Folder.find({team: req.user.current_team.id, parentFolder: req.body.folder_id, $or: [
+    {entireTeam: true},
+    {userMembers: req.user._id},
+    {subdivisionMembers: {"$in": userSubdivisionIds} }
+  ]}, function(err, folders){
+    if(err){
+      console.error(err);
+      res.end("fail");
+    }else{
+      res.end(JSON.stringify(folders));
+    }
   })
 })
 app.post("/f/getFilesInFolder", requireLogin, function(req, res){
-  File.find({team: req.user.current_team.id, parentFolder: req.body.folder_id}, function(err, files){
-    //
+  File.find({folder: req.body.folder_id}, function(err, files){
+    if(err){
+      console.error(err);
+      res.end("fail");
+    }else{
+      res.end(JSON.stringify(files));
+    }
   })
 })
+app.post("/f/createFolder", requireLogin, function(req, res){
+  if(req.body.type == "teamFolder"){
+    Folder.create({
+      name: req.body.name,
+      team: req.user.current_team.id,
+      userMembers: req.body.userMembers,
+      subdivisionMembers: req.body.subdivisionMembers,
+      creator: req.user._id,
+      parentFolder: undefined,
+      ancestors: [],
+      defaultFolder: false
+    }, function(err, folder){
+      if(err){
+        console.error(err);
+        res.end("fail");
+      }else{
+        res.end(JSON.stringify(folder));
+      }
+    });
+  }else if (req.body.type == "subFolder") {
+    Folder.create({
+      name: req.body.name,
+      team: req.user.current_team.id,
+      userMembers: req.body.userMembers,
+      subdivisionMembers: req.body.subdivisionMembers,
+      parentFolder: req.body.parentFolder,
+      ancestors: req.body.ancestors.concat([req.body.parentFolder]),
+      creator: req.user._id,
+      defaultFolder: false
+    }, function(err, folder){
+      if(err){
+        console.error(err);
+        res.end("fail");
+      }else{
+        res.end(JSON.stringify(folder));
+      }
+    });
+  }else {
+    res.end("fail");
+  }
+});
+app.post("/f/uploadFile", requireLogin, multer().single('uploadedFile'), function(req, res){
+  var ext = req.file.originalname.substring(req.file.originalname.lastIndexOf(".")+1).toLowerCase() || "unknown";
+  File.create({
+    name: req.body.fileName,
+    originalName: req.file.originalname,
+    folder: req.body.currentFolderId,
+    size: req.file.size,
+    type: extToType(ext),
+    creator: req.user._id
+  }, function(err, file){
+    if(err){
+      console.error(err);
+      res.end("fail");
+    }else{
+      uploadToDrive(req.file.buffer, file._id, function(err, data){
+        if(err){
+          console.error(err);
+          res.end("fail");
+        }else{
+          if(file.type != "image"){
+            res.end(JSON.stringify(file));
+          }else{
+            lwip.open(req.file.buffer, ext, function(err, image){
+              if(err){
+                console.error(err);
+                res.end("fail");
+              }else{
+                var hToWRatio = image.height()/image.width();
+                if(hToWRatio >= 1){
+                  image.resize(280, 280*hToWRatio, function(err, image){
+                    if(err){
+                      console.error(err);
+                      res.end("fail");
+                    }else{
+                      image.toBuffer(ext, function(err, buffer){
+                        if(err){
+                          console.error(err);
+                          res.end("fail");
+                        }else{
+                          uploadToDrive(buffer, file._id+"-preview", function(err, data){
+                            if(err){
+                              console.error(err);
+                              res.end("fail");
+                            }else{
+                              res.end(JSON.stringify(file));
+                            }
+                          });
+                        }
+                      })
+                    }
+                  })
+                }else{
+                  image.resize(280/hToWRatio, 280, function(err, image){
+                    if(err){
+                      console.error(err);
+                      res.end("fail");
+                    }else{
+                      image.toBuffer(ext, function(err, buffer){
+                        if(err){
+                          console.error(err);
+                          res.end("fail");
+                        }else{
+                          uploadToDrive(buffer, file._id+"-preview", function(err, data){
+                            if(err){
+                              console.error(err);
+                              res.end("fail");
+                            }else{
+                              res.end(JSON.stringify(file));
+                            }
+                          });
+                        }
+                      })
+                    }
+                  })
+                }
+              }
+            });
+          }
+        }
+      });
+    }
+  })
+})
+app.post("/f/deleteFile", requireLogin, function(req, res){
+  File.findOne({_id: req.body.file_id}, function(err, file){
+    if(err){
+      console.error(err);
+      res.end("fail");
+    }else{
+      if(req.user._id.toString() == file.creator.toString()){
+        deleteFileFromDrive(req.body.file_id, function(err, data){
+          if(err){
+            console.error(err);
+            res.end("fail");
+          }else{
+            file.remove(function(err){
+              if(err){
+                console.error(err);
+                res.end("fail");
+              }else{
+                res.end("success");
+              }
+            });
+          }
+        })
+      }else{
+        res.end("fail");
+      }
+    }
+  });
+});
 
 var online_clients = {};
 io.on('connection', function(socket){
