@@ -33,6 +33,8 @@
   $(document).ready(function(){
     $("#username_box").focus();
     $("#login_button").click(function(){
+      $(this).val("Logging in");
+      $(this).prop("disabled",true);
       var username = $("#username_box").val();
       var password = $("#password_box").val();
       $.post("/f/login", {"username": username, "password": password}, function(responseText){

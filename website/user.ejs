@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
     <link rel="stylesheet" href="../css/index.css" type="text/css">
     <link href="../jbox/jBox.css" rel="stylesheet">
+    <link href="../jbox/themes/TooltipDark.css" rel="stylesheet">
     <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
 
   </head>
@@ -40,22 +41,7 @@
               <input type="text" placeholder="search" class="searchbox"></input>
               <div class="search_drop">
                 <ul class="search_drop_items">
-                  <!-- <li>
-                    under<br/>
-                    construction
-                  </li>
-                  <li>
-                    under<br/>
-                    construction
-                  </li>
-                  <li>
-                    under<br/>
-                    construction
-                  </li>
-                  <li>
-                    under<br/>
-                    construction
-                  </li> -->
+
                 </ul>
               </div>
           </li>
@@ -127,15 +113,15 @@
         <div class="col-md-6">
           <div class="tasks_data">
             <span class="data_title bold">Pending Tasks</span>
-            <ul class="task_list">
-              <li class="data_point">Cut part</li>
+            <ul class="task_list pending">
+              <!-- <li class="data_point">Cut part<br/><div class="indented">this is the desc</div></li>
               <li class="data_point">Send form to SC</li>
-              <li class="data_point">Clean out vacuum cleaner</li>
+              <li class="data_point">Clean out vacuum cleaner</li> -->
             </ul>
             <hr class="hr_small_margin">
             <span class="data_title bold">Completed Tasks</span>
-            <ul class="task_list">
-              <li class="data_point">Screw in talons</li>
+            <ul class="task_list completed">
+              <!-- <li class="data_point">Screw in talons</li>
               <li class="data_point">Buy wood for tests</li>
               <li class="data_point">Destroy Gabe</li>
               <li class="data_point">Cut part</li>
@@ -143,7 +129,7 @@
               <li class="data_point">Clean out vacuum cleaner</li>
               <li class="data_point">Cut part</li>
               <li class="data_point">Send form to SC</li>
-              <li class="data_point">Clean out vacuum cleaner</li>
+              <li class="data_point">Clean out vacuum cleaner</li> -->
             </ul>
           </div>
         </div>
@@ -163,8 +149,13 @@
       <div class="leftbar_item"><span id="leftbar_email"><%= email %></span></div>
       <div class="leftbar_item"><span id="leftbar_phone"><%= phone %></span></div>
       <div class="others_only">
-        <div class="leftbar_item"><input id="message_user" type="button" class="button leader_action" value="Message"></input></div>
+      <% if(viewerUserId.toString() == _id.toString()){ %>
+        <div class="leftbar_item"><input id="edit_profile" type="button" class="button leftbar_btn" value="Edit Profile"></input></div>
+        <div class="leftbar_item"><input id="change_password" type="button" class="button leftbar_btn" value="Change Password"></input></div>
+        <!-- <div class="leftbar_item"><input id="message_user" type="button" class="button leader_action" value="Message"></input></div> -->
+      <% }else if (viewerUserPosition == "admin" || viewerUserPosition == "leader"){ %>
         <div class="leftbar_item"><input id="assign_task" type="button" class="button leader_action" value="Assign Task"></input></div>
+      <% } %>
       </div>
       <!-- <div class="leftbar_item"><input id="change_position" type="button" class="button leader_action" value="Change Position"></input></div> -->
       <div class="change_position_div">
@@ -204,9 +195,10 @@
     <% String.prototype.capitalize = function() { %>
       <% return this.charAt(0).toUpperCase() + this.slice(1); %>
     <% } %>
-    <script src="../jbox/jBox.min.js"></script>
     <script type="text/javascript" src="../js/socket.io.js"></script>
     <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script src="../js/jquery.form.js"></script>
+    <script src="../jbox/jBox.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../js/velocity.min.js"></script>
     <script type="text/javascript" src="../js/main.js"></script>
@@ -248,6 +240,95 @@
           }
         }
       }
+
+      function assignTaskModal(title){
+        var new_modal = new jBox('Modal', {
+          width: 350,
+          height: 'auto',
+          title: title,
+          onClose: function(){
+            setTimeout(function(){
+              task_modal.destroy();
+            }, 100)
+          }
+        })
+        new_modal.setContent('<input type="text" class="task_name" placeholder="Title"></input><br/><textarea class="task_description" placeholder="Short Description (Optional)"></textarea><br/>Due: <select class="task_month"><option value="1">January</option><option value="2">February</option><option value="3">March</option><option value="4">April</option><option value="5">May</option><option value="6">June</option><option value="7">July</option><option value="8">August</option><option value="9">September</option><option value="10">October</option><option value="11">November</option><option value="12">December</option></select><select class="task_day"></select><select class="task_year"></select><br/><input type="button" class="button submit_task" value="Submit"></input>');
+
+        var thisYear = new Date().getFullYear();
+        var thisMonth = new Date().getMonth()+1;
+        var thisDay = new Date().getDate();
+
+        $('.task_month option[value="'+thisMonth+'"]').prop('selected',true); //selects current month
+
+
+        for(var j = thisYear ; j < thisYear+5 ; j++){
+          $(".task_year").append("<option value='"+j+"'>"+j+"</option>"); //adds next 5 years
+        }
+
+        for(var k = 1 ; k <= new Date($(".task_year").find(":selected").text(), $('.task_month option[value="'+thisMonth+'"]').val(), 0).getDate() ; k++ ){
+          $(".task_day").append("<option value='"+k+"'>"+k+"</option>")
+          if(k == new Date($(".task_year").find(":selected").text(), $('.task_month option[value="'+thisMonth+'"]').val(), 0).getDate()){
+            $(".task_day option[value='"+(parseInt(thisDay)+1).toString()+"']").prop("selected", true);
+          }
+        }
+
+        $(".task_month").change(function(){
+          $(".task_day").empty();
+          for(var k = 1 ; k <= new Date($(".task_year").find(":selected").text(), $(".task_month").find(":selected").val(), 0).getDate() ; k++ ){
+            $(".task_day").append("<option value='"+k+"'>"+k+"</option>")
+          }
+        });
+        $(".task_year").change(function(){
+          $(".task_day").empty();
+          for(var i = 1 ; i <= new Date($(this).find(":selected").text(), $(".task_month").find(":selected").val(), 0).getDate() ; i++){
+            $(".task_day").append("<option value='"+i+"'>"+i+"</option>");
+          }
+        })
+        new_modal.open();
+        return new_modal
+
+      }
+      function changePasswordModal(title){
+        var new_modal = new jBox('Modal', {
+            width: 350,
+            height: 'auto',
+            title: 'Change Password',
+            onClose: function(){
+              setTimeout(function(){
+                change_password_modal.destroy();
+              },100);
+            }
+        });
+        new_modal.setContent('<input type="password" placeholder="Old password" class="old_password modal_textbox"></input><br/><input type="password" placeholder="New Password" class="new_password modal_textbox"></input><br/><input type="password" placeholder="Confirm New Password" class="new_password_confirm modal_textbox"></input><br/><input type="button" class="button modal_button save_password" value="Save"></input>');
+        new_modal.open();
+        return new_modal;
+      }
+      function editProfileModal(title){
+        var new_modal = new jBox('Modal', {
+            width: 350,
+            height: 'auto',
+            title: title,
+            onClose: function() {
+              setTimeout(function(){
+                edit_profile_modal.destroy();
+              }, 100)
+            }
+        });
+        new_modal.setContent('<form action="/f/editProfile" enctype="multipart/form-data" method="post" id="edit_profile_form"><input type="text" name="firstname" class="edit_firstname modal_textbox"></input><br/><input type="text" name="lastname" class="edit_lastname modal_textbox"></input><br/><input type="text" name="email" class="edit_email modal_textbox"></input><br/><input type="text" name="phone" class="edit_phone modal_textbox"></input><br/><input name="new_prof_pic" type="file" id="new_prof_pic" class="hidden" accept="image/*" /><input type="button" class="button edit_prof_pic modal_button" value="Change Profile Picture"></input><br/><input type="submit" class="button modal_button save_prof" value="Save"></input></form>')
+
+        $.post("/f/getSelf", function(responseText){
+          var self = JSON.parse(responseText);
+          $(".modal_textbox").val("");
+          $(".edit_firstname").val(self.firstname)
+          $(".edit_lastname").val(self.lastname)
+          $(".edit_email").val(self.email)
+          $(".edit_phone").val(self.phone)
+          new_modal.open();
+        })
+        return new_modal;
+
+      }
+
       $(document).ready(function(){
         $.post("/f/getUserAbsences", {user_id: window.location.pathname.substring(window.location.pathname.lastIndexOf("/") + 1)}, function(responseText){
           var data = JSON.parse(responseText);
@@ -269,11 +350,153 @@
             $("#presence_percent").html( "N/A" );
           }
         })
+        $.post("/f/getUserTasks", {user_id: window.location.pathname.substring(window.location.pathname.lastIndexOf("/") + 1)}, function(responseText){
+          if(responseText != "fail"){
+            var tasks = JSON.parse(responseText);
+            if(tasks.length > 0){
+              for (var i = 0; i < tasks.length; i++) {
+                var li = document.createElement("li");
+                $(li).addClass("data_point");
+                // $(li).html( tasks[i].name + " (By " + readableDate(tasks[i].due_date) + ")");
+                $(li).html( tasks[i].name + " <span class='due_date_display'>(By " + readableDate(tasks[i].due_date) + ")</span> <span style='vertical-align: -5%; font-size: 14px' title='Assigned By "+ tasks[i].creator.firstname + " " + tasks[i].creator.lastname +"' class='assigned_by glyphicon glyphicon-info-sign'></span>");
+                var div = document.createElement("div");
+                $(div).addClass("indented");
+                $(div).html(tasks[i].description);
+                $(li).append("<br/>");
+                $(li).append( $(div) );
+                if( tasks[i].completed ){
+                  $(".task_list.completed").append( $(li) );
+                }else{
+                  if(localStorage._id == tasks[i].for || localStorage.c_team_position == "admin" || localStorage.c_team_position == "leader"){
+                    var mark_as_completed = document.createElement("input");
+                    $(mark_as_completed).attr("type", "button");
+                    $(mark_as_completed).attr("data-taskid", tasks[i]._id);
+                    $(mark_as_completed).attr("value", "Mark as Completed");
+                    $(mark_as_completed).addClass("task_complete");
+                    $(mark_as_completed).addClass("button");
+                    $(li).append( $(mark_as_completed) );
+                  }
+                  $(".task_list.pending").append( $(li) );
+                }
+              }
+            }else{
+              $(".task_list.completed").append( "<li class='data_point'>none</li>" );
+              $(".task_list.pending").append( "<li class='data_point'>none</li>" );
+            }
+            $('.assigned_by').jBox('Tooltip', {
+                delayOpen: 0,
+                delayClose: 0,
+                theme: "TooltipDark"
+            });
+          }else{
+            alert(responseText);
+          }
+        })
         if( localStorage.profpicpath == "images/user.jpg" ){
           $(".profile_id.ejs").attr("src", "../"+localStorage.profpicpath + "-60");
         }else{
           $(".profile_id.ejs").attr("src", localStorage.profpicpath + "-60");
         }
+        $(document).on("click", "#change_password", function(){
+          change_password_modal = changePasswordModal("Change Password");
+        })
+        $(document).on("click", ".save_password", function(){
+          if($(".new_password").val() == $(".new_password_confirm").val()){
+            $.post("/f/changePassword", {
+              old_password: $(".old_password").val(),
+              new_password: $(".new_password").val(),
+              new_password_confirm: $(".new_password_confirm").val()
+            }, function(responseText){
+              if(responseText == "success"){
+                alert("Successfully changed password");
+                change_password_modal.close();
+              }else{
+                alert(responseText);
+              }
+            });
+          }else{
+            alert("New passwords do not match");
+          }
+        });
+        $(document).on("click", ".edit_prof_pic", function(){
+          $("#new_prof_pic").trigger("click");
+        })
+        $(document).on("click", "#edit_profile", function(){
+          edit_profile_modal = editProfileModal("Edit Profile");
+        });
+        $(document).on("submit", "#edit_profile_form", function(e){
+          e.preventDefault();
+          $(this).ajaxSubmit({
+              error: function(xhr) {
+            		alert(xhr.status)
+              },
+              success: function(response) {
+                if(response == "success"){
+                  window.location.reload(true);
+                }else{
+                  alert(response);
+                }
+              }
+  	      });
+        	return false;
+        });
+        $(document).on("click", "#assign_task", function(){
+          task_modal = assignTaskModal('Assign a Task');
+        });
+        $(document).on("click", ".submit_task", function(){
+          $.post("/f/assignTask", {
+            user_id: window.location.pathname.substring(window.location.pathname.lastIndexOf("/") + 1),
+            task_name: $(".task_name").val(),
+            task_description: $(".task_description").val(),
+            due_date: new Date( $( ".task_year option:selected" ).text(), $( ".task_month option:selected" ).val()-1, $( ".task_day option:selected" ).text())
+          }, function(responseText){
+            if(responseText != "fail"){
+              var li = document.createElement("li");
+              $(li).addClass("data_point");
+              $(li).html( $(".task_name").val() + " <span class='due_date_display'>(By " + readableDate(new Date( $( ".task_year option:selected" ).text(), $( ".task_month option:selected" ).val()-1, $( ".task_day option:selected" ).text())) + ")</span> <span style='vertical-align: -5%; font-size: 14px' title='Assigned By "+ localStorage.firstname + " " + localStorage.lastname +"' class='assigned_by glyphicon glyphicon-info-sign'></span>");
+              var div = document.createElement("div");
+              $(div).addClass("indented");
+              $(div).html($(".task_description").val());
+              $(li).append("<br/>");
+              $(li).append( $(div) );
+              var mark_as_completed = document.createElement("input");
+              $(mark_as_completed).attr("type", "button");
+              $(mark_as_completed).attr("data-taskid", responseText);
+              $(mark_as_completed).attr("value", "Mark as Completed");
+              $(mark_as_completed).addClass("task_complete");
+              $(mark_as_completed).addClass("button");
+              $(li).append( $(mark_as_completed) );
+              $(".task_list.pending").append( $(li) );
+              $('.assigned_by').jBox('Tooltip', {
+                  delayOpen: 0,
+                  delayClose: 0,
+                  theme: "TooltipDark"
+              });
+              task_modal.close();
+              task_modal.destroy();
+            }else{
+              alert(responseText);
+            }
+          })
+        });
+        $(document).on("click", ".task_complete", function(){
+          if(window.confirm("Are you sure? This action is irreversible. You can, and will be held accountable if you mark this dishonestly.")){
+            var $this = $(this);
+            $.post("/f/markTaskAsCompleted", {
+              task_id: $this.attr("data-taskid"),
+              target_user: window.location.pathname.substring(window.location.pathname.lastIndexOf("/") + 1)
+            }, function(responseText){
+              if(responseText == "success"){
+                var completedTask = $this.parent().clone();
+                $this.parent().remove();
+                completedTask.find(".task_complete").remove();
+                completedTask.appendTo($(".task_list.completed"));
+              }else{
+                alert(responseText);
+              }
+            });
+          }
+        })
         $(document).on("click", ".position_item", function(){
           if (window.confirm("Are you sure?")) {
             var $this = $(this);

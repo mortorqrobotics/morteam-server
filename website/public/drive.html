@@ -154,6 +154,8 @@
     <script src="/js/jquery.form.js"></script>
     <script>
 
+      var socket = io();
+
       function removeDuplicates(arr) {
         var seen = {};
         var out = [];
@@ -257,7 +259,7 @@
           title: title,
           onClose: function(){
             setTimeout(function(){
-              team_folder_modal.destroy();
+              team_folder_modal.destroy();  //keyword "this" does not work. make sure to name the modal "team_folder_modal".
             }, 100)
           }
         });
@@ -333,6 +335,11 @@
                     }
                 };
 
+            },
+            onClose: function(){
+              setTimeout(function(){
+                add_file_modal.destroy(); //keyword "this" does not work. make sure to name the modal "add_file_modal".
+              }, 100)
             }
         });
         new_modal.setContent("<form enctype='multipart/form-data' action='/f/uploadFile' method='post' id='upload_form'><input type='file' id='file' class='hidden' name='uploadedFile'></input><input type='button' class='button file_choose' value='Choose File'></input><p id='chosen_file'>No File Selected</p><input type='text' class='file_name' name='fileName' placeholder='File Name'></input><input type='submit' class='button upload_button' value='Upload'></input></form>");
@@ -341,19 +348,85 @@
       }
       function bytesToSize(bytes){
         if(bytes < 1000){
-          return bytes + " Bytes";
+          return +bytes.toFixed(2) + " Bytes";
         }else if (bytes < 1000000) {
-          return (bytes/1000)+" KB"
+          return +(bytes/1000).toFixed(2)+ " KB"
         }else if (bytes < 1000000000) {
-          return (bytes/1000000)+" MB"
+          return +(bytes/1000000).toFixed(2)+ " MB"
         }else {
-          return bytes + " Bytes";
+          return +bytes.toFixed(2) + " Bytes";
         }
       }
+      function messageNotification(title, content, chatid) {
+        var newMessageNotice = new jBox('Notice', {
+            attributes: {
+                x: 'right',
+                y: 'bottom'
+            },
+            theme: 'NoticeBorder',
+            volume: 100,
+            animation: {
+                open: 'slide:bottom',
+                close: 'slide:right'
+            },
+            content: content,
+            maxWidth: 300,
+            maxHeight: 105,
+            title: title,
+            closeOnClick: false,
+            onOpen: function() {
+                // $($(this)[0].content).attr("data-author", author._id);
+                $($(this)[0].content).attr("data-chatid", chatid);
+            }
+        });
+      };
 
       $(document).ready(function(){
         document.body.appendChild(loadingDiv);
         loadTeamFolders();
+
+        spinnerOpts = {
+            lines: 13 // The number of lines to draw
+                ,
+            length: 0 // The length of each line
+                ,
+            width: 20 // The line thickness
+                ,
+            radius: 42 // The radius of the inner circle
+                ,
+            scale: .5 // Scales overall size of the spinner
+                ,
+            corners: 1 // Corner roundness (0..1)
+                ,
+            color: 'orange' // #rgb or #rrggbb or array of colors
+                ,
+            opacity: 0.25 // Opacity of the lines
+                ,
+            rotate: 0 // The rotation offset
+                ,
+            direction: 1 // 1: clockwise, -1: counterclockwise
+                ,
+            speed: 1 // Rounds per second
+                ,
+            trail: 60 // Afterglow percentage
+                ,
+            fps: 20 // Frames per second when using setTimeout() as a fallback for CSS
+                ,
+            zIndex: 2e9 // The z-index (defaults to 2000000000)
+                ,
+            className: 'spinner' // The CSS class to assign to the spinner
+                ,
+            top: '50%' // Top position relative to parent
+                ,
+            left: '50%' // Left position relative to parent
+                ,
+            shadow: false // Whether to render a shadow
+                ,
+            hwaccel: false // Whether to use hardware acceleration
+                ,
+            position: 'absolute' // Element positioning
+        }
+
 
         //general modal stuff
         $(document).on("click", ".potential_member", function(){
@@ -379,35 +452,40 @@
           }).hide();
         });
 
-        $(document).on("submit", "#upload_form", function(){
-          $('<input />').attr('type', 'hidden').attr('name', "currentFolderId").attr('value', currentFolder).appendTo(this);
-          $(this).ajaxSubmit({
-              error: function(xhr) {
-            		alert(xhr.status)
-              },
-              success: function(response) {
-                if(response != "fail"){
-                  add_file_modal.close();
-                  add_file_modal.destroy();
-                  var file = JSON.parse(response)
-                  var fileType = file.type;
-                  if(file.type == "image"){
-                    fileType = "/file/" + file._id + "-preview";
+        $(document).on("submit", "#upload_form", function(e){
+          e.preventDefault();
+          if( $(".file_name").val() != "" ){
+            $('<input />').attr('type', 'hidden').attr('name', "currentFolderId").attr('value', currentFolder).appendTo(this);
+            add_file_modal.setContent("Uploading...")
+            $(this).ajaxSubmit({
+                error: function(xhr) {
+              		alert(xhr.status)
+                },
+                success: function(response) {
+                  if(response != "fail"){
+                    add_file_modal.close();
+                    add_file_modal.destroy();
+                    var file = JSON.parse(response)
+                    var fileType = file.type;
+                    if(file.type == "image"){
+                      fileType = "/file/" + file._id + "-preview";
+                    }else{
+                      fileType = "images/"+file.type+'.png';
+                    }
+                    var $file = $('<div style="z-index:1;" class="doc_frame '+file.type+'" data-fileid="' + file._id + '" title="' + file.name +
+                        '"><div class="hidden confirm_del"><p>Are you sure?</p><input type="button" value="yes" class="yes"></input><input type="button" value="no" class="no"></input></div><img src="'+fileType+'" class="doc_preview"/><span class="doc_title"><span class="name">' + file.name + '</span><span class="glyphicon glyphicon-trash doc_delete"></span></span></div>');
+                    $grid.append($file).isotope("appended", $file);
                   }else{
-                    fileType = "images/"+file.type+'.png';
+                    alert(response);
                   }
-                  var $file = $('<div style="z-index:1;" class="doc_frame '+file.type+'" data-fileid="' + file._id + '" title="' + file.name +
-                      '"><div class="hidden confirm_del"><p>Are you sure?</p><input type="button" value="yes" class="yes"></input><input type="button" value="no" class="no"></input></div><img src="'+fileType+'" class="doc_preview"/><span class="doc_title"><span class="name">' + file.name + '</span><span class="glyphicon glyphicon-trash doc_delete"></span></span></div>');
-                  $grid.append($file).isotope("appended", $file);
-                }else{
-                  alert(response);
                 }
-              }
-  	      });
+    	      });
 
-        	return false;
+          	return false;
+          }else{
+            alert("You forgot to name the file.");
+          }
         });
-
       });
 
       var currentFolder;
@@ -541,6 +619,8 @@
           if (a[0] != b[0] && a[0] != b[1]){
 
             if( !$(this).hasClass("selected") ){
+              spinner = new Spinner(spinnerOpts).spin(loadingDiv);
+              var done = 0;
               var $this = $(this);
               currentFolder = $this.attr("data-folderid");
               if( $(".documents_list").hasClass("hidden") ){
@@ -552,6 +632,12 @@
 
               $.post("/f/getSubFolders", {folder_id: $this.attr("data-folderid")}, function(responseText){
                 var folders = JSON.parse(responseText);
+                if(folders.length == 0){
+                  done++;
+                  if(done == 2){
+                    spinner.stop();
+                  }
+                }
                 for (var i = 0; i < folders.length; i++) {
                   var $folder = $('<div style="z-index:1;" class="doc_frame folder_doc" data-folderid="' + folders[i]._id + '" title="' + folders[i].name +
                       '"><div class="hidden confirm_del"><p>Are you sure?</p><input type="button" value="yes" class="yes"></input><input type="button" value="no" class="no"></input></div><img src="' +
@@ -565,10 +651,21 @@
                   //         y: 'bottom'
                   //     }
                   // });
+                  if( i == folders.length-1 && done == 1){
+                    spinner.stop();
+                  }else if ( i == folders.length-1 && done == 0 ) {
+                    done++;
+                  }
                 }
               });
               $.post("/f/getFilesInFolder", {folder_id: $this.attr("data-folderid")}, function(responseText){
                 var files = JSON.parse(responseText);
+                if(files.length == 0){
+                  done++;
+                  if(done == 2){
+                    spinner.stop();
+                  }
+                }
                 for (var i = 0; i < files.length; i++) {
                   var fileType = files[i].type;
                   if(files[i].type == "image"){
@@ -577,21 +674,26 @@
                     fileType = "images/"+files[i].type+'.png';
                   }
                   var deleteButton = '';
-                  if(files[i].creator == localStorage._id){
+                  if(files[i].creator == localStorage._id || localStorage.c_team_position == "admin"){
                     deleteButton = '<span class="glyphicon glyphicon-trash doc_delete"></span>'
                   }
                   var $file = $('<div style="z-index:1;" class="doc_frame '+files[i].type+'" data-fileid="' + files[i]._id + '" title="' + files[i].name +
                       '"><div class="hidden confirm_del"><p>Are you sure?</p><input type="button" value="yes" class="yes"></input><input type="button" value="no" class="no"></input></div><img src="'+fileType+'" class="doc_preview"/><span class="doc_title"><span class="name">' + files[i].name + '</span><span class="file_size">' + bytesToSize(files[i].size) +
                       '</span>'+deleteButton+'</span></div>');
                   $grid.append($file).isotope("appended", $file);
-                  // $folder.jBox('Tooltip', {
-                  //     delayOpen: 700,
-                  //     delayClose: 300,
-                  //     theme: "TooltipDark",
-                  //     position: {
-                  //         y: 'bottom'
-                  //     }
-                  // });
+                  $file.jBox('Tooltip', {
+                      delayOpen: 700,
+                      delayClose: 300,
+                      theme: "TooltipDark",
+                      position: {
+                          y: 'bottom'
+                      }
+                  });
+                  if( i == files.length-1 && done == 1){
+                    spinner.stop();
+                  }else if ( i == files.length-1 && done == 0 ) {
+                    done++;
+                  }
                 }
               });
             }
@@ -618,7 +720,7 @@
               }
           });
           $(frame.find(".yes")).click(function() {
-            $.post("/f/deleteFile", {file_id: frame.attr("data-fileid")}, function(responseText){
+            $.post("/f/deleteFile", {file_id: frame.attr("data-fileid"), isImg: frame.hasClass("image")}, function(responseText){
               console.log(responseText);
               if(responseText == "success"){
                 $grid.isotope('remove', frame).isotope();
@@ -673,40 +775,42 @@
           team_folder_modal = newTeamFolderModal("New Group");
         });
         $(document).on("click", "#make_team_folder", function(){
-          var p_selected_users = $(".potential_member.clicked");
-          var p_selected_subdivisions = $(".potential_subdivision.clicked");
+          if($("#folder_name").val() != ""){
+            var p_selected_users = $(".potential_member.clicked");
+            var p_selected_subdivisions = $(".potential_subdivision.clicked");
 
-          userMembers = [];
-          subdivisionMembers = [];
+            userMembers = [];
+            subdivisionMembers = [];
 
-          for (var i = 0; i < p_selected_users.length; i++) {
-            userMembers.push($(p_selected_users[i]).attr("data-userid"));
-          }
-          for (var i = 0; i < p_selected_subdivisions.length; i++) {
-            subdivisionMembers.push($(p_selected_subdivisions[i]).attr("data-subdivisionid"));
-          }
+            for (var i = 0; i < p_selected_users.length; i++) {
+              userMembers.push($(p_selected_users[i]).attr("data-userid"));
+            }
+            for (var i = 0; i < p_selected_subdivisions.length; i++) {
+              subdivisionMembers.push($(p_selected_subdivisions[i]).attr("data-subdivisionid"));
+            }
 
-          if(removeDuplicates(userMembers).length == 1 && subdivisionMembers.length == 0){
-            team_folder_modal.close();
-            team_folder_modal.destroy();
+            if(removeDuplicates(userMembers).length == 1 && subdivisionMembers.length == 0){
+              team_folder_modal.close();
+              team_folder_modal.destroy();
+            }else{
+              $.post("/f/createFolder", {type: "teamFolder", name: $("#folder_name").val(), userMembers: userMembers, subdivisionMembers: subdivisionMembers}, function(responseText){
+                if(responseText != "fail"){
+                  var folder = JSON.parse(responseText);
+                  var li = document.createElement("li");
+                  $(li).attr("data-folderid", folder._id);
+                  $(li).addClass("drive_name");
+                  $(li).html('<span id="make_drive" class="glyphicon glyphicon-folder-open"></span> ' + folder.name)
+                  $(".folders_list").append($(li));
+                }else {
+                  alert(responseText);
+                }
+              });
+              team_folder_modal.close();
+              team_folder_modal.destroy();
+            }
           }else{
-            $.post("/f/createFolder", {type: "teamFolder", name: $("#folder_name").val(), userMembers: userMembers, subdivisionMembers: subdivisionMembers}, function(responseText){
-              if(responseText != "fail"){
-                var folder = JSON.parse(responseText);
-                var li = document.createElement("li");
-                $(li).attr("data-folderid", folder._id);
-                $(li).addClass("drive_name");
-                $(li).html('<span id="make_drive" class="glyphicon glyphicon-folder-open"></span> ' + folder.name)
-                $(".folders_list").append($(li));
-              }else {
-                alert(responseText);
-              }
-            });
-            team_folder_modal.close();
-            team_folder_modal.destroy();
+            alert("You forgot to name the folder.");
           }
-
-
         });
 
         $(document).on("click", ".add_file", function(){
@@ -757,6 +861,15 @@
             }
         });
 
+        socket.on('message', function(msg){
+          if(msg.type == "group"){
+            messageNotification(msg.author_fn+" "+msg.author_ln+" in "+msg.chat_name, msg.content, msg.chat_id);
+          }else{
+            messageNotification(msg.author_fn+" "+msg.author_ln, msg.content, msg.chat_id);
+          }
+          $('#audio-files').find('audio#click-sound')[0].play();
+          $('#audio-files').find('audio#click-sound')[0].currentTime = 0;
+        })
 
 
         var $quicksearch = $('.searchbox').keyup(debounce(function() {

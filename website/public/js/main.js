@@ -164,4 +164,31 @@ $(document).ready(function(){
     location="/u/"+$(this).attr("data-userid");
   })
 
+  var typingTimer;
+  var doneTypingInterval = 300;
+  $(document).on("keyup", ".searchbox", function(){
+    clearTimeout(typingTimer);
+    typingTimer = setTimeout(doneTyping, doneTypingInterval);
+  })
+  $(document).on("keydown", ".searchbox", function(){
+    clearTimeout(typingTimer);
+  })
+  function doneTyping(){
+    if($(".searchbox").val() != ""){
+      $.post("/f/searchForUsers", {search: $(".searchbox").val()}, function(responseText){
+        if(responseText != "fail"){
+          $(".search_drop").show();
+          $(".search_drop_items").empty();
+          var matchedUsers = JSON.parse(responseText);
+          for (var i = 0; i < matchedUsers.length; i++) {
+            $(".search_drop_items").append('<li class="user-link" data-userid="'+matchedUsers[i]._id+'"><img id="small_prof_pic" src="'+matchedUsers[i].profpicpath+'-60" onError="this.src=\'../images/user.jpg\'"></img>&nbsp;&nbsp;<span style="vertical-align:middle;">'+matchedUsers[i].firstname + ' ' + matchedUsers[i].lastname+'</span></li>')
+          }
+        }else{
+          $(".search_drop").hide();
+        }
+      })
+    }else{
+      $(".search_drop").hide();
+    }
+  }
 });

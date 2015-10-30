@@ -15,6 +15,7 @@
     <script src="jbox/jBox.css"></script>
     <link rel="stylesheet" href="css/index.css" type="text/css">
     <link href="jbox/jBox.css" rel="stylesheet">
+    <link href="/jbox/themes/TooltipDark.css" rel="stylesheet">
     <script src="js/spin.js"></script>
     <script type="text/javascript">
         var loadingDiv = document.createElement("div");
@@ -44,6 +45,11 @@
           </li>
           <li class="navbar_item searchbox_list_item">
               <input type="text" placeholder="search" class="searchbox"></input>
+              <div class="search_drop">
+                <ul class="search_drop_items">
+
+                </ul>
+              </div>
           </li>
           <li class="navbar_item glyph_link chat_btn menu_btn" onclick="location='chat'">
               <span class="glyphicon glyphicon-comment"></span>
@@ -110,36 +116,15 @@
               <h3 class="u_events_title">Upcoming Events</h3>
               <div class="events_container">
                 <ul class="events_list upcoming_events">
+
                 </ul>
               </div>
             </div>
             <div class="jobs_overview">
-              <h3 class="u_events_title">&nbsp;Your Tasks</h3>
+              <h3 class="u_events_title">&nbsp;Pending Tasks</h3>
               <div class="events_container">
-                <ul class="events_list jobs_list">
-                  <li>Under Construction</li>
-                  <li>All newbies will take quiz</li>
-                  <li>Programming meeting in 285</li>
-                  <li>All newbies will take quiz</li>
-                  <li>Programming meeting in 285</li>
-                  <li>All newbies will take quiz</li>
-                  <li>Programming meeting in 285</li>
-                  <li>All newbies will take quiz</li>
-                  <li>Programming meeting in 285</li>
-                  <li>All newbies will take quiz</li>
-                  <li>Programming meeting in 285</li>
-                  <li>All newbies will take quiz</li>
-                  <li>All newbies will take quiz</li>
-                  <li>Programming meeting in 285</li>
-                  <li>All newbies will take quiz</li>
-                  <li>Programming meeting in 285</li>
-                  <li>All newbies will take quiz</li>
-                  <li>Programming meeting in 285</li>
-                  <li>All newbies will take quiz</li>
-                  <li>Programming meeting in 285</li>
-                  <li>All newbies will take quiz</li>
-                  <li>Programming meeting in 285</li>
-                  <li>All newbies will take quiz</li>
+                <ul class="events_list task_list">
+
                 </ul>
               </div>
             </div>
@@ -288,7 +273,7 @@
         title: title,
         onClose: function(){
           setTimeout(function(){
-            event_modal.destroy();
+            event_modal.destroy();  //keyword "this" does not work. make sure to name the modal "event_modal".
           }, 100)
         }
       });
@@ -355,12 +340,44 @@
 
         $.post("/f/getUpcomingEventsForUser", function(responseText){
           var upcomingEvents = JSON.parse(responseText);
-          for(var i = 0; i < upcomingEvents.length; i++){
-            var li = document.createElement("li");
-            $(li).html(upcomingEvents[i].name + " (" + readableDate(upcomingEvents[i].date) + ")");
-            $(".upcoming_events").append( $(li) );
+          if(upcomingEvents.length > 0){
+            for(var i = 0; i < upcomingEvents.length; i++){
+              var li = document.createElement("li");
+              $(li).html(upcomingEvents[i].name + " (" + readableDate(upcomingEvents[i].date) + ")");
+              $(".upcoming_events").append( $(li) );
+            }
+          }else{
+            $(".upcoming_events").append( "<li>none</li>" );
           }
         });
+
+        $.post("/f/getPendingUserTasks", {user_id: localStorage._id}, function(responseText){
+          if(responseText != "fail"){
+            var tasks = JSON.parse(responseText);
+            if(tasks.length > 0){
+              for (var i = 0; i < tasks.length; i++) {
+                var li = document.createElement("li");
+                // $(li).html( tasks[i].name + " (By " + readableDate(tasks[i].due_date) + ")");
+                $(li).html( tasks[i].name + " <span class='due_date_display'>(By " + readableDate(tasks[i].due_date) + ")</span> <span style='vertical-align: -5%; font-size: 14px' title='Assigned By "+ tasks[i].creator.firstname + " " + tasks[i].creator.lastname +"' class='assigned_by glyphicon glyphicon-info-sign'></span>");
+                var div = document.createElement("div");
+                $(div).addClass("indented");
+                $(div).html(tasks[i].description);
+                $(li).append("<br/>");
+                $(li).append( $(div) );
+                $(".task_list").append( $(li) );
+              }
+              $('.assigned_by').jBox('Tooltip', {
+                  delayOpen: 0,
+                  delayClose: 0,
+                  theme: "TooltipDark"
+              });
+            }else{
+              $(".task_list").append("<li>none</li>");
+            }
+          }else{
+            alert(responseText);
+          }
+        })
 
         $(".selected_year").html( year );
         for( i=-1 ; i<5 ; i++){
@@ -502,7 +519,6 @@
             if(responseText == "success"){
               $("p.clicked").removeClass("clicked");
               attendance_modal.close();
-              attendance_modal.destroy();
             }else{
               alert(responseText);
             }
@@ -521,58 +537,60 @@
 
 
         $(document).on("click", "#event_done_btn", function(){
-          var $this = $(this);
-          var p_selected_users = $(".potential_member.clicked");
-          var p_selected_subdivisions = $(".potential_subdivision.clicked");
+          if( $("#event_name").val() != "" ){
+            var $this = $(this);
+            var p_selected_users = $(".potential_member.clicked");
+            var p_selected_subdivisions = $(".potential_subdivision.clicked");
 
-          subdivisionAttendees = [];
-          userAttendees = []
+            subdivisionAttendees = [];
+            userAttendees = []
 
-          for (var i = 0; i < p_selected_users.length; i++) {
-            userAttendees.push($(p_selected_users[i]).attr("data-userid"));
-          }
-          for (var i = 0; i < p_selected_subdivisions.length; i++) {
-            subdivisionAttendees.push($(p_selected_subdivisions[i]).attr("data-subdivisionid"));
-          }
-          if(removeDuplicates(userAttendees).length == 1 && subdivisionAttendees.length == 0){
-            event_modal.close();
-            event_modal.destroy();
-          }else{
-            $.post("/f/createEvent", {
-              name: $("#event_name").val(),
-              description: $(".event_description").val(),
-              userAttendees: userAttendees,
-              subdivisionAttendees: subdivisionAttendees,
-              date: $this.attr("data-date")
-            }, function(responseText){
+            for (var i = 0; i < p_selected_users.length; i++) {
+              userAttendees.push($(p_selected_users[i]).attr("data-userid"));
+            }
+            for (var i = 0; i < p_selected_subdivisions.length; i++) {
+              subdivisionAttendees.push($(p_selected_subdivisions[i]).attr("data-subdivisionid"));
+            }
+            if(removeDuplicates(userAttendees).length == 1 && subdivisionAttendees.length == 0){
               event_modal.close();
-              event_modal.destroy();
-              if(responseText != "fail"){
-                var newEvent = JSON.parse(responseText);
-                var li = document.createElement("li");
-                $(li).attr("data-eventid", newEvent._id);
-                var event_name_display = document.createElement("span");
-                $(event_name_display).addClass("bold");
-                $(event_name_display).html(newEvent.name);
-                // TODO: add attendance and delete buttons
-                var attendance_btn = '<span title="Record Attendance" class="glyphicon glyphicon-list-alt leaders_only attendance"></span>';
-                var delete_event_btn = '<span class="glyphicon glyphicon-trash list_right delete_event"></span>';
-                var event_description_display = document.createElement("div");
-                $(event_description_display).addClass("indented");
-                $(event_description_display).html(newEvent.description);
-                $(li).append( $(event_name_display) );
-                $(li).append( " " );
-                $(li).append( attendance_btn );
-                $(li).append( delete_event_btn );
-                $(li).append( "<br/>" )
-                $(li).append( $(event_description_display) );
+            }else{
+              $.post("/f/createEvent", {
+                name: $("#event_name").val(),
+                description: $(".event_description").val(),
+                userAttendees: userAttendees,
+                subdivisionAttendees: subdivisionAttendees,
+                date: $this.attr("data-date")
+              }, function(responseText){
+                event_modal.close();
+                if(responseText != "fail"){
+                  var newEvent = JSON.parse(responseText);
+                  var li = document.createElement("li");
+                  $(li).attr("data-eventid", newEvent._id);
+                  var event_name_display = document.createElement("span");
+                  $(event_name_display).addClass("bold");
+                  $(event_name_display).html(newEvent.name);
+                  // TODO: add attendance and delete buttons
+                  var attendance_btn = '<span title="Record Attendance" class="glyphicon glyphicon-list-alt leaders_only attendance"></span>';
+                  var delete_event_btn = '<span class="glyphicon glyphicon-trash list_right delete_event"></span>';
+                  var event_description_display = document.createElement("div");
+                  $(event_description_display).addClass("indented");
+                  $(event_description_display).html(newEvent.description);
+                  $(li).append( $(event_name_display) );
+                  $(li).append( " " );
+                  $(li).append( attendance_btn );
+                  $(li).append( delete_event_btn );
+                  $(li).append( "<br/>" )
+                  $(li).append( $(event_description_display) );
 
 
-                $(".day_list[data-day='"+ new Date($this.attr("data-date")).getDate() +"']").append( $(li) );
-              }else{
-                alert(responseText);
-              }
-            });
+                  $(".day_list[data-day='"+ new Date($this.attr("data-date")).getDate() +"']").append( $(li) );
+                }else{
+                  alert(responseText);
+                }
+              });
+            }
+          }else{
+            alert("You forgot to name the event");
           }
         });
 

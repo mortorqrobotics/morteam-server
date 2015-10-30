@@ -58,6 +58,7 @@
         $(".void_left").removeClass("col-sm-6");
         $(".void_left").addClass("col-md-12");
         $(".void_left").append('<input class="void_input team_join_id" type="text" placeholder="Team Code"></input><br/><input class="team_join_btn button" type="button" value="Join"></input>');
+        $(".team_join_id").focus();
       });
       $(".show_create").click(function(){
         $(".void_left").empty();
@@ -97,7 +98,7 @@
             localStorage.c_team_position = "member";
             location="/";
           }else{
-            alert("fail");
+            alert(responseText);
           }
         })
       });

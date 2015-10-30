@@ -2108,6 +2108,9 @@ li.drop_item:hover{
 .edit_profile, .leader_action, .change_password{
 	background-color: #ffb524;
 }
+.leftbar_btn{
+	background-color: #ffb524;
+}
 .void_input{
 	width: 100%;
 	max-width: 270px;
@@ -2218,7 +2221,6 @@ li.drop_item:hover{
 	padding-bottom: 3px;
 }
 .task_list{
-	height: 85px;
 	overflow: auto;
 }
 .hr_small_margin{
@@ -2266,6 +2268,7 @@ li.drop_item:hover{
 }
 #notif_button{
 	position: relative;
+	visibility: hidden;
 }
 .unseen_count{
 	background-color: red;
@@ -2297,8 +2300,8 @@ li.drop_item:hover{
 .delete_event{
 	margin-top: 0px;
 }
-.user_link{
-	font-size: 24px;
+.user_link_display{
+	font-size: 17px;
 	margin: 8px;
 	vertical-align: middle;
 }
@@ -2524,4 +2527,11 @@ th{
 }
 #drive_dir > span:hover{
 	background-color: #e9e9e9;
+}
+.task_complete{
+	margin-left: 5px !important;
+	font-size: 12px;
+}
+.due_date_display{
+	font-size: 14px;
 }

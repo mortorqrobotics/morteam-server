@@ -26,6 +26,7 @@ var Event = require('./schemas/Event.js');
 var AttendanceHandler = require('./schemas/AttendanceHandler.js');
 var Folder = require('./schemas/Folder.js');
 var File = require('./schemas/File.js');
+var Task = require('./schemas/Task.js');
 
 mongoose.connect('mongodb://localhost:27017/morteamtest2');
 
@@ -47,7 +48,13 @@ function parseJSON(str) {
     return JSON.parse(String(str));
   } catch (ex) {}
 }
-
+function validateEmail(email) {
+  var re = /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i;
+  return re.test(email);
+}
+function validatePhone(phone){
+  return phone.match(/\d/g).length===10;
+}
 function createToken(size) {
   var token = "";
   for (var i = 0; i < size; i++) {
@@ -302,7 +309,7 @@ app.use(function(req, res, next) {
       if (req.user) {
         if (req.user.teams.length > 0) {
           res.redirect("/");
-        } else {
+        } else { //TODO: In the future, add an else if(current_team is undefined) res.redirect
           next();
         }
       } else {
@@ -348,7 +355,8 @@ app.get("/u/:id", function(req, res) {
           phone: user.phone,
           profpicpath: user.profpicpath,
           viewedUserPosition: findTeamInUser(user, req.user.current_team.id).position,
-          viewerUserPosition: req.user.current_team.position
+          viewerUserPosition: req.user.current_team.position,
+          viewerUserId: req.user._id
         });
       } else {
         userNotFound(res);
@@ -464,181 +472,200 @@ app.get('/file/:fileId', requireLogin, function(req, res){
     }
   })
 });
+app.get('/team', requireLogin, function(req, res){
+  User.find({ teams: { $elemMatch: { id: req.user.current_team.id } } }, '-password', function(err, users){
+    Team.findOne({id: req.user.current_team.id}, function(err, team){
+      res.render('team', {
+        teamName: team.name,
+        teamNum: team.number,
+        teamId: team.id,
+        members: users,
+        viewerIsAdmin: req.user.current_team.position=="admin",
+      });
+    });
+  });
+});
 app.get('*', function(req, res) {
   send404(res);
 });
 // app.post("/f/createUser", upload.single('profpic'), function(req, res) {
 app.post("/f/createUser", multer({limits: {fileSize:10*1024*1024}}).single('profpic'), function(req, res) {
-  User.find({
-    $or: [{
-      username: req.body.username
-    }, {
-      email: req.body.email
-    }, {
-      phone: req.body.phone
-    }]
-  }, function(err, users) { //see if user exists
-    if(err){
-      console.error(err);
-      res.end("fail");
-    }else{
-      if(users){
-        if (users.length != 0) {
-          res.end("exists");
-        } else {
-          if(req.body.password == req.body.password_confirm){
-            if(req.file){
-              var suffix = req.file.originalname.substring(req.file.originalname.lastIndexOf(".")+1).toLowerCase();
-              lwip.open(req.file.buffer, suffix, function(err, image){
-                if(err){
-                  console.error(err);
-                  res.end("fail");
-                }else{
-                  var hToWRatio = image.height()/image.width();
-                  if(hToWRatio >= 1){
-                    image.resize(60, 60*hToWRatio, function(err, image){
-                      if(err){
-                        console.error(err);
-                        res.end("fail");
-                      }else{
-                        image.toBuffer(suffix, function(err, buffer){
-                          if(err){
-                            console.error(err);
-                            res.end("fail");
-                          }else{
-                            uploadToProfPics(buffer, req.body.username + "-60", function(err, data){
-                              if(err){
-                                console.error(err);
-                                res.end("fail");
-                              }
-                            });
-                          }
-                        })
-                      }
-                    })
+  req.body.firstname = req.body.firstname.capitalize();
+  req.body.lastname = req.body.lastname.capitalize();
+  if( validateEmail(req.body.email) && validatePhone(req.body.phone) ){
+    User.find({
+      $or: [{
+        username: req.body.username
+      }, {
+        email: req.body.email
+      }, {
+        phone: req.body.phone
+      }]
+    }, function(err, users) { //see if user exists
+      if(err){
+        console.error(err);
+        res.end("fail");
+      }else{
+        if(users){
+          if (users.length != 0) {
+            res.end("exists");
+          } else {
+            if(req.body.password == req.body.password_confirm){
+              if(req.file){
+                var suffix = req.file.originalname.substring(req.file.originalname.lastIndexOf(".")+1).toLowerCase();
+                lwip.open(req.file.buffer, suffix, function(err, image){
+                  if(err){
+                    console.error(err);
+                    res.end("fail");
                   }else{
-                    image.resize(60/hToWRatio, 60, function(err, image){
-                      if(err){
-                        console.error(err);
-                        res.end("fail");
-                      }else{
-                        image.toBuffer(suffix, function(err, buffer){
-                          if(err){
-                            console.error(err);
-                            res.end("fail");
-                          }else{
-                            uploadToProfPics(buffer, req.body.username + "-60", function(err, data){
-                              if(err){
-                                console.error(err);
-                                res.end("fail");
-                              }
-                            });
-                          }
-                        })
-                      }
-                    })
+                    var hToWRatio = image.height()/image.width();
+                    if(hToWRatio >= 1){
+                      image.resize(60, 60*hToWRatio, function(err, image){
+                        if(err){
+                          console.error(err);
+                          res.end("fail");
+                        }else{
+                          image.toBuffer(suffix, function(err, buffer){
+                            if(err){
+                              console.error(err);
+                              res.end("fail");
+                            }else{
+                              uploadToProfPics(buffer, req.body.username + "-60", function(err, data){
+                                if(err){
+                                  console.error(err);
+                                  res.end("fail");
+                                }
+                              });
+                            }
+                          })
+                        }
+                      })
+                    }else{
+                      image.resize(60/hToWRatio, 60, function(err, image){
+                        if(err){
+                          console.error(err);
+                          res.end("fail");
+                        }else{
+                          image.toBuffer(suffix, function(err, buffer){
+                            if(err){
+                              console.error(err);
+                              res.end("fail");
+                            }else{
+                              uploadToProfPics(buffer, req.body.username + "-60", function(err, data){
+                                if(err){
+                                  console.error(err);
+                                  res.end("fail");
+                                }
+                              });
+                            }
+                          })
+                        }
+                      })
+                    }
                   }
-                }
-              });
-              lwip.open(req.file.buffer, suffix, function(err, image){
-                if(err){
-                  console.error(err);
-                  res.end("fail");
-                }else{
-                  var hToWRatio = image.height()/image.width();
-                  if(hToWRatio >= 1){
-                    image.resize(300, 300*hToWRatio, function(err, image){
-                      if(err){
-                        console.error(err);
-                        res.end("fail");
-                      }else{
-                        image.toBuffer(suffix, function(err, buffer){
-                          if(err){
-                            console.error(err);
-                            res.end("fail");
-                          }else{
-                            uploadToProfPics(buffer, req.body.username + "-300", function(err, data){
-                              if(err){
-                                console.error(err);
-                                res.end("fail");
-                              }
-                            });
-                          }
-                        })
-                      }
-                    })
+                });
+                lwip.open(req.file.buffer, suffix, function(err, image){
+                  if(err){
+                    console.error(err);
+                    res.end("fail");
                   }else{
-                    image.resize(300/hToWRatio, 300, function(err, image){
-                      if(err){
-                        console.error(err);
-                        res.end("fail");
-                      }else{
-                        image.toBuffer(suffix, function(err, buffer){
-                          if(err){
-                            console.error(err);
-                            res.end("fail");
-                          }else{
-                            uploadToProfPics(buffer, req.body.username + "-300", function(err, data){
-                              if(err){
-                                console.error(err);
-                                res.end("fail");
-                              }
-                            });
-                          }
-                        })
-                      }
-                    })
+                    var hToWRatio = image.height()/image.width();
+                    if(hToWRatio >= 1){
+                      image.resize(300, 300*hToWRatio, function(err, image){
+                        if(err){
+                          console.error(err);
+                          res.end("fail");
+                        }else{
+                          image.toBuffer(suffix, function(err, buffer){
+                            if(err){
+                              console.error(err);
+                              res.end("fail");
+                            }else{
+                              uploadToProfPics(buffer, req.body.username + "-300", function(err, data){
+                                if(err){
+                                  console.error(err);
+                                  res.end("fail");
+                                }
+                              });
+                            }
+                          })
+                        }
+                      })
+                    }else{
+                      image.resize(300/hToWRatio, 300, function(err, image){
+                        if(err){
+                          console.error(err);
+                          res.end("fail");
+                        }else{
+                          image.toBuffer(suffix, function(err, buffer){
+                            if(err){
+                              console.error(err);
+                              res.end("fail");
+                            }else{
+                              uploadToProfPics(buffer, req.body.username + "-300", function(err, data){
+                                if(err){
+                                  console.error(err);
+                                  res.end("fail");
+                                }
+                              });
+                            }
+                          })
+                        }
+                      })
+                    }
                   }
-                }
-              });
-              User.create({
-                username: req.body.username,
-                password: req.body.password,
-                firstname: req.body.firstname,
-                lastname: req.body.lastname,
-                email: req.body.email,
-                phone: req.body.phone,
-                profpicpath: "/pp/" + /*req.file.key.substring( 2 )*/ req.body.username
-              }, function(err, user) {
-                if (err) {
-                  res.end("fail");
-                  console.error(err);
-                } else {
-                  res.end("success");
-                  console.log("User " + user._id + ", " + user.firstname + " " + user.lastname + " was saved!");
-                }
-              });
+                });
+                User.create({
+                  username: req.body.username,
+                  password: req.body.password,
+                  firstname: req.body.firstname,
+                  lastname: req.body.lastname,
+                  email: req.body.email,
+                  phone: req.body.phone,
+                  profpicpath: "/pp/" + /*req.file.key.substring( 2 )*/ req.body.username
+                }, function(err, user) {
+                  if (err) {
+                    res.end("fail");
+                    console.error(err);
+                  } else {
+                    res.end("success");
+                    console.log("User " + user._id + ", " + user.firstname + " " + user.lastname + " was saved!");
+                  }
+                });
+              }else{
+                User.create({
+                  username: req.body.username,
+                  password: req.body.password,
+                  firstname: req.body.firstname,
+                  lastname: req.body.lastname,
+                  email: req.body.email,
+                  phone: req.body.phone,
+                  profpicpath: "images/user.jpg"
+                }, function(err, user) {
+                  if (err) {
+                    res.end("fail");
+                    console.error(err);
+                  } else {
+                    console.log("User " + user._id + ", " + user.firstname + " " + user.lastname + " was saved!");
+                    res.end("success");
+                  }
+                });
+              }
             }else{
-              User.create({
-                username: req.body.username,
-                password: req.body.password,
-                firstname: req.body.firstname,
-                lastname: req.body.lastname,
-                email: req.body.email,
-                phone: req.body.phone,
-                profpicpath: "images/user.jpg"
-              }, function(err, user) {
-                if (err) {
-                  res.end("fail");
-                  console.error(err);
-                } else {
-                  console.log("User " + user._id + ", " + user.firstname + " " + user.lastname + " was saved!");
-                  res.end("success");
-                }
-              });
+              res.end("password mismatch");
             }
-          }else{
-            res.end("password mismatch");
           }
         }
       }
-    }
-  });
+    });
+  }else{
+    res.end("fail: Form data is invalid");
+  }
 });
 app.post("/f/getUsersInTeam", requireLogin, function(req, res) {
   User.find({
     teams: {$elemMatch: {id: req.user.current_team.id }}
-  }, function(err, users) {
+  }, '-password', function(err, users) {
     if (err) {
       console.error(err);
       res.end("fail");
@@ -668,6 +695,7 @@ app.post("/f/login", function(req, res) {
       user.comparePassword(req.body.password, function(err, isMatch) {
         if (err) {
           console.error(err);
+          res.end("fail");
         } else {
           if (isMatch) {
             req.session.user = user;
@@ -747,7 +775,9 @@ app.post("/f/joinTeam", requireLogin, function(req, res) {
             res.end("fail")
           } else {
             if(user){
-              if(user.teams.length > 0){
+              if( user.bannedFromTeams.length > 0 && user.bannedFromTeams.indexOf(req.body.team_id) > -1 ){
+                res.end("banned");
+              }else if(user.teams.length > 0){
                 User.find({teams: {$elemMatch: {"id": req.body.team_id} } }, function(err, users){
                   if(err){
                     console.error(err);
@@ -825,7 +855,7 @@ app.post("/f/joinTeam", requireLogin, function(req, res) {
     }
   });
 });
-app.post("/f/createSubdivision", requireLogin, function(req, res) {
+app.post("/f/createSubdivision", requireLogin, requireLeader, function(req, res) {
   Subdivision.create({
     name: req.body.name,
     type: req.body.type,
@@ -835,7 +865,16 @@ app.post("/f/createSubdivision", requireLogin, function(req, res) {
       console.error(err);
       res.end("fail");
     } else {
-      res.end(subdivision._id.toString());
+      User.update({_id: req.user._id}, { '$push': {
+        'subdivisions': {_id: subdivision._id, team: req.user.current_team.id, accepted: true}
+      }}, function(err, model){
+        if(err){
+          console.error(err);
+          res.end("fail");
+        }else{
+          res.end(subdivision._id.toString());
+        }
+      })
     }
   });
 });
@@ -981,54 +1020,65 @@ app.post("/f/acceptSubdivisionInvitation", requireLogin, function(req, res){
   });
 });
 app.post("/f/joinPublicSubdivision", requireLogin, function(req, res){
-  User.update({_id: req.user._id}, {'$pull': {
-    'subdivisions': {_id: new ObjectId(req.body.subdivision_id), team: req.user.current_team.id, accepted: false}
-  }}, function(err){
+  Subdivision.findOne({_id: req.body.subdivision_id}, function(err, subdivision){
     if(err){
       console.error(err);
       res.end("fail");
     }else{
-      User.update({_id: req.user._id}, {'$push': {
-        'subdivisions': {_id: new ObjectId(req.body.subdivision_id), team: req.user.current_team.id, accepted: true}
-      }}, function(err){
-        if(err){
-          console.error(err);
-          res.end("fail");
-        }else{
-          Event.find({ subdivisionAttendees: req.body.subdivision_id }, function(err, events){
-            if(err){
-              console.error(err);
-              res.end("fail");
-            }else{
-              if(events.length > 0){
-                var done = 0;
-                for(var i = 0; i < events.length; i++){
-                  AttendanceHandler.update({event: events[i]._id, event_date: {"$gt": new Date()}}, { "$push": {
-                    attendees: {
-                      user: req.user._id,
-                      status: "absent"
-                    }
-                  }}, function(err, model){
-                    if(err){
-                      console.error(err);
-                      res.end("fail");
-                    }else{
-                      done++;
-                      if(done == events.length){
-                        res.end("success");
-                      }
-                    }
-                  })
-                }
+      if(subdivision.type == "public"){
+        User.update({_id: req.user._id}, {'$pull': {
+          'subdivisions': {_id: new ObjectId(req.body.subdivision_id), team: req.user.current_team.id, accepted: false}
+        }}, function(err){
+          if(err){
+            console.error(err);
+            res.end("fail");
+          }else{
+            User.update({_id: req.user._id}, {'$push': {
+              'subdivisions': {_id: new ObjectId(req.body.subdivision_id), team: req.user.current_team.id, accepted: true}
+            }}, function(err){
+              if(err){
+                console.error(err);
+                res.end("fail");
               }else{
-                res.end("success");
+                Event.find({ subdivisionAttendees: req.body.subdivision_id }, function(err, events){
+                  if(err){
+                    console.error(err);
+                    res.end("fail");
+                  }else{
+                    if(events.length > 0){
+                      var done = 0;
+                      for(var i = 0; i < events.length; i++){
+                        AttendanceHandler.update({event: events[i]._id, event_date: {"$gt": new Date()}}, { "$push": {
+                          attendees: {
+                            user: req.user._id,
+                            status: "absent"
+                          }
+                        }}, function(err, model){
+                          if(err){
+                            console.error(err);
+                            res.end("fail");
+                          }else{
+                            done++;
+                            if(done == events.length){
+                              res.end("success");
+                            }
+                          }
+                        })
+                      }
+                    }else{
+                      res.end("success");
+                    }
+                  }
+                });
               }
-            }
-          });
-        }
-      });
+            });
+          }
+        });
+      }else{
+        res.end("fail");
+      }
     }
-  });
+  })
 })
 app.post("/f/ignoreSubdivisionInvite", requireLogin, function(req, res){
   User.update({_id: req.user._id}, {'$pull': {
@@ -1082,54 +1132,43 @@ app.post("/f/leaveSubdivision", requireLogin, function(req, res){
     }
   });
 })
-app.post("/f/deleteSubdivision", requireLogin, function(req, res){
+app.post("/f/deleteSubdivision", requireLogin, requireAdmin, function(req, res){
   User.findOne({_id: req.user._id}, function(err, user){
     if(err){
       console.error(err);
       res.end("fail");
     }else{
       if(user){
-        if(req.user.current_team.position == "admin"){
-          Subdivision.findOneAndRemove({_id: new ObjectId(req.body.subdivision_id), team: req.user.current_team.id}, function(err){
-            if(err){
-              console.error(err);
-              res.end("fail");
-            }else{
-              // User.update( {team: req.body.team_id, subdivisions: {$elemMatch: {id: req.body.subdivision_id, team: req.body.team_id}} }, {'$pull': {
-              //   'subdivisions': {id: req.body.subdivision_id, team: req.body.team_id, accepted: true}
-              // }}, function(err, model){
-              //   if(err){
-              //     console.error(err);
-              //     res.end("fail");
-              //   }else{
-              //     console.log(model);
-              //     res.end("success");
-              //   }
-              // });
+        Subdivision.findOneAndRemove({_id: new ObjectId(req.body.subdivision_id), team: req.user.current_team.id}, function(err){
+          if(err){
+            console.error(err);
+            res.end("fail");
+          }else{
+            // User.update( {team: req.body.team_id, subdivisions: {$elemMatch: {id: req.body.subdivision_id, team: req.body.team_id}} }, {'$pull': {
+            //   'subdivisions': {id: req.body.subdivision_id, team: req.body.team_id, accepted: true}
+            // }}, function(err, model){
+            //   if(err){
+            //     console.error(err);
+            //     res.end("fail");
+            //   }else{
+            //     console.log(model);
+            //     res.end("success");
+            //   }
+            // });
+            User.update({teams:{$elemMatch:{id: req.user.current_team.id}}}, {'$pull': { //TODO: FIX THIS, it wont remove subdivision from user
+              'subdivisions': {_id: new ObjectId(req.body.subdivision_id), team: req.user.current_team.id}
+            }}, function(err, model){
+              if(err){
+                console.error(err);
+                res.end("fail");
+              }else{
+                console.log(model);
+                res.end("success");
+              }
+            });
 
-              User.update( {team: req.user.current_team.id}, {'$pull': { //TODO: FIX THIS, it wont remove subdivision from user
-                'subdivisions': {_id: new ObjectId(req.body.subdivision_id), team: req.user.current_team.id, accepted: true}
-              }}, function(err, model){
-                if(err){
-                  console.error(err);
-                  res.end("fail");
-                }else{
-                  console.log(model);
-                  res.end("success");
-                }
-              });
-
-            }
-          });
-        }else{
-          transporter.sendMail({
-              from: 'rafezyfarbod@gmail.com',
-              to: 'rafezyfarbod@gmail.com',
-              subject: 'Security Alert!',
-              text: 'The user ' + req.user.firstname + req.user.lastname + ' tried to perform administrator tasks. User ID: ' + req.user._id
-          });
-          res.end("fail");
-        }
+          }
+        });
       }
     }
   })
@@ -1147,23 +1186,27 @@ app.post("/f/removeUserFromSubdivision", requireLogin, requireAdmin, function(re
           console.error(err);
           res.end("fail");
         }else{
-          var done = 0;
-          for(var i = 0; i < events.length; i++){
-            AttendanceHandler.update({event: events[i]._id}, { "$pull": {
-              'attendees': {
-                user: req.body.user_id,
-              }
-            }}, function(err, model){
-              if(err){
-                console.error(err);
-                res.end("fail");
-              }else{
-                done++;
-                if(done == events.length){
-                  res.end("success");
+          if(events.length > 0){
+            var done = 0;
+            for(var i = 0; i < events.length; i++){
+              AttendanceHandler.update({event: events[i]._id}, { "$pull": {
+                'attendees': {
+                  user: req.body.user_id,
                 }
-              }
-            })
+              }}, function(err, model){
+                if(err){
+                  console.error(err);
+                  res.end("fail");
+                }else{
+                  done++;
+                  if(done == events.length){
+                    res.end("success");
+                  }
+                }
+              })
+            }
+          }else{
+            res.end("success");
           }
         }
       });
@@ -1260,7 +1303,11 @@ app.post("/f/postAnnouncement", requireLogin, function(req, res){
 });
 app.post("/f/getAnnouncementsForUser", requireLogin, function(req, res) {
   var finalAnnouncements = [];
-  var userSubdivisionIds = req.user.subdivisions.map(function(subdivision) {return new ObjectId(subdivision._id);});
+  var userSubdivisionIds = req.user.subdivisions.map(function(subdivision) {
+    if (subdivision.accepted == true) {
+      return new ObjectId(subdivision._id);
+    }
+  });
   Announcement.find({
     team: req.user.current_team.id,
     $or: [
@@ -1297,7 +1344,7 @@ app.post("/f/deleteAnnouncement", requireLogin, function(req, res){
       console.error(err);
       res.end("fail");
     }else{
-      if(req.user._id == announcement.author || req.user.current_team.position == "admin"){
+      if(req.user._id == announcement.author.toString() || req.user.current_team.position == "admin"){
         announcement.remove(function(err){
           if(err){
             console.error(err);
@@ -1376,7 +1423,11 @@ app.post("/f/createChat", requireLogin, function(req, res){
   }
 })
 app.post("/f/getChatsForUser", requireLogin, function(req, res){
-  var userSubdivisionIds = req.user.subdivisions.map(function(subdivision) {return subdivision._id;});
+  var userSubdivisionIds = req.user.subdivisions.map(function(subdivision) {
+    if (subdivision.accepted == true) {
+      return new ObjectId(subdivision._id);
+    }
+  });
   Chat.find({
     team: req.user.current_team.id,
     $or: [
@@ -1471,7 +1522,11 @@ app.post("/f/sendMessage", requireLogin, function(req, res){
   });
 });
 app.post("/f/getEventsForUserInTeamInMonth", requireLogin, function(req, res){
-  var userSubdivisionIds = req.user.subdivisions.map(function(subdivision) {return subdivision._id;});
+  var userSubdivisionIds = req.user.subdivisions.map(function(subdivision) {
+    if (subdivision.accepted == true) {
+      return new ObjectId(subdivision._id);
+    }
+  });
   var numberOfDays = new Date(req.body.year, req.body.month+1, 0).getDate(); //month is 1 based
   var start = new Date(req.body.year, req.body.month, 1); //month is 0 based
   var end = new Date(req.body.year, req.body.month, numberOfDays); //month is 0 based
@@ -1492,7 +1547,11 @@ app.post("/f/getEventsForUserInTeamInMonth", requireLogin, function(req, res){
   });
 });
 app.post("/f/getUpcomingEventsForUser", requireLogin, function(req, res){
-  var userSubdivisionIds = req.user.subdivisions.map(function(subdivision) {return subdivision._id;});
+  var userSubdivisionIds = req.user.subdivisions.map(function(subdivision) {
+    if (subdivision.accepted == true) {
+      return new ObjectId(subdivision._id);
+    }
+  });
   Event.find({
     team: req.user.current_team.id,
     $or: [
@@ -1656,7 +1715,11 @@ app.post("/f/excuseAbsence", requireLogin, requireLeader, function(req, res){
   })
 })
 app.post("/f/getTeamFolders", requireLogin, function(req, res){
-  var userSubdivisionIds = req.user.subdivisions.map(function(subdivision) {return subdivision._id;});
+  var userSubdivisionIds = req.user.subdivisions.map(function(subdivision) {
+    if (subdivision.accepted == true) {
+      return new ObjectId(subdivision._id);
+    }
+  });
   Folder.find({team: req.user.current_team.id, parentFolder: { "$exists": false }, $or: [
     {entireTeam: true},
     {userMembers: req.user._id},
@@ -1671,7 +1734,11 @@ app.post("/f/getTeamFolders", requireLogin, function(req, res){
   })
 })
 app.post("/f/getSubFolders", requireLogin, function(req, res){
-  var userSubdivisionIds = req.user.subdivisions.map(function(subdivision) {return subdivision._id;});
+  var userSubdivisionIds = req.user.subdivisions.map(function(subdivision) {
+    if (subdivision.accepted == true) {
+      return new ObjectId(subdivision._id);
+    }
+  });
   Folder.find({team: req.user.current_team.id, parentFolder: req.body.folder_id, $or: [
     {entireTeam: true},
     {userMembers: req.user._id},
@@ -1836,7 +1903,18 @@ app.post("/f/deleteFile", requireLogin, function(req, res){
                 console.error(err);
                 res.end("fail");
               }else{
-                res.end("success");
+                if(req.body.isImg){
+                    deleteFileFromDrive(req.body.file_id+"-preview", function(err, data){
+                      if(err){
+                        console.error(err);
+                        res.end("fail");
+                      }else{
+                        res.end("success");
+                      }
+                    })
+                }else{
+                  res.end("success");
+                }
               }
             });
           }
@@ -1847,12 +1925,275 @@ app.post("/f/deleteFile", requireLogin, function(req, res){
     }
   });
 });
+app.post("/f/assignTask", requireLogin, requireLeader, function(req, res){
+  if(req.body.task_description){
+    Task.create({
+      name: req.body.task_name,
+      description: req.body.task_description,
+      team: req.user.current_team.id,
+      for: req.body.user_id,
+      due_date: req.body.due_date,
+      creator: req.user._id,
+      completed: false
+    }, function(err, task){
+      if(err){
+        console.error(err);
+        res.end("fail");
+      }else{
+        res.end("success");
+      }
+    })
+  }else{
+    Task.create({
+      name: req.body.task_name,
+      team: req.user.current_team.id,
+      for: req.body.user_id,
+      due_date: req.body.due_date,
+      creator: req.user._id,
+      completed: false
+    }, function(err, task){
+      if(err){
+        console.error(err);
+        res.end("fail");
+      }else{
+        res.end(task._id.toString());
+      }
+    })
+  }
+})
+app.post("/f/getUserTasks", requireLogin, function(req, res){
+  Task.find({for: req.body.user_id}).populate('creator').exec(function(err, tasks){
+    if(err){
+      console.error(err);
+      res.end("fail");
+    }else{
+      res.end(JSON.stringify(tasks));
+    }
+  })
+})
+app.post("/f/getPendingUserTasks", requireLogin, function(req, res){
+  Task.find({for: req.body.user_id, completed:false}).populate('creator').exec(function(err, tasks){
+    if(err){
+      console.error(err);
+      res.end("fail");
+    }else{
+      res.end(JSON.stringify(tasks));
+    }
+  })
+})
+
+app.post("/f/markTaskAsCompleted", requireLogin, function(req, res){
+  if( req.user._id == req.body.target_user || req.user.current_team.position == "admin" || req.user.current_team.position == "leader" ){
+    Task.update({_id: req.body.task_id}, { "$set": {completed: true} }, function(err, model){
+      if(err){
+        console.error(err);
+        res.end("fail");
+      }else{
+        res.end("success");
+      }
+    });
+  }
+})
+app.post("/f/searchForUsers", requireLogin, function(req, res){
+  var terms = req.body.search.split(' ');
+  var regexString = "";
+  for (var i = 0; i < terms.length; i++){
+    regexString += terms[i];
+    if (i < terms.length - 1) regexString += '|';
+  }
+  var re = new RegExp(regexString, 'ig');
+  User.find({
+    teams: {$elemMatch: {id: req.user.current_team.id}},
+    $or: [
+      { firstname: re }, { lastname: re }
+    ]
+  }, '-password').limit(10).exec(function(err, users) {
+    if(err){
+      console.error(err);
+      res.end("fail");
+    }else{
+      res.end(JSON.stringify(users));
+    }
+  });
+})
+app.post("/f/changePassword", requireLogin, function(req, res){
+  if(req.body.new_password == req.body.new_password_confirm){
+    User.findOne({_id: req.user._id}, function(err, user){
+      user.comparePassword(req.body.old_password, function(err, isMatch) {
+        if (err) {
+          console.error(err);
+          res.end("fail");
+        } else {
+          if (isMatch) {
+            user.password = req.body.new_password;
+            user.save(function(err){
+              if(err){
+                console.error(err);
+                res.end("fail");
+              }else{
+                res.end("success");
+              }
+            })
+          } else {
+            res.end("fail: incorrect password");
+          }
+        }
+      })
+    })
+  }else{
+    res.end("fail: new passwords do not match");
+  }
+});
+function resizeImage(buffer, size, suffix, callback){
+  lwip.open(buffer, suffix, function(err, image){
+    if(err){
+      callback(err, undefined);
+    }else{
+      var hToWRatio = image.height()/image.width();
+      if(hToWRatio >= 1){
+        image.resize(size, size*hToWRatio, function(err, image){
+          if(err){
+            callback(err, undefined);
+          }else{
+            image.toBuffer(suffix, function(err, buffer){
+              if(err){
+                callback(err, undefined);
+              }else{
+                callback(undefined, buffer);
+              }
+            })
+          }
+        })
+      }else{
+        image.resize(size/hToWRatio, size, function(err, image){
+          if(err){
+            callback(err, undefined);
+          }else{
+            image.toBuffer(suffix, function(err, buffer){
+              if(err){
+                callback(err, undefined);
+              }else{
+                callback(undefined, buffer);
+              }
+            })
+          }
+        })
+      }
+    }
+  });
+}
+app.post("/f/editProfile", requireLogin, multer().single('new_prof_pic'), function(req, res){
+  if(req.file){
+    var suffix = req.file.originalname.substring(req.file.originalname.lastIndexOf(".")+1).toLowerCase();
+    resizeImage(req.file.buffer, 300, suffix, function(err, buffer){
+      if(err){
+        console.error(err);
+        res.end("fail");
+      }else{
+        uploadToProfPics(buffer, req.user.username+"-300", function(err, data){
+          if(err){
+            console.error(err);
+            res.end("fail");
+          }else{
+            resizeImage(req.file.buffer, 60, suffix, function(err, buffer){
+              if(err){
+                console.error(err);
+                res.end("fail");
+              }else{
+                uploadToProfPics(buffer, req.user.username+"-60", function(err, data){
+                  if(err){
+                    console.error(err);
+                    res.end("fail");
+                  }else{
+                    User.findOneAndUpdate({_id: req.user._id}, {
+                      firstname: req.body.firstname,
+                      lastname: req.body.lastname,
+                      email: req.body.email,
+                      phone: req.body.phone
+                    }, function(err, user){
+                      if(err){
+                        console.error(err);
+                        res.end("fail");
+                      }else{
+                        res.end("success");
+                      }
+                    })
+                  }
+                })
+              }
+            })
+          }
+        });
+      }
+    });
+  }else{
+    User.findOneAndUpdate({_id: req.user._id}, {
+      firstname: req.body.firstname,
+      lastname: req.body.lastname,
+      email: req.body.email,
+      phone: req.body.phone
+    }, function(err, user){
+      if(err){
+        console.error(err);
+        res.end("fail");
+      }else{
+        res.end("success");
+      }
+    })
+  }
+});
+app.post("/f/getSelf", requireLogin, function(req, res){
+  User.findOne({_id: req.user._id}, '-password', function(err, user){
+    if(err){
+      console.error(err);
+      res.end("fail");
+    }else{
+      res.end(JSON.stringify(user));
+    }
+  });
+});
+app.post("/f/removeUserFromTeam", requireLogin, requireAdmin, function(req, res){
+  User.update({_id: req.body.user_id}, { '$pull': {
+    'teams': {id: req.user.current_team.id},
+  },
+  '$push': {
+    'bannedFromTeams': req.user.current_team.id
+  }}, function(err, model){
+    if(err){
+      console.error(err);
+      res.end("fail");
+    }else{
+      User.findOne({_id: req.body.user_id}, function(err, user){
+        if(err){
+          console.error(err);
+          res.end("fail");
+        }else{
+          if(user.current_team.id == req.user.current_team.id){
+            user.current_team = undefined //TODO: make it so that if current_team is undefined when logging in, it allows you to set current_team
+            user.save(function(err){
+              if(err){
+                console.error(err);
+                res.end("fail");
+              }else{
+                res.end("success");
+              }
+            })
+          }
+        }
+      });
+    }
+  })
+})
 
 var online_clients = {};
 io.on('connection', function(socket){
   var sess = socket.request.session.user;
   if(sess && online_clients[sess._id] == undefined){
-    var userSubdivisionIds = sess.subdivisions.map(function(subdivision) {return subdivision._id;});
+    var userSubdivisionIds = sess.subdivisions.map(function(subdivision) {
+      if (subdivision.accepted == true) {
+        return new ObjectId(subdivision._id);
+      }
+    });
     Chat.find({
       team: sess.current_team.id,
       $or: [

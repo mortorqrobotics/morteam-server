@@ -22,7 +22,8 @@ var userSchema = new Schema({
   current_team: {
     id: String,
     position: String
-  }
+  },
+  bannedFromTeams: [String]
 });
 
 userSchema.pre('save', function(next){

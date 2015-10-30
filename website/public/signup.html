@@ -39,6 +39,16 @@
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
   <script type="text/javascript" src="js/main.js"></script>
   <script>
+  String.prototype.capitalize = function() {
+    return this.charAt(0).toUpperCase() + this.slice(1);
+  }
+  function validateEmail(email) {
+    var re = /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i;
+    return re.test(email);
+  }
+  function validatePhone(phone){
+    return phone.match(/\d/g).length===10;
+  }
   $(document).ready(function(){
     // $("#signup_buttonS").click(function() {
     //   if($("#password_signup").val() == $("#password_signup_confirm").val()){
@@ -68,22 +78,37 @@
     $(".pic_choose_button").click(function(){
       $("#show_files").trigger("click");
     })
-    $('#signup_form').submit(function() {
+    $('#signup_form').submit(function(e) {
+      $("#signup_buttonS").val("Loading");
+      $("#signup_buttonS").prop("disabled",true);
+      e.preventDefault();
+      if(validatePhone($("#phone_signup").val())){
+        if(validateEmail($("#email_signup").val())){
+          $("#firstname").val( $("#firstname").val().capitalize() );
+          $("#lastname").val( $("#lastname").val().capitalize() );
 
-        $(this).ajaxSubmit({
-            error: function(xhr) {
-          		alert(xhr.status)
-            },
-            success: function(response) {
-              if(response == "success"){
-                location="/login";
-              }else{
-                alert(response);
+          $(this).ajaxSubmit({
+              error: function(xhr) {
+            		alert(xhr.status)
+              },
+              success: function(response) {
+                if(response == "success"){
+                  location="/login";
+                }else{
+                  alert(response);
+                }
               }
-            }
-	      });
+  	      });
 
-      	return false;
+        	return false;
+        }else{
+          alert("Email is invalid.");
+          return false;
+        }
+      }else{
+        alert("Phone is invalid.");
+        return false;
+      }
     });
   });
   </script>

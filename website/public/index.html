@@ -54,22 +54,7 @@
             <input type="text" placeholder="search" class="searchbox"></input>
             <div class="search_drop">
               <ul class="search_drop_items">
-                <!-- <li>
-                  under<br/>
-                  construction
-                </li>
-                <li>
-                  under<br/>
-                  construction
-                </li>
-                <li>
-                  under<br/>
-                  construction
-                </li>
-                <li>
-                  under<br/>
-                  construction
-                </li> -->
+
               </ul>
             </div>
         </li>
@@ -121,7 +106,7 @@
       <div class="announcements_left">
         <p id="view_prof_button">View Profile</p>
         <p id="logout_button">Log Out</p>
-        <p id="team_button">MorTorq</p>
+        <p id="team_button">Team</p>
         <hr>
         <div id="your_subdivisions">
             <h5 style="margin-bottom: 15px;">Your Subdivisions</h5>
@@ -134,11 +119,11 @@
         <div id="invited_subdivisions">
             <h5 style="margin-bottom: 15px;">Subdivision Invites</h5>
         </div>
+        <!-- <hr>
+        <p class="new_subdivision"><span class="glyphicon glyphicon-plus"></span> Make a Subdivision</p> -->
         <hr>
-        <p class="new_subdivision"><span class="glyphicon glyphicon-plus"></span> Make a Subdivision</p>
-        <hr>
-        <p id="aboutus_link">About Us</p>
-        <span>© 2015 MorTeam</span>
+        <span style="color: gray; display: inline-block; margin-bottom: 6px;">© 2015 MorTeam</span><br/>
+        <span><a style="color: gray;" href="terms">Privacy and Terms</a></span>
       </div>
       <div class="announcements_center">
         <div class="post_announcement cf">
@@ -191,6 +176,50 @@
 
   var socket = io();
   // socket.emit("add to clients", {_id: localStorage._id});
+
+  spinnerOpts = {
+      lines: 13 // The number of lines to draw
+          ,
+      length: 0 // The length of each line
+          ,
+      width: 20 // The line thickness
+          ,
+      radius: 42 // The radius of the inner circle
+          ,
+      scale: .5 // Scales overall size of the spinner
+          ,
+      corners: 1 // Corner roundness (0..1)
+          ,
+      color: 'orange' // #rgb or #rrggbb or array of colors
+          ,
+      opacity: 0.25 // Opacity of the lines
+          ,
+      rotate: 0 // The rotation offset
+          ,
+      direction: 1 // 1: clockwise, -1: counterclockwise
+          ,
+      speed: 1 // Rounds per second
+          ,
+      trail: 60 // Afterglow percentage
+          ,
+      fps: 20 // Frames per second when using setTimeout() as a fallback for CSS
+          ,
+      zIndex: 2e9 // The z-index (defaults to 2000000000)
+          ,
+      className: 'spinner' // The CSS class to assign to the spinner
+          ,
+      top: '50%' // Top position relative to parent
+          ,
+      left: '50%' // Left position relative to parent
+          ,
+      shadow: false // Whether to render a shadow
+          ,
+      hwaccel: false // Whether to use hardware acceleration
+          ,
+      position: 'absolute' // Element positioning
+  }
+
+
   function messageNotification(title, content, chatid) {
     var newMessageNotice = new jBox('Notice', {
         attributes: {
@@ -218,7 +247,12 @@
     var new_modal = new jBox('Modal', {
       width: 350,
       height: 373,
-      title: title
+      title: title,
+      onClose: function(){
+        setTimeout(function(){
+          new_subdivision_modal.destroy();  //keyword "this" does not work. make sure to name the modal "new_subdivision_modal".
+        }, 100)
+      }
     });
     $.post("/f/getUsersInTeam", function(responseText){
       var span = document.createElement("span");
@@ -238,6 +272,9 @@
         $(user).attr("data-userid", users[i]._id);
         $(user).html(users[i].firstname + " " + users[i].lastname);
         $(potential_members).append(user);
+        if(users[i]._id == localStorage._id){
+          $(user).addClass("hidden");
+        }
       }
       $(span).append($(subdivision_name));
       $(span).append("<br/>");
@@ -269,7 +306,13 @@
     var new_modal = new jBox('Modal', {
       width: 350,
       height: 373,
-      title: title
+      title: title,
+      onClose: function(){
+        setTimeout(function(){
+          custom_audience_modal.destroy();  //keyword "this" does not work. make sure to name the modal "custom_audience_modal".
+        }, 100)
+      }
+
     });
     var span = document.createElement("span");
     var user_search = '<input type="text" placeholder="Search Names..." class="members_search" id="audience_members_search">';
@@ -302,6 +345,10 @@
         $(user).attr("data-userid", users[i]._id);
         $(user).html(users[i].firstname + " " + users[i].lastname);
         $(potential_members).append(user);
+        if(users[i]._id == localStorage._id){
+          $(user).addClass("clicked");
+          $(user).addClass("hidden");
+        }
       }
       $(span).append($(user_search));
       $(span).append("<br/>");
@@ -315,6 +362,11 @@
   }
   var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
   $(document).ready(function(){
+    document.body.appendChild(loadingDiv);
+
+    if(localStorage.c_team_position == "leader" || localStorage.c_team_position == "admin"){
+      $("#invited_subdivisions").after('<hr><p class="new_subdivision"><span class="glyphicon glyphicon-plus"></span> Make a Subdivision</p>');
+    }
 
     $.post("/f/getAllSubdivisionsForUserInTeam", function(responseText){
       var subdivisions = JSON.parse(responseText);
@@ -576,34 +628,44 @@
       $(this).addClass("selected");
     });
     $(document).on("click", '#make_subdivision_btn', function() {
-      var type;
-      if ($(".public").hasClass("selected")){
-        type = "public";
-      }else{
-        type = "private";
-      }
-      var p_selected_users = $("p.clicked");
-      var selectedUsers = [];
-      for (var i = 0; i < p_selected_users.length; i++) {
-        selectedUsers.push($(p_selected_users[i]).attr("data-userid"));
-      }
-      $.post("/f/createSubdivision", {name: $("#subdivision_name").val(), type: type}, function(responseText){
-        if(responseText != "fail"){
-          for(var i=0; i<selectedUsers.length; i++){
-            $.post("/f/inviteToSubdivision", {user_id: selectedUsers[i], subdivision_id: responseText}, function(responseText){
-              if(responseText == "success"){
-                //
-              }else{
-                alert("fail");
-              }
-            });
+      $(this).val("Loading");
+      $(this).prop("disabled",true);
+      if($("#subdivision_name").val() != ""){
+        if($("#subdivision_name").val().length < 22){
+          var type;
+          if ($(".public").hasClass("selected")){
+            type = "public";
+          }else{
+            type = "private";
           }
-          new_subdivision_modal.close();
-          location="/"; //TODO: possibly make this better
+          var p_selected_users = $("p.clicked");
+          var selectedUsers = [];
+          for (var i = 0; i < p_selected_users.length; i++) {
+            selectedUsers.push($(p_selected_users[i]).attr("data-userid"));
+          }
+          $.post("/f/createSubdivision", {name: $("#subdivision_name").val(), type: type}, function(responseText){
+            if(responseText != "fail"){
+              for(var i=0; i<selectedUsers.length; i++){
+                $.post("/f/inviteToSubdivision", {user_id: selectedUsers[i], subdivision_id: responseText}, function(responseText){
+                  if(responseText == "success"){
+                    //
+                  }else{
+                    alert("fail");
+                  }
+                });
+              }
+              new_subdivision_modal.close();
+              location="/"; //TODO: possibly make this better
+            }else{
+              alert("failed to create");
+            }
+          });
         }else{
-          alert("failed to create");
+          alert("The name can only have 21 letters or less.");
         }
-      });
+      }else{
+        alert("You forgot to name the subdivision.");
+      }
     });
 
     socket.on('message', function(msg){
@@ -625,6 +687,7 @@
   }
 
   function loadAnnouncements(callback){
+    spinner = new Spinner(spinnerOpts).spin(loadingDiv);
     $.post("/f/getAnnouncementsForUser", {skip: 20*localStorage.page},function(responseText){
       if(responseText != "fail"){
         var announcements = JSON.parse(responseText);
@@ -665,7 +728,7 @@
           $(announcementTopDiv).append( span );
           $(announcementTopDiv).append( timestamp );
           $(announcementDiv).append( announcementTopDiv );
-          if(localStorage._id == announcements[i].author || localStorage.c_team_position == "admin"){
+          if(localStorage._id == announcements[i].author._id || localStorage.c_team_position == "admin"){
             var deleteButton = document.createElement("span")
             $(deleteButton).addClass("glyphicon");
             $(deleteButton).addClass("glyphicon-remove");
@@ -677,6 +740,9 @@
           callback( announcementDiv );
           document.getElementById('main_textarea').value = "";
           $('#main_textarea').css("height", "56px");
+          if( i == announcements.length-1 ){
+            spinner.stop();
+          }
         }
         setTimeout(function(){
             $ann = $(".announcements_list").isotope({

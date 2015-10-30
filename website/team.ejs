@@ -31,7 +31,7 @@
     </div>
     <div class="navigation_bar">
         <ul id="navbar_list">
-          <li class="navbar_item navbar_title" onclick="location='/'">
+          <li class="navbar_item navbar_title" onclick="location='index'">
               MorTeam
           </li>
           <li class="navbar_item searchbox_list_item">
@@ -70,7 +70,7 @@
     </div>
     <div id="prof_drop" class="hidden">
       <ul>
-        <li class="notif_list_item" onclick="location='user?user='+localStorage.username;">View Profile and Settings</li>
+        <li class="notif_list_item" id="view_prof_button">View Profile and Settings</li>
         <li class="notif_list_item" id="logout_button">Log Out</li>
       </ul>
     </div>
@@ -79,17 +79,21 @@
 
     <!-- BODY -->
     <div class="wide_body">
-      <h1 class="page_title">Meet The Team!</h1>
+      <div class="general_info">
+        <span class="team_head"><h1><%= teamName %><br/><h2>Team <%= teamNum %></h2></h1></span>
+      </div>
       <div class="container-fluid">
-        <div class="row">
-          <div class="devteam_member col-sm-12 col-md-4">
-          </div>
-          <div class="devteam_member col-sm-12 col-md-4">
-            <img class="devteam_member_image" src="images/devteam/farbod.jpg" /><span><h3>Farbod Rafezy</h3><p>Farbod is in charge of everything. His hobbies include swimming and thinking about stuff that is not important. He is 17 years old and is currently a Senior at Beverly Hills High School.</p></span>
-          </div>
-          <div class="devteam_member col-sm-12 col-md-4">
-          </div>
-        </div>
+        <div class=" members_list row">
+          <% members.forEach(function(member) { %>
+            <div class="col-sm-6 col-md-4 col-lg-3">
+              <span data-userid="<%= member._id %>" class="user_display"><img src="<%= member.profpicpath %>-60" onerror="this.src='images/user.jpg'" id="small_prof_pic"></img>
+                <span class="user_link_display"><%= member.firstname %> <%= member.lastname %></span>
+                <% if(viewerIsAdmin){ %>
+                  <span class="glyphicon glyphicon-trash delete_user "></span>
+                <% } %>
+              </span>
+            </div>
+          <% }); %>
       </div>
     </div>
     <!-- END OF BODY -->
@@ -102,40 +106,31 @@
     <script type="text/javascript" src="js/velocity.min.js"></script>
     <script type="text/javascript" src="js/main.js"></script>
     <script type="text/javascript">
-      var socket = io();
-      function messageNotification(title, content, chatid) {
-        var newMessageNotice = new jBox('Notice', {
-            attributes: {
-                x: 'right',
-                y: 'bottom'
-            },
-            theme: 'NoticeBorder',
-            volume: 100,
-            animation: {
-                open: 'slide:bottom',
-                close: 'slide:right'
-            },
-            content: content,
-            maxWidth: 300,
-            maxHeight: 105,
-            title: title,
-            closeOnClick: false,
-            onOpen: function() {
-                // $($(this)[0].content).attr("data-author", author._id);
-                $($(this)[0].content).attr("data-chatid", chatid);
-            }
-        });
-      };
-
       $(document).ready(function(){
-        socket.on('message', function(msg){
-          if(msg.type == "group"){
-            messageNotification(msg.author_fn+" "+msg.author_ln+" in "+msg.chat_name, msg.content, msg.chat_id);
-          }else{
-            messageNotification(msg.author_fn+" "+msg.author_ln, msg.content, msg.chat_id);
+        $(document).on("click", ".user_display", function(e){
+          var a = $(e.target);
+          var b = $(this).find(".delete_user");
+          if (a[0] != b[0]){
+            location="u/"+ $(this).attr("data-userid");
           }
-          $('#audio-files').find('audio#click-sound')[0].play();
-          $('#audio-files').find('audio#click-sound')[0].currentTime = 0;
+        });
+        $(document).on("click", ".delete_user", function(){
+          if (window.confirm("Are you sure?")) {
+            var $this = $(this);
+            $.post("/f/removeUserFromTeam", {user_id: $this.parent().attr("data-userid")}, function(responseText){
+              if(responseText == "success"){
+                $this.parent().find("#small_prof_pic").remove();
+                $this.parent().find(".user_link").html("Removed");
+                $this.parent().css("background-color", "#FF6F6F")
+                var delete_btn = $this;
+                setTimeout(function(){
+                  delete_btn.remove();
+                }, 10)
+              }else{
+                alert(responseText);
+              }
+            })
+          }
         })
       });
       window.onunload = function(){};
