@@ -269,7 +269,7 @@
         var potential_members = document.createElement("div");
         $(potential_members).attr("id", "potential_folder_members");
         $(potential_members).addClass("potential_members");
-        $(potential_members).addClass("tall");
+        $(potential_members).addClass("medium-tall");
         var make_team_folder = '<input type="button" id="make_team_folder" class="button done_button" value="Done">'
         $.ajax({
           type: 'POST',
@@ -455,6 +455,7 @@
         $(document).on("submit", "#upload_form", function(e){
           e.preventDefault();
           if( $(".file_name").val() != "" ){
+            $(".file_name").val( removeHTML( $(".file_name").val() ) );
             $('<input />').attr('type', 'hidden').attr('name', "currentFolderId").attr('value', currentFolder).appendTo(this);
             add_file_modal.setContent("Uploading...")
             $(this).ajaxSubmit({
@@ -776,37 +777,41 @@
         });
         $(document).on("click", "#make_team_folder", function(){
           if($("#folder_name").val() != ""){
-            var p_selected_users = $(".potential_member.clicked");
-            var p_selected_subdivisions = $(".potential_subdivision.clicked");
+            if($("#folder_name").val().length < 22){
+              var p_selected_users = $(".potential_member.clicked");
+              var p_selected_subdivisions = $(".potential_subdivision.clicked");
 
-            userMembers = [];
-            subdivisionMembers = [];
+              userMembers = [];
+              subdivisionMembers = [];
 
-            for (var i = 0; i < p_selected_users.length; i++) {
-              userMembers.push($(p_selected_users[i]).attr("data-userid"));
-            }
-            for (var i = 0; i < p_selected_subdivisions.length; i++) {
-              subdivisionMembers.push($(p_selected_subdivisions[i]).attr("data-subdivisionid"));
-            }
+              for (var i = 0; i < p_selected_users.length; i++) {
+                userMembers.push($(p_selected_users[i]).attr("data-userid"));
+              }
+              for (var i = 0; i < p_selected_subdivisions.length; i++) {
+                subdivisionMembers.push($(p_selected_subdivisions[i]).attr("data-subdivisionid"));
+              }
 
-            if(removeDuplicates(userMembers).length == 1 && subdivisionMembers.length == 0){
-              team_folder_modal.close();
-              team_folder_modal.destroy();
+              if(removeDuplicates(userMembers).length == 1 && subdivisionMembers.length == 0){
+                team_folder_modal.close();
+                team_folder_modal.destroy();
+              }else{
+                $.post("/f/createFolder", {type: "teamFolder", name: normalizeDisplayedText($("#folder_name").val()), userMembers: userMembers, subdivisionMembers: subdivisionMembers}, function(responseText){
+                  if(responseText != "fail"){
+                    var folder = JSON.parse(responseText);
+                    var li = document.createElement("li");
+                    $(li).attr("data-folderid", folder._id);
+                    $(li).addClass("drive_name");
+                    $(li).html('<span id="make_drive" class="glyphicon glyphicon-folder-open"></span> ' + folder.name)
+                    $(".folders_list").append($(li));
+                  }else {
+                    alert(responseText);
+                  }
+                });
+                team_folder_modal.close();
+                team_folder_modal.destroy();
+              }
             }else{
-              $.post("/f/createFolder", {type: "teamFolder", name: $("#folder_name").val(), userMembers: userMembers, subdivisionMembers: subdivisionMembers}, function(responseText){
-                if(responseText != "fail"){
-                  var folder = JSON.parse(responseText);
-                  var li = document.createElement("li");
-                  $(li).attr("data-folderid", folder._id);
-                  $(li).addClass("drive_name");
-                  $(li).html('<span id="make_drive" class="glyphicon glyphicon-folder-open"></span> ' + folder.name)
-                  $(".folders_list").append($(li));
-                }else {
-                  alert(responseText);
-                }
-              });
-              team_folder_modal.close();
-              team_folder_modal.destroy();
+              alert("Name has to be 21 characters or fewer.")
             }
           }else{
             alert("You forgot to name the folder.");

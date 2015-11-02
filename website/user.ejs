@@ -205,6 +205,17 @@
     <script>
       var socket = io();
 
+      String.prototype.capitalize = function() {
+        return this.charAt(0).toUpperCase() + this.slice(1);
+      }
+      function validateEmail(email) {
+        var re = /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i;
+        return re.test(email);
+      }
+      function validatePhone(phone){
+        return phone.match(/\d/g).length===10;
+      }
+
       function messageNotification(title, content, chatid) {
         var newMessageNotice = new jBox('Notice', {
             attributes: {
@@ -240,7 +251,6 @@
           }
         }
       }
-
       function assignTaskModal(title){
         var new_modal = new jBox('Modal', {
           width: 350,
@@ -426,18 +436,32 @@
         });
         $(document).on("submit", "#edit_profile_form", function(e){
           e.preventDefault();
-          $(this).ajaxSubmit({
-              error: function(xhr) {
-            		alert(xhr.status)
-              },
-              success: function(response) {
-                if(response == "success"){
-                  window.location.reload(true);
-                }else{
-                  alert(response);
-                }
-              }
-  	      });
+          if(validateEmail( $(".edit_email").val() )){
+            if(validatePhone( $(".edit_phone").val() )){
+              $(".edit_firstname").val( $(".edit_firstname").val().replace(/[^\w\s]/gi, '').capitalize() )
+              $(".edit_lastname").val( $(".edit_lastname").val().replace(/[^\w\s]/gi, '').capitalize() )
+              $(this).ajaxSubmit({
+                  error: function(xhr) {
+                		alert(xhr.status)
+                  },
+                  success: function(response) {
+                    if(response == "success"){
+                      localStorage.firstname = $(".edit_firstname").val().replace(/[^\w\s]/gi, '').capitalize();
+                      localStorage.lastname = $(".edit_lastname").val().replace(/[^\w\s]/gi, '').capitalize();
+                      localStorage.email = $(".edit_email").val();
+                      localStorage.phone = $(".edit_phone").val();
+                      window.location.reload(true);
+                    }else{
+                      alert(response);
+                    }
+                  }
+      	      });
+            }else{
+              alert("invalid phone");
+            }
+          }else{
+            alert("invalid email");
+          }
         	return false;
         });
         $(document).on("click", "#assign_task", function(){

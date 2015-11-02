@@ -171,6 +171,7 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
     <script src="jbox/jBox.min.js"></script>
     <script type="text/javascript" src="js/velocity.min.js"></script>
+    <script src="js/Autolinker.min.js"></script>
     <script type="text/javascript" src="js/main.js"></script>
     <script type="text/javascript">
 
@@ -224,12 +225,15 @@
         for(var i = 0; i < attendees.length; i++){
           var attendee = document.createElement("p");
           $(attendee).addClass("potential_member");
+          $(attendee).addClass("attendee");
           $(attendee).attr("data-userid", attendees[i].user._id);
           $(attendee).html(attendees[i].user.firstname + " " + attendees[i].user.lastname);
           if(attendees[i].status == "present"){
             $(attendee).addClass("clicked");
           }else if (attendees[i].status == "excused") {
             $(attendee).addClass("excused");
+          }else if (attendees[i].status == "tardy") {
+            $(attendee).addClass("tardy");
           }
           $(potential_members).append(attendee);
         }
@@ -284,7 +288,6 @@
       var potential_members = document.createElement("div");
       $(potential_members).attr("id", "potential_attendance_members");
       $(potential_members).addClass("potential_members");
-      $(potential_members).addClass("tall");
       var done_btn = '<input data-date="'+ date +'" type="button" id="event_done_btn" class="button done_button" value="Done">'
       $.ajax({
         type: 'POST',
@@ -508,6 +511,11 @@
                 user: $(p_attendees[i]).attr("data-userid"),
                 status: "excused"
               })
+            }else if( $(p_attendees[i]).hasClass("tardy") ){
+              updatedAttendees.push({
+                user: $(p_attendees[i]).attr("data-userid"),
+                status: "tardy"
+              })
             }else{
               updatedAttendees.push({
                 user: $(p_attendees[i]).attr("data-userid"),
@@ -517,7 +525,6 @@
           }
           $.post("/f/updateAttendanceForEvent", {event_id: $(this).attr("data-eventid"), updatedAttendees: updatedAttendees}, function(responseText){
             if(responseText == "success"){
-              $("p.clicked").removeClass("clicked");
               attendance_modal.close();
             }else{
               alert(responseText);
@@ -555,8 +562,8 @@
               event_modal.close();
             }else{
               $.post("/f/createEvent", {
-                name: $("#event_name").val(),
-                description: $(".event_description").val(),
+                name: normalizeDisplayedText( $("#event_name").val() ),
+                description: normalizeDisplayedText( $(".event_description").val() ),
                 userAttendees: userAttendees,
                 subdivisionAttendees: subdivisionAttendees,
                 date: $this.attr("data-date")
@@ -593,6 +600,39 @@
             alert("You forgot to name the event");
           }
         });
+
+        $(document).on("contextmenu", ".attendee", function(e){
+          e.preventDefault();
+          $(".drop").remove();
+          var drop = $("<div class='drop' data-userid='"+$(this).attr("data-userid")+"'><li id='mark-present' class='drop_item'>Mark As Present</li><li id='mark-tardy' class='drop_item'>Mark as Tardy</li><li id='mark-excused' class='drop_item'>Mark As Excused</li></div>");
+          drop.css("top", e.pageY);
+          drop.css("left", e.pageX);
+          $("body").append(drop);
+          $(document).click(function(){
+               $(".drop").remove();
+               $(".chat_name:not(.make_group)").unbind("contextmenu");
+          });
+          return false;
+        })
+        $(document).on("click", "#mark-present", function(){
+          $(".attendee[data-userid='"+ $(this).parent().attr("data-userid") +"']").removeClass("tardy");
+          $(".attendee[data-userid='"+ $(this).parent().attr("data-userid") +"']").removeClass("excused");
+
+          $(".attendee[data-userid='"+ $(this).parent().attr("data-userid") +"']").addClass("clicked");
+        });
+        $(document).on("click", "#mark-tardy", function(){
+          $(".attendee[data-userid='"+ $(this).parent().attr("data-userid") +"']").removeClass("clicked");
+          $(".attendee[data-userid='"+ $(this).parent().attr("data-userid") +"']").removeClass("excused");
+
+          $(".attendee[data-userid='"+ $(this).parent().attr("data-userid") +"']").addClass("tardy");
+        });
+        $(document).on("click", "#mark-excused", function(){
+          $(".attendee[data-userid='"+ $(this).parent().attr("data-userid") +"']").removeClass("tardy");
+          $(".attendee[data-userid='"+ $(this).parent().attr("data-userid") +"']").removeClass("clicked");
+
+          $(".attendee[data-userid='"+ $(this).parent().attr("data-userid") +"']").addClass("excused");
+        });
+
 
         function hideLeftbar(time, button){
           $(".leftbar").velocity({left: "-260px"}, { duration: time, queue: false });

@@ -90,12 +90,16 @@
           $(this).ajaxSubmit({
               error: function(xhr) {
             		alert(xhr.status)
+                $("#signup_buttonS").val("Submit");
+                $("#signup_buttonS").prop("disabled",false);
               },
               success: function(response) {
                 if(response == "success"){
                   location="/login";
                 }else{
                   alert(response);
+                  $("#signup_buttonS").val("Submit");
+                  $("#signup_buttonS").prop("disabled",false);
                 }
               }
   	      });
@@ -103,10 +107,14 @@
         	return false;
         }else{
           alert("Email is invalid.");
+          $("#signup_buttonS").val("Submit");
+          $("#signup_buttonS").prop("disabled",false);
           return false;
         }
       }else{
         alert("Phone is invalid.");
+        $("#signup_buttonS").val("Submit");
+        $("#signup_buttonS").prop("disabled",false);
         return false;
       }
     });

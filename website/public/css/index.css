@@ -29,6 +29,9 @@ img{
 .button:hover{
 	background-color: orange;
 }
+.fname{
+	display: inline-block;
+}
 .leftbar{
 	background-color: #FFC547;
 	width: 260px;
@@ -1137,6 +1140,10 @@ html { overflow-x: hidden; }
 	right: 0;
 	cursor: pointer;
 }
+span.name{
+	max-height: 140px;
+	overflow: hidden;
+}
 .image_preview{
 	display: none;
 }
@@ -1423,7 +1430,10 @@ html { overflow-x: hidden; }
 	background-color: #53CF29 !important;
 }
 .potential_member.excused{
-	background-color: #FFF500;
+	background-color: #C5FF38 !important;
+}
+.potential_member.tardy{
+	background-color: #FFF500 !important;
 }
 #selected_names_div, #selected_folder_members, #selected_event_members, #selected_scope_members, #selected_present_members, #selected_audience_member{
 	height: 130px;
@@ -1458,6 +1468,10 @@ html { overflow-x: hidden; }
 .potential_members.tall{
 	height: 230px;
 }
+.potential_members.medium-tall{
+	height: 180px;
+}
+
 .potential_members::-webkit-scrollbar{
 	-webkit-appearance: none;
 }
@@ -1922,6 +1936,11 @@ html { overflow-x: hidden; }
 	/*margin-top: calc(50% - 20px); */
 	margin-top: 40vh;
 }
+.attendee{
+	-webkit-user-select: none; /* Chrome/Safari */
+	-moz-user-select: none; /* Firefox */
+	-ms-user-select: none; /* IE10+ */
+}
 .drop{
     background: #f9f9f9;
     width: 180px;
@@ -1929,7 +1948,7 @@ html { overflow-x: hidden; }
     position: absolute;
     box-shadow: 0px 1px 5px -2px black;
     opacity: .96;
-		z-index: 99;
+		z-index: 99999 !important;
 }
 li.drop_item{
     list-style-type: none;
@@ -1940,7 +1959,7 @@ li.drop_item{
 li.drop_item:hover{
     background: #d9d9d9;
 }
-.drop:after{
+/*.drop:after{
     content: '';
     position: absolute;
     border-style: solid;
@@ -1951,7 +1970,7 @@ li.drop_item:hover{
     z-index: 1;
     top: -8px;
     left: 21px;
-}
+}*/
 .chat_body{
 	overflow-y: hidden;
 }

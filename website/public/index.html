@@ -538,59 +538,61 @@
       custom_audience_modal.close();
     });
     $(document).on("click", ".announcement_post_button", function(){
-      if($(".audience_item.selected").hasClass("first_audience")){
-        var targetAudience = "everyone"
-      }else if ($(".audience_item.selected").hasClass("custom_audience")) {
-        var targetAudience = {
-          userMembers: userAudience,
-          subdivisionMembers: subdivisionAudience
-        }
-
-      }else{
-        var targetAudience = $(".audience_item.selected").attr("data-subdivisionid");
-      }
       var message = (new nicEditors.findEditor('main_textarea')).getContent();
       var filteredMessage = Autolinker.link( message.replace("(<((?!br|a|/a|img|b|/b|i|/i|u|/u|div|/div|hr)[^>]+)>)", "").replace(/(<div\s+.*?class=").*?(".*)/gi, "") );
-      nicEditors.findEditor('main_textarea').setContent('');
-      $.post("/f/postAnnouncement", {audience: targetAudience, content: filteredMessage}, function(responseText){
-        if(responseText!="fail"){
-          var announcementDiv = document.createElement("div");
-          $(announcementDiv).addClass("announcement");
-          $(announcementDiv).attr("data-postid", responseText);
-          var announcementTopDiv = document.createElement("div");
-          $(announcementTopDiv).addClass("announcement_top");
-          var img = document.createElement("img");
-          $(img).attr("id", "medium_prof_pic");
-          $(img).attr("src", localStorage.profpicpath + "-60");
-          $(img).addClass("user-link")
-          $(img).attr("data-userid", localStorage._id)
-          var span = document.createElement("span");
-          $(span).addClass("announcement_poster");
-          $(span).attr("data-userid", localStorage._id);
-          var now = new Date()
-          var timestamp = document.createElement("span");
-          $(timestamp).addClass("announcement_timestamp")
-          $(span).html( localStorage.firstname + " " + localStorage.lastname )
-          $(timestamp).html( " - " + "just now");
-          $(announcementTopDiv).append( img );
-          $(announcementTopDiv).append( span );
-          $(announcementTopDiv).append( timestamp );
-          $(announcementDiv).append( announcementTopDiv );
-          var deleteButton = document.createElement("span")
-          $(deleteButton).addClass("glyphicon");
-          $(deleteButton).addClass("glyphicon-remove");
-          $(deleteButton).addClass("delete_icon");
-          $(announcementDiv).append(deleteButton);
-          $(announcementDiv).append("<br/>");
-          $(announcementDiv).append( filteredMessage );
+      if( filteredMessage != "<br>" ){
+        if($(".audience_item.selected").hasClass("first_audience")){
+          var targetAudience = "everyone"
+        }else if ($(".audience_item.selected").hasClass("custom_audience")) {
+          var targetAudience = {
+            userMembers: userAudience,
+            subdivisionMembers: subdivisionAudience
+          }
 
-          $('.announcements_list').prepend(announcementDiv).isotope('prepended', announcementDiv)
-          document.getElementById('main_textarea').value = "";
-          $('#main_textarea').css("height", "56px");
         }else{
-          alert(responseText);
+          var targetAudience = $(".audience_item.selected").attr("data-subdivisionid");
         }
-      });
+        nicEditors.findEditor('main_textarea').setContent('');
+        $.post("/f/postAnnouncement", {audience: targetAudience, content: filteredMessage}, function(responseText){
+          if(responseText!="fail"){
+            var announcementDiv = document.createElement("div");
+            $(announcementDiv).addClass("announcement");
+            $(announcementDiv).attr("data-postid", responseText);
+            var announcementTopDiv = document.createElement("div");
+            $(announcementTopDiv).addClass("announcement_top");
+            var img = document.createElement("img");
+            $(img).attr("id", "medium_prof_pic");
+            $(img).attr("src", localStorage.profpicpath + "-60");
+            $(img).addClass("user-link")
+            $(img).attr("data-userid", localStorage._id)
+            var span = document.createElement("span");
+            $(span).addClass("announcement_poster");
+            $(span).attr("data-userid", localStorage._id);
+            var now = new Date()
+            var timestamp = document.createElement("span");
+            $(timestamp).addClass("announcement_timestamp")
+            $(span).html( localStorage.firstname + " " + localStorage.lastname )
+            $(timestamp).html( " - " + "just now");
+            $(announcementTopDiv).append( img );
+            $(announcementTopDiv).append( span );
+            $(announcementTopDiv).append( timestamp );
+            $(announcementDiv).append( announcementTopDiv );
+            var deleteButton = document.createElement("span")
+            $(deleteButton).addClass("glyphicon");
+            $(deleteButton).addClass("glyphicon-remove");
+            $(deleteButton).addClass("delete_icon");
+            $(announcementDiv).append(deleteButton);
+            $(announcementDiv).append("<br/>");
+            $(announcementDiv).append( filteredMessage );
+
+            $('.announcements_list').prepend(announcementDiv).isotope('prepended', announcementDiv)
+            document.getElementById('main_textarea').value = "";
+            $('#main_textarea').css("height", "56px");
+          }else{
+            alert(responseText);
+          }
+        });
+      }
     });
 
 
@@ -687,7 +689,7 @@
   }
 
   function loadAnnouncements(callback){
-    spinner = new Spinner(spinnerOpts).spin(loadingDiv);
+    // spinner = new Spinner(spinnerOpts).spin(loadingDiv);
     $.post("/f/getAnnouncementsForUser", {skip: 20*localStorage.page},function(responseText){
       if(responseText != "fail"){
         var announcements = JSON.parse(responseText);
@@ -741,7 +743,7 @@
           document.getElementById('main_textarea').value = "";
           $('#main_textarea').css("height", "56px");
           if( i == announcements.length-1 ){
-            spinner.stop();
+            // spinner.stop();
           }
         }
         setTimeout(function(){

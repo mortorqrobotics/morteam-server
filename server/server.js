@@ -216,11 +216,19 @@ function uploadToProfPics(buffer, destFileName, callback) {
     ContentType: 'application/octet-stream'
   }).send(callback);
 }
-function uploadToDrive(buffer, destFileName, callback) {
+// function uploadToDrive(buffer, destFileName, callback) {
+//   driveBucket.upload({
+//     Body: buffer,
+//     Key: destFileName.toString(),
+//     ContentType: 'application/octet-stream'
+//   }).send(callback);
+// }
+function uploadToDrive(buffer, destFileName, contentType, contentDisposition, callback) {
   driveBucket.upload({
     Body: buffer,
     Key: destFileName.toString(),
-    ContentType: 'application/octet-stream'
+    ContentType: contentType,
+    ContentDisposition: contentDisposition
   }).send(callback);
 }
 function getFileFromDrive(fileName, callback){
@@ -259,7 +267,7 @@ app.use(bodyParser.urlencoded({
 }));
 
 var sessionMiddleware = session({
-  secret: 'temporary_secret',
+  secret: 'placeholder_secret',
   saveUninitialized: false,
   resave: false,
   store: new MongoStore({ mongooseConnection: mongoose.connection })
@@ -442,35 +450,75 @@ var mimetypes = {
   "keynote": "application/vnd.ms-powerpointtd",
   "audio": "audio/mpeg",
   "image": "application/octet-stream",
-  "pdf": "application/pdf"
+  "pdf": "application/pdf",
+  "unknown": "application/octet-stream"
 }
 app.get('/file/:fileId', requireLogin, function(req, res){
-  if(req.params.fileId.indexOf("-") > -1){
-    var fileId = req.params.fileId.substring(0, req.params.fileId.indexOf("-"));
-  }else{
-    var fileId = req.params.fileId;
-  }
-  getFileFromDrive(req.params.fileId, function(err, data){
-    if(err){
-      console.error(err);
-      res.end("fail");
-    }else{
-      File.findOne({_id: fileId}, function(err, file){
-        if(err){
-          console.error(err);
-          res.end("fail");
-        }else{
-          if(file){
-            res.writeHead(200, {
-              "Content-Type": mimetypes[file.type],
-              "Content-Disposition": "attachment; filename=" + file.name,
-            });
-            res.end(data.Body, 'binary');
-          }
-        }
-      })
+  // if(req.params.fileId.indexOf("-") > -1){
+  //   var fileId = req.params.fileId.substring(0, req.params.fileId.indexOf("-"));
+  // }else{
+  //   var fileId = req.params.fileId;
+  // }
+  // getFileFromDrive(req.params.fileId, function(err, data){
+  //   if(err){
+  //     console.error(err);
+  //     res.end("fail");
+  //   }else{
+  //     File.findOne({_id: fileId}, function(err, file){
+  //       if(err){
+  //         console.error(err);
+  //         res.end("fail");
+  //       }else{
+  //         if(file){
+  //           res.writeHead(200, {
+  //             "Content-Type": mimetypes[file.type],
+  //             "Content-Disposition": "attachment; filename=" + file.name,
+  //           });
+  //           res.end(data.Body, 'binary');
+  //         }
+  //       }
+  //     })
+  //   }
+  // })
+  var userSubdivisionIds = req.user.subdivisions.map(function(subdivision) {
+    if (subdivision.accepted == true) {
+      return new ObjectId(subdivision._id);
     }
-  })
+  });
+  if(req.params.fileId.indexOf("-preview") == -1){
+    File.findOne({_id: req.params.fileId}).populate('folder').exec(function(err, file){
+      if(err){
+        console.error(err);
+        res.end("fail");
+      }else{
+        if(file){
+          if( (file.folder.team == req.user.current_team.id && file.folder.entireTeam) || file.folder.userMembers.indexOf(req.user._id)>-1 || file.folder.subdivisionMembers.hasAnythingFrom(userSubdivisionIds) ){
+            driveBucket.getSignedUrl('getObject', { Key: req.params.fileId, Expires: 60 }, function (err, url) {
+              if(err){
+                console.error(err);
+                res.end("fail");
+              }else{
+                res.redirect(url);
+              }
+            });
+          }else{
+            res.end("restricted");
+          }
+        }else{
+          res.end("fail");
+        }
+      }
+    });
+  }else{
+    driveBucket.getSignedUrl('getObject', { Key: req.params.fileId, Expires: 60 }, function (err, url) {
+      if(err){
+        console.error(err);
+        res.end("fail");
+      }else{
+        res.redirect(url);
+      }
+    });
+  }
 });
 app.get('/team', requireLogin, function(req, res){
   User.find({ teams: { $elemMatch: { id: req.user.current_team.id } } }, '-password', function(err, users){
@@ -851,32 +899,38 @@ app.post("/f/joinTeam", requireLogin, function(req, res) {
             }
           }
         });
+      }else{
+        res.end("no such team");
       }
     }
   });
 });
 app.post("/f/createSubdivision", requireLogin, requireLeader, function(req, res) {
-  Subdivision.create({
-    name: req.body.name,
-    type: req.body.type,
-    team: req.user.current_team.id
-  }, function(err, subdivision) {
-    if (err) {
-      console.error(err);
-      res.end("fail");
-    } else {
-      User.update({_id: req.user._id}, { '$push': {
-        'subdivisions': {_id: subdivision._id, team: req.user.current_team.id, accepted: true}
-      }}, function(err, model){
-        if(err){
-          console.error(err);
-          res.end("fail");
-        }else{
-          res.end(subdivision._id.toString());
-        }
-      })
-    }
-  });
+  if(req.body.name.length < 22){
+    Subdivision.create({
+      name: req.body.name,
+      type: req.body.type,
+      team: req.user.current_team.id
+    }, function(err, subdivision) {
+      if (err) {
+        console.error(err);
+        res.end("fail");
+      } else {
+        User.update({_id: req.user._id}, { '$push': {
+          'subdivisions': {_id: subdivision._id, team: req.user.current_team.id, accepted: true}
+        }}, function(err, model){
+          if(err){
+            console.error(err);
+            res.end("fail");
+          }else{
+            res.end(subdivision._id.toString());
+          }
+        })
+      }
+    });
+  }else{
+    res.end("fail");
+  }
 });
 app.post("/f/inviteToSubdivision", requireLogin, function(req, res) {
   Subdivision.findOne({
@@ -1406,20 +1460,24 @@ app.post("/f/createChat", requireLogin, function(req, res){
       }
     });
   }else{
-    Chat.create({
-      team: req.user.current_team.id,
-      name: req.body.name,
-      userMembers: JSON.parse(userMembers),
-      subdivisionMembers: JSON.parse(subdivisionMembers),
-      group: true
-    }, function(err, chat){
-      if(err){
-        console.error(err);
-        res.end("fail");
-      }else{
-        res.end(JSON.stringify(chat));
-      }
-    });
+    if(req.body.name.length < 22){
+      Chat.create({
+        team: req.user.current_team.id,
+        name: req.body.name,
+        userMembers: JSON.parse(userMembers),
+        subdivisionMembers: JSON.parse(subdivisionMembers),
+        group: true
+      }, function(err, chat){
+        if(err){
+          console.error(err);
+          res.end("fail");
+        }else{
+          res.end(JSON.stringify(chat));
+        }
+      });
+    }else{
+      res.end("fail");
+    }
   }
 })
 app.post("/f/getChatsForUser", requireLogin, function(req, res){
@@ -1763,48 +1821,59 @@ app.post("/f/getFilesInFolder", requireLogin, function(req, res){
   })
 })
 app.post("/f/createFolder", requireLogin, function(req, res){
-  if(req.body.type == "teamFolder"){
-    Folder.create({
-      name: req.body.name,
-      team: req.user.current_team.id,
-      userMembers: req.body.userMembers,
-      subdivisionMembers: req.body.subdivisionMembers,
-      creator: req.user._id,
-      parentFolder: undefined,
-      ancestors: [],
-      defaultFolder: false
-    }, function(err, folder){
-      if(err){
-        console.error(err);
-        res.end("fail");
-      }else{
-        res.end(JSON.stringify(folder));
-      }
-    });
-  }else if (req.body.type == "subFolder") {
-    Folder.create({
-      name: req.body.name,
-      team: req.user.current_team.id,
-      userMembers: req.body.userMembers,
-      subdivisionMembers: req.body.subdivisionMembers,
-      parentFolder: req.body.parentFolder,
-      ancestors: req.body.ancestors.concat([req.body.parentFolder]),
-      creator: req.user._id,
-      defaultFolder: false
-    }, function(err, folder){
-      if(err){
-        console.error(err);
-        res.end("fail");
-      }else{
-        res.end(JSON.stringify(folder));
-      }
-    });
+  if(req.body.name.length < 22){
+    if(req.body.type == "teamFolder"){
+      Folder.create({
+        name: req.body.name,
+        team: req.user.current_team.id,
+        userMembers: req.body.userMembers,
+        subdivisionMembers: req.body.subdivisionMembers,
+        creator: req.user._id,
+        parentFolder: undefined,
+        ancestors: [],
+        defaultFolder: false
+      }, function(err, folder){
+        if(err){
+          console.error(err);
+          res.end("fail");
+        }else{
+          res.end(JSON.stringify(folder));
+        }
+      });
+    }else if (req.body.type == "subFolder") {
+      Folder.create({
+        name: req.body.name,
+        team: req.user.current_team.id,
+        userMembers: req.body.userMembers,
+        subdivisionMembers: req.body.subdivisionMembers,
+        parentFolder: req.body.parentFolder,
+        ancestors: req.body.ancestors.concat([req.body.parentFolder]),
+        creator: req.user._id,
+        defaultFolder: false
+      }, function(err, folder){
+        if(err){
+          console.error(err);
+          res.end("fail");
+        }else{
+          res.end(JSON.stringify(folder));
+        }
+      });
+    }else {
+      res.end("fail");
+    }
   }else {
     res.end("fail");
   }
 });
 app.post("/f/uploadFile", requireLogin, multer().single('uploadedFile'), function(req, res){
   var ext = req.file.originalname.substring(req.file.originalname.lastIndexOf(".")+1).toLowerCase() || "unknown";
+  var mime = mimetypes[extToType(ext)];
+  var disposition;
+  if(mime == "application/octet-stream"){
+    disposition = "attachment; filename="+req.file.originalname;
+  }else{
+    disposition = "attachment; filename="+req.body.fileName;
+  }
   File.create({
     name: req.body.fileName,
     originalName: req.file.originalname,
@@ -1817,7 +1886,7 @@ app.post("/f/uploadFile", requireLogin, multer().single('uploadedFile'), functio
       console.error(err);
       res.end("fail");
     }else{
-      uploadToDrive(req.file.buffer, file._id, function(err, data){
+      uploadToDrive(req.file.buffer, file._id, mime, disposition, function(err, data){
         if(err){
           console.error(err);
           res.end("fail");
@@ -1842,7 +1911,7 @@ app.post("/f/uploadFile", requireLogin, multer().single('uploadedFile'), functio
                           console.error(err);
                           res.end("fail");
                         }else{
-                          uploadToDrive(buffer, file._id+"-preview", function(err, data){
+                          uploadToDrive(buffer, file._id+"-preview", mime, disposition, function(err, data){
                             if(err){
                               console.error(err);
                               res.end("fail");
@@ -1865,7 +1934,7 @@ app.post("/f/uploadFile", requireLogin, multer().single('uploadedFile'), functio
                           console.error(err);
                           res.end("fail");
                         }else{
-                          uploadToDrive(buffer, file._id+"-preview", function(err, data){
+                          uploadToDrive(buffer, file._id+"-preview", mime, disposition, function(err, data){
                             if(err){
                               console.error(err);
                               res.end("fail");
@@ -2083,63 +2152,71 @@ function resizeImage(buffer, size, suffix, callback){
   });
 }
 app.post("/f/editProfile", requireLogin, multer().single('new_prof_pic'), function(req, res){
-  if(req.file){
-    var suffix = req.file.originalname.substring(req.file.originalname.lastIndexOf(".")+1).toLowerCase();
-    resizeImage(req.file.buffer, 300, suffix, function(err, buffer){
-      if(err){
-        console.error(err);
-        res.end("fail");
-      }else{
-        uploadToProfPics(buffer, req.user.username+"-300", function(err, data){
+  if(validateEmail(req.body.email)){
+    if(validatePhone(req.body.phone)){
+      if(req.file){
+        var suffix = req.file.originalname.substring(req.file.originalname.lastIndexOf(".")+1).toLowerCase();
+        resizeImage(req.file.buffer, 300, suffix, function(err, buffer){
           if(err){
             console.error(err);
             res.end("fail");
           }else{
-            resizeImage(req.file.buffer, 60, suffix, function(err, buffer){
+            uploadToProfPics(buffer, req.user.username+"-300", function(err, data){
               if(err){
                 console.error(err);
                 res.end("fail");
               }else{
-                uploadToProfPics(buffer, req.user.username+"-60", function(err, data){
+                resizeImage(req.file.buffer, 60, suffix, function(err, buffer){
                   if(err){
                     console.error(err);
                     res.end("fail");
                   }else{
-                    User.findOneAndUpdate({_id: req.user._id}, {
-                      firstname: req.body.firstname,
-                      lastname: req.body.lastname,
-                      email: req.body.email,
-                      phone: req.body.phone
-                    }, function(err, user){
+                    uploadToProfPics(buffer, req.user.username+"-60", function(err, data){
                       if(err){
                         console.error(err);
                         res.end("fail");
                       }else{
-                        res.end("success");
+                        User.findOneAndUpdate({_id: req.user._id}, {
+                          firstname: req.body.firstname,
+                          lastname: req.body.lastname,
+                          email: req.body.email,
+                          phone: req.body.phone
+                        }, function(err, user){
+                          if(err){
+                            console.error(err);
+                            res.end("fail");
+                          }else{
+                            res.end("success");
+                          }
+                        })
                       }
                     })
                   }
                 })
               }
-            })
+            });
           }
         });
-      }
-    });
-  }else{
-    User.findOneAndUpdate({_id: req.user._id}, {
-      firstname: req.body.firstname,
-      lastname: req.body.lastname,
-      email: req.body.email,
-      phone: req.body.phone
-    }, function(err, user){
-      if(err){
-        console.error(err);
-        res.end("fail");
       }else{
-        res.end("success");
+        User.findOneAndUpdate({_id: req.user._id}, {
+          firstname: req.body.firstname,
+          lastname: req.body.lastname,
+          email: req.body.email,
+          phone: req.body.phone
+        }, function(err, user){
+          if(err){
+            console.error(err);
+            res.end("fail");
+          }else{
+            res.end("success");
+          }
+        })
       }
-    })
+    }else{
+      res.end("fail");
+    }
+  }else{
+    res.end("fail");
   }
 });
 app.post("/f/getSelf", requireLogin, function(req, res){

@@ -389,37 +389,41 @@
 
 
         $(document).on("click", "#make_chat_btn", function(){
-          var $this = $(this);
-          $.post("/f/createChat", {
-            userMembers: sessionStorage.userMembers,
-            subdivisionMembers: sessionStorage.subdivisionMembers,
-            type: "group",
-            name: normalizeDisplayedText($this.prev().val())
-          }, function(responseText){
-            if(responseText != "fail"){
-              var chat = JSON.parse(responseText);
-              var li = document.createElement("li");
-              $(li).addClass("chat_name");
-              var img = document.createElement("img");
-              $(img).addClass("small_prof_pic");
-              $(img).addClass("temp");
-              $(img).attr("id", "small_prof_pic");
-              $(img).attr("src", "images/group.png");
-              var span = document.createElement("span");
-              $(span).html(chat.name);
-              $(li).append( $(img) );
-              $(li).append( $(span) );
-              $(li).attr("data-chatid", chat._id);
-              $(".chat_search_li").after( $(li) );
-              $(li).trigger("click");
-              socket.emit('new chat', {type: "group", userMembers: chat.userMembers, subdivisionMembers: chat.subdivisionMembers, name: chat.name, chat_id: chat._id});
-            }else{
-              alert(responseText);
-            }
-          })
-          sessionStorage.removeItem("userMembers");
-          sessionStorage.removeItem("subdivisionMembers");
-          new_convo_modal.close();
+          if(normalizeDisplayedText($(this).prev().val()).length < 22){
+            var $this = $(this);
+            $.post("/f/createChat", {
+              userMembers: sessionStorage.userMembers,
+              subdivisionMembers: sessionStorage.subdivisionMembers,
+              type: "group",
+              name: normalizeDisplayedText($this.prev().val())
+            }, function(responseText){
+              if(responseText != "fail"){
+                var chat = JSON.parse(responseText);
+                var li = document.createElement("li");
+                $(li).addClass("chat_name");
+                var img = document.createElement("img");
+                $(img).addClass("small_prof_pic");
+                $(img).addClass("temp");
+                $(img).attr("id", "small_prof_pic");
+                $(img).attr("src", "images/group.png");
+                var span = document.createElement("span");
+                $(span).html(chat.name);
+                $(li).append( $(img) );
+                $(li).append( $(span) );
+                $(li).attr("data-chatid", chat._id);
+                $(".chat_search_li").after( $(li) );
+                $(li).trigger("click");
+                socket.emit('new chat', {type: "group", userMembers: chat.userMembers, subdivisionMembers: chat.subdivisionMembers, name: chat.name, chat_id: chat._id});
+              }else{
+                alert(responseText);
+              }
+            })
+            sessionStorage.removeItem("userMembers");
+            sessionStorage.removeItem("subdivisionMembers");
+            new_convo_modal.close();
+          }else{
+            alert("Name has to be 21 characters or fewer.")
+          }
         });
 
 
@@ -597,6 +601,9 @@
             //load messages
             $.post("/f/loadMessagesForChat", {chat_id: $this.attr("data-chatid"), skip: 20*parseInt(sessionStorage.chatPage)}, function(responseText){
               var messages = JSON.parse(responseText);
+              if(messages.length == 0){
+                spinner.stop();
+              }
               for(var i = 0; i < messages.length; i++){
                 if(messages[i].author._id.toString() != localStorage._id){
                   $('.chat_area').prepend("<div class='bubble_wrapper'><div class='other_bubble'><img title='" + messages[i].author.firstname + " " +  messages[i].author.lastname + ", " + parseDate(messages[i].timestamp) + "' class='show tt' id='small_prof_pic' src='"+ messages[i].author.profpicpath + "-60" +"'></img>" + "<p data-userid='" + messages[i].author._id + "' class='chat_opponent user-link'>" + messages[i].author.firstname + ": </p class='chat_opponent'>" + messages[i].content + "</div></div>")
