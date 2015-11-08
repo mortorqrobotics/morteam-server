@@ -2182,7 +2182,7 @@ app.post("/f/editProfile", requireLogin, multer().single('new_prof_pic'), functi
                           lastname: req.body.lastname,
                           email: req.body.email,
                           phone: req.body.phone,
-			  profpicpath: "/pp/" +  req.user.username
+			                    profpicpath: "/pp/" +  req.user.username
                         }, function(err, user){
                           if(err){
                             console.error(err);
