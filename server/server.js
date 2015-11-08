@@ -12,6 +12,7 @@ var multer = require('multer');
 var AWS = require('aws-sdk');
 var ObjectId = require('mongoose').Types.ObjectId;
 var lwip = require('lwip');
+var config = require("./config.json");
 app = express();
 AWS.config.loadFromPath('./aws-config.json');
 publicDir = require("path").join(__dirname, "../website/public");
@@ -28,11 +29,11 @@ var Folder = require('./schemas/Folder.js');
 var File = require('./schemas/File.js');
 var Task = require('./schemas/Task.js');
 
-mongoose.connect('mongodb://localhost:27017/morteamtest2');
+mongoose.connect('mongodb://localhost:27017/morteam');
 
 var transporter = nodemailer.createTransport();
 
-var port = process.argv[2] || 8080;
+var port = process.argv[2] || 80;
 var io = require("socket.io").listen(app.listen(port));
 console.log('server started on port %s', port);
 
@@ -267,7 +268,7 @@ app.use(bodyParser.urlencoded({
 }));
 
 var sessionMiddleware = session({
-  secret: 'placeholder_secret',
+  secret: config.sessionSecret,
   saveUninitialized: false,
   resave: false,
   store: new MongoStore({ mongooseConnection: mongoose.connection })
@@ -2180,7 +2181,8 @@ app.post("/f/editProfile", requireLogin, multer().single('new_prof_pic'), functi
                           firstname: req.body.firstname,
                           lastname: req.body.lastname,
                           email: req.body.email,
-                          phone: req.body.phone
+                          phone: req.body.phone,
+			  profpicpath: "/pp/" +  req.user.username
                         }, function(err, user){
                           if(err){
                             console.error(err);
