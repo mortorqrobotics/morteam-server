@@ -576,82 +576,84 @@
 
 
         $(document).on("click", ".chat_name:not(.compose)", function(){
-          spinner = new Spinner(spinnerOpts).spin(loadingDiv);
-          socket.emit('stop typing', {chat_id: $(".chat_name.selected").attr("data-chatid") });
-          $(".send_button").show().removeClass("hidden");
-          $(".reply_textarea").show().removeClass("hidden");
-          $(".chat_area").show().removeClass("hidden");
-          $(".chat_area").unbind("scroll");
-          sessionStorage.chatPage = 0;
-          if( !$(this).hasClass("selected") ){
-            receivers = [];
-            var $this = $(this);
-            $(".chat_name:not(.compose)").removeClass("selected");
-            $this.addClass("selected");
-            $("#chat_area").empty();
-            //load receivers
-            $.post("/f/getUsersInChat", {chat_id: $this.attr("data-chatid")}, function(responseText){
-              var users = JSON.parse(responseText);
-              for(var i = 0; i < users.length; i++){
-                if(users[i]._id.toString() != localStorage._id){
-                  receivers.push(users[i]._id.toString());
+          if(!$(this).hasClass("selected")){
+            spinner = new Spinner(spinnerOpts).spin(loadingDiv);
+            socket.emit('stop typing', {chat_id: $(".chat_name.selected").attr("data-chatid") });
+            $(".send_button").show().removeClass("hidden");
+            $(".reply_textarea").show().removeClass("hidden");
+            $(".chat_area").show().removeClass("hidden");
+            $(".chat_area").unbind("scroll");
+            sessionStorage.chatPage = 0;
+            if( !$(this).hasClass("selected") ){
+              receivers = [];
+              var $this = $(this);
+              $(".chat_name:not(.compose)").removeClass("selected");
+              $this.addClass("selected");
+              $("#chat_area").empty();
+              //load receivers
+              $.post("/f/getUsersInChat", {chat_id: $this.attr("data-chatid")}, function(responseText){
+                var users = JSON.parse(responseText);
+                for(var i = 0; i < users.length; i++){
+                  if(users[i]._id.toString() != localStorage._id){
+                    receivers.push(users[i]._id.toString());
+                  }
                 }
-              }
-            });
-            //load messages
-            $.post("/f/loadMessagesForChat", {chat_id: $this.attr("data-chatid"), skip: 20*parseInt(sessionStorage.chatPage)}, function(responseText){
-              var messages = JSON.parse(responseText);
-              if(messages.length == 0){
-                spinner.stop();
-              }
-              for(var i = 0; i < messages.length; i++){
-                if(messages[i].author._id.toString() != localStorage._id){
-                  $('.chat_area').prepend("<div class='bubble_wrapper'><div class='other_bubble'><img title='" + messages[i].author.firstname + " " +  messages[i].author.lastname + ", " + parseDate(messages[i].timestamp) + "' class='show tt' id='small_prof_pic' src='"+ messages[i].author.profpicpath + "-60" +"'></img>" + "<p data-userid='" + messages[i].author._id + "' class='chat_opponent user-link'>" + messages[i].author.firstname + ": </p class='chat_opponent'>" + messages[i].content + "</div></div>")
-                }else{
-                  // $('.chat_area').append("<div class='bubble_wrapper'><div class='self_bubble'><p class='chat_opponent'>" + messages[i].author.firstname + ": </p class='chat_opponent'>" + messages[i].content + "</div></div>")
-                  $('.chat_area').prepend("<div class='bubble_wrapper'><div class='self_bubble'>" + messages[i].content + "</div></div>");
-
-                }
-                $(".chat_area").animate({
-                    scrollTop: $('.chat_area')[0].scrollHeight
-                }, 0);
-                if( i == messages.length-1 ){
+              });
+              //load messages
+              $.post("/f/loadMessagesForChat", {chat_id: $this.attr("data-chatid"), skip: 20*parseInt(sessionStorage.chatPage)}, function(responseText){
+                var messages = JSON.parse(responseText);
+                if(messages.length == 0){
                   spinner.stop();
                 }
-              }
-              $('.tt').jBox('Tooltip', {
-                  delayOpen: 100,
-                  delayClose: 0,
-                  theme: "TooltipDark"
-              });
-              $('.chat_area').scroll(function() {
-                  var pos = $('.chat_area').scrollTop();
-                  if (pos == 0) {
-                      sessionStorage.chatPage++;
-                      $.post("/f/loadMessagesForChat", {chat_id: $this.attr("data-chatid"), skip: 20*parseInt(sessionStorage.chatPage)}, function(responseText){
-                        var messages = JSON.parse(responseText);
-                        for (var i = 0; i < messages.length; i++){
-                          if(messages[i].author._id.toString() != localStorage._id){
-                            var appendedMsg = $("<div class='bubble_wrapper'><div class='other_bubble'><img title='" + messages[i].author.firstname + " " +  messages[i].author.lastname + ", " + parseDate(messages[i].timestamp) + "' class='show tt' id='small_prof_pic' src='"+ messages[i].author.profpicpath+ "-60" +"'></img>" + "<p data-userid='" + messages[i].author._id + "' class='chat_opponent user-link'>" + messages[i].author.firstname + ": </p class='chat_opponent'>" + messages[i].content + "</div></div>").prependTo($('.chat_area'));
-                            $(".chat_area").animate({
-                                scrollTop: "+="+appendedMsg.height()
-                            }, 0);
-                          }else{
-                            var appendedMsg = $("<div class='bubble_wrapper'><div class='self_bubble'>" + messages[i].content + "</div></div>").prependTo($('.chat_area'))
-                            $(".chat_area").animate({
-                                scrollTop: "+="+appendedMsg.height()
-                            }, 0);
-                          }
-                        }
-                        $('.tt').jBox('Tooltip', {
-                            delayOpen: 100,
-                            delayClose: 0,
-                            theme: "TooltipDark"
-                        });
-                      })
+                for(var i = 0; i < messages.length; i++){
+                  if(messages[i].author._id.toString() != localStorage._id){
+                    $('.chat_area').prepend("<div class='bubble_wrapper'><div class='other_bubble'><img title='" + messages[i].author.firstname + " " +  messages[i].author.lastname + ", " + parseDate(messages[i].timestamp) + "' class='show tt' id='small_prof_pic' src='"+ messages[i].author.profpicpath + "-60" +"'></img>" + "<p data-userid='" + messages[i].author._id + "' class='chat_opponent user-link'>" + messages[i].author.firstname + ": </p class='chat_opponent'>" + messages[i].content + "</div></div>")
+                  }else{
+                    // $('.chat_area').append("<div class='bubble_wrapper'><div class='self_bubble'><p class='chat_opponent'>" + messages[i].author.firstname + ": </p class='chat_opponent'>" + messages[i].content + "</div></div>")
+                    $('.chat_area').prepend("<div class='bubble_wrapper'><div class='self_bubble'>" + messages[i].content + "</div></div>");
+
                   }
+                  $(".chat_area").animate({
+                      scrollTop: $('.chat_area')[0].scrollHeight
+                  }, 0);
+                  if( i == messages.length-1 ){
+                    spinner.stop();
+                  }
+                }
+                $('.tt').jBox('Tooltip', {
+                    delayOpen: 100,
+                    delayClose: 0,
+                    theme: "TooltipDark"
+                });
+                $('.chat_area').scroll(function() {
+                    var pos = $('.chat_area').scrollTop();
+                    if (pos == 0) {
+                        sessionStorage.chatPage++;
+                        $.post("/f/loadMessagesForChat", {chat_id: $this.attr("data-chatid"), skip: 20*parseInt(sessionStorage.chatPage)}, function(responseText){
+                          var messages = JSON.parse(responseText);
+                          for (var i = 0; i < messages.length; i++){
+                            if(messages[i].author._id.toString() != localStorage._id){
+                              var appendedMsg = $("<div class='bubble_wrapper'><div class='other_bubble'><img title='" + messages[i].author.firstname + " " +  messages[i].author.lastname + ", " + parseDate(messages[i].timestamp) + "' class='show tt' id='small_prof_pic' src='"+ messages[i].author.profpicpath+ "-60" +"'></img>" + "<p data-userid='" + messages[i].author._id + "' class='chat_opponent user-link'>" + messages[i].author.firstname + ": </p class='chat_opponent'>" + messages[i].content + "</div></div>").prependTo($('.chat_area'));
+                              $(".chat_area").animate({
+                                  scrollTop: "+="+appendedMsg.height()
+                              }, 0);
+                            }else{
+                              var appendedMsg = $("<div class='bubble_wrapper'><div class='self_bubble'>" + messages[i].content + "</div></div>").prependTo($('.chat_area'))
+                              $(".chat_area").animate({
+                                  scrollTop: "+="+appendedMsg.height()
+                              }, 0);
+                            }
+                          }
+                          $('.tt').jBox('Tooltip', {
+                              delayOpen: 100,
+                              delayClose: 0,
+                              theme: "TooltipDark"
+                          });
+                        })
+                    }
+                });
               });
-            });
+            }
           }
         });
         $(document).on("click", ".send_button", function(){
@@ -863,4 +865,3 @@
 </body>
 
 </html>
-

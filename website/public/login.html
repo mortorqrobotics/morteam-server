@@ -19,7 +19,7 @@
 
   <div id="login_area">
     <div id="form">
-      <input class="login_item" type="text" placeholder="Username/Email" id="username_box"></input>
+      <input autocapitalize="off" autocorrect="off" class="login_item" type="text" placeholder="Username/Email" id="username_box"></input>
       <input class="login_item" type="password" placeholder="Password" id="password_box"></input>
       <div id="remember"><input type="checkbox" id="remember_box" checked></input><label for="remember_box" id="remember_text">Remember me?</label></div>
       <input class="login_item" type="submit" value="Log In" id="login_button"></input>
@@ -38,7 +38,7 @@
       var username = $("#username_box").val();
       var password = $("#password_box").val();
       $.post("/f/login", {"username": username, "password": password}, function(responseText){
-        if(responseText != "inc/username" && responseText != "inc/password"){
+        if(responseText != "inc/username" && responseText != "inc/password" && responseText != "fail"){
           var user = JSON.parse(responseText)
           localStorage.username = user.username;
           localStorage.firstname = user.firstname;
@@ -57,8 +57,16 @@
           location="/";
         }else if(responseText == "inc/password"){
           alert("incorrect password");
+          $(this).val("Log in");
+          $(this).prop("disabled",false);
         }else if(responseText == "inc/username"){
           alert("incorrect username");
+          $(this).val("Log in");
+          $(this).prop("disabled",false);
+        }else{
+          alert(responseText);
+          $(this).val("Log in");
+          $(this).prop("disabled",false);
         }
       });
     });

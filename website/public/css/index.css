@@ -280,6 +280,9 @@ li.active{
 	.menu_btn{
 		display: none;
 	}
+	#notif_button{
+		display: none !important;
+	}
 }
 @media screen and (max-width: 700px) {
 	.profile_name{
