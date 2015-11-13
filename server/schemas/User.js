@@ -13,7 +13,7 @@ var userSchema = new Schema({
   created_at:   Date,
   updated_at:   Date,
   profpicpath:  String,
-  teams:        Array,
+  teams:        Array, //Array of ids of teams of which said user is a member. IMPORTANT: id != _id (for "teams" a non-random id is used as opposed to an _id)
   subdivisions: [{
     _id: { type: Schema.Types.ObjectId, ref: 'Subdivision' },
     team: String,
@@ -23,7 +23,7 @@ var userSchema = new Schema({
     id: String,
     position: String
   },
-  bannedFromTeams: [String]
+  bannedFromTeams: [String] //Array of ids of teams from which said user is banned
 });
 
 userSchema.pre('save', function(next){

@@ -77,8 +77,8 @@ function requireAdmin(req, res, next) {
     transporter.sendMail({
         from: 'rafezyfarbod@gmail.com',
         to: 'rafezyfarbod@gmail.com',
-        subject: 'Security Alert!',
-        text: 'The user ' + req.user.firstname + req.user.lastname + ' tried to perform administrator tasks. User ID: ' + req.user._id
+        subject: 'MorTeam Security Alert!',
+        text: 'The user ' + req.user.firstname + " " + req.user.lastname + ' tried to perform administrator tasks. User ID: ' + req.user._id
     });
     res.end("fail");
   } else {
@@ -92,8 +92,8 @@ function requireLeader(req, res, next) {
     transporter.sendMail({
         from: 'rafezyfarbod@gmail.com',
         to: 'rafezyfarbod@gmail.com',
-        subject: 'Security Alert!',
-        text: 'The user ' + req.user.firstname + req.user.lastname + ' tried to perform administrator tasks. User ID: ' + req.user._id
+        subject: 'MorTeam Security Alert!',
+        text: 'The user ' + req.user.firstname + " " + req.user.lastname + ' tried to perform leader/administrator tasks. User ID: ' + req.user._id
     });
     res.end("fail");
   }
@@ -737,25 +737,31 @@ app.post("/f/deleteUser", requireLogin, function(req, res) {
   });
 });
 app.post("/f/login", function(req, res) {
+  //IMPORTANT: req.body.username can either be a username or an email. Please do not let this confuse you.
   User.findOne({
-    username: req.body.username
+    $or: [{username: req.body.username}, {email: req.body.username}]
   }, function(err, user) {
-    if (user) {
-      user.comparePassword(req.body.password, function(err, isMatch) {
-        if (err) {
-          console.error(err);
-          res.end("fail");
-        } else {
-          if (isMatch) {
-            req.session.user = user;
-            res.end(JSON.stringify(user));
+    if(err){
+      console.error(err);
+      res.end("fail");
+    }else{
+      if (user) {
+        user.comparePassword(req.body.password, function(err, isMatch) {
+          if (err) {
+            console.error(err);
+            res.end("fail");
           } else {
-            res.end("inc/password");
+            if (isMatch) {
+              req.session.user = user;
+              res.end(JSON.stringify(user));
+            } else {
+              res.end("inc/password");
+            }
           }
-        }
-      })
-    } else {
-      res.end("inc/username")
+        })
+      } else {
+        res.end("inc/username")
+      }
     }
   });
 });
@@ -1408,6 +1414,14 @@ app.post("/f/deleteAnnouncement", requireLogin, function(req, res){
             res.end("success");
           }
         })
+      }else{
+        transporter.sendMail({
+            from: 'rafezyfarbod@gmail.com',
+            to: 'rafezyfarbod@gmail.com',
+            subject: 'MorTeam Security Alert!',
+            text: 'The user ' + req.user.firstname + " " + req.user.lastname + ' tried to perform administrator tasks. User ID: ' + req.user._id
+        });
+        res.end("fail");
       }
     }
   });

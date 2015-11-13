@@ -31,8 +31,9 @@
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
   <script>
   $(document).ready(function(){
-    $("#username_box").focus();
-    $("#login_button").click(function(){
+      $("#username_box").focus();
+      $("#login_button").click(function(){
+      var $this = $(this);
       $(this).val("Logging in");
       $(this).prop("disabled",true);
       var username = $("#username_box").val();
@@ -55,18 +56,14 @@
             }
           }
           location="/";
-        }else if(responseText == "inc/password"){
-          alert("incorrect password");
-          $(this).val("Log in");
-          $(this).prop("disabled",false);
-        }else if(responseText == "inc/username"){
-          alert("incorrect username");
-          $(this).val("Log in");
-          $(this).prop("disabled",false);
+        }else if(responseText == "inc/password" || responseText == "inc/username"){
+          alert("incorrect username/password");
+          $this.val("Log in");
+          $this.prop("disabled",false);
         }else{
           alert(responseText);
-          $(this).val("Log in");
-          $(this).prop("disabled",false);
+          $this.val("Log in");
+          $this.prop("disabled",false);
         }
       });
     });

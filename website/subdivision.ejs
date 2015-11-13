@@ -229,7 +229,7 @@
           if (responseText == "success") {
             $(".subdivision_join_btn").remove();
             $("#join-leave").append('<input type="button" class="button subdivision_leave_btn" value="Leave"></input>');
-            $("#subdivision_members").append('<li class="user-link subdivision_member full-width" data-userid="' + localStorage._id + '" id="' + localStorage._id + '"><img src="../images/user.jpg" onerror="this.src=\'../images/user.jpg\'" class="small_prof_pic show" id="small_prof_pic">' + localStorage.firstname + ' ' +
+            $("#subdivision_members").append('<li class="user-link subdivision_member full-width" data-userid="' + localStorage._id + '" id="' + localStorage._id + '"><img src='+localStorage.profpicpath+' onerror="this.src=\'../images/user.jpg\'" class="small_prof_pic show" id="small_prof_pic">' + localStorage.firstname + ' ' +
               localStorage.lastname + '</li>');
           } else {
             alert("fail");
