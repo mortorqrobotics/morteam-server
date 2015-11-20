@@ -457,7 +457,8 @@
           if( $(".file_name").val() != "" ){
             $(".file_name").val( removeHTML( $(".file_name").val() ) );
             $('<input />').attr('type', 'hidden').attr('name', "currentFolderId").attr('value', currentFolder).appendTo(this);
-            add_file_modal.setContent("Uploading...")
+            add_file_modal.setContent("<h2 style='width: 100%; text-align: center;'>Uploading...</h2>")
+            add_file_modal.setHeight(100);
             $(this).ajaxSubmit({
                 error: function(xhr) {
               		alert(xhr.status)

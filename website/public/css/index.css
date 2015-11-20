@@ -1255,8 +1255,9 @@ span.name{
 	position: absolute;
 	left: 0px;
 	top: 43px;
-	opacity: .7;
+	opacity: .8;
 	font-size: 14px;
+	font-weight: 300;
 }
 .doc_delete:hover{
 	color: #a9a9a9;
@@ -2557,4 +2558,14 @@ th{
 }
 .due_date_display{
 	font-size: 14px;
+}
+.group_member_li{
+	height: 41px;
+}
+.group_member_icon{
+	font-size: 28px;
+}
+.group_member_name.subdivision{
+	vertical-align: 6px;
+	padding-left: 8px;
 }

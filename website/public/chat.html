@@ -349,8 +349,10 @@
                 $(img).attr("src", user2.profpicpath + "-60");
                 var span = document.createElement("span");
                 $(span).html(user2.fn + " " + user2.ln);
+                // var options_span = '<span class="glyphicon glyphicon-cog list_right options_li"></span>'
                 $(li).append( $(img) );
                 $(li).append( $(span) );
+                // $(li).append( $(options_span) ); //TODO: why wont this work
                 $(li).attr("data-chatid", user2.chat_id);
                 $(".chat_search_li").after( $(li) );
                 $(li).trigger("click");
@@ -389,7 +391,7 @@
 
 
         $(document).on("click", "#make_chat_btn", function(){
-          if(normalizeDisplayedText($(this).prev().val()).length < 22){
+          if(normalizeDisplayedText($(this).prev().val()).length < 20){
             var $this = $(this);
             $.post("/f/createChat", {
               userMembers: sessionStorage.userMembers,
@@ -422,7 +424,7 @@
             sessionStorage.removeItem("subdivisionMembers");
             new_convo_modal.close();
           }else{
-            alert("Name has to be 21 characters or fewer.")
+            alert("Name has to be 19 characters or fewer.")
           }
         });
 
@@ -541,10 +543,14 @@
                   $(img).addClass("temp");
                   // $(img).addClass("offline");
                   $(img).attr("id", "small_prof_pic");
+                  var options_span = '<span class="glyphicon glyphicon-cog list_right options_li"></span>'
                   if(chats[i].group == true){
                     $(span).html(chats[i].name)
                     $(li).addClass("group_chat");
                     $(img).attr("src", "images/group.png")
+                    $(li).append( img );
+                    $(li).append( span );
+                    $(li).append( $(options_span) );
                   }else{
                     var user2 = getUserOtherThanSelf(chats[i].userMembers)
                     $(span).html(user2.firstname + " " + user2.lastname);
@@ -558,9 +564,9 @@
                     }else{
                       $(img).addClass("offline");
                     }
+                    $(li).append( img );
+                    $(li).append( span );
                   }
-                  $(li).append( img );
-                  $(li).append( span );
                   $(li).attr("data-chatid", chats[i]._id);
 
                   $(".users_list").append( $(li) );
@@ -656,6 +662,89 @@
             }
           }
         });
+        function optionsModal(title, currentName, chat_id){
+          var new_modal = new jBox('Modal', {
+              width: 350,
+              height: 'auto',
+              title: title,
+              onClose: function(){
+                setTimeout(function(){
+                  options_modal.destroy()
+                }, 100)
+              }
+          });
+          $.post("/f/getMembersOfChat", {chat_id: chat_id}, function(responseText){
+            var members = JSON.parse(responseText);
+            if(!(members.subdivisionMembers.length == 0 && members.userMembers.length == 2)){
+              var container = document.createElement("span");
+              var change_name = '<input type="text" class="change_name" value="'+ currentName +'"></input><br/>'
+              var div = document.createElement("div");
+              $(div).addClass("group_members");
+              var ul = document.createElement("ul");
+              $(ul).addClass("current_group_members");
+              // var addMember = '<li class=" add_group_member"><span class="glyphicon glyphicon-plus"></span><span class="group_member_name">Add Member(s)</span></li>';
+              $(container).append( $(change_name) );
+              $(container).append( $(div) );
+              $(div).append( $(ul) );
+              // $(ul).append( $(addMember) );
+              for(var i = 0; i < members.userMembers.length; i++){
+                $(ul).append('<li class="group_member_li"><img class="user-link" data-userid="'+members.userMembers[i]._id+'" id="small_prof_pic" src="'+members.userMembers[i].profpicpath+'-60"></img><span data-userid="'+members.userMembers[i]._id+'" class="group_member_name user-link">'+ members.userMembers[i].firstname + ' ' + members.userMembers[i].lastname +'</span> </li>')
+                //<span class="member_remove glyphicon glyphicon-remove"></span> -------------------------------^
+              }
+              for(var i = 0; i < members.subdivisionMembers.length; i++){
+                $(ul).append('<li class="group_member_li"><span class="glyphicon glyphicon-screenshot group_member_icon"></span><span data-subdivisionid="'+members.subdivisionMembers[i]._id+'" class="group_member_name subdivision">' + members.subdivisionMembers[i].name + '</span></li>')
+              }
+              // if(localStorage.c_team_position == "admin"){
+              //   $(container).append('<input data-chatid="'+chat_id+'" type="button" class="button leave_group" value="Leave Group"></input>')
+              //   $(container).append('<input data-chatid="'+chat_id+'" type="button" class="button delete_group" value="Delete Group"></input>')
+              // }else{
+              //   $(container).append('<input data-chatid="'+chat_id+'" type="button" class="button leave_group nonadmin" value="Leave Group"></input>')
+              // }
+              $(container).append('<input data-chatid="'+chat_id+'" type="button" class="button save_options" value="Done"></input>')
+              new_modal.setContent( $(container) );
+            }else{
+              alert("You can't do that.")
+              return
+            }
+          });
+          new_modal.open();
+          return new_modal;
+        }
+        $(document).on("click", ".options_li", function(){
+          var currentName = $(this).prev().html();
+          options_modal = optionsModal("Options", currentName, $(this).parent().attr("data-chatid"));
+        });
+        $(document).on("click", ".leave_group", function(){
+          //leave group
+        });
+        $(document).on("click", ".delete_group", function(){
+          var chat_id = $(this).attr("data-chatid");
+          $.post("/f/deleteChat", {chat_id: $(this).attr("data-chatid")}, function(responseText){
+            if(responseText == "success"){
+              options_modal.close();
+              $(".chat_name[data-chatid='"+ chat_id +"']").remove();
+              $(".chat_name").first().next().next().trigger("click");
+            }else{
+              alert(responseText);
+            }
+          });
+
+        })
+        $(document).on("click", ".save_options", function(){
+          if(normalizeDisplayedText($(".change_name").val()).length < 20){
+            var chat_id = $(this).attr("data-chatid");
+            $.post("/f/changeGroupName", {chat_id: chat_id, newName: normalizeDisplayedText($(".change_name").val())}, function(responseText){
+              if(responseText == "success"){
+                options_modal.close();
+                $(".chat_name[data-chatid='"+ chat_id +"'] > span").first().html( $(".change_name").val() )
+              }else{
+                alert(responseText);
+              }
+            });
+          }else{
+            alert("Name has to be 19 characters or fewer.")
+          }
+        })
         $(document).on("click", ".send_button", function(){
           if($(".reply_textarea").val() != ""){
             var $this = $(this);

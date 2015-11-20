@@ -7,6 +7,7 @@ var fileSchema = new Schema({
   folder: { type: Schema.Types.ObjectId, ref: 'Folder', required: false },
   size: Number,
   type: String,
+  mimetype: String,
   creator: { type: Schema.Types.ObjectId, ref: 'User' },
   created_at: Date,
   updated_at: Date,

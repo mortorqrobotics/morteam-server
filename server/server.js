@@ -13,6 +13,7 @@ var AWS = require('aws-sdk');
 var ObjectId = require('mongoose').Types.ObjectId;
 var lwip = require('lwip');
 var config = require("./config.json");
+var extToMime = require("./extToMime.json");
 app = express();
 AWS.config.loadFromPath('./aws-config.json');
 publicDir = require("path").join(__dirname, "../website/public");
@@ -29,7 +30,7 @@ var Folder = require('./schemas/Folder.js');
 var File = require('./schemas/File.js');
 var Task = require('./schemas/Task.js');
 
-mongoose.connect('mongodb://localhost:27017/morteam');
+mongoose.connect('mongodb://localhost:27017/morteamtest2');
 
 var transporter = nodemailer.createTransport();
 
@@ -187,7 +188,7 @@ function removeDuplicates(arr) {
 }
 function extToType(ext){
   var spreadsheet = ['xls', 'xlsx', 'numbers', '_xls', 'xlsb', 'xlsm', 'xltx', 'xlt'];
-  var word = ['doc', 'docx', 'rtf', 'pages', 'txt'];
+  var word = ['doc', 'rtf', 'pages', 'txt', 'docx'];
   var image = ['png', 'jpg', 'jpeg', 'jif', 'jfif', 'gif', 'raw', 'tiff', 'bmp', 'rif', 'tif', 'webp'];
   var keynote = ['key', 'ppt', 'pptx'];
   var audio = ['mp4', 'webm', 'mp3', 'wav', 'm4a', 'avi', 'wma', 'ogg', 'm4p', 'ra', 'ram', 'rm', 'mid', 'flv', 'mkv', 'ogv', 'mov', 'mpg'];
@@ -209,12 +210,12 @@ function extToType(ext){
 }
 var profPicBucket = new AWS.S3({params: {Bucket: 'profilepics.morteam.com'}});
 var driveBucket = new AWS.S3({params: {Bucket: 'drive.morteam.com'}});
-function uploadToProfPics(buffer, destFileName, callback) {
+function uploadToProfPics(buffer, destFileName, contentType, callback) {
   profPicBucket.upload({
     ACL: 'public-read',
     Body: buffer,
     Key: destFileName.toString(),
-    ContentType: 'application/octet-stream'
+    ContentType: contentType,
   }).send(callback);
 }
 // function uploadToDrive(buffer, destFileName, callback) {
@@ -445,15 +446,15 @@ app.get("/images/user.jpg-300", function(req, res){
 app.get('/pp/:path', function(req, res){
   res.redirect(profpicDir+req.params.path);
 });
-var mimetypes = {
-  "word": "application/msword",
-  "spreadsheet": "application/vnd.ms-excel",
-  "keynote": "application/vnd.ms-powerpointtd",
-  "audio": "audio/mpeg",
-  "image": "application/octet-stream",
-  "pdf": "application/pdf",
-  "unknown": "application/octet-stream"
-}
+// var mimetypes = {
+//   "word": "application/msword",
+//   "spreadsheet": "application/vnd.ms-excel",
+//   "keynote": "application/vnd.ms-powerpointtd",
+//   "audio": "audio/mpeg",
+//   "image": "application/octet-stream",
+//   "pdf": "application/pdf",
+//   "unknown": "application/octet-stream"
+// }
 app.get('/file/:fileId', requireLogin, function(req, res){
   // if(req.params.fileId.indexOf("-") > -1){
   //   var fileId = req.params.fileId.substring(0, req.params.fileId.indexOf("-"));
@@ -561,6 +562,11 @@ app.post("/f/createUser", multer({limits: {fileSize:10*1024*1024}}).single('prof
           } else {
             if(req.body.password == req.body.password_confirm){
               if(req.file){
+                var ext = req.file.originalname.substring(req.file.originalname.lastIndexOf(".")+1).toLowerCase() || "unknown";
+                var mime = extToMime[ext]
+                if(mime == undefined){
+                  mime = "application/octet-stream"
+                }
                 var suffix = req.file.originalname.substring(req.file.originalname.lastIndexOf(".")+1).toLowerCase();
                 lwip.open(req.file.buffer, suffix, function(err, image){
                   if(err){
@@ -579,7 +585,7 @@ app.post("/f/createUser", multer({limits: {fileSize:10*1024*1024}}).single('prof
                               console.error(err);
                               res.end("fail");
                             }else{
-                              uploadToProfPics(buffer, req.body.username + "-60", function(err, data){
+                              uploadToProfPics(buffer, req.body.username + "-60", mime, function(err, data){
                                 if(err){
                                   console.error(err);
                                   res.end("fail");
@@ -600,7 +606,7 @@ app.post("/f/createUser", multer({limits: {fileSize:10*1024*1024}}).single('prof
                               console.error(err);
                               res.end("fail");
                             }else{
-                              uploadToProfPics(buffer, req.body.username + "-60", function(err, data){
+                              uploadToProfPics(buffer, req.body.username + "-60", mime, function(err, data){
                                 if(err){
                                   console.error(err);
                                   res.end("fail");
@@ -630,7 +636,7 @@ app.post("/f/createUser", multer({limits: {fileSize:10*1024*1024}}).single('prof
                               console.error(err);
                               res.end("fail");
                             }else{
-                              uploadToProfPics(buffer, req.body.username + "-300", function(err, data){
+                              uploadToProfPics(buffer, req.body.username + "-300", mime, function(err, data){
                                 if(err){
                                   console.error(err);
                                   res.end("fail");
@@ -651,7 +657,7 @@ app.post("/f/createUser", multer({limits: {fileSize:10*1024*1024}}).single('prof
                               console.error(err);
                               res.end("fail");
                             }else{
-                              uploadToProfPics(buffer, req.body.username + "-300", function(err, data){
+                              uploadToProfPics(buffer, req.body.username + "-300", mime, function(err, data){
                                 if(err){
                                   console.error(err);
                                   res.end("fail");
@@ -1475,7 +1481,7 @@ app.post("/f/createChat", requireLogin, function(req, res){
       }
     });
   }else{
-    if(req.body.name.length < 22){
+    if(req.body.name.length < 20){
       Chat.create({
         team: req.user.current_team.id,
         name: req.body.name,
@@ -1567,18 +1573,65 @@ app.post("/f/getUsersInChat", requireLogin, function(req, res){
     }
   });
 });
-// app.post("/f/sendMessage", function(req, res){
-//   Chat.update({_id: req.body.chat_id}, { '$push': {
-//     'messages': {author: new ObjectId(req.user._id), content: req.body.content, timestamp: new Date()}
-//   }, updated_at: new Date()}, function(err, model){
-//     if(err){
-//       console.error(err);
-//       res.end("fail");
-//     }else{
-//       res.end("success");
-//     }
-//   });
-// });
+app.post("/f/getMembersOfChat", requireLogin, function(req, res){
+  Chat.findOne({_id: req.body.chat_id}, {userMembers: 1, subdivisionMembers: 1}, function(err, chat){
+    if(err){
+      console.error(err);
+      res.end("fail");
+    }else{
+      var members = {
+        userMembers: [],
+        subdivisionMembers: []
+      }
+      User.find({_id: { "$in": chat.userMembers }}, '-password', function(err, users){
+        if(err){
+          console.error(err);
+          res.end("fail");
+        }else{
+          // res.end(JSON.stringify(users))
+          for(var i = 0; i < users.length; i++){
+            members.userMembers.push(users[i]);
+          }
+          Subdivision.find({_id: { "$in": chat.subdivisionMembers }}, function(err, subdivisions){
+            if(err){
+              console.error(err);
+              res.end("fail");
+            }else{
+              for(var i = 0; i < subdivisions.length; i++){
+                members.subdivisionMembers.push(subdivisions[i]);
+              }
+              res.end(JSON.stringify(members));
+            }
+          })
+        }
+      });
+    }
+  });
+});
+app.post("/f/changeGroupName", requireLogin, function(req, res){
+  if(req.body.newName.length < 20){
+    Chat.update({_id: req.body.chat_id}, { name: req.body.newName }, function(err, model){
+      if(err){
+        console.error(err);
+        res.end("fail");
+      }else{
+        res.end("success");
+      }
+    })
+  }else{
+    res.end("fail")
+  }
+});
+app.post("/f/deleteChat", requireAdmin, function(req, res){
+  Chat.findOneAndRemove({_id: req.body.chat_id}, function(err){
+    if(err){
+      console.error(err);
+      res.end("fail");
+    }else{
+      res.end("success");
+    }
+  });
+});
 app.post("/f/sendMessage", requireLogin, function(req, res){
   Chat.update({_id: req.body.chat_id}, { '$push': {
     'messages': {
@@ -1882,19 +1935,28 @@ app.post("/f/createFolder", requireLogin, function(req, res){
 });
 app.post("/f/uploadFile", requireLogin, multer().single('uploadedFile'), function(req, res){
   var ext = req.file.originalname.substring(req.file.originalname.lastIndexOf(".")+1).toLowerCase() || "unknown";
-  var mime = mimetypes[extToType(ext)];
+  // var mime = mimetypes[extToType(ext)];
+  var mime = extToMime[ext];
   var disposition;
-  if(mime == "application/octet-stream"){
+  // if(mime == "application/octet-stream"){
+  //   disposition = "attachment; filename="+req.file.originalname;
+  // }else{
+  //   disposition = "attachment; filename="+req.body.fileName;
+  // }
+  if (mime == undefined){
     disposition = "attachment; filename="+req.file.originalname;
+    mime = "application/octet-stream";
   }else{
-    disposition = "attachment; filename="+req.body.fileName;
+    disposition = "attachment; filename="+req.body.fileName+"."+ext;
   }
+
   File.create({
     name: req.body.fileName,
     originalName: req.file.originalname,
     folder: req.body.currentFolderId,
     size: req.file.size,
     type: extToType(ext),
+    mimetype: mime,
     creator: req.user._id
   }, function(err, file){
     if(err){
@@ -2170,23 +2232,28 @@ app.post("/f/editProfile", requireLogin, multer().single('new_prof_pic'), functi
   if(validateEmail(req.body.email)){
     if(validatePhone(req.body.phone)){
       if(req.file){
+        var ext = req.file.originalname.substring(req.file.originalname.lastIndexOf(".")+1).toLowerCase() || "unknown";
+        var mime = extToMime[ext]
+        if(mime == undefined){
+          mime = "application/octet-stream"
+        }
         var suffix = req.file.originalname.substring(req.file.originalname.lastIndexOf(".")+1).toLowerCase();
         resizeImage(req.file.buffer, 300, suffix, function(err, buffer){
           if(err){
             console.error(err);
             res.end("fail");
           }else{
-            uploadToProfPics(buffer, req.user.username+"-300", function(err, data){
+            uploadToProfPics(buffer, req.user.username+"-300", mime, function(err, data){
               if(err){
                 console.error(err);
                 res.end("fail");
               }else{
-                resizeImage(req.file.buffer, 60, suffix, function(err, buffer){
+                resizeImage(req.file.buffer, 60, suffix, mime, function(err, buffer){
                   if(err){
                     console.error(err);
                     res.end("fail");
                   }else{
-                    uploadToProfPics(buffer, req.user.username+"-60", function(err, data){
+                    uploadToProfPics(buffer, req.user.username+"-60", mime, function(err, data){
                       if(err){
                         console.error(err);
                         res.end("fail");

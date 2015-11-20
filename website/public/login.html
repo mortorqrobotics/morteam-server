@@ -33,51 +33,50 @@
   $(document).ready(function(){
       $("#username_box").focus();
       $("#login_button").click(function(){
-      var $this = $(this);
-      $(this).val("Logging in");
-      $(this).prop("disabled",true);
-      var username = $("#username_box").val();
-      var password = $("#password_box").val();
-      $.post("/f/login", {"username": username, "password": password}, function(responseText){
-        if(responseText != "inc/username" && responseText != "inc/password" && responseText != "fail"){
-          var user = JSON.parse(responseText)
-          localStorage.username = user.username;
-          localStorage.firstname = user.firstname;
-          localStorage.lastname = user.lastname;
-          localStorage._id = user._id;
-          localStorage.phone = user.phone;
-          localStorage.email = user.email;
-          localStorage.teams = JSON.stringify(user.teams);
-          localStorage.profpicpath = user.profpicpath;
-          if(user.teams && user.teams.length > 0){
-            if(user.current_team){
-              localStorage.c_team = user.current_team.id;
-              localStorage.c_team_position = user.current_team.position;
+        var $this = $(this);
+        $(this).val("Logging in");
+        $(this).prop("disabled",true);
+        var username = $.trim($("#username_box").val());
+        var password = $("#password_box").val();
+        $.post("/f/login", {"username": username, "password": password}, function(responseText){
+          if(responseText != "inc/username" && responseText != "inc/password" && responseText != "fail"){
+            var user = JSON.parse(responseText)
+            localStorage.username = user.username;
+            localStorage.firstname = user.firstname;
+            localStorage.lastname = user.lastname;
+            localStorage._id = user._id;
+            localStorage.phone = user.phone;
+            localStorage.email = user.email;
+            localStorage.teams = JSON.stringify(user.teams);
+            localStorage.profpicpath = user.profpicpath;
+            if(user.teams && user.teams.length > 0){
+              if(user.current_team){
+                localStorage.c_team = user.current_team.id;
+                localStorage.c_team_position = user.current_team.position;
+              }
             }
+            location="/";
+          }else if(responseText == "inc/password" || responseText == "inc/username"){
+            alert("incorrect username/password");
+            $this.val("Log in");
+            $this.prop("disabled",false);
+          }else{
+            alert(responseText);
+            $this.val("Log in");
+            $this.prop("disabled",false);
           }
-          location="/";
-        }else if(responseText == "inc/password" || responseText == "inc/username"){
-          alert("incorrect username/password");
-          $this.val("Log in");
-          $this.prop("disabled",false);
-        }else{
-          alert(responseText);
-          $this.val("Log in");
-          $this.prop("disabled",false);
+        });
+      });
+
+      $(document).keypress(function(e) {
+        if(e.which == 13) {
+          if($("#password_box").is(":focus")){
+            $("#login_button").trigger("click");
+          }else if ($("#username_box").is(":focus")) {
+            $("#password_box").focus();
+          }
         }
       });
-    });
-
-    $(document).keypress(function(e) {
-      if(e.which == 13) {
-        if($("#password_box").is(":focus")){
-          $("#login_button").trigger("click");
-        }else if ($("#username_box").is(":focus")) {
-          $("#password_box").focus();
-        }
-      }
-    });
-
   });
   </script>
 
