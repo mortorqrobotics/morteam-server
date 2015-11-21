@@ -12,6 +12,7 @@ var multer = require('multer');
 var AWS = require('aws-sdk');
 var ObjectId = require('mongoose').Types.ObjectId;
 var lwip = require('lwip');
+var Autolinker = require( 'autolinker' );
 var config = require("./config.json");
 var extToMime = require("./extToMime.json");
 app = express();
@@ -185,6 +186,13 @@ function removeDuplicates(arr) {
     }
   }
   return result;
+}
+function removeHTML(text){
+  return text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+     //  text.replace(/\<(?!a|br).*?\>/g, "");
+}
+function normalizeDisplayedText(text){
+  return Autolinker.link(removeHTML(text));
 }
 function extToType(ext){
   var spreadsheet = ['xls', 'xlsx', 'numbers', '_xls', 'xlsb', 'xlsm', 'xltx', 'xlt'];
@@ -1635,7 +1643,7 @@ app.post("/f/deleteChat", requireAdmin, function(req, res){
 app.post("/f/sendMessage", requireLogin, function(req, res){
   Chat.update({_id: req.body.chat_id}, { '$push': {
     'messages': {
-      "$each": [ {author: new ObjectId(req.user._id), content: req.body.content, timestamp: new Date()} ],
+      "$each": [ {author: new ObjectId(req.user._id), content: normalizeDisplayedText(req.body.content), timestamp: new Date()} ],
       "$position": 0
     }
   }, updated_at: new Date()}, function(err, model){
@@ -2237,8 +2245,8 @@ app.post("/f/editProfile", requireLogin, multer().single('new_prof_pic'), functi
         if(mime == undefined){
           mime = "application/octet-stream"
         }
-        var suffix = req.file.originalname.substring(req.file.originalname.lastIndexOf(".")+1).toLowerCase();
-        resizeImage(req.file.buffer, 300, suffix, function(err, buffer){
+        // var suffix = req.file.originalname.substring(req.file.originalname.lastIndexOf(".")+1).toLowerCase();
+        resizeImage(req.file.buffer, 300, ext, function(err, buffer){
           if(err){
             console.error(err);
             res.end("fail");
@@ -2248,7 +2256,7 @@ app.post("/f/editProfile", requireLogin, multer().single('new_prof_pic'), functi
                 console.error(err);
                 res.end("fail");
               }else{
-                resizeImage(req.file.buffer, 60, suffix, mime, function(err, buffer){
+                resizeImage(req.file.buffer, 60, ext, function(err, buffer){
                   if(err){
                     console.error(err);
                     res.end("fail");

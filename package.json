@@ -1,6 +1,6 @@
 {
   "name": "MorTeam",
-  "version": "1.0.0-beta.2",
+  "version": "1.0.0-beta.3",
   "description": "Organization utility for robotics teams",
   "main": "server.js",
   "dependencies": {
@@ -15,7 +15,8 @@
     "mongoose": "^4.1.7",
     "multer": "^1.0.6",
     "nodemailer": "^1.5.0",
-    "socket.io": "^1.3.5"
+    "socket.io": "^1.3.5",
+    "autolinker": "^0.22.0"
   },
   "repository": {
     "type": "git",
