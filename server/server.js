@@ -31,7 +31,7 @@ var Folder = require('./schemas/Folder.js');
 var File = require('./schemas/File.js');
 var Task = require('./schemas/Task.js');
 
-mongoose.connect('mongodb://localhost:27017/morteamtest2');
+mongoose.connect('mongodb://localhost:27017/morteam');
 
 var transporter = nodemailer.createTransport();
 
