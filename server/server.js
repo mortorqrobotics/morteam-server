@@ -1324,6 +1324,10 @@ app.post("/f/changePosition", requireLogin, function(req, res){
   })
 });
 app.post("/f/postAnnouncement", requireLogin, function(req, res){
+  //Attempt to convert audience request to JSON in case client does not explicitly send it as a JSON type
+  try {
+    req.body.audience = JSON.parse(req.body.audience);
+  }  catch(e) { }
   if(typeof(req.body.audience) == "object"){
     Announcement.create({
       author: req.user._id,
@@ -1363,7 +1367,7 @@ app.post("/f/postAnnouncement", requireLogin, function(req, res){
         content: req.body.content,
         team: req.user.current_team.id,
         timestamp: new Date(),
-        subdivisionAudience: [ req.body.audience ]
+	subdivisionAudience: [new ObjectId(String(req.body.audience))]
       }, function(err, announcement){
         if(err){
           console.error(err);
