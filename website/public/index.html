@@ -539,7 +539,7 @@
     });
     $(document).on("click", ".announcement_post_button", function(){
       var message = (new nicEditors.findEditor('main_textarea')).getContent();
-      var filteredMessage = Autolinker.link( message.replace("(<((?!br|a|/a|img|b|/b|i|/i|u|/u|div|/div|hr)[^>]+)>)", "").replace(/(<div\s+.*?class=").*?(".*)/gi, "") );
+      var filteredMessage = message.replace("(<((?!br|a|/a|img|b|/b|i|/i|u|/u|div|/div|hr)[^>]+)>)", "").replace(/(<div\s+.*?class=").*?(".*)/gi, "");
       if( filteredMessage != "<br>" ){
         if($(".audience_item.selected").hasClass("first_audience")){
           var targetAudience = "everyone"

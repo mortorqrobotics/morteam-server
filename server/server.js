@@ -405,7 +405,7 @@ app.get("/s/:id", function(req, res) {
           } else {
             if (subdivision.type == "private") {
               for (var i = 0; i < users.length; i++) {
-                if (users[i]._id == req.user._id) {
+                if (users[i]._id.toString() == req.user._id) {
                   res.render('subdivision', {
                     name: subdivision.name,
                     type: subdivision.type,
@@ -550,6 +550,7 @@ app.get('*', function(req, res) {
 app.post("/f/createUser", multer({limits: {fileSize:10*1024*1024}}).single('profpic'), function(req, res) {
   req.body.firstname = req.body.firstname.capitalize();
   req.body.lastname = req.body.lastname.capitalize();
+  req.body.phone = req.body.phone.replace(/[- )(]/g,'')
   if( validateEmail(req.body.email) && validatePhone(req.body.phone) ){
     User.find({
       $or: [{
@@ -1328,6 +1329,7 @@ app.post("/f/postAnnouncement", requireLogin, function(req, res){
   try {
     req.body.audience = JSON.parse(req.body.audience);
   }  catch(e) { }
+  req.body.content = Autolinker.link( req.body.content )
   if(typeof(req.body.audience) == "object"){
     Announcement.create({
       author: req.user._id,
