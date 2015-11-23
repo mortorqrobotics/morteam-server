@@ -2100,7 +2100,23 @@ app.post("/f/assignTask", requireLogin, requireLeader, function(req, res){
         console.error(err);
         res.end("fail");
       }else{
-        res.end("success");
+        //res.end("success");
+        User.findOne({_id: req.body.user_id}, function(err, user){
+          if(err){
+            console.error(err);
+            res.end("fail");
+          }else{
+            if(user){
+              transporter.sendMail({
+                  from: 'notify@morteam.com',
+                  to: user.email,
+                  subject: 'New Task Assigned By ' + req.user.firstname + " " + req.user.lastname,
+                  text: 'View your new task at http://www.morteam.com/u/' + req.body.user_id
+              });
+              res.end("success");
+            }
+          }
+        })
       }
     })
   }else{
