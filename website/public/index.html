@@ -47,7 +47,7 @@
   </div>
   <div class="navigation_bar">
       <ul id="navbar_list">
-        <li class="navbar_item navbar_title navbar_title_index">
+        <li class="navbar_item navbar_title navbar_title_index" onclick="location='/'">
             MorTeam
         </li>
         <li class="navbar_item searchbox_list_item">
@@ -583,7 +583,7 @@
             $(deleteButton).addClass("delete_icon");
             $(announcementDiv).append(deleteButton);
             $(announcementDiv).append("<br/>");
-            $(announcementDiv).append( filteredMessage );
+            $(announcementDiv).append( Autolinker.link(filteredMessage) );
 
             $('.announcements_list').prepend(announcementDiv).isotope('prepended', announcementDiv)
             document.getElementById('main_textarea').value = "";

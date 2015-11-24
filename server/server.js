@@ -1964,6 +1964,8 @@ app.post("/f/uploadFile", requireLogin, multer().single('uploadedFile'), functio
     disposition = "attachment; filename="+req.body.fileName+"."+ext;
   }
 
+  req.body.fileName = normalizeDisplayedText(req.body.fileName);
+
   File.create({
     name: req.body.fileName,
     originalName: req.file.originalname,
@@ -2052,7 +2054,7 @@ app.post("/f/deleteFile", requireLogin, function(req, res){
       console.error(err);
       res.end("fail");
     }else{
-      if(req.user._id.toString() == file.creator.toString()){
+      if(req.user._id.toString() == file.creator.toString() || req.user.current_team.position == "admin"){
         deleteFileFromDrive(req.body.file_id, function(err, data){
           if(err){
             console.error(err);
@@ -2108,7 +2110,7 @@ app.post("/f/assignTask", requireLogin, requireLeader, function(req, res){
           }else{
             if(user){
               transporter.sendMail({
-                  from: 'notify@morteam.com',
+                  from: 'MorTeam <notify@morteam.com>',
                   to: user.email,
                   subject: 'New Task Assigned By ' + req.user.firstname + " " + req.user.lastname,
                   text: 'View your new task at http://www.morteam.com/u/' + req.body.user_id

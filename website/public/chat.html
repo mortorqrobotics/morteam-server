@@ -583,9 +583,6 @@
 
         $(document).on("click", ".chat_name:not(.compose)", function(){
           if(!$(this).hasClass("selected")){
-            if(spinner){
-              spinner.stop()
-            }
             spinner = new Spinner(spinnerOpts).spin(loadingDiv);
             socket.emit('stop typing', {chat_id: $(".chat_name.selected").attr("data-chatid") });
             $(".send_button").show().removeClass("hidden");
