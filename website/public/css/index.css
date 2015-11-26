@@ -262,9 +262,6 @@ li.active{
 	font-family: 'Titillium Web', sans-serif;
 	cursor: pointer;
 }
-.navbar_title_index{
-	cursor: default;
-}
 @media screen and (min-width: 821px) {
 	.menu{
 		display: none;

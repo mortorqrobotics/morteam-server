@@ -1289,6 +1289,18 @@ app.post("/f/removeUserFromSubdivision", requireLogin, requireAdmin, function(re
     }
   });
 });
+app.post("/f/getUsersInSubdivision", requireLogin, function(req, res){
+  User.find({
+    subdivisions: { $elemMatch: { _id: req.body.subdivision_id } }
+  }, function(err, users){
+    if(err){
+      console.error(err);
+      res.end("fail");
+    }else{
+      res.end( JSON.stringify(users) );
+    }
+  })
+});
 app.post("/f/changePosition", requireLogin, function(req, res){
   var positionHA = {
     "member": 0,
