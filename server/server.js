@@ -704,7 +704,7 @@ app.post("/f/createUser", multer({limits: {fileSize:10*1024*1024}}).single('prof
                   lastname: req.body.lastname,
                   email: req.body.email,
                   phone: req.body.phone,
-                  profpicpath: "images/user.jpg"
+                  profpicpath: "/images/user.jpg"
                 }, function(err, user) {
                   if (err) {
                     res.end("fail");
@@ -1292,7 +1292,7 @@ app.post("/f/removeUserFromSubdivision", requireLogin, requireAdmin, function(re
 app.post("/f/getUsersInSubdivision", requireLogin, function(req, res){
   User.find({
     subdivisions: { $elemMatch: { _id: req.body.subdivision_id } }
-  }, function(err, users){
+  }, '-password', function(err, users){
     if(err){
       console.error(err);
       res.end("fail");
