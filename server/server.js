@@ -858,27 +858,38 @@ app.post("/f/joinTeam", requireLogin, function(req, res) {
                     }else{
                       user.teams.push({id: req.body.team_id, position: "admin"});
                     }
-                    user.save(function(err) {
-                      if (err) {
+                    AttendanceHandler.update({ entireTeam: true, event_date: { $gte: new Date() } }, {
+                      '$push': {
+                        'attendees': {user: req.user._id, status: "absent"}
+                      }
+                    }, function(err, model){
+                      if(err){
                         console.error(err);
                         res.end("fail");
-                      } else {
-                        Folder.create({
-                          name: "Personal Files",
-                          team: req.body.team_id,
-                          userMembers: req.user._id,
-                          creator: req.user._id,
-                          defaultFolder: true
-                        }, function(err, folder){
-                          if(err){
+                      }else{
+                        user.save(function(err) {
+                          if (err) {
                             console.error(err);
                             res.end("fail");
-                          }else{
-                            res.end("success");
+                          } else {
+                            Folder.create({
+                              name: "Personal Files",
+                              team: req.body.team_id,
+                              userMembers: req.user._id,
+                              creator: req.user._id,
+                              defaultFolder: true
+                            }, function(err, folder){
+                              if(err){
+                                console.error(err);
+                                res.end("fail");
+                              }else{
+                                res.end("success");
+                              }
+                            });
                           }
                         });
                       }
-                    });
+                    })
                   }
                 });
               }else{
@@ -894,27 +905,38 @@ app.post("/f/joinTeam", requireLogin, function(req, res) {
                       user.teams.push({id: req.body.team_id, position: "admin"});
                       user.current_team = {id: req.body.team_id, position: "admin"};
                     }
-                    user.save(function(err) {
-                      if (err) {
+                    AttendanceHandler.update({ entireTeam: true, event_date: { $gte: new Date() } }, {
+                      '$push': {
+                        'attendees': {user: req.user._id, status: "absent"}
+                      }
+                    }, function(err, model){
+                      if(err){
                         console.error(err);
                         res.end("fail");
-                      } else {
-                        Folder.create({
-                          name: "Personal Files",
-                          team: req.body.team_id,
-                          userMembers: req.user._id,
-                          creator: req.user._id,
-                          defaultFolder: true
-                        }, function(err, folder){
-                          if(err){
+                      }else{
+                        user.save(function(err) {
+                          if (err) {
                             console.error(err);
                             res.end("fail");
-                          }else{
-                            res.end("success");
+                          } else {
+                            Folder.create({
+                              name: "Personal Files",
+                              team: req.body.team_id,
+                              userMembers: req.user._id,
+                              creator: req.user._id,
+                              defaultFolder: true
+                            }, function(err, folder){
+                              if(err){
+                                console.error(err);
+                                res.end("fail");
+                              }else{
+                                res.end("success");
+                              }
+                            });
                           }
                         });
                       }
-                    });
+                    })
                   }
                 });
               }
@@ -1685,6 +1707,7 @@ app.post("/f/getEventsForUserInTeamInMonth", requireLogin, function(req, res){
   Event.find({
     team: req.user.current_team.id,
     $or: [
+      { entireTeam: true },
       { userAttendees: req.user._id },
       { subdivisionAttendees: { "$in": userSubdivisionIds } }
     ],
@@ -1707,6 +1730,7 @@ app.post("/f/getUpcomingEventsForUser", requireLogin, function(req, res){
   Event.find({
     team: req.user.current_team.id,
     $or: [
+      { entireTeam: true },
       { userAttendees: req.user._id },
       { subdivisionAttendees: { "$in": userSubdivisionIds } }
     ],
@@ -1721,81 +1745,160 @@ app.post("/f/getUpcomingEventsForUser", requireLogin, function(req, res){
   });
 });
 app.post("/f/createEvent", requireLogin, requireLeader, function(req, res){
+  if(req.body.userAttendees == undefined){
+    req.body.userAttendees = []
+  }
+  if(req.body.subdivisionAttendees == undefined){
+    req.body.subdivisionAttendees = []
+  }
   if(req.body.description != ""){
-    Event.create({
-      name: req.body.name,
-      description: req.body.description,
-      userAttendees: req.body.userAttendees,
-      subdivisionAttendees: req.body.subdivisionAttendees,
-      date: new Date(req.body.date),
-      team: req.user.current_team.id,
-      creator: req.user._id
-    }, function(err, event){
-      if(err){
-        console.error(err);
-        res.end("fail");
-      }else{
-        var attendees = [];
-        for(var i = 0; i < req.body.userAttendees.length; i++){
-          attendees.push( { user: req.body.userAttendees[i], status: "absent" } );
-        }
-        User.find({ subdivisions: { $elemMatch: { _id: {"$in": req.body.subdivisionAttendees} } } }, function(err, users){
-          for(var i = 0; i < users.length; i++){
-            attendees.push( { user: users[i]._id, status: "absent" } );
-          }
-          attendees = removeDuplicates(attendees);
-          AttendanceHandler.create({
-            event: event._id,
-            event_date: event.date,
-            attendees: attendees
-          }, function(err, attendanceHandler){
-            if(err){
-              console.error(err);
-              res.end("fail");
-            }else{
-              res.end( JSON.stringify(event) )
+    if(req.body.entireTeam == "true"){
+      console.log("shoudlnt");
+      Event.create({
+        name: req.body.name,
+        description: req.body.description,
+        entireTeam: true,
+        date: new Date(req.body.date),
+        team: req.user.current_team.id,
+        creator: req.user._id
+      }, function(err, event){
+        if(err){
+          console.error(err);
+          res.end("fail");
+        }else{
+          var attendees = [];
+          User.find({ teams: {$elemMatch: {id: req.user.current_team.id }} }, function(err, users){
+            for(var i = 0; i < users.length; i++){
+              attendees.push( { user: users[i]._id, status: "absent" } );
             }
+            AttendanceHandler.create({
+              event: event._id,
+              event_date: event.date,
+              attendees: attendees,
+              entireTeam: true
+            }, function(err, attendanceHandler){
+              if(err){
+                console.error(err);
+                res.end("fail");
+              }else{
+                res.end( JSON.stringify(event) )
+              }
+            });
           });
-        });
-      }
-    });
+        }
+      });
+    }else{
+      Event.create({
+        name: req.body.name,
+        description: req.body.description,
+        userAttendees: req.body.userAttendees,
+        subdivisionAttendees: req.body.subdivisionAttendees,
+        date: new Date(req.body.date),
+        team: req.user.current_team.id,
+        creator: req.user._id
+      }, function(err, event){
+        if(err){
+          console.error(err);
+          res.end("fail");
+        }else{
+          var attendees = [];
+          for(var i = 0; i < req.body.userAttendees.length; i++){
+            attendees.push( { user: req.body.userAttendees[i], status: "absent" } );
+          }
+          User.find({ subdivisions: { $elemMatch: { _id: {"$in": req.body.subdivisionAttendees} } } }, function(err, users){
+            for(var i = 0; i < users.length; i++){
+              attendees.push( { user: users[i]._id, status: "absent" } );
+            }
+            attendees = removeDuplicates(attendees);
+            AttendanceHandler.create({
+              event: event._id,
+              event_date: event.date,
+              attendees: attendees
+            }, function(err, attendanceHandler){
+              if(err){
+                console.error(err);
+                res.end("fail");
+              }else{
+                res.end( JSON.stringify(event) )
+              }
+            });
+          });
+        }
+      });
+    }
   }else{
-    Event.create({
-      name: req.body.name,
-      userAttendees: req.body.userAttendees,
-      subdivisionAttendees: req.body.subdivisionAttendees,
-      date: new Date(req.body.date),
-      team: req.user.current_team.id,
-      creator: req.user._id
-    }, function(err, event){
-      if(err){
-        console.error(err);
-        res.end("fail");
-      }else{
-        var attendees = [];
-        for(var i = 0; i < req.body.userAttendees.length; i++){
-          attendees.push( { user: req.body.userAttendees[i], status: "absent" } );
-        }
-        User.find({ subdivisions: { $elemMatch: { _id: {"$in": req.body.subdivisionAttendees} } } }, function(err, users){
-          for(var i = 0; i < users.length; i++){
-            attendees.push( { user: users[i]._id, status: "absent" } );
-          }
-          attendees = removeDuplicates(attendees);
-          AttendanceHandler.create({
-            event: event._id,
-            event_date: event.date,
-            attendees: attendees
-          }, function(err, attendanceHandler){
-            if(err){
-              console.error(err);
-              res.end("fail");
-            }else{
-              res.end( JSON.stringify(event) )
+    if(req.body.entireTeam == "true"){
+      console.log("shoudlnt");
+      Event.create({
+        name: req.body.name,
+        entireTeam: true,
+        date: new Date(req.body.date),
+        team: req.user.current_team.id,
+        creator: req.user._id
+      }, function(err, event){
+        if(err){
+          console.error(err);
+          res.end("fail");
+        }else{
+          var attendees = [];
+          User.find({ teams: {$elemMatch: {id: req.user.current_team.id }} }, function(err, users){
+            for(var i = 0; i < users.length; i++){
+              attendees.push( { user: users[i]._id, status: "absent" } );
             }
+            AttendanceHandler.create({
+              event: event._id,
+              event_date: event.date,
+              attendees: attendees,
+              entireTeam: true
+            }, function(err, attendanceHandler){
+              if(err){
+                console.error(err);
+                res.end("fail");
+              }else{
+                res.end( JSON.stringify(event) )
+              }
+            });
           });
-        });
-      }
-    });
+        }
+      });
+    }else{
+      Event.create({
+        name: req.body.name,
+        userAttendees: req.body.userAttendees,
+        subdivisionAttendees: req.body.subdivisionAttendees,
+        date: new Date(req.body.date),
+        team: req.user.current_team.id,
+        creator: req.user._id
+      }, function(err, event){
+        if(err){
+          console.error(err);
+          res.end("fail");
+        }else{
+          var attendees = [];
+          for(var i = 0; i < req.body.userAttendees.length; i++){
+            attendees.push( { user: req.body.userAttendees[i], status: "absent" } );
+          }
+          User.find({ subdivisions: { $elemMatch: { _id: {"$in": req.body.subdivisionAttendees} } } }, function(err, users){
+            for(var i = 0; i < users.length; i++){
+              attendees.push( { user: users[i]._id, status: "absent" } );
+            }
+            attendees = removeDuplicates(attendees);
+            AttendanceHandler.create({
+              event: event._id,
+              event_date: event.date,
+              attendees: attendees
+            }, function(err, attendanceHandler){
+              if(err){
+                console.error(err);
+                res.end("fail");
+              }else{
+                res.end( JSON.stringify(event) )
+              }
+            });
+          });
+        }
+      });
+    }
   }
 });
 app.post("/f/deleteEvent", requireLogin, requireLeader, function(req, res){

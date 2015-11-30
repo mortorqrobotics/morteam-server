@@ -273,7 +273,7 @@
     function eventModal(title, date){
       var new_modal = new jBox('Modal', {
         width: 350,
-        height: 445,
+        height: 460,
         title: title,
         onClose: function(){
           setTimeout(function(){
@@ -284,6 +284,7 @@
       var span = document.createElement("span");
       var event_name = '<input type="text" id="event_name" class="name_input" placeholder="Title">';
       var event_description = '<textarea class="event_description" placeholder="Description (Optional)"></textarea>';
+      var entireTeamDiv = '<div><input id="entireTeam" type="checkbox"> Invite Everyone</div>'
       var user_search = '<input type="text" placeholder="Search Names..." class="members_search" id="event_members_search">';
       var potential_members = document.createElement("div");
       $(potential_members).attr("id", "potential_attendance_members");
@@ -323,6 +324,8 @@
         $(span).append($(event_description));
         $(span).append("<br/>");
         $(span).append("Please select the attendees:");
+        $(span).append("<br/>");
+        $(span).append($(entireTeamDiv));
         $(span).append($(user_search));
         $(span).append("<br/>");
         $(span).append($(potential_members));
@@ -480,6 +483,15 @@
           event_modal = eventModal("New Event", newDate.toString());
         });
 
+        $(document).on("change", "#entireTeam", function(){
+          if( this.checked ){
+            $('#potential_attendance_members').addClass("hidden");
+            $('#potential_attendance_members > .clicked').removeClass("clicked");
+          }else{
+            $('#potential_attendance_members').removeClass("hidden");
+          }
+        })
+
         $(document).on("click", ".delete_event", function(){
           var $this = $(this);
           if (window.confirm("Are you sure?")) {
@@ -566,7 +578,8 @@
                 description: normalizeDisplayedText( $(".event_description").val() ),
                 userAttendees: userAttendees,
                 subdivisionAttendees: subdivisionAttendees,
-                date: $this.attr("data-date")
+                date: $this.attr("data-date"),
+                entireTeam: $('#entireTeam').is(':checked')
               }, function(responseText){
                 event_modal.close();
                 if(responseText != "fail"){

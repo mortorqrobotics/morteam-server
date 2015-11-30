@@ -8,6 +8,7 @@ var attendanceHandlerSchema = new Schema({
     user: { type: Schema.Types.ObjectId, ref: 'User' },
     status: String
   }],
+  entireTeam: Boolean,
   created_at:  Date,
   updated_at:  Date,
 });
