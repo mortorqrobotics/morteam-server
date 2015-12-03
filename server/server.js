@@ -1751,40 +1751,50 @@ app.post("/f/createEvent", requireLogin, requireLeader, function(req, res){
   if(req.body.subdivisionAttendees == undefined){
     req.body.subdivisionAttendees = []
   }
+  if(req.body.hasAttendance == "true"){
+    req.body.hasAttendance = true;
+  }else{
+    req.body.hasAttendance = false;
+  }
+
   if(req.body.description != ""){
     if(req.body.entireTeam == "true"){
-      console.log("shoudlnt");
       Event.create({
         name: req.body.name,
         description: req.body.description,
         entireTeam: true,
         date: new Date(req.body.date),
         team: req.user.current_team.id,
-        creator: req.user._id
+        creator: req.user._id,
+        hasAttendance: req.body.hasAttendance
       }, function(err, event){
         if(err){
           console.error(err);
           res.end("fail");
         }else{
-          var attendees = [];
-          User.find({ teams: {$elemMatch: {id: req.user.current_team.id }} }, function(err, users){
-            for(var i = 0; i < users.length; i++){
-              attendees.push( { user: users[i]._id, status: "absent" } );
-            }
-            AttendanceHandler.create({
-              event: event._id,
-              event_date: event.date,
-              attendees: attendees,
-              entireTeam: true
-            }, function(err, attendanceHandler){
-              if(err){
-                console.error(err);
-                res.end("fail");
-              }else{
-                res.end( JSON.stringify(event) )
+          if(req.body.hasAttendance){
+            var attendees = [];
+            User.find({ teams: {$elemMatch: {id: req.user.current_team.id }} }, function(err, users){
+              for(var i = 0; i < users.length; i++){
+                attendees.push( { user: users[i]._id, status: "absent" } );
               }
+              AttendanceHandler.create({
+                event: event._id,
+                event_date: event.date,
+                attendees: attendees,
+                entireTeam: true
+              }, function(err, attendanceHandler){
+                if(err){
+                  console.error(err);
+                  res.end("fail");
+                }else{
+                  res.end( JSON.stringify(event) )
+                }
+              });
             });
-          });
+          }else{
+            res.end(JSON.stringify(event));
+          }
         }
       });
     }else{
@@ -1795,70 +1805,79 @@ app.post("/f/createEvent", requireLogin, requireLeader, function(req, res){
         subdivisionAttendees: req.body.subdivisionAttendees,
         date: new Date(req.body.date),
         team: req.user.current_team.id,
-        creator: req.user._id
+        creator: req.user._id,
+        hasAttendance: req.body.hasAttendance
       }, function(err, event){
         if(err){
           console.error(err);
           res.end("fail");
         }else{
-          var attendees = [];
-          for(var i = 0; i < req.body.userAttendees.length; i++){
-            attendees.push( { user: req.body.userAttendees[i], status: "absent" } );
-          }
-          User.find({ subdivisions: { $elemMatch: { _id: {"$in": req.body.subdivisionAttendees} } } }, function(err, users){
-            for(var i = 0; i < users.length; i++){
-              attendees.push( { user: users[i]._id, status: "absent" } );
+          if(req.body.hasAttendance){
+            var attendees = [];
+            for(var i = 0; i < req.body.userAttendees.length; i++){
+              attendees.push( { user: req.body.userAttendees[i], status: "absent" } );
             }
-            attendees = removeDuplicates(attendees);
-            AttendanceHandler.create({
-              event: event._id,
-              event_date: event.date,
-              attendees: attendees
-            }, function(err, attendanceHandler){
-              if(err){
-                console.error(err);
-                res.end("fail");
-              }else{
-                res.end( JSON.stringify(event) )
+            User.find({ subdivisions: { $elemMatch: { _id: {"$in": req.body.subdivisionAttendees} } } }, function(err, users){
+              for(var i = 0; i < users.length; i++){
+                attendees.push( { user: users[i]._id, status: "absent" } );
               }
+              attendees = removeDuplicates(attendees);
+              AttendanceHandler.create({
+                event: event._id,
+                event_date: event.date,
+                attendees: attendees
+              }, function(err, attendanceHandler){
+                if(err){
+                  console.error(err);
+                  res.end("fail");
+                }else{
+                  res.end( JSON.stringify(event) )
+                }
+              });
             });
-          });
+          }else{
+            res.end(JSON.stringify(event));
+          }
         }
       });
     }
   }else{
     if(req.body.entireTeam == "true"){
-      console.log("shoudlnt");
       Event.create({
         name: req.body.name,
         entireTeam: true,
         date: new Date(req.body.date),
         team: req.user.current_team.id,
-        creator: req.user._id
+        creator: req.user._id,
+        hasAttendance: req.body.hasAttendance
       }, function(err, event){
         if(err){
           console.error(err);
           res.end("fail");
         }else{
-          var attendees = [];
-          User.find({ teams: {$elemMatch: {id: req.user.current_team.id }} }, function(err, users){
-            for(var i = 0; i < users.length; i++){
-              attendees.push( { user: users[i]._id, status: "absent" } );
-            }
-            AttendanceHandler.create({
-              event: event._id,
-              event_date: event.date,
-              attendees: attendees,
-              entireTeam: true
-            }, function(err, attendanceHandler){
-              if(err){
-                console.error(err);
-                res.end("fail");
-              }else{
-                res.end( JSON.stringify(event) )
+          if(req.body.hasAttendance){
+            var attendees = [];
+            User.find({ teams: {$elemMatch: {id: req.user.current_team.id }} }, function(err, users){
+              for(var i = 0; i < users.length; i++){
+                attendees.push( { user: users[i]._id, status: "absent" } );
               }
+              AttendanceHandler.create({
+                event: event._id,
+                event_date: event.date,
+                attendees: attendees,
+                entireTeam: true
+              }, function(err, attendanceHandler){
+                if(err){
+                  console.error(err);
+                  res.end("fail");
+                }else{
+                  res.end( JSON.stringify(event) )
+                }
+              });
             });
-          });
+          }else{
+            res.end(JSON.stringify(event));
+          }
         }
       });
     }else{
@@ -1868,34 +1887,39 @@ app.post("/f/createEvent", requireLogin, requireLeader, function(req, res){
         subdivisionAttendees: req.body.subdivisionAttendees,
         date: new Date(req.body.date),
         team: req.user.current_team.id,
-        creator: req.user._id
+        creator: req.user._id,
+        hasAttendance: req.body.hasAttendance
       }, function(err, event){
         if(err){
           console.error(err);
           res.end("fail");
         }else{
-          var attendees = [];
-          for(var i = 0; i < req.body.userAttendees.length; i++){
-            attendees.push( { user: req.body.userAttendees[i], status: "absent" } );
-          }
-          User.find({ subdivisions: { $elemMatch: { _id: {"$in": req.body.subdivisionAttendees} } } }, function(err, users){
-            for(var i = 0; i < users.length; i++){
-              attendees.push( { user: users[i]._id, status: "absent" } );
+          if(req.body.hasAttendance){
+            var attendees = [];
+            for(var i = 0; i < req.body.userAttendees.length; i++){
+              attendees.push( { user: req.body.userAttendees[i], status: "absent" } );
             }
-            attendees = removeDuplicates(attendees);
-            AttendanceHandler.create({
-              event: event._id,
-              event_date: event.date,
-              attendees: attendees
-            }, function(err, attendanceHandler){
-              if(err){
-                console.error(err);
-                res.end("fail");
-              }else{
-                res.end( JSON.stringify(event) )
+            User.find({ subdivisions: { $elemMatch: { _id: {"$in": req.body.subdivisionAttendees} } } }, function(err, users){
+              for(var i = 0; i < users.length; i++){
+                attendees.push( { user: users[i]._id, status: "absent" } );
               }
+              attendees = removeDuplicates(attendees);
+              AttendanceHandler.create({
+                event: event._id,
+                event_date: event.date,
+                attendees: attendees
+              }, function(err, attendanceHandler){
+                if(err){
+                  console.error(err);
+                  res.end("fail");
+                }else{
+                  res.end( JSON.stringify(event) )
+                }
+              });
             });
-          });
+          }else{
+            res.end(JSON.stringify(event));
+          }
         }
       });
     }

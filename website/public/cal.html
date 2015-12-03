@@ -273,7 +273,7 @@
     function eventModal(title, date){
       var new_modal = new jBox('Modal', {
         width: 350,
-        height: 460,
+        height: 475,
         title: title,
         onClose: function(){
           setTimeout(function(){
@@ -285,6 +285,7 @@
       var event_name = '<input type="text" id="event_name" class="name_input" placeholder="Title">';
       var event_description = '<textarea class="event_description" placeholder="Description (Optional)"></textarea>';
       var entireTeamDiv = '<div><input id="entireTeam" type="checkbox"> Invite Everyone</div>'
+      var hasAttendanceDiv = '<div><input id="hasAttendance" type="checkbox" checked> Take Attendance?</div>'
       var user_search = '<input type="text" placeholder="Search Names..." class="members_search" id="event_members_search">';
       var potential_members = document.createElement("div");
       $(potential_members).attr("id", "potential_attendance_members");
@@ -326,6 +327,7 @@
         $(span).append("Please select the attendees:");
         $(span).append("<br/>");
         $(span).append($(entireTeamDiv));
+        $(span).append($(hasAttendanceDiv));
         $(span).append($(user_search));
         $(span).append("<br/>");
         $(span).append($(potential_members));
@@ -463,7 +465,9 @@
                   var attendance_btn = '<span title="Record Attendance" class="glyphicon glyphicon-list-alt leaders_only attendance"></span>';
                   var delete_event_btn = '<span class="glyphicon glyphicon-trash list_right delete_event"></span>';
                   $(li).append(" ");
-                  $(li).append(attendance_btn);
+                  if( events[i].hasAttendance ){
+                    $(li).append(attendance_btn);
+                  }
                   $(li).append(delete_event_btn);
                 }
                 $(li).append( "<br/>" )
@@ -579,7 +583,8 @@
                 userAttendees: userAttendees,
                 subdivisionAttendees: subdivisionAttendees,
                 date: $this.attr("data-date"),
-                entireTeam: $('#entireTeam').is(':checked')
+                entireTeam: $('#entireTeam').is(':checked'),
+                hasAttendance: $('#hasAttendance').is(':checked')
               }, function(responseText){
                 event_modal.close();
                 if(responseText != "fail"){
@@ -597,7 +602,9 @@
                   $(event_description_display).html(newEvent.description);
                   $(li).append( $(event_name_display) );
                   $(li).append( " " );
-                  $(li).append( attendance_btn );
+                  if( $('#hasAttendance').is(':checked') ){
+                    $(li).append( attendance_btn );
+                  }
                   $(li).append( delete_event_btn );
                   $(li).append( "<br/>" )
                   $(li).append( $(event_description_display) );

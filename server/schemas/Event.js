@@ -8,6 +8,7 @@ var eventSchema = new Schema({
   userAttendees: [{ type: Schema.Types.ObjectId, ref: 'User' }],
   subdivisionAttendees: [{ type: Schema.Types.ObjectId, ref: 'Subdivision' }],
   entireTeam: Boolean,
+  hasAttendance: Boolean,
   date: { type: Date, required: true },
   creator: { type: Schema.Types.ObjectId, ref: 'User' },
   created_at:  Date,
