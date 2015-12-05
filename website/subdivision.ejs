@@ -316,8 +316,10 @@
           }, function(responseText){
             if(responseText == "success"){
               //
+            }else if(responseText == "already invited"){
+              console.log(responseText);
             }else{
-              alert("fail");
+              alert(responseText)
             }
           });
         }

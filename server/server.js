@@ -216,6 +216,14 @@ function extToType(ext){
     return "unknown";
   }
 }
+Array.prototype.hasObjectThatContains = function(key, value){
+  for(var i = 0; i < this.length; i++){
+    if( this[i][key] == value ){
+      return true;
+    }
+  }
+  return false;
+}
 var profPicBucket = new AWS.S3({params: {Bucket: 'profilepics.morteam.com'}});
 var driveBucket = new AWS.S3({params: {Bucket: 'drive.morteam.com'}});
 function uploadToProfPics(buffer, destFileName, contentType, callback) {
@@ -993,19 +1001,23 @@ app.post("/f/inviteToSubdivision", requireLogin, function(req, res) {
             res.end("fail");
           } else {
             if (user) {
-              user.subdivisions.push({
-                _id: new ObjectId(req.body.subdivision_id),
-                team: req.user.current_team.id, //P
-                accepted: false
-              });
-              user.save(function(err) {
-                if (err) {
-                  console.error(err);
-                  res.end("fail");
-                } else {
-                  res.end("success");
-                }
-              })
+              if( !user.subdivisions.hasObjectThatContains("_id", req.body.subdivision_id) ){
+                user.subdivisions.push({
+                  _id: new ObjectId(req.body.subdivision_id),
+                  team: req.user.current_team.id, //P
+                  accepted: false
+                });
+                user.save(function(err) {
+                  if (err) {
+                    console.error(err);
+                    res.end("fail");
+                  } else {
+                    res.end("success");
+                  }
+                })
+              }else{
+                res.end("already invited");
+              }
             } else {
               res.end("fail");
             }
