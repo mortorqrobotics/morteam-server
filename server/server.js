@@ -33,7 +33,20 @@ var Task = require('./schemas/Task.js');
 
 mongoose.connect('mongodb://localhost:27017/morteam');
 
-var transporter = nodemailer.createTransport();
+var notify = nodemailer.createTransport({
+    service: 'Gmail',
+    auth: {
+        user: 'notify@morteam.com',
+        pass: config.notifyPassword
+    }
+});
+var support = nodemailer.createTransport({
+    service: 'Gmail',
+    auth: {
+        user: 'support@morteam.com',
+        pass: config.supportPassword
+    }
+});
 
 var port = process.argv[2] || 80;
 var io = require("socket.io").listen(app.listen(port));
@@ -76,8 +89,7 @@ function requireLogin(req, res, next) {
 }
 function requireAdmin(req, res, next) {
   if (req.user.current_team.position != "admin") {
-    transporter.sendMail({
-        from: 'rafezyfarbod@gmail.com',
+    notfiy.sendMail({
         to: 'rafezyfarbod@gmail.com',
         subject: 'MorTeam Security Alert!',
         text: 'The user ' + req.user.firstname + " " + req.user.lastname + ' tried to perform administrator tasks. User ID: ' + req.user._id
@@ -91,8 +103,7 @@ function requireLeader(req, res, next) {
   if (req.user.current_team.position == "admin" || req.user.current_team.position == "leader") {
     next();
   } else {
-    transporter.sendMail({
-        from: 'rafezyfarbod@gmail.com',
+    notify.sendMail({
         to: 'rafezyfarbod@gmail.com',
         subject: 'MorTeam Security Alert!',
         text: 'The user ' + req.user.firstname + " " + req.user.lastname + ' tried to perform leader/administrator tasks. User ID: ' + req.user._id
@@ -1481,8 +1492,7 @@ app.post("/f/deleteAnnouncement", requireLogin, function(req, res){
           }
         })
       }else{
-        transporter.sendMail({
-            from: 'rafezyfarbod@gmail.com',
+        notify.sendMail({
             to: 'rafezyfarbod@gmail.com',
             subject: 'MorTeam Security Alert!',
             text: 'The user ' + req.user.firstname + " " + req.user.lastname + ' tried to perform administrator tasks. User ID: ' + req.user._id
@@ -2260,8 +2270,7 @@ app.post("/f/assignTask", requireLogin, requireLeader, function(req, res){
             res.end("fail");
           }else{
             if(user){
-              transporter.sendMail({
-                  from: 'MorTeam <notify@morteam.com>',
+              notify.sendMail({
                   to: user.email,
                   subject: 'New Task Assigned By ' + req.user.firstname + " " + req.user.lastname,
                   text: 'View your new task at http://www.morteam.com/u/' + req.body.user_id
@@ -2538,8 +2547,7 @@ app.post("/f/forgotPassword", function(req, res){
           console.error(err);
           res.end("fail");
         }else{
-          transporter.sendMail({
-              from: 'MorTeam <notify@morteam.com>',
+          notify.sendMail({
               to: req.body.email,
               subject: 'New MorTeam Password Request',
               text: 'It seems like you requested to reset your password. Your new password is ' + new_password + '. Feel free to reset it after you log in.'
