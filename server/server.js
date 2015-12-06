@@ -2527,6 +2527,29 @@ app.post("/f/removeUserFromTeam", requireLogin, requireAdmin, function(req, res)
     }
   })
 })
+app.post("/f/forgotPassword", function(req, res){
+  User.findOne({email: req.body.email}, function(err, user){
+    if(err){
+      console.error(err);
+      res.end("fail");
+    }else{
+      user.assignNewPassword(function(err, new_password){
+        if(err){
+          console.error(err);
+          res.end("fail");
+        }else{
+          transporter.sendMail({
+              from: 'MorTeam <notify@morteam.com>',
+              to: req.body.email,
+              subject: 'New MorTeam Password Request',
+              text: 'It seems like you requested to reset your password. Your new password is ' + new_password + '. Feel free to reset it after you log in.'
+          });
+          res.end("success");
+        }
+      });
+    }
+  })
+})
 
 var online_clients = {};
 io.on('connection', function(socket){

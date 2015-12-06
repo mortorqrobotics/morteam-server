@@ -3,6 +3,15 @@ var bcrypt = require('bcrypt'),
 Schema = mongoose.Schema;
 SALT_WORK_FACTOR = 10;
 
+function createToken(size) {
+  var token = "";
+  for (var i = 0; i < size; i++) {
+    var rand = Math.floor(Math.random() * 62);
+    token += String.fromCharCode(rand + ((rand < 26) ? 97 : ((rand < 52) ? 39 : -4)));
+  }
+  return token;
+}
+
 var userSchema = new Schema({
   username:     { type: String, required: true, unique: true },
   password:     { type: String, required: true },
@@ -58,6 +67,19 @@ userSchema.methods.comparePassword = function(candidatePassword, cb) {
         cb(null, isMatch);
     });
 };
+
+userSchema.methods.assignNewPassword = function(cb) {
+  var user = this;
+  var new_password = createToken(8);
+  bcrypt.genSalt(SALT_WORK_FACTOR, function(err, salt) {
+      if (err) return cb(err, null);
+      bcrypt.hash(new_password, salt, function(err, hash) {
+          if (err) return cb(err, null);
+          user.password = hash;
+          cb(null, new_password)
+      });
+  });
+}
 
 var User = mongoose.model('User', userSchema);
 
