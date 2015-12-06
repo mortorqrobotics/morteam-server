@@ -207,6 +207,12 @@ function removeHTML(text){
 function normalizeDisplayedText(text){
   return Autolinker.link(removeHTML(text));
 }
+var daysInWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+var months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+function readableDate(datestr){
+  var date = new Date(datestr);
+  return months[date.getMonth()] + " " + date.getDate() + ", " + date.getFullYear();
+}
 function extToType(ext){
   var spreadsheet = ['xls', 'xlsx', 'numbers', '_xls', 'xlsb', 'xlsm', 'xltx', 'xlt'];
   var word = ['doc', 'rtf', 'pages', 'txt', 'docx'];
@@ -1402,7 +1408,25 @@ app.post("/f/postAnnouncement", requireLogin, function(req, res){
         console.error(err);
         res.end("fail");
       }else{
-        res.end(announcement._id.toString());
+        User.find({ $or: [
+          { _id: { $in: req.body.audience.userMembers } },
+          { subdivisions: { $elemMatch: { '_id': { $in: req.body.audience.subdivisionMembers } } } }
+        ] }, '-password', function(err, users){
+          if(err){
+            console.error(err);
+            res.end("fail");
+          }else{
+            users.forEach(function(user){
+              notify.sendMail({
+                  from: 'MorTeam Notification <notify@morteam.com>',
+                  to: user.email,
+                  subject: 'New Announcement By ' + req.user.firstname + ' ' + req.user.lastname,
+                  html: announcement.content
+              });
+            })
+            res.end(announcement._id.toString());
+          }
+        })
       }
     });
   }else{
@@ -1418,7 +1442,22 @@ app.post("/f/postAnnouncement", requireLogin, function(req, res){
           console.error(err);
           res.end("fail");
         }else{
-          res.end(announcement._id.toString());
+          User.find({ teams: {$elemMatch: {id: req.user.current_team.id }} }, '-password', function(err, users){
+            if(err){
+              console.error(err);
+              res.end("fail");
+            }else{
+              users.forEach(function(user){
+                notify.sendMail({
+                    from: 'MorTeam Notification <notify@morteam.com>',
+                    to: user.email,
+                    subject: 'New Announcement By ' + req.user.firstname + ' ' + req.user.lastname,
+                    html: announcement.content
+                });
+              })
+              res.end(announcement._id.toString());
+            }
+          })
         }
       });
     }else{
@@ -1428,16 +1467,32 @@ app.post("/f/postAnnouncement", requireLogin, function(req, res){
         content: req.body.content,
         team: req.user.current_team.id,
         timestamp: new Date(),
-	subdivisionAudience: [new ObjectId(String(req.body.audience))]
+	      subdivisionAudience: [new ObjectId(String(req.body.audience))]
       }, function(err, announcement){
         if(err){
           console.error(err);
           res.end("fail");
         }else{
-          res.end(announcement._id.toString());
+          User.find({
+            subdivisions: { $elemMatch: { _id: req.body.audience } }
+          }, '-password', function(err, users){
+            if(err){
+              console.error(err);
+              res.end("fail");
+            }else{
+              users.forEach(function(user){
+                notify.sendMail({
+                    from: 'MorTeam Notification <notify@morteam.com>',
+                    to: user.email,
+                    subject: 'New Announcement By ' + req.user.firstname + ' ' + req.user.lastname,
+                    html: announcement.content
+                });
+              })
+              res.end(announcement._id.toString());
+            }
+          })
         }
       });
-
     }
   }
 });
@@ -1797,29 +1852,44 @@ app.post("/f/createEvent", requireLogin, requireLeader, function(req, res){
           console.error(err);
           res.end("fail");
         }else{
-          if(req.body.hasAttendance){
-            var attendees = [];
-            User.find({ teams: {$elemMatch: {id: req.user.current_team.id }} }, function(err, users){
-              for(var i = 0; i < users.length; i++){
-                attendees.push( { user: users[i]._id, status: "absent" } );
+          User.find({ teams: {$elemMatch: {id: req.user.current_team.id }} }, '-password', function(err, users){
+            if(err){
+              console.error(err);
+              res.end("fail");
+            }else{
+              users.forEach(function(user){
+                notify.sendMail({
+                    from: 'MorTeam Notification <notify@morteam.com>',
+                    to: user.email,
+                    subject: 'New Event on ' + readableDate(event.date) + ' - ' + event.name,
+                    html: req.user.firstname + ' ' + req.user.lastname + ' has created an event on ' + readableDate(event.date) + ',<br><br>' + event.name + '<br>' + event.description
+                });
+              })
+              if(req.body.hasAttendance){
+                var attendees = [];
+                User.find({ teams: {$elemMatch: {id: req.user.current_team.id }} }, function(err, users){
+                  for(var i = 0; i < users.length; i++){
+                    attendees.push( { user: users[i]._id, status: "absent" } );
+                  }
+                  AttendanceHandler.create({
+                    event: event._id,
+                    event_date: event.date,
+                    attendees: attendees,
+                    entireTeam: true
+                  }, function(err, attendanceHandler){
+                    if(err){
+                      console.error(err);
+                      res.end("fail");
+                    }else{
+                      res.end(JSON.stringify(event));
+                    }
+                  });
+                });
+              }else{
+                res.end(JSON.stringify(event));
               }
-              AttendanceHandler.create({
-                event: event._id,
-                event_date: event.date,
-                attendees: attendees,
-                entireTeam: true
-              }, function(err, attendanceHandler){
-                if(err){
-                  console.error(err);
-                  res.end("fail");
-                }else{
-                  res.end( JSON.stringify(event) )
-                }
-              });
-            });
-          }else{
-            res.end(JSON.stringify(event));
-          }
+            }
+          })
         }
       });
     }else{
@@ -1837,32 +1907,50 @@ app.post("/f/createEvent", requireLogin, requireLeader, function(req, res){
           console.error(err);
           res.end("fail");
         }else{
-          if(req.body.hasAttendance){
-            var attendees = [];
-            for(var i = 0; i < req.body.userAttendees.length; i++){
-              attendees.push( { user: req.body.userAttendees[i], status: "absent" } );
-            }
-            User.find({ subdivisions: { $elemMatch: { _id: {"$in": req.body.subdivisionAttendees} } } }, function(err, users){
-              for(var i = 0; i < users.length; i++){
-                attendees.push( { user: users[i]._id, status: "absent" } );
-              }
-              attendees = removeDuplicates(attendees);
-              AttendanceHandler.create({
-                event: event._id,
-                event_date: event.date,
-                attendees: attendees
-              }, function(err, attendanceHandler){
-                if(err){
-                  console.error(err);
-                  res.end("fail");
-                }else{
-                  res.end( JSON.stringify(event) )
+          User.find({ $or: [
+            { _id: { $in: req.body.userAttendees } },
+            { subdivisions: { $elemMatch: { '_id': { $in: req.body.subdivisionAttendees } } } }
+          ] }, '-password', function(err, users){
+            if(err){
+              console.error(err);
+              res.end("fail");
+            }else{
+              users.forEach(function(user){
+                notify.sendMail({
+                    from: 'MorTeam Notification <notify@morteam.com>',
+                    to: user.email,
+                    subject: 'New Event on ' + readableDate(event.date) + ' - ' + event.name,
+                    html: req.user.firstname + ' ' + req.user.lastname + ' has created an event on ' + readableDate(event.date) + ',<br><br>' + event.name + '<br>' + event.description
+                });
+              })
+              if(req.body.hasAttendance){
+                var attendees = [];
+                for(var i = 0; i < req.body.userAttendees.length; i++){
+                  attendees.push( { user: req.body.userAttendees[i], status: "absent" } );
                 }
-              });
-            });
-          }else{
-            res.end(JSON.stringify(event));
-          }
+                User.find({ subdivisions: { $elemMatch: { _id: {"$in": req.body.subdivisionAttendees} } } }, function(err, users){
+                  for(var i = 0; i < users.length; i++){
+                    attendees.push( { user: users[i]._id, status: "absent" } );
+                  }
+                  attendees = removeDuplicates(attendees);
+                  AttendanceHandler.create({
+                    event: event._id,
+                    event_date: event.date,
+                    attendees: attendees
+                  }, function(err, attendanceHandler){
+                    if(err){
+                      console.error(err);
+                      res.end("fail");
+                    }else{
+                      res.end( JSON.stringify(event) )
+                    }
+                  });
+                });
+              }else{
+                res.end(JSON.stringify(event));
+              }
+            }
+          })
         }
       });
     }
@@ -1880,29 +1968,44 @@ app.post("/f/createEvent", requireLogin, requireLeader, function(req, res){
           console.error(err);
           res.end("fail");
         }else{
-          if(req.body.hasAttendance){
-            var attendees = [];
-            User.find({ teams: {$elemMatch: {id: req.user.current_team.id }} }, function(err, users){
-              for(var i = 0; i < users.length; i++){
-                attendees.push( { user: users[i]._id, status: "absent" } );
+          User.find({ teams: {$elemMatch: {id: req.user.current_team.id }} }, '-password', function(err, users){
+            if(err){
+              console.error(err);
+              res.end("fail");
+            }else{
+              users.forEach(function(user){
+                notify.sendMail({
+                    from: 'MorTeam Notification <notify@morteam.com>',
+                    to: user.email,
+                    subject: 'New Event on ' + readableDate(event.date) + ' - ' + event.name,
+                    html: req.user.firstname + ' ' + req.user.lastname + ' has created an event on ' + readableDate(event.date) + ',<br><br>' + event.name
+                });
+              })
+              if(req.body.hasAttendance){
+                var attendees = [];
+                User.find({ teams: {$elemMatch: {id: req.user.current_team.id }} }, function(err, users){
+                  for(var i = 0; i < users.length; i++){
+                    attendees.push( { user: users[i]._id, status: "absent" } );
+                  }
+                  AttendanceHandler.create({
+                    event: event._id,
+                    event_date: event.date,
+                    attendees: attendees,
+                    entireTeam: true
+                  }, function(err, attendanceHandler){
+                    if(err){
+                      console.error(err);
+                      res.end("fail");
+                    }else{
+                      res.end( JSON.stringify(event) )
+                    }
+                  });
+                });
+              }else{
+                res.end(JSON.stringify(event));
               }
-              AttendanceHandler.create({
-                event: event._id,
-                event_date: event.date,
-                attendees: attendees,
-                entireTeam: true
-              }, function(err, attendanceHandler){
-                if(err){
-                  console.error(err);
-                  res.end("fail");
-                }else{
-                  res.end( JSON.stringify(event) )
-                }
-              });
-            });
-          }else{
-            res.end(JSON.stringify(event));
-          }
+            }
+          })
         }
       });
     }else{
@@ -1919,32 +2022,50 @@ app.post("/f/createEvent", requireLogin, requireLeader, function(req, res){
           console.error(err);
           res.end("fail");
         }else{
-          if(req.body.hasAttendance){
-            var attendees = [];
-            for(var i = 0; i < req.body.userAttendees.length; i++){
-              attendees.push( { user: req.body.userAttendees[i], status: "absent" } );
-            }
-            User.find({ subdivisions: { $elemMatch: { _id: {"$in": req.body.subdivisionAttendees} } } }, function(err, users){
-              for(var i = 0; i < users.length; i++){
-                attendees.push( { user: users[i]._id, status: "absent" } );
-              }
-              attendees = removeDuplicates(attendees);
-              AttendanceHandler.create({
-                event: event._id,
-                event_date: event.date,
-                attendees: attendees
-              }, function(err, attendanceHandler){
-                if(err){
-                  console.error(err);
-                  res.end("fail");
-                }else{
-                  res.end( JSON.stringify(event) )
+          User.find({ $or: [
+            { _id: { $in: req.body.userAttendees } },
+            { subdivisions: { $elemMatch: { '_id': { $in: req.body.subdivisionAttendees } } } }
+          ] }, '-password', function(err, users){
+            if(err){
+              console.error(err);
+              res.end("fail");
+            }else{
+              users.forEach(function(user){
+                notify.sendMail({
+                    from: 'MorTeam Notification <notify@morteam.com>',
+                    to: user.email,
+                    subject: 'New Event on ' + readableDate(event.date) + ' - ' + event.name,
+                    html: req.user.firstname + ' ' + req.user.lastname + ' has created an event on ' + readableDate(event.date) + ',<br><br>' + event.name
+                });
+              })
+              if(req.body.hasAttendance){
+                var attendees = [];
+                for(var i = 0; i < req.body.userAttendees.length; i++){
+                  attendees.push( { user: req.body.userAttendees[i], status: "absent" } );
                 }
-              });
-            });
-          }else{
-            res.end(JSON.stringify(event));
-          }
+                User.find({ subdivisions: { $elemMatch: { _id: {"$in": req.body.subdivisionAttendees} } } }, function(err, users){
+                  for(var i = 0; i < users.length; i++){
+                    attendees.push( { user: users[i]._id, status: "absent" } );
+                  }
+                  attendees = removeDuplicates(attendees);
+                  AttendanceHandler.create({
+                    event: event._id,
+                    event_date: event.date,
+                    attendees: attendees
+                  }, function(err, attendanceHandler){
+                    if(err){
+                      console.error(err);
+                      res.end("fail");
+                    }else{
+                      res.end( JSON.stringify(event) )
+                    }
+                  });
+                });
+              }else{
+                res.end(JSON.stringify(event));
+              }
+            }
+          })
         }
       });
     }
