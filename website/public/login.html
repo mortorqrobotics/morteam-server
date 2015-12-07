@@ -1,38 +1,64 @@
 <!DOCTYPE html>
 <html>
 
-<head>
-  <meta charset="utf-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="google-site-verification" content="iZPx5YPDKe6xaZTCKdgkb9u9r2DDKHVPkgFDkCgPqJg" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>MorTeam - The General-Purpose FRC Management Platform</title>
-  <meta name="description" content="With an all-in-one website, communicate with teammmates using team-wide and subdivision-specific announcements, chats, group drives, calendar events, attendance, and more.">
-  <link href='http://fonts.googleapis.com/css?family=Open+Sans:700,300,400' rel='stylesheet' type='text/css'>
-  <link href='http://fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'>
-  <link href='http://fonts.googleapis.com/css?family=Exo+2:400,300,200' rel='stylesheet' type='text/css'>
-  <link href='http://fonts.googleapis.com/css?family=Titillium+Web' rel='stylesheet' type='text/css'>
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
-  <link rel="stylesheet" href="css/index.css" type="text/css">
-</head>
+	<head>
+		<meta charset="utf-8" />
+	  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+	  <meta name="google-site-verification" content="iZPx5YPDKe6xaZTCKdgkb9u9r2DDKHVPkgFDkCgPqJg" />
+	  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+		<title>MorTeam - The General-Purpose FRC Team Management Platform</title>
+		<link rel="stylesheet" type="text/css" href="css/login.css">
+		<link href='https://fonts.googleapis.com/css?family=Exo+2:400,300,200' rel='stylesheet' type='text/css'>
+		<meta name="description" content="With an all-in-one website, communicate with teammmates using team-wide and subdivision-specific announcements, chats, group drives, calendar events, attendance, and more.">
+	</head>
 
-<body>
+	<body>
 
-  <div id="login_area">
-    <div id="form">
-      <input autocapitalize="off" autocorrect="off" class="login_item" type="text" placeholder="Username/Email" id="username_box"></input>
-      <input class="login_item" type="password" placeholder="Password" id="password_box"></input>
-      <div id="remember"><input type="checkbox" id="remember_box" checked></input><label for="remember_box" id="remember_text">Remember me?</label></div>
-      <input class="login_item" type="submit" value="Log In" id="login_button"></input>
-    </div>
-    <input class="login_item" type="submit" value="Sign Up" onclick="location='signup'" id="signup_buttonL"></input>
-  </div>
+		<div class="landingBox landingBox-top">
+			<h1>MorTeam</h1><h3> Beta</h3>
+		</div>
 
-  <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
-  <script>
-  $(document).ready(function(){
+		<!-- AVOID USING <br> FOR SPACING PURPOSES. USE CSS margin INSTEAD -->
+		<div class="loginBox">
+			<input autocapitalize="off" autocorrect="off" id="username_box" type="text" placeholder="Username/Email" class="m_textbox login_textbox"/><br>
+			<input id="password_box" type="password" placeholder="Password" class="m_textbox login_textbox"/><br>
+			<input id="login_button" type="button" class="m_button m_orange login_button" value="Log In"/><br>
+			<input id="signup_buttonL" type="button" class="m_button m_blue login_button" onclick="location='signup'" value="Sign Up"/>
+		</div>
+
+		<div class="left-body">
+			<div class="landingBox landingBox-main">
+				<!-- HTML DOES NOT RECOGNIZE LINE BREAKS OR MORE THAN ONE SPACE IN YOUR TEXT. USE <br> AND &nbsp; INSTEAD -->
+				<div>
+					<h1 class="landing-title">Welcome</h1>
+					<h2 class="landing-text">MorTeam is an all-in-one management and organization utility for FRC teams around the world. The development of MorTeam has been led by Farbod Rafezy, Programming Co-President of team 1515, since the summer of 2015. The goal of MorTeam is to streamline robotics related activites during the intensity of build season and provide a unified and easily accessible experience for teams and their members.</h2>
+				</div>
+				<div>
+					<h1 class="landing-title">Subdivisions</h1>
+					<h2 class="landing-text">Each FRC team is divided into several groups with different specialties. Some of the subdivisions require seperate facilities and seprate schedules to accomodate their respective plans. Because of this, MorTeam has provided a way for team leaders and administartors to create custom public and private subdivision to help with organizing team errands and reducing schedule conflicts.</h2>
+				</div>
+				<div>
+					<h1 class="landing-title">Announcements</h1>
+					<h2 class="landing-text">Teams need to make reports about specific current events within the team and/or update teammembers about schedule updates and the such. Traditionally this has been done through email, but emails get lost and it is difficult to target specific real-time audiences through email. MorTeam allows teammembers to make announcements that notify members through emails while remaining on the homepage of the team for future reference. It is also much easier to target specific subdivisions and groups so anyone who joins a subdivision later during the year can keep updated with previous announcements.</h2>
+				</div>
+				<div>
+					<h1 class="landing-title">Chat</h1>
+					<h2 class="landing-text">Communication is a key goal for MorTeam, and what better way to communicate than chatting? Everyone uses different chat services, iMessage, whatsApp, Viber, etc. But at the same time not everyone is always accessible, especially within large robotics teams. MorTeam chat brings a unified chat experience to robotics teams to avoid these preference conflictions and give users the ability to chat within their respective subdivisions or privately.</h2>
+				</div>
+				<div>
+					<h1 class="landing-title">Drive</h1>
+					<h2 class="landing-text">Similar to other aspects of MorTeam, drive can be used to share all types of files within the team and/or custom groups and subdivisions. Just create a group, customize permissions, and share away...</h2>
+				</div>
+				<div>
+					<h1 class="landing-title">Calendar</h1>
+					<h2 class="landing-text">One of the perks of being on a robotics teams is the plethora of events in which one can indulge. With MorTeam, team leaders and administrators can create events for the team, their respective subdivisions, and custom groups. Additionally attendance can be taken for an event and can be seen at any later time; all while keeping everyone updated via email.</h2>
+				</div>
+			</div>
+		</div>
+
+	<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+	<script>
+	$(document).ready(function(){
       $("#username_box").focus();
       $("#login_button").click(function(){
         var $this = $(this);
@@ -80,20 +106,19 @@
         }
       });
   });
-  </script>
+	</script>
 
+	<script>
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
 
-  <script>
-  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-67504156-1', 'auto');
+	ga('send', 'pageview');
 
-  ga('create', 'UA-67504156-1', 'auto');
-  ga('send', 'pageview');
+	</script>
 
-  </script>
-
-</body>
+	</body>
 
 </html>

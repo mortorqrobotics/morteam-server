@@ -1,0 +1,143 @@
+*{
+	font-family: "helvetica neue", sans-serif;
+	font-weight: 200;
+	margin: 0px;
+	padding: 0px;
+	outline: 0;
+}
+
+body {
+	background-color: #fff;
+}
+
+.loginBox{
+	background-color: #FFC547;
+	width: 260px;
+	height: auto;
+	/*box-shadow: 3px 3px 3px #888888;*/
+	position: fixed;
+	right: 10px;
+	text-align: center;
+	padding-top: 50px;
+	padding-bottom: 50px;
+	top: 230px;
+}
+
+.landingBox-top{
+	background-color: #FFC547;
+	padding-top: 30px;
+	height: 80px;
+	width: 100%;
+}
+
+.landingBox-top > h1, h3{
+	display: inline-block;
+	color: white;
+	font-weight: 200;
+	font-family: "exo 2", sans-serif;
+}
+.landingBox-top > h1{
+	font-size: 60px;
+	padding-left: 30px;
+}
+.landingBox-top > h3{
+	padding-left: 10px;
+}
+
+.landingBox-main{
+	line-height: 32.5px;
+	max-width: 800px;
+	margin: auto;
+}
+
+.left-body{
+	width: calc(100% - 490px);
+	text-align: justify;
+	padding-top: 100px;
+	padding-left: 100px;
+	padding-right: 100px;
+}
+
+.m_textbox{
+	font-size: 18px;
+	width: 210px;
+	height: 28px;
+	padding: 3px;
+	border: none;
+	/*box-shadow: 1px 1px 1px #BA7000;*/
+}
+
+.m_button {
+	padding:5px;
+	background-color: orange;
+	border: 1px solid #666;
+	color: #000;
+	text-decoration: none;
+	width: 210px;
+	height: 32px;
+	border: none;
+	/*box-shadow: 1px 1px 1px #BA7000;*/
+	font-size: 18px;
+	cursor: pointer;
+}
+.m_blue{
+	background-color: #00A2FF;
+}
+
+.m_orange{
+	background-color: orange;
+}
+
+.m_orange:hover{
+	background-color: darkorange;
+}
+
+.m_blue:hover{
+	background-color: #008BDB;
+}
+
+.login_textbox{
+	margin-bottom: 15px;
+}
+.login_button{
+	margin-top: 15px;
+}
+
+.landing-title{
+	font-size: 40px;
+	margin-bottom: 25px;
+	font-weight: 400;
+	max-width: 800px;
+}
+.landing-text{
+	max-width: 800px;
+	/*margin: auto;*/
+	margin-bottom: 85px;
+}
+
+@media screen and (max-width: 945px) {
+	.left-body{
+		padding-left: 30px;
+		padding-right: 30px;
+		width: calc(100% - 350px);
+	}
+}
+@media screen and (max-width: 600px) {
+	.loginBox{
+		position: absolute;
+		top: 130px;
+		left: calc(50% - 130px);
+	}
+	.left-body{
+		position: absolute;
+		top: 350px;
+		width: calc(100% - 60px);
+		text-align: left;
+	}
+}
+@media screen and (max-width: 350px) {
+	.landingBox-top > h1{
+		padding-top: 10px;
+		font-size: 50px;
+	}
+}
