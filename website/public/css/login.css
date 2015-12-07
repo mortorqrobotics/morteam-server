@@ -10,6 +10,11 @@ body {
 	background-color: #fff;
 }
 
+input {
+    -webkit-appearance: none;
+    border-radius: 0;
+}
+
 .loginBox{
 	background-color: #FFC547;
 	width: 260px;
