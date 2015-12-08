@@ -213,6 +213,14 @@ function readableDate(datestr){
   var date = new Date(datestr);
   return months[date.getMonth()] + " " + date.getDate() + ", " + date.getFullYear();
 }
+function createRecepientList(users){
+  var result = "";
+  users.forEach(function(user){
+    result += user.email + ",";
+  });
+  result = result.substring(0, result.length-1);
+  return result;
+}
 function extToType(ext){
   var spreadsheet = ['xls', 'xlsx', 'numbers', '_xls', 'xlsb', 'xlsm', 'xltx', 'xlt'];
   var word = ['doc', 'rtf', 'pages', 'txt', 'docx'];
@@ -1344,7 +1352,7 @@ app.post("/f/removeUserFromSubdivision", requireLogin, requireAdmin, function(re
 });
 app.post("/f/getUsersInSubdivision", requireLogin, function(req, res){
   User.find({
-    subdivisions: { $elemMatch: { _id: req.body.subdivision_id } }
+    subdivisions: { $elemMatch: { _id: req.body.subdivision_id, accepted: true } }
   }, '-password', function(err, users){
     if(err){
       console.error(err);
@@ -1416,14 +1424,13 @@ app.post("/f/postAnnouncement", requireLogin, function(req, res){
             console.error(err);
             res.end("fail");
           }else{
-            users.forEach(function(user){
-              notify.sendMail({
-                  from: 'MorTeam Notification <notify@morteam.com>',
-                  to: user.email,
-                  subject: 'New Announcement By ' + req.user.firstname + ' ' + req.user.lastname,
-                  html: announcement.content
-              });
-            })
+            var list = createRecepientList(users);
+            notify.sendMail({
+                from: 'MorTeam Notification <notify@morteam.com>',
+                to: list,
+                subject: 'New Announcement By ' + req.user.firstname + ' ' + req.user.lastname,
+                html: announcement.content
+            });
             res.end(announcement._id.toString());
           }
         })
@@ -1447,14 +1454,13 @@ app.post("/f/postAnnouncement", requireLogin, function(req, res){
               console.error(err);
               res.end("fail");
             }else{
-              users.forEach(function(user){
-                notify.sendMail({
-                    from: 'MorTeam Notification <notify@morteam.com>',
-                    to: user.email,
-                    subject: 'New Announcement By ' + req.user.firstname + ' ' + req.user.lastname,
-                    html: announcement.content
-                });
-              })
+              var list = createRecepientList(users);
+              notify.sendMail({
+                  from: 'MorTeam Notification <notify@morteam.com>',
+                  to: list,
+                  subject: 'New Announcement By ' + req.user.firstname + ' ' + req.user.lastname,
+                  html: announcement.content
+              });
               res.end(announcement._id.toString());
             }
           })
@@ -1480,14 +1486,13 @@ app.post("/f/postAnnouncement", requireLogin, function(req, res){
               console.error(err);
               res.end("fail");
             }else{
-              users.forEach(function(user){
-                notify.sendMail({
-                    from: 'MorTeam Notification <notify@morteam.com>',
-                    to: user.email,
-                    subject: 'New Announcement By ' + req.user.firstname + ' ' + req.user.lastname,
-                    html: announcement.content
-                });
-              })
+              var list = createRecepientList(users);
+              notify.sendMail({
+                  from: 'MorTeam Notification <notify@morteam.com>',
+                  to: list
+                  subject: 'New Announcement By ' + req.user.firstname + ' ' + req.user.lastname,
+                  html: announcement.content
+              });
               res.end(announcement._id.toString());
             }
           })
@@ -1857,14 +1862,13 @@ app.post("/f/createEvent", requireLogin, requireLeader, function(req, res){
               console.error(err);
               res.end("fail");
             }else{
-              users.forEach(function(user){
-                notify.sendMail({
-                    from: 'MorTeam Notification <notify@morteam.com>',
-                    to: user.email,
-                    subject: 'New Event on ' + readableDate(event.date) + ' - ' + event.name,
-                    html: req.user.firstname + ' ' + req.user.lastname + ' has created an event on ' + readableDate(event.date) + ',<br><br>' + event.name + '<br>' + event.description
-                });
-              })
+              var list = createRecepientList(users);
+              notify.sendMail({
+                  from: 'MorTeam Notification <notify@morteam.com>',
+                  to: list,
+                  subject: 'New Event on ' + readableDate(event.date) + ' - ' + event.name,
+                  html: req.user.firstname + ' ' + req.user.lastname + ' has created an event on ' + readableDate(event.date) + ',<br><br>' + event.name + '<br>' + event.description
+              });
               if(req.body.hasAttendance){
                 var attendees = [];
                 User.find({ teams: {$elemMatch: {id: req.user.current_team.id }} }, function(err, users){
@@ -1915,14 +1919,13 @@ app.post("/f/createEvent", requireLogin, requireLeader, function(req, res){
               console.error(err);
               res.end("fail");
             }else{
-              users.forEach(function(user){
-                notify.sendMail({
-                    from: 'MorTeam Notification <notify@morteam.com>',
-                    to: user.email,
-                    subject: 'New Event on ' + readableDate(event.date) + ' - ' + event.name,
-                    html: req.user.firstname + ' ' + req.user.lastname + ' has created an event on ' + readableDate(event.date) + ',<br><br>' + event.name + '<br>' + event.description
-                });
-              })
+              var list = createRecepientList(users);
+              notify.sendMail({
+                  from: 'MorTeam Notification <notify@morteam.com>',
+                  to: list,
+                  subject: 'New Event on ' + readableDate(event.date) + ' - ' + event.name,
+                  html: req.user.firstname + ' ' + req.user.lastname + ' has created an event on ' + readableDate(event.date) + ',<br><br>' + event.name + '<br>' + event.description
+              });
               if(req.body.hasAttendance){
                 var attendees = [];
                 for(var i = 0; i < req.body.userAttendees.length; i++){
@@ -1973,14 +1976,13 @@ app.post("/f/createEvent", requireLogin, requireLeader, function(req, res){
               console.error(err);
               res.end("fail");
             }else{
-              users.forEach(function(user){
-                notify.sendMail({
-                    from: 'MorTeam Notification <notify@morteam.com>',
-                    to: user.email,
-                    subject: 'New Event on ' + readableDate(event.date) + ' - ' + event.name,
-                    html: req.user.firstname + ' ' + req.user.lastname + ' has created an event on ' + readableDate(event.date) + ',<br><br>' + event.name
-                });
-              })
+              var list = createRecepientList(users);
+              notify.sendMail({
+                  from: 'MorTeam Notification <notify@morteam.com>',
+                  to: list,
+                  subject: 'New Event on ' + readableDate(event.date) + ' - ' + event.name,
+                  html: req.user.firstname + ' ' + req.user.lastname + ' has created an event on ' + readableDate(event.date) + ',<br><br>' + event.name
+              });
               if(req.body.hasAttendance){
                 var attendees = [];
                 User.find({ teams: {$elemMatch: {id: req.user.current_team.id }} }, function(err, users){
@@ -2030,14 +2032,13 @@ app.post("/f/createEvent", requireLogin, requireLeader, function(req, res){
               console.error(err);
               res.end("fail");
             }else{
-              users.forEach(function(user){
-                notify.sendMail({
-                    from: 'MorTeam Notification <notify@morteam.com>',
-                    to: user.email,
-                    subject: 'New Event on ' + readableDate(event.date) + ' - ' + event.name,
-                    html: req.user.firstname + ' ' + req.user.lastname + ' has created an event on ' + readableDate(event.date) + ',<br><br>' + event.name
-                });
-              })
+              var list = createRecepientList(users);
+              notify.sendMail({
+                  from: 'MorTeam Notification <notify@morteam.com>',
+                  to: list,
+                  subject: 'New Event on ' + readableDate(event.date) + ' - ' + event.name,
+                  html: req.user.firstname + ' ' + req.user.lastname + ' has created an event on ' + readableDate(event.date) + ',<br><br>' + event.name
+              });
               if(req.body.hasAttendance){
                 var attendees = [];
                 for(var i = 0; i < req.body.userAttendees.length; i++){
