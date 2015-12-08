@@ -1489,7 +1489,7 @@ app.post("/f/postAnnouncement", requireLogin, function(req, res){
               var list = createRecepientList(users);
               notify.sendMail({
                   from: 'MorTeam Notification <notify@morteam.com>',
-                  to: list
+                  to: list,
                   subject: 'New Announcement By ' + req.user.firstname + ' ' + req.user.lastname,
                   html: announcement.content
               });
