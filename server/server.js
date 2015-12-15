@@ -111,6 +111,7 @@ function requireLeader(req, res, next) {
     next();
   } else {
     notify.sendMail({
+        from: 'MorTeam Notification <notify@morteam.com>',
         to: 'rafezyfarbod@gmail.com',
         subject: 'MorTeam Security Alert!',
         text: 'The user ' + req.user.firstname + " " + req.user.lastname + ' tried to perform leader/administrator tasks. User ID: ' + req.user._id
@@ -1431,6 +1432,7 @@ app.post("/f/postAnnouncement", requireLogin, function(req, res){
           }else{
             var list = createRecepientList(users);
             notify.sendMail({
+                from: 'MorTeam Notification <notify@morteam.com>',
                 to: list,
                 subject: 'New Announcement By ' + req.user.firstname + ' ' + req.user.lastname,
                 html: announcement.content
@@ -1468,6 +1470,7 @@ app.post("/f/postAnnouncement", requireLogin, function(req, res){
             }else{
               var list = createRecepientList(users);
               notify.sendMail({
+                  from: 'MorTeam Notification <notify@morteam.com>',
                   to: list,
                   subject: 'New Announcement By ' + req.user.firstname + ' ' + req.user.lastname,
                   html: announcement.content
@@ -1507,6 +1510,7 @@ app.post("/f/postAnnouncement", requireLogin, function(req, res){
             }else{
               var list = createRecepientList(users);
               notify.sendMail({
+                  from: 'MorTeam Notification <notify@morteam.com>',
                   to: list,
                   subject: 'New Announcement By ' + req.user.firstname + ' ' + req.user.lastname,
                   html: announcement.content
@@ -1573,6 +1577,7 @@ app.post("/f/deleteAnnouncement", requireLogin, function(req, res){
         })
       }else{
         notify.sendMail({
+            from: 'MorTeam Notification <notify@morteam.com>',
             to: 'rafezyfarbod@gmail.com',
             subject: 'MorTeam Security Alert!',
             text: 'The user ' + req.user.firstname + " " + req.user.lastname + ' tried to perform administrator tasks. User ID: ' + req.user._id
@@ -1881,6 +1886,7 @@ app.post("/f/createEvent", requireLogin, requireLeader, function(req, res){
             }else{
               var list = createRecepientList(users);
               notify.sendMail({
+                  from: 'MorTeam Notification <notify@morteam.com>',
                   to: list,
                   subject: 'New Event on ' + readableDate(event.date) + ' - ' + event.name,
                   html: req.user.firstname + ' ' + req.user.lastname + ' has created an event on ' + readableDate(event.date) + ',<br><br>' + event.name + '<br>' + event.description
@@ -1937,6 +1943,7 @@ app.post("/f/createEvent", requireLogin, requireLeader, function(req, res){
             }else{
               var list = createRecepientList(users);
               notify.sendMail({
+                  from: 'MorTeam Notification <notify@morteam.com>',
                   to: list,
                   subject: 'New Event on ' + readableDate(event.date) + ' - ' + event.name,
                   html: req.user.firstname + ' ' + req.user.lastname + ' has created an event on ' + readableDate(event.date) + ',<br><br>' + event.name + '<br>' + event.description
@@ -1993,6 +2000,7 @@ app.post("/f/createEvent", requireLogin, requireLeader, function(req, res){
             }else{
               var list = createRecepientList(users);
               notify.sendMail({
+                  from: 'MorTeam Notification <notify@morteam.com>',
                   to: list,
                   subject: 'New Event on ' + readableDate(event.date) + ' - ' + event.name,
                   html: req.user.firstname + ' ' + req.user.lastname + ' has created an event on ' + readableDate(event.date) + ',<br><br>' + event.name
@@ -2048,6 +2056,7 @@ app.post("/f/createEvent", requireLogin, requireLeader, function(req, res){
             }else{
               var list = createRecepientList(users);
               notify.sendMail({
+                  from: 'MorTeam Notification <notify@morteam.com>',
                   to: list,
                   subject: 'New Event on ' + readableDate(event.date) + ' - ' + event.name,
                   html: req.user.firstname + ' ' + req.user.lastname + ' has created an event on ' + readableDate(event.date) + ',<br><br>' + event.name
@@ -2409,6 +2418,7 @@ app.post("/f/assignTask", requireLogin, requireLeader, function(req, res){
           }else{
             if(user){
               notify.sendMail({
+                  from: 'MorTeam Notification <notify@morteam.com>',
                   to: user.email,
                   subject: 'New Task Assigned By ' + req.user.firstname + " " + req.user.lastname,
                   text: 'View your new task at http://www.morteam.com/u/' + req.body.user_id
@@ -2686,6 +2696,7 @@ app.post("/f/forgotPassword", function(req, res){
           res.end("fail");
         }else{
           notify.sendMail({
+              from: 'MorTeam Notification <notify@morteam.com>',
               to: req.body.email,
               subject: 'New MorTeam Password Request',
               text: 'It seems like you requested to reset your password. Your new password is ' + new_password + '. Feel free to reset it after you log in.'
