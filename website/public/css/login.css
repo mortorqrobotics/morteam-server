@@ -207,7 +207,7 @@ label:before {
 	}
 	.left-body{
 		position: absolute;
-		top: 350px;
+		top: 430px;
 		width: calc(100% - 60px);
 		text-align: left;
 	}
