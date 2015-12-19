@@ -119,6 +119,47 @@ input {
 	/*margin: auto;*/
 	margin-bottom: 85px;
 }
+#remember{
+	position: relative;
+	left: 28px;
+	margin-top: 5px;
+	text-align: left;
+}
+#remember_box:hover{
+	cursor: pointer;
+}
+#remember_text{
+	margin-left: 30px;
+	font-weight: 200;
+}
+#remember_text:hover{
+	cursor: pointer;
+}
+input[type=checkbox]:not(#entireTeam, #hasAttendance) {
+    display: none;
+}
+input[type=checkbox]:checked + label:before {
+	position: absolute;
+    content: "\2713";
+    color: orange;
+    text-align: center;
+    line-height: 20px;
+    bottom: .01em;
+    border-radius: 1px;
+}
+label:before {
+    content: "";
+    display: inline-block;
+
+    width: 20px;
+    height: 20px;
+
+    position: absolute;
+    left: 0;
+    bottom: .01em;
+    background-color: #E9E9E9;
+    border-radius: 1px;
+}
 
 @media screen and (max-width: 945px) {
 	.left-body{

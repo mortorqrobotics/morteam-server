@@ -22,6 +22,7 @@
 		<div class="loginBox">
 			<input autocapitalize="off" autocorrect="off" id="username_box" type="text" placeholder="Username/Email" class="m_textbox login_textbox"/><br>
 			<input id="password_box" type="password" placeholder="Password" class="m_textbox login_textbox"/><br>
+			<div id="remember"><input type="checkbox" id="remember_box"></input><label for="remember_box" id="remember_text">Remember me?</label></div>
 			<input id="login_button" type="button" class="m_button m_orange login_button" value="Log In"/><br>
 			<input id="signup_buttonL" type="button" class="m_button m_blue login_button" onclick="location='signup'" value="Sign Up"/>
 		</div>
@@ -66,7 +67,7 @@
         $(this).prop("disabled",true);
         var username = $.trim($("#username_box").val());
         var password = $("#password_box").val();
-        $.post("/f/login", {"username": username, "password": password}, function(responseText){
+        $.post("/f/login", {"username": username, "password": password, "rememberMe": $('#remember_box').is(':checked')}, function(responseText){
           if(responseText != "inc/username" && responseText != "inc/password" && responseText != "fail"){
             var user = JSON.parse(responseText)
             localStorage.username = user.username;

@@ -523,7 +523,6 @@ li.active{
 	position: relative;
 	left: 32px;
 	margin-top: 24px;
-	visibility: hidden;
 }
 #remember_box:hover{
 	cursor: pointer;

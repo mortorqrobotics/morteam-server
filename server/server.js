@@ -40,18 +40,6 @@ var notify = nodemailer.createTransport({
         user: config.mailgunUser,
         pass: config.mailgunPass
     }
-}, {
-    from: 'MorTeam Notification <notify@morteam.com>'
-});
-
-var support = nodemailer.createTransport({
-    service: 'Mailgun',
-    auth: {
-        user: config.mailgunUser,
-        pass: config.mailgunPass
-    }
-}, {
-    from: 'MorTeam Support <support@morteam.com>'
 });
 
 var port = process.argv[2] || 80;
@@ -132,6 +120,17 @@ function subdivisionNotFound(response) {
     "Content-Type": "text/plain"
   });
   response.end("Subdivision not found");
+}
+function handleError(err, res){
+  if(err){
+    console.error(err);
+    fs.appendFile("errors.txt", err.toString());
+    fs.appendFile("errors.txt", "##################");
+    res.end("fail");
+    return
+  }else{
+    return
+  }
 }
 
 
@@ -794,6 +793,12 @@ app.post("/f/deleteUser", requireLogin, function(req, res) {
 });
 app.post("/f/login", function(req, res) {
   //IMPORTANT: req.body.username can either be a username or an email. Please do not let this confuse you.
+  if(req.body.rememberMe == "true"){
+    req.body.rememberMe = true;
+  }else{
+    req.body.rememberMe = false;
+  }
+
   User.findOne({
     $or: [{username: req.body.username}, {email: req.body.username}]
   }, function(err, user) {
@@ -809,6 +814,9 @@ app.post("/f/login", function(req, res) {
           } else {
             if (isMatch) {
               req.session.user = user;
+              if(req.body.rememberMe){
+                req.session.cookie.maxAge = 365 * 24 * 60 * 60 * 1000; //one year
+              }
               res.end(JSON.stringify(user));
             } else {
               res.end("inc/password");
