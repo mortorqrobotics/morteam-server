@@ -25,6 +25,16 @@ img{
 	border: none;
 	padding: 3px 8px 3px 8px;
 	border-radius: 1px;
+	cursor: pointer;
+}
+.m_input{
+	margin-top: 5px;
+	border: none;
+	padding: 8px 4px 8px 4px;
+	font-size: 15px;
+	margin-bottom: 10px;
+	box-shadow: 1.5px 3px 8px -2px #a9a9a9;
+	border-radius: 1px;
 }
 .button:hover{
 	background-color: orange;
@@ -2563,4 +2573,20 @@ th{
 .group_member_name.subdivision{
 	vertical-align: 6px;
 	padding-left: 8px;
+}
+#fp_done{
+	width: 180px;
+	margin-top: 10px;
+	font-size: 15px;
+	padding: 8px 4px 8px 4px;
+	box-shadow: 1.5px 3px 8px -2px #a9a9a9;
+}
+#fp_div{
+	text-align: center;
+	margin-top: 35vh;
+}
+#back_to_login{
+	position: absolute;
+	top: 0px;
+	left: 0px;
 }

@@ -135,6 +135,9 @@ input {
 #remember_text:hover{
 	cursor: pointer;
 }
+#fp_btn{
+	font-size: 14px;
+}
 input[type=checkbox]:not(#entireTeam, #hasAttendance) {
     display: none;
 }
@@ -160,6 +163,34 @@ label:before {
     background-color: #E9E9E9;
     border-radius: 1px;
 }
+.name_input{
+	width: 100%;
+	margin-top: 5px;
+	border: none;
+	padding: 8px 4px 8px 4px;
+	font-size: 15px;
+	margin-bottom: 10px;
+	box-shadow: 1.5px 3px 8px -2px #a9a9a9;
+	border-radius: 1px;
+}
+.button{
+	background-color: #FFC547;
+	border: none;
+	padding: 3px 8px 3px 8px;
+	border-radius: 1px;
+}
+.done_button{
+	width: 91.5%;
+	height: 37px;
+	background-color: #ffc547;
+	border: none;
+	color: black;
+	position: absolute;
+	bottom: 15px;
+	box-shadow: 1.5px 3px 8px -2px #a9a9a9;
+	border-radius: 1px;
+}
+
 
 @media screen and (max-width: 945px) {
 	.left-body{

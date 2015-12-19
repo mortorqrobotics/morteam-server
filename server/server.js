@@ -363,6 +363,10 @@ app.use(function(req, res, next) {
       next();
     } else if (req.url == "/signup.html") {
       next();
+    } else if (req.url == "/fp.html") {
+      next();
+    } else if (req.url == "/favicon.ico") {
+
     } else if (req.url == "/void.html") {
       if (req.user) {
         if (req.user.teams.length > 0) {
@@ -2693,25 +2697,43 @@ app.post("/f/removeUserFromTeam", requireLogin, requireAdmin, function(req, res)
   })
 })
 app.post("/f/forgotPassword", function(req, res){
-  User.findOne({email: req.body.email}, function(err, user){
+  User.findOne({email: req.body.email, username: req.body.username}, function(err, user){
     if(err){
       console.error(err);
       res.end("fail");
     }else{
-      user.assignNewPassword(function(err, new_password){
-        if(err){
-          console.error(err);
-          res.end("fail");
-        }else{
-          notify.sendMail({
-              from: 'MorTeam Notification <notify@morteam.com>',
-              to: req.body.email,
-              subject: 'New MorTeam Password Request',
-              text: 'It seems like you requested to reset your password. Your new password is ' + new_password + '. Feel free to reset it after you log in.'
-          });
-          res.end("success");
-        }
-      });
+      if(user){
+        user.assignNewPassword(function(err, new_password){
+          if(err){
+            console.error(err);
+            res.end("fail");
+          }else{
+            user.save(function(err){
+              if(err){
+                console.error(err);
+                res.end("fail");
+              }else{
+                notify.sendMail({
+                    from: 'MorTeam Notification <notify@morteam.com>',
+                    to: req.body.email,
+                    subject: 'New MorTeam Password Request',
+                    text: 'It seems like you requested to reset your password. Your new password is ' + new_password + '. Feel free to reset it after you log in.'
+                }, function(err, info){
+                  if(err){
+                    console.error(err);
+                    res.end("fail");
+                  }else{
+                    console.log(info);
+                    res.end("success");
+                  }
+                });
+              }
+            })
+          }
+        });
+      }else{
+        res.end("does not exist");
+      }
     }
   })
 })

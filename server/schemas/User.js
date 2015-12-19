@@ -68,18 +68,26 @@ userSchema.methods.comparePassword = function(candidatePassword, cb) {
     });
 };
 
+// userSchema.methods.assignNewPassword = function(cb) {
+//   var user = this;
+//   var new_password = createToken(8);
+//   bcrypt.genSalt(SALT_WORK_FACTOR, function(err, salt) {
+//       if (err) return cb(err, null);
+//       bcrypt.hash(new_password, salt, function(err, hash) {
+//           if (err) return cb(err, null);
+//           user.password = hash;
+//           cb(null, new_password)
+//       });
+//   });
+// }
+
 userSchema.methods.assignNewPassword = function(cb) {
   var user = this;
   var new_password = createToken(8);
-  bcrypt.genSalt(SALT_WORK_FACTOR, function(err, salt) {
-      if (err) return cb(err, null);
-      bcrypt.hash(new_password, salt, function(err, hash) {
-          if (err) return cb(err, null);
-          user.password = hash;
-          cb(null, new_password)
-      });
-  });
+  user.password = new_password;
+  cb(null, new_password);
 }
+
 
 var User = mongoose.model('User', userSchema);
 
