@@ -1,16 +1,10 @@
 var mongoose = require('mongoose');
-var bcrypt = require('bcrypt'),
-Schema = mongoose.Schema;
+var bcrypt = require('bcrypt');
+var Schema = mongoose.Schema;
+var util = require("../util.js");
 SALT_WORK_FACTOR = 10;
 
-function createToken(size) {
-  var token = "";
-  for (var i = 0; i < size; i++) {
-    var rand = Math.floor(Math.random() * 62);
-    token += String.fromCharCode(rand + ((rand < 26) ? 97 : ((rand < 52) ? 39 : -4)));
-  }
-  return token;
-}
+var createToken = util.createToken;
 
 var userSchema = new Schema({
   username:     { type: String, required: true, unique: true },
