@@ -1,14 +1,26 @@
 module.exports = function(app, util, schemas) {
 
-  var User = schemas.User;
-  var Team = schemas.Team;
-  var AttendanceHandler = schemas.AttendanceHandler;
-  var Folder = schemas.Folder;
+  //assign variables to util functions(and objects) and database schemas
+  for(key in util){
+    eval("var " + key + " = util." + key + ";");
+  }
+  for(key in schemas){
+    eval("var " + key + " = schemas." + key + ";");
+  }
 
-  var requireLogin = util.requireLogin;
-  var requireLeader = util.requireLeader;
-  var requireAdmin = util.requireAdmin;
-
+  app.get('/team', requireLogin, function(req, res){
+    User.find({ teams: { $elemMatch: { id: req.user.current_team.id } } }, '-password', function(err, users){
+      Team.findOne({id: req.user.current_team.id}, function(err, team){
+        res.render('team', {
+          teamName: team.name,
+          teamNum: team.number,
+          teamId: team.id,
+          members: users,
+          viewerIsAdmin: req.user.current_team.position=="admin",
+        });
+      });
+    });
+  });
   app.post("/f/getUsersInTeam", requireLogin, function(req, res) {
     User.find({
       teams: {$elemMatch: {id: req.user.current_team.id }}

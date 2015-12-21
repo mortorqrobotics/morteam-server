@@ -4,17 +4,52 @@ module.exports = function(app, util, schemas) {
   var lwip = require('lwip');
   var multer = require('multer');
 
-  var User = schemas.User;
+  //assign variables to util functions(and objects) and database schemas
+  for(key in util){
+    eval("var " + key + " = util." + key + ";");
+  }
+  for(key in schemas){
+    eval("var " + key + " = schemas." + key + ";");
+  }
 
-  var requireLogin = util.requireLogin;
-  var requireLeader = util.requireLeader;
-  var requireAdmin = util.requireAdmin;
-  var validateEmail = util.validateEmail;
-  var validatePhone = util.validatePhone;
-  var findTeamInUser = util.findTeamInUser;
-  var uploadToProfPics = util.uploadToProfPics;
-  var resizeImage = util.resizeImage;
-  var notify = util.notify;
+  app.get("/u/:id", function(req, res) {
+    User.findOne({
+      _id: req.params.id,
+      teams: {$elemMatch: {'id': req.user.current_team.id }}
+    }, function(err, user) {
+      if (err) {
+        send404(res);
+      } else {
+        if (user) {
+          res.render('user', {
+            firstname: user.firstname,
+            lastname: user.lastname,
+            _id: user._id,
+            email: user.email,
+            phone: user.phone,
+            profpicpath: user.profpicpath,
+            viewedUserPosition: findTeamInUser(user, req.user.current_team.id).position,
+            viewerUserPosition: req.user.current_team.position,
+            viewerUserId: req.user._id
+          });
+        } else {
+          userNotFound(res);
+        }
+      }
+    })
+  });
+
+  //load default profile picture
+  app.get("/images/user.jpg-60", function(req, res){
+    res.sendFile(publicDir+"/images/user.jpg");
+  });
+  app.get("/images/user.jpg-300", function(req, res){
+    res.sendFile(publicDir+"/images/user.jpg");
+  });
+  //load user profile picture from AWS S3
+  app.get('/pp/:path', function(req, res){
+    res.redirect(profpicDir+req.params.path);
+  });
 
   app.post("/f/login", function(req, res) {
     //IMPORTANT: req.body.username can either be a username or an email. Please do not let this confuse you.

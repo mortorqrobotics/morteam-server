@@ -2,14 +2,13 @@ module.exports = function(app, util, schemas) {
 
   var ObjectId = require('mongoose').Types.ObjectId;
 
-  var User = schemas.User;
-  var Chat = schemas.Chat;
-
-  var requireLogin = util.requireLogin;
-  var requireLeader = util.requireLeader;
-  var requireAdmin = util.requireAdmin;
-  var getUserOtherThanSelf = util.getUserOtherThanSelf;
-  var normalizeDisplayedText = util.normalizeDisplayedText;
+  //assign variables to util functions(and objects) and database schemas
+  for(key in util){
+    eval("var " + key + " = util." + key + ";");
+  }
+  for(key in schemas){
+    eval("var " + key + " = schemas." + key + ";");
+  }
 
   app.post("/f/createChat", requireLogin, function(req, res){
     var subdivisionMembers;

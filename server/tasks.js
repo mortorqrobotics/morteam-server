@@ -1,12 +1,12 @@
 module.exports = function(app, util, schemas) {
 
-  var User = schemas.User;
-  var Task = schemas.Task;
-
-  var requireLogin = util.requireLogin;
-  var requireLeader = util.requireLeader;
-  var requireAdmin = util.requireAdmin;
-  var notify = util.notify;
+  //assign variables to util functions(and objects) and database schemas
+  for(key in util){
+    eval("var " + key + " = util." + key + ";");
+  }
+  for(key in schemas){
+    eval("var " + key + " = schemas." + key + ";");
+  }
 
   app.post("/f/assignTask", requireLogin, requireLeader, function(req, res){
     if(req.body.task_description){

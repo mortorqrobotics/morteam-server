@@ -3,14 +3,13 @@ module.exports = function(app, util, schemas) {
   var Autolinker = require( 'autolinker' );
   var ObjectId = require('mongoose').Types.ObjectId;
 
-  var User = schemas.User;
-  var Announcement = schemas.Announcement;
-
-  var requireLogin = util.requireLogin;
-  var requireLeader = util.requireLeader;
-  var requireAdmin = util.requireAdmin;
-  var createRecepientList = util.createRecepientList;
-  var notify = util.notify;
+  //assign variables to util functions(and objects) and database schemas
+  for(key in util){
+    eval("var " + key + " = util." + key + ";");
+  }
+  for(key in schemas){
+    eval("var " + key + " = schemas." + key + ";");
+  }
 
   app.post("/f/postAnnouncement", requireLogin, function(req, res){
     //Attempt to convert audience request to JSON in case client does not explicitly send it as a JSON type

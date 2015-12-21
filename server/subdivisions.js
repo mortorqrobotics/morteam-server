@@ -2,15 +2,77 @@ module.exports = function(app, util, schemas) {
 
   var ObjectId = require('mongoose').Types.ObjectId;
 
-  var User = schemas.User;
-  var Subdivision = schemas.Subdivision;
-  var Event = schemas.Event;
-  var AttendanceHandler = schemas.AttendanceHandler;
+  //assign variables to util functions(and objects) and database schemas
+  for(key in util){
+    eval("var " + key + " = util." + key + ";");
+  }
+  for(key in schemas){
+    eval("var " + key + " = schemas." + key + ";");
+  }
 
-  var requireLogin = util.requireLogin;
-  var requireLeader = util.requireLeader;
-  var requireAdmin = util.requireAdmin;
+  app.get("/s/:id", function(req, res) {
+    var joined = false;
+    Subdivision.findOne({
+      _id: req.params.id,
+      team: req.user.current_team.id
+    }, function(err, subdivision) {
+      if (err) {
+        send404(res);
+      } else {
+        if (subdivision) {
+          User.find({
+            subdivisions: {
+              $elemMatch: {
+                _id: subdivision._id, //TODO: maybe add toString
+                accepted: true
+              }
+            }
+          }, function(err, users) {
+            if (err) {
+              send404(res);
+            } else {
+              if (subdivision.type == "private") {
+                for (var i = 0; i < users.length; i++) {
+                  if (users[i]._id.toString() == req.user._id) {
+                    res.render('subdivision', {
+                      name: subdivision.name,
+                      type: subdivision.type,
+                      team: subdivision.team, //TODO: POSSIBLY CHANGE TO subdivision.team._id
+                      admin: req.user.current_team.position=="admin",
+                      joined: true,
+                      members: users,
+                      current_user_id: req.user._id
+                    });
+                    break;
+                  }
+                }
+                res.end("nothing to see here.");
+              } else if (subdivision.type == "public") {
+                for (var i = 0; i < users.length; i++) {
+                  if (users[i]._id.toString() == req.user._id.toString()) {
+                    joined = true
+                    break;
+                  }
+                }
 
+                res.render('subdivision', {
+                  name: subdivision.name,
+                  type: subdivision.type,
+                  team: subdivision.team, //TODO: POSSIBLY CHANGE TO subdivision.team._id
+                  admin: req.user.current_team.position=="admin",
+                  joined: joined,
+                  members: users,
+                  current_user_id: req.user._id
+                });
+              }
+            }
+          })
+        } else {
+          subdivisionNotFound(res);
+        }
+      }
+    })
+  });
   app.post("/f/createSubdivision", requireLogin, requireLeader, function(req, res) {
     if(req.body.name.length < 22){
       Subdivision.create({

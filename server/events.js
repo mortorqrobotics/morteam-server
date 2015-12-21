@@ -2,17 +2,13 @@ module.exports = function(app, util, schemas) {
 
   var ObjectId = require('mongoose').Types.ObjectId;
 
-  var User = schemas.User;
-  var Event = schemas.Event;
-  var AttendanceHandler = schemas.AttendanceHandler;
-
-  var requireLogin = util.requireLogin;
-  var requireLeader = util.requireLeader;
-  var requireAdmin = util.requireAdmin;
-  var createRecepientList = util.createRecepientList;
-  var readableDate = util.readableDate;
-  var removeDuplicates = util.removeDuplicates;
-  var notify = util.notify;
+  //assign variables to util functions(and objects) and database schemas
+  for(key in util){
+    eval("var " + key + " = util." + key + ";");
+  }
+  for(key in schemas){
+    eval("var " + key + " = schemas." + key + ";");
+  }
 
   app.post("/f/getEventsForUserInTeamInMonth", requireLogin, function(req, res){
     var userSubdivisionIds = req.user.subdivisions.map(function(subdivision) {

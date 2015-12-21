@@ -4,18 +4,55 @@ module.exports = function(app, util, schemas) {
   var multer = require('multer');
   var extToMime = require("./extToMime.json");
 
-  var User = schemas.User;
-  var Folder = schemas.Folder;
-  var File = schemas.File;
+  //assign variables to util functions(and objects) and database schemas
+  for(key in util){
+    eval("var " + key + " = util." + key + ";");
+  }
+  for(key in schemas){
+    eval("var " + key + " = schemas." + key + ";");
+  }
 
-  var requireLogin = util.requireLogin;
-  var requireLeader = util.requireLeader;
-  var requireAdmin = util.requireAdmin;
-  var uploadToDrive = util.uploadToDrive;
-  var deleteFileFromDrive = util.deleteFileFromDrive;
-  var normalizeDisplayedText = util.normalizeDisplayedText;
-  var extToType = util.extToType;
-
+  app.get('/file/:fileId', requireLogin, function(req, res){
+    var userSubdivisionIds = req.user.subdivisions.map(function(subdivision) {
+      if (subdivision.accepted == true) {
+        return new ObjectId(subdivision._id);
+      }
+    });
+    if(req.params.fileId.indexOf("-preview") == -1){
+      File.findOne({_id: req.params.fileId}).populate('folder').exec(function(err, file){
+        if(err){
+          console.error(err);
+          res.end("fail");
+        }else{
+          if(file){
+            if( (file.folder.team == req.user.current_team.id && file.folder.entireTeam) || file.folder.userMembers.indexOf(req.user._id)>-1 || file.folder.subdivisionMembers.hasAnythingFrom(userSubdivisionIds) ){
+              driveBucket.getSignedUrl('getObject', { Key: req.params.fileId, Expires: 60 }, function (err, url) {
+                if(err){
+                  console.error(err);
+                  res.end("fail");
+                }else{
+                  res.redirect(url);
+                }
+              });
+            }else{
+              res.end("restricted");
+            }
+          }else{
+            res.end("fail");
+          }
+        }
+      });
+    }else{
+      driveBucket.getSignedUrl('getObject', { Key: req.params.fileId, Expires: 60 }, function (err, url) {
+        if(err){
+          console.error(err);
+          res.end("fail");
+        }else{
+          res.redirect(url);
+        }
+      });
+    }
+  });
   app.post("/f/getTeamFolders", requireLogin, function(req, res){
     var userSubdivisionIds = req.user.subdivisions.map(function(subdivision) {
       if (subdivision.accepted == true) {
