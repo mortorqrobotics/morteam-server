@@ -703,7 +703,7 @@
     // spinner = new Spinner(spinnerOpts).spin(loadingDiv);
     $.post("/f/getAnnouncementsForUser", {skip: 20*localStorage.page},function(responseText){
       if(responseText != "fail"){
-        var announcements = JSON.parse(responseText);
+        var announcements = responseText;
         // var announcementsArr = JSON.parse(responseText);
         // var announcements = announcementsArr.map(function(ann) {
         //   return ann.obj;

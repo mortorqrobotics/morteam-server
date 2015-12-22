@@ -12,12 +12,13 @@ module.exports = function(app, util, schemas) {
   }
 
   app.post("/f/postAnnouncement", requireLogin, function(req, res){
-    //Attempt to convert audience request to JSON in case client does not explicitly send it as a JSON type
+    //attempt to convert audience request to JSON in case client does not explicitly send it as a JSON type
     try {
       req.body.audience = JSON.parse(req.body.audience);
     }  catch(e) { }
+    //adds <a> tags to detected links
     req.body.content = Autolinker.link( req.body.content )
-    if(typeof(req.body.audience) == "object"){
+    if(typeof(req.body.audience) == "object"){ //this means user has selected 'custom' audience
       Announcement.create({
         author: req.user._id,
         content: req.body.content,
@@ -30,14 +31,17 @@ module.exports = function(app, util, schemas) {
           console.error(err);
           res.end("fail");
         }else{
+          //announcement has been added to database. Now we need to send an email to everyone who is supposed to see it.
           User.find({ $or: [
             { _id: { $in: req.body.audience.userMembers } },
+            //users that have a subdivision which has an _id that is in the audience.subdivisionMembers array
             { subdivisions: { $elemMatch: { '_id': { $in: req.body.audience.subdivisionMembers } } } }
           ] }, '-password', function(err, users){
             if(err){
               console.error(err);
               res.end("fail");
             }else{
+              //creates a string which is a list of recepients with the following format: "a@a.com, b@b.com, c@c.com"
               var list = createRecepientList(users);
               notify.sendMail({
                   from: 'MorTeam Notification <notify@morteam.com>',
@@ -71,11 +75,13 @@ module.exports = function(app, util, schemas) {
             console.error(err);
             res.end("fail");
           }else{
+            //find all users in the current team
             User.find({ teams: {$elemMatch: {id: req.user.current_team.id }} }, '-password', function(err, users){
               if(err){
                 console.error(err);
                 res.end("fail");
               }else{
+                //creates a string which is a list of recepients with the following format: "a@a.com, b@b.com, c@c.com"
                 var list = createRecepientList(users);
                 notify.sendMail({
                     from: 'MorTeam Notification <notify@morteam.com>',
@@ -96,19 +102,19 @@ module.exports = function(app, util, schemas) {
             })
           }
         });
-      }else{
-        //with subdivision id
+      }else{ //this means that the user selected a specific subdivision to send the announcement to
         Announcement.create({
           author: req.user._id,
           content: req.body.content,
           team: req.user.current_team.id,
           timestamp: new Date(),
-  	      subdivisionAudience: [new ObjectId(String(req.body.audience))]
+  	      subdivisionAudience: [new ObjectId(String(req.body.audience))] //req.body.audience is a string that is the _id of said subdivision
         }, function(err, announcement){
           if(err){
             console.error(err);
             res.end("fail");
           }else{
+            //find users that have a subdivision which has an _id that is equal to req.body.audience(the subdivision _id)
             User.find({
               subdivisions: { $elemMatch: { _id: req.body.audience } }
             }, '-password', function(err, users){
@@ -116,6 +122,7 @@ module.exports = function(app, util, schemas) {
                 console.error(err);
                 res.end("fail");
               }else{
+                //creates a string which is a list of recepients with the following format: "a@a.com, b@b.com, c@c.com"
                 var list = createRecepientList(users);
                 notify.sendMail({
                     from: 'MorTeam Notification <notify@morteam.com>',
@@ -132,12 +139,13 @@ module.exports = function(app, util, schemas) {
     }
   });
   app.post("/f/getAnnouncementsForUser", requireLogin, function(req, res) {
-    var finalAnnouncements = [];
+    //creates an array of the _ids of the subdivisions that the user is a member of
     var userSubdivisionIds = req.user.subdivisions.map(function(subdivision) {
       if (subdivision.accepted == true) {
         return new ObjectId(subdivision._id);
       }
     });
+    //find announcements that the user should be able to see
     Announcement.find({
       team: req.user.current_team.id,
       $or: [
@@ -155,16 +163,18 @@ module.exports = function(app, util, schemas) {
       ]
     },
     {
+      //only respond with _id, author, content and timestamp
       _id: 1,
       author: 1,
       content: 1,
       timestamp: 1
+      //populate author and sort by timestamp, skip and limit are for pagination
     }).populate("author", "-password").sort('-timestamp').skip(req.body.skip).limit(20).exec(function(err, announcements){
       if(err){
         console.error(err);
         res.end("fail");
       }else{
-        res.end(JSON.stringify(announcements))
+        res.json(announcements)
       }
     })
   })
@@ -174,6 +184,7 @@ module.exports = function(app, util, schemas) {
         console.error(err);
         res.end("fail");
       }else{
+        //check if user is eligible to delete said announcement
         if(req.user._id == announcement.author.toString() || req.user.current_team.position == "admin"){
           announcement.remove(function(err){
             if(err){
@@ -184,6 +195,7 @@ module.exports = function(app, util, schemas) {
             }
           })
         }else{
+          //warn me about attempted hax, bruh
           notify.sendMail({
               from: 'MorTeam Notification <notify@morteam.com>',
               to: 'rafezyfarbod@gmail.com',

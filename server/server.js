@@ -36,7 +36,7 @@ var schemas = {
   Task: require('./schemas/Task.js'),
 }
 
-//assign variables to imported util functions(and objects) and database schemas
+//assign variables to imported util functions(and objects) and database schemas (example: var myFunc = util.myFunc;)
 for(key in util){
   eval("var " + key + " = util." + key + ";");
 }

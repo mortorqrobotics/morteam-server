@@ -179,7 +179,7 @@ $(document).ready(function(){
         if(responseText != "fail"){
           $(".search_drop").show();
           $(".search_drop_items").empty();
-          var matchedUsers = JSON.parse(responseText);
+          var matchedUsers = responseText;
           for (var i = 0; i < matchedUsers.length; i++) {
             $(".search_drop_items").append('<li class="user-link" data-userid="'+matchedUsers[i]._id+'"><img id="small_prof_pic" src="'+matchedUsers[i].profpicpath+'-60" onError="this.src=\'../images/user.jpg\'"></img>&nbsp;&nbsp;<span style="vertical-align:middle;">'+matchedUsers[i].firstname + ' ' + matchedUsers[i].lastname+'</span></li>')
           }

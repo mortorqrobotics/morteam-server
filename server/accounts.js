@@ -1,10 +1,10 @@
 module.exports = function(app, util, schemas) {
 
-  var extToMime = require("./extToMime.json");
-  var lwip = require('lwip');
-  var multer = require('multer');
+  var extToMime = require("./extToMime.json"); //used to convert file extensions to mime types
+  var lwip = require('lwip'); //image processing module
+  var multer = require('multer'); //for file uploads
 
-  //assign variables to util functions(and objects) and database schemas
+  //assign variables to util functions(and objects) and database schemas (example: var myFunc = util.myFunc;)
   for(key in util){
     eval("var " + key + " = util." + key + ";");
   }
@@ -12,15 +12,18 @@ module.exports = function(app, util, schemas) {
     eval("var " + key + " = schemas." + key + ";");
   }
 
+  //load profile page of any user based on _id
   app.get("/u/:id", function(req, res) {
     User.findOne({
       _id: req.params.id,
-      teams: {$elemMatch: {'id': req.user.current_team.id }}
+      teams: {$elemMatch: {'id': req.user.current_team.id }} //said user has to be a member of the current team of whoever is loading the page
     }, function(err, user) {
       if (err) {
+        console.error(err);
         send404(res);
       } else {
         if (user) {
+          //load user.ejs page with said user's profile info
           res.render('user', {
             firstname: user.firstname,
             lastname: user.lastname,
@@ -53,6 +56,8 @@ module.exports = function(app, util, schemas) {
 
   app.post("/f/login", function(req, res) {
     //IMPORTANT: req.body.username can either be a username or an email. Please do not let this confuse you.
+
+    //because you can't send booleans via HTTP
     if(req.body.rememberMe == "true"){
       req.body.rememberMe = true;
     }else{
@@ -73,23 +78,25 @@ module.exports = function(app, util, schemas) {
               res.end("fail");
             } else {
               if (isMatch) {
+                //store user info in cookies
                 req.session.user = user;
                 if(req.body.rememberMe){
-                  req.session.cookie.maxAge = 365 * 24 * 60 * 60 * 1000; //one year
+                  req.session.cookie.maxAge = 365 * 24 * 60 * 60 * 1000; //change cookie expiration date to one year
                 }
-                res.end(JSON.stringify(user));
+                res.json(user);
               } else {
-                res.end("inc/password");
+                res.end("inc/password"); //incorrect password
               }
             }
           })
         } else {
-          res.end("inc/username")
+          res.end("inc/username") //incorrect username
         }
       }
     });
   });
   app.post("/f/logout", requireLogin, function(req, res) {
+    //destroy user session cookie
     req.session.destroy(function(err) {
       if(err){
         console.error(err);
@@ -99,11 +106,21 @@ module.exports = function(app, util, schemas) {
       }
     })
   });
+
+  //REFACTOR THIS MESS. HOLY CRAP
+  //uses multer middleware to parse uploaded file called 'profpic' with a max file size
   app.post("/f/createUser", multer({limits: {fileSize:10*1024*1024}}).single('profpic'), function(req, res) {
+    //capitalize names
     req.body.firstname = req.body.firstname.capitalize();
     req.body.lastname = req.body.lastname.capitalize();
+
+    //remove parentheses and dashes from phone number
     req.body.phone = req.body.phone.replace(/[- )(]/g,'')
+
+    //if phone and email are valid (see util.js for validation methods)
     if( validateEmail(req.body.email) && validatePhone(req.body.phone) ){
+
+      //check if a user with either same username, email, or phone already exists
       User.find({
         $or: [{
           username: req.body.username
@@ -112,15 +129,19 @@ module.exports = function(app, util, schemas) {
         }, {
           phone: req.body.phone
         }]
-      }, function(err, users) { //see if user exists
+      }, function(err, users) {
         if(err){
           console.error(err);
           res.end("fail");
         }else{
           if(users){
             if (users.length != 0) {
+              //user exists
+
               res.end("exists");
             } else {
+              //user does not exist
+
               if(req.body.password == req.body.password_confirm){
                 if(req.file){
                   var ext = req.file.originalname.substring(req.file.originalname.lastIndexOf(".")+1).toLowerCase() || "unknown";
@@ -286,12 +307,13 @@ module.exports = function(app, util, schemas) {
         res.end("fail");
         console.error(err);
       } else {
-        console.log("User deleted");
         res.end("success");
       }
     });
   });
   app.post("/f/changePosition", requireLogin, function(req, res){
+
+    //position hierarchy
     var positionHA = {
       "member": 0,
       "leader": 1,
@@ -304,11 +326,14 @@ module.exports = function(app, util, schemas) {
         res.end("fail");
       }else{
         if(user){
+          //find position of current user
           current_position = findTeamInUser(user, req.user.current_team.id).position;
+          //check position hierarchy to see if it is allowed for user to change the position of target user
           if( positionHA[req.user.current_team.position] >= positionHA[req.body.target_position] && positionHA[req.user.current_team.position] >= positionHA[current_position] ){
+            //update position of target user
             User.update({_id: req.body.user_id, 'teams.id': req.user.current_team.id}, {'$set': {
-              'teams.$.position': req.body.target_position, //P (find out what .$. means and if it means selected "teams" element then keep it like this)
-              'current_team.position': req.body.target_position //P (make sure in the future current_team.position is checked with "teams" array of the document when user is logging in as opposed to doing this)
+              'teams.$.position': req.body.target_position, //find out what .$. means and if it means selected "teams" element
+              'current_team.position': req.body.target_position //make sure in the future current_team.position is checked with "teams" array of the document when user is logging in as opposed to doing this
             }}, function(err){
               if(err){
                 console.error(err);
@@ -327,13 +352,17 @@ module.exports = function(app, util, schemas) {
     })
   });
   app.post("/f/searchForUsers", requireLogin, function(req, res){
+    //create array of search terms
     var terms = req.body.search.split(' ');
     var regexString = "";
+    //create regular expression
     for (var i = 0; i < terms.length; i++){
       regexString += terms[i];
       if (i < terms.length - 1) regexString += '|';
     }
     var re = new RegExp(regexString, 'ig');
+
+    //find maximum of 10 users that match the search criteria
     User.find({
       teams: {$elemMatch: {id: req.user.current_team.id}},
       $or: [
@@ -344,19 +373,21 @@ module.exports = function(app, util, schemas) {
         console.error(err);
         res.end("fail");
       }else{
-        res.end(JSON.stringify(users));
+        res.json(users);
       }
     });
   })
   app.post("/f/changePassword", requireLogin, function(req, res){
     if(req.body.new_password == req.body.new_password_confirm){
       User.findOne({_id: req.user._id}, function(err, user){
+        //check if old password is correct
         user.comparePassword(req.body.old_password, function(err, isMatch) {
           if (err) {
             console.error(err);
             res.end("fail");
           } else {
             if (isMatch) {
+              //set and save new password (password is automatically encrypted. see /schemas/User.js)
               user.password = req.body.new_password;
               user.save(function(err){
                 if(err){
@@ -379,33 +410,42 @@ module.exports = function(app, util, schemas) {
   app.post("/f/editProfile", requireLogin, multer().single('new_prof_pic'), function(req, res){
     if(validateEmail(req.body.email)){
       if(validatePhone(req.body.phone)){
-        if(req.file){
+        if(req.file){ //if user chose to update their profile picture too
+
+          //get extension and corresponding mime type
           var ext = req.file.originalname.substring(req.file.originalname.lastIndexOf(".")+1).toLowerCase() || "unknown";
           var mime = extToMime[ext]
           if(mime == undefined){
             mime = "application/octet-stream"
           }
-          // var suffix = req.file.originalname.substring(req.file.originalname.lastIndexOf(".")+1).toLowerCase();
+
+          //NOTE: for explanations of the functions used here, see util.js
+
+          //resize image to 300px
           resizeImage(req.file.buffer, 300, ext, function(err, buffer){
             if(err){
               console.error(err);
               res.end("fail");
             }else{
+              //upload to profile picture bucket in AWS
               uploadToProfPics(buffer, req.user.username+"-300", mime, function(err, data){
                 if(err){
                   console.error(err);
                   res.end("fail");
                 }else{
+                  //resize image to 60px
                   resizeImage(req.file.buffer, 60, ext, function(err, buffer){
                     if(err){
                       console.error(err);
                       res.end("fail");
                     }else{
+                      //upload to profile picture bucket in AWS
                       uploadToProfPics(buffer, req.user.username+"-60", mime, function(err, data){
                         if(err){
                           console.error(err);
                           res.end("fail");
                         }else{
+                          //update rest of user info in database
                           User.findOneAndUpdate({_id: req.user._id}, {
                             firstname: req.body.firstname,
                             lastname: req.body.lastname,
@@ -429,6 +469,7 @@ module.exports = function(app, util, schemas) {
             }
           });
         }else{
+          //update user info in database
           User.findOneAndUpdate({_id: req.user._id}, {
             firstname: req.body.firstname,
             lastname: req.body.lastname,
@@ -450,6 +491,7 @@ module.exports = function(app, util, schemas) {
       res.end("fail");
     }
   });
+  //get information about the currently logged in user
   app.post("/f/getSelf", requireLogin, function(req, res){
     User.findOne({_id: req.user._id}, '-password', function(err, user){
       if(err){
@@ -465,7 +507,7 @@ module.exports = function(app, util, schemas) {
       'teams': {id: req.user.current_team.id},
     },
     '$push': {
-      'bannedFromTeams': req.user.current_team.id
+      'bannedFromTeams': req.user.current_team.id //bans user from rejoining
     }}, function(err, model){
       if(err){
         console.error(err);
@@ -476,6 +518,7 @@ module.exports = function(app, util, schemas) {
             console.error(err);
             res.end("fail");
           }else{
+            //if user is currently using the team he is being banned from
             if(user.current_team.id == req.user.current_team.id){
               user.current_team = undefined //TODO: make it so that if current_team is undefined when logging in, it allows you to set current_team
               user.save(function(err){
@@ -499,6 +542,7 @@ module.exports = function(app, util, schemas) {
         res.end("fail");
       }else{
         if(user){
+          //for function explanation see /schemas/User.js
           user.assignNewPassword(function(err, new_password){
             if(err){
               console.error(err);
@@ -509,6 +553,7 @@ module.exports = function(app, util, schemas) {
                   console.error(err);
                   res.end("fail");
                 }else{
+                  //email user new password
                   notify.sendMail({
                       from: 'MorTeam Notification <notify@morteam.com>',
                       to: req.body.email,

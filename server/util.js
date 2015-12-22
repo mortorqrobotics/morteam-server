@@ -309,7 +309,7 @@ module.exports = function() {
    String.prototype.contains = function(arg) {
      return this.indexOf(arg) > -1;
    };
-   
+
    String.prototype.capitalize = function() {
      return this.charAt(0).toUpperCase() + this.slice(1);
    }
