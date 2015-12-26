@@ -242,7 +242,7 @@ module.exports = function() {
    }
 
    this.uploadToProfPics = function(buffer, destFileName, contentType, callback) {
-     profPicBucket.upload({
+     self.profPicBucket.upload({
        ACL: 'public-read',
        Body: buffer,
        Key: destFileName.toString(),
@@ -251,7 +251,7 @@ module.exports = function() {
    }
 
    this.uploadToDrive = function(buffer, destFileName, contentType, contentDisposition, callback) {
-     driveBucket.upload({
+     self.driveBucket.upload({
        Body: buffer,
        Key: destFileName.toString(),
        ContentType: contentType,
