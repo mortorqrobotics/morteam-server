@@ -448,7 +448,7 @@
           }
           $.post("/f/getEventsForUserInTeamInMonth", {year: year, month: month-1}, function(responseText){
             if(responseText != "fail"){
-              var events = JSON.parse(responseText);
+              var events = responseText;
               for(var i = 0; i < events.length; i++){
                 var day = new Date(events[i].date).getDate();
                 var li = document.createElement("li");

@@ -13,10 +13,20 @@ module.exports = function(app, util, schemas) {
   app.post("/f/createChat", requireLogin, function(req, res){
     var subdivisionMembers;
     var userMembers;
-    if(req.body.subdivisionMembers == undefined){ subdivisionMembers = [] }else{ subdivisionMembers = req.body.subdivisionMembers}
-    if(req.body.userMembers == undefined){ userMembers = [] }else{ userMembers = req.body.userMembers}
+    if(req.body.subdivisionMembers == undefined){
+      subdivisionMembers = [];
+    }else{
+      subdivisionMembers = req.body.subdivisionMembers
+    }
+    if(req.body.userMembers == undefined){
+      userMembers = [];
+    }else{
+      userMembers = req.body.userMembers;
+    }
 
     if(req.body.type == "private"){
+      //private chat
+      
       Chat.findOne({
         group: false,
         team: req.user.current_team.id,

@@ -16,7 +16,7 @@ module.exports = function(app, util, schemas) {
     try {
       req.body.audience = JSON.parse(req.body.audience);
     }  catch(e) { }
-    //adds <a> tags to detected links
+    //add <a> tags to detected links
     req.body.content = Autolinker.link( req.body.content )
     if(typeof(req.body.audience) == "object"){ //this means user has selected 'custom' audience
       Announcement.create({

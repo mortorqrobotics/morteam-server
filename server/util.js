@@ -10,7 +10,8 @@ module.exports = function() {
   var nodemailer = require('nodemailer');
   var lwip = require('lwip');
   var AWS = require('aws-sdk');
-  AWS.config.loadFromPath('./aws-config.json');
+  var AWSConfigPath = require("path").join(__dirname, "/aws-config.json");
+  AWS.config.loadFromPath(AWSConfigPath);
 
  return new (function() {
 
@@ -33,11 +34,11 @@ module.exports = function() {
    this.driveBucket = new AWS.S3({params: {Bucket: 'drive.morteam.com'}});
 
    //quick way to send a 404: not found error
-   this.send404 = function(response) {
-     response.writeHead(404, {
+   this.send404 = function(res) {
+     res.writeHead(404, {
        "Content-Type": "text/plain"
      });
-     response.end("404: Page Not Found");
+     res.end("404: Page Not Found");
    }
 
    //parses JSON without crashing when parsing invalid JSON

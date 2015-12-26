@@ -299,6 +299,12 @@ module.exports = function(app, util, schemas) {
       res.end("fail: Form data is invalid");
     }
   });
+  app.post("/f/getUser", requireLogin, function(req, res){
+    User.findOne({_id: req.body._id}, '-password', function(err, user){
+      handleError(err);
+      res.json(user);
+    })
+  })
   app.post("/f/deleteUser", requireLogin, function(req, res) {
     User.findOneAndRemove({
       _id: req.body._id
