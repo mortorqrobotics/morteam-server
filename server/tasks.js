@@ -60,8 +60,8 @@ module.exports = function(app, util, schemas) {
       })
     }
   })
-  app.post("/f/getUserTasks", requireLogin, function(req, res){
-    Task.find({for: req.body.user_id}).populate('creator').exec(function(err, tasks){
+  app.post("/f/getCompletedUserTasks", requireLogin, function(req, res){
+    Task.find({for: req.body.user_id, completed: true}).populate('creator').exec(function(err, tasks){
       if(err){
         console.error(err);
         res.end("fail");
@@ -71,7 +71,7 @@ module.exports = function(app, util, schemas) {
     })
   })
   app.post("/f/getPendingUserTasks", requireLogin, function(req, res){
-    Task.find({for: req.body.user_id, completed:false}).populate('creator').exec(function(err, tasks){
+    Task.find({for: req.body.user_id, completed: false}).populate('creator').exec(function(err, tasks){
       if(err){
         console.error(err);
         res.end("fail");

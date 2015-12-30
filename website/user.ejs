@@ -360,7 +360,7 @@
             $("#presence_percent").html( "N/A" );
           }
         })
-        $.post("/f/getUserTasks", {user_id: window.location.pathname.substring(window.location.pathname.lastIndexOf("/") + 1)}, function(responseText){
+        $.post("/f/getCompletedUserTasks", {user_id: window.location.pathname.substring(window.location.pathname.lastIndexOf("/") + 1)}, function(responseText){
           if(responseText != "fail"){
             var tasks = JSON.parse(responseText);
             if(tasks.length > 0){
@@ -374,23 +374,46 @@
                 $(div).html(tasks[i].description);
                 $(li).append("<br/>");
                 $(li).append( $(div) );
-                if( tasks[i].completed ){
-                  $(".task_list.completed").append( $(li) );
-                }else{
-                  if(localStorage._id == tasks[i].for || localStorage.c_team_position == "admin" || localStorage.c_team_position == "leader"){
-                    var mark_as_completed = document.createElement("input");
-                    $(mark_as_completed).attr("type", "button");
-                    $(mark_as_completed).attr("data-taskid", tasks[i]._id);
-                    $(mark_as_completed).attr("value", "Mark as Completed");
-                    $(mark_as_completed).addClass("task_complete");
-                    $(mark_as_completed).addClass("button");
-                    $(li).append( $(mark_as_completed) );
-                  }
-                  $(".task_list.pending").append( $(li) );
-                }
+                $(".task_list.completed").append( $(li) );
               }
             }else{
               $(".task_list.completed").append( "<li class='data_point'>none</li>" );
+            }
+            $('.assigned_by').jBox('Tooltip', {
+                delayOpen: 0,
+                delayClose: 0,
+                theme: "TooltipDark"
+            });
+          }else{
+            alert(responseText);
+          }
+        })
+        $.post("/f/getPendingUserTasks", {user_id: window.location.pathname.substring(window.location.pathname.lastIndexOf("/") + 1)}, function(responseText){
+          if(responseText != "fail"){
+            var tasks = JSON.parse(responseText);
+            if(tasks.length > 0){
+              for (var i = 0; i < tasks.length; i++) {
+                var li = document.createElement("li");
+                $(li).addClass("data_point");
+                // $(li).html( tasks[i].name + " (By " + readableDate(tasks[i].due_date) + ")");
+                $(li).html( tasks[i].name + " <span class='due_date_display'>(By " + readableDate(tasks[i].due_date) + ")</span> <span style='vertical-align: -5%; font-size: 14px' title='Assigned By "+ tasks[i].creator.firstname + " " + tasks[i].creator.lastname +"' class='assigned_by glyphicon glyphicon-info-sign'></span>");
+                var div = document.createElement("div");
+                $(div).addClass("indented");
+                $(div).html(tasks[i].description);
+                $(li).append("<br/>");
+                $(li).append( $(div) );
+                if(localStorage._id == tasks[i].for || localStorage.c_team_position == "admin" || localStorage.c_team_position == "leader"){
+                  var mark_as_completed = document.createElement("input");
+                  $(mark_as_completed).attr("type", "button");
+                  $(mark_as_completed).attr("data-taskid", tasks[i]._id);
+                  $(mark_as_completed).attr("value", "Mark as Completed");
+                  $(mark_as_completed).addClass("task_complete");
+                  $(mark_as_completed).addClass("button");
+                  $(li).append( $(mark_as_completed) );
+                }
+                $(".task_list.pending").append( $(li) );
+              }
+            }else{
               $(".task_list.pending").append( "<li class='data_point'>none</li>" );
             }
             $('.assigned_by').jBox('Tooltip', {

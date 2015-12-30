@@ -113,8 +113,9 @@ module.exports = function(app, util, schemas) {
       name: 1,
       group: 1,
       userMembers: 1,
-      subdivisionMembers: 1
-    }).populate("userMembers subdivisionMembers", "-password").sort('-updated_at').exec(function(err, chats){
+      subdivisionMembers: 1,
+      updated_at: 1
+    }).slice('messages', [0, 1]).populate("userMembers subdivisionMembers", "-password").sort('-updated_at').exec(function(err, chats){
       if(err){
         console.error(err);
         res.end("fail");
