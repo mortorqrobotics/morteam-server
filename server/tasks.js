@@ -29,7 +29,6 @@ module.exports = function(app, util, schemas) {
           console.error(err);
           res.end("fail");
         }else{
-          //res.end("success");
           User.findOne({_id: req.body.user_id}, function(err, user){
             if(err){
               console.error(err);
@@ -42,7 +41,7 @@ module.exports = function(app, util, schemas) {
                     subject: 'New Task Assigned By ' + req.user.firstname + " " + req.user.lastname,
                     text: 'View your new task at http://www.morteam.com/u/' + req.body.user_id
                 });
-                res.end("success");
+                res.end(task._id.toString());
               }
             }
           })
@@ -61,7 +60,22 @@ module.exports = function(app, util, schemas) {
           console.error(err);
           res.end("fail");
         }else{
-          res.end(task._id.toString());
+          User.findOne({_id: req.body.user_id}, function(err, user){
+            if(err){
+              console.error(err);
+              res.end("fail");
+            }else{
+              if(user){
+                notify.sendMail({
+                    from: 'MorTeam Notification <notify@morteam.com>',
+                    to: user.email,
+                    subject: 'New Task Assigned By ' + req.user.firstname + " " + req.user.lastname,
+                    text: 'View your new task at http://www.morteam.com/u/' + req.body.user_id
+                });
+                res.end(task._id.toString());
+              }
+            }
+          })
         }
       })
     }
