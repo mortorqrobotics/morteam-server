@@ -9,6 +9,12 @@ module.exports = function(app, util, schemas) {
   }
 
   app.post("/f/assignTask", requireLogin, requireLeader, function(req, res){
+
+    //for iOS and Android
+    if(typeof(req.body.due_date) == "string"){
+      req.body.due_date = new Date(req.body.due_date)
+    }
+
     if(req.body.task_description){
       Task.create({
         name: req.body.task_name,
