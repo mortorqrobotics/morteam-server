@@ -273,7 +273,7 @@
     function eventModal(title, date){
       var new_modal = new jBox('Modal', {
         width: 350,
-        height: 475,
+        height: 495,
         title: title,
         onClose: function(){
           setTimeout(function(){
@@ -286,6 +286,7 @@
       var event_description = '<textarea class="event_description" placeholder="Description (Optional)"></textarea>';
       var entireTeamDiv = '<div><input id="entireTeam" type="checkbox"> Invite Everyone</div>'
       var hasAttendanceDiv = '<div><input id="hasAttendance" type="checkbox" checked> Take Attendance?</div>'
+      var sendEmailDiv = '<div><input id="sendEmail" type="checkbox" checked> Send Email?</div>'
       var user_search = '<input type="text" placeholder="Search Names..." class="members_search" id="event_members_search">';
       var potential_members = document.createElement("div");
       $(potential_members).attr("id", "potential_attendance_members");
@@ -328,6 +329,7 @@
         $(span).append("<br/>");
         $(span).append($(entireTeamDiv));
         $(span).append($(hasAttendanceDiv));
+        $(span).append($(sendEmailDiv));
         $(span).append($(user_search));
         $(span).append("<br/>");
         $(span).append($(potential_members));
@@ -584,7 +586,8 @@
                 subdivisionAttendees: subdivisionAttendees,
                 date: $this.attr("data-date"),
                 entireTeam: $('#entireTeam').is(':checked'),
-                hasAttendance: $('#hasAttendance').is(':checked')
+                hasAttendance: $('#hasAttendance').is(':checked'),
+                sendEmail: $('#sendEmail').is(':checked')
               }, function(responseText){
                 event_modal.close();
                 if(responseText != "fail"){

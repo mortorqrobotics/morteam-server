@@ -584,7 +584,7 @@ li.active{
 	background-color: #008AE6;
 	cursor: pointer;
 }
-input[type=checkbox]:not(#entireTeam, #hasAttendance) {
+input[type=checkbox]:not(#entireTeam, #hasAttendance, #sendEmail) {
     display: none;
 }
 label:before {

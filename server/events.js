@@ -60,17 +60,26 @@ module.exports = function(app, util, schemas) {
     });
   });
   app.post("/f/createEvent", requireLogin, requireLeader, function(req, res){
+
     if(req.body.userAttendees == undefined){
       req.body.userAttendees = []
     }
     if(req.body.subdivisionAttendees == undefined){
       req.body.subdivisionAttendees = []
     }
+
     if(req.body.hasAttendance == "true"){
       req.body.hasAttendance = true;
     }else{
       req.body.hasAttendance = false;
     }
+
+    if(req.body.sendEmail == "true"){
+      req.body.sendEmail = true;
+    }else{
+      req.body.sendEmail = false;
+    }
+
 
     if(req.body.description != ""){
       if(req.body.entireTeam == "true"){
@@ -92,13 +101,15 @@ module.exports = function(app, util, schemas) {
                 console.error(err);
                 res.end("fail");
               }else{
-                var list = createRecepientList(users);
-                notify.sendMail({
-                    from: 'MorTeam Notification <notify@morteam.com>',
-                    to: list,
-                    subject: 'New Event on ' + readableDate(event.date) + ' - ' + event.name,
-                    html: req.user.firstname + ' ' + req.user.lastname + ' has created an event on ' + readableDate(event.date) + ',<br><br>' + event.name + '<br>' + event.description
-                });
+                if(req.body.sendEmail){
+                  var list = createRecepientList(users);
+                  notify.sendMail({
+                      from: 'MorTeam Notification <notify@morteam.com>',
+                      to: list,
+                      subject: 'New Event on ' + readableDate(event.date) + ' - ' + event.name,
+                      html: req.user.firstname + ' ' + req.user.lastname + ' has created an event on ' + readableDate(event.date) + ',<br><br>' + event.name + '<br>' + event.description
+                  });
+                }
                 if(req.body.hasAttendance){
                   var attendees = [];
                   User.find({ teams: {$elemMatch: {id: req.user.current_team.id }} }, function(err, users){
@@ -149,13 +160,15 @@ module.exports = function(app, util, schemas) {
                 console.error(err);
                 res.end("fail");
               }else{
-                var list = createRecepientList(users);
-                notify.sendMail({
-                    from: 'MorTeam Notification <notify@morteam.com>',
-                    to: list,
-                    subject: 'New Event on ' + readableDate(event.date) + ' - ' + event.name,
-                    html: req.user.firstname + ' ' + req.user.lastname + ' has created an event on ' + readableDate(event.date) + ',<br><br>' + event.name + '<br>' + event.description
-                });
+                if(req.body.sendEmail){
+                  var list = createRecepientList(users);
+                  notify.sendMail({
+                      from: 'MorTeam Notification <notify@morteam.com>',
+                      to: list,
+                      subject: 'New Event on ' + readableDate(event.date) + ' - ' + event.name,
+                      html: req.user.firstname + ' ' + req.user.lastname + ' has created an event on ' + readableDate(event.date) + ',<br><br>' + event.name + '<br>' + event.description
+                  });
+                }
                 if(req.body.hasAttendance){
                   var attendees = [];
                   for(var i = 0; i < req.body.userAttendees.length; i++){
@@ -206,13 +219,15 @@ module.exports = function(app, util, schemas) {
                 console.error(err);
                 res.end("fail");
               }else{
-                var list = createRecepientList(users);
-                notify.sendMail({
-                    from: 'MorTeam Notification <notify@morteam.com>',
-                    to: list,
-                    subject: 'New Event on ' + readableDate(event.date) + ' - ' + event.name,
-                    html: req.user.firstname + ' ' + req.user.lastname + ' has created an event on ' + readableDate(event.date) + ',<br><br>' + event.name
-                });
+                if(req.body.sendEmail){
+                  var list = createRecepientList(users);
+                  notify.sendMail({
+                      from: 'MorTeam Notification <notify@morteam.com>',
+                      to: list,
+                      subject: 'New Event on ' + readableDate(event.date) + ' - ' + event.name,
+                      html: req.user.firstname + ' ' + req.user.lastname + ' has created an event on ' + readableDate(event.date) + ',<br><br>' + event.name
+                  });
+                }
                 if(req.body.hasAttendance){
                   var attendees = [];
                   User.find({ teams: {$elemMatch: {id: req.user.current_team.id }} }, function(err, users){
@@ -262,13 +277,15 @@ module.exports = function(app, util, schemas) {
                 console.error(err);
                 res.end("fail");
               }else{
-                var list = createRecepientList(users);
-                notify.sendMail({
-                    from: 'MorTeam Notification <notify@morteam.com>',
-                    to: list,
-                    subject: 'New Event on ' + readableDate(event.date) + ' - ' + event.name,
-                    html: req.user.firstname + ' ' + req.user.lastname + ' has created an event on ' + readableDate(event.date) + ',<br><br>' + event.name
-                });
+                if(req.body.sendEmail){
+                  var list = createRecepientList(users);
+                  notify.sendMail({
+                      from: 'MorTeam Notification <notify@morteam.com>',
+                      to: list,
+                      subject: 'New Event on ' + readableDate(event.date) + ' - ' + event.name,
+                      html: req.user.firstname + ' ' + req.user.lastname + ' has created an event on ' + readableDate(event.date) + ',<br><br>' + event.name
+                  });
+                }
                 if(req.body.hasAttendance){
                   var attendees = [];
                   for(var i = 0; i < req.body.userAttendees.length; i++){
