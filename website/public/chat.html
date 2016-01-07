@@ -103,8 +103,16 @@
       </div>
     </div>
     <div class="ads">
-      <div class="ad"></div>
-      <div class="ad2"></div>
+      <div class="ad"><script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<!-- Chat -->
+<ins class="adsbygoogle"
+     style="display:inline-block;width:160px;height:600px"
+     data-ad-client="ca-pub-6908015693715549"
+     data-ad-slot="8692209914"></ins>
+<script>
+(adsbygoogle = window.adsbygoogle || []).push({});
+</script></div>
+      <!-- <div class="ad2"></div> -->
     </div>
     <!-- END OF BODY -->
 
@@ -138,6 +146,14 @@
 
       var socket = io();
       var shouldListen = false;
+
+      var window_is_focused;
+
+      $(window).focus(function() {
+          window_is_focused = true;
+      }).blur(function() {
+          window_is_focused = false;
+      });
 
       function messageNotification(title, content, chatid) {
         var newMessageNotice = new jBox('Notice', {
@@ -834,6 +850,10 @@
                 delayClose: 0,
                 theme: "TooltipDark"
             });
+            if(!window_is_focused){
+              $('#audio-files').find('audio#click-sound')[0].play();
+              $('#audio-files').find('audio#click-sound')[0].currentTime = 0;
+            }
           }else{
             if(msg.type == "group"){
               messageNotification(msg.author_fn+" "+msg.author_ln+" in "+msg.chat_name, msg.content, msg.chat_id);

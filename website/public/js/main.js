@@ -191,4 +191,7 @@ $(document).ready(function(){
       $(".search_drop").hide();
     }
   }
+  $(document).on("click", ".messageNotification", function(){
+    location="chat";
+  })
 });

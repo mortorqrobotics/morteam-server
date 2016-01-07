@@ -146,16 +146,18 @@ module.exports = function(app, util, schemas) {
       res.end("fail");
     }
   });
-  app.post("/f/uploadFile", requireLogin, multer().single('uploadedFile'), function(req, res){
+  app.post("/f/uploadFile", requireLogin, multer({limits: 50*1000000 /* 50 megabytes */}).single('uploadedFile'), function(req, res){
+
+    File.find({}).populate( 'folder', null, { team: req.user.current_team.id } ).exec(function(err, files){
+      if(err) console.error(err);
+      console.log(files);
+    });
+
     var ext = req.file.originalname.substring(req.file.originalname.lastIndexOf(".")+1).toLowerCase() || "unknown";
-    // var mime = mimetypes[extToType(ext)];
+
     var mime = extToMime[ext];
     var disposition;
-    // if(mime == "application/octet-stream"){
-    //   disposition = "attachment; filename="+req.file.originalname;
-    // }else{
-    //   disposition = "attachment; filename="+req.body.fileName;
-    // }
+
     if (mime == undefined){
       disposition = "attachment; filename="+req.file.originalname;
       mime = "application/octet-stream";
