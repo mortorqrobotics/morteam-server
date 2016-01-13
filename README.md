@@ -1,5 +1,7 @@
 #MorTeam Beta 4
 ***
+##Contact
+support@morteam.com
 ##Usage
 This is the REST format for the MorTeam server. It can be used to create or improve upon clients that wish to use MorTeam as their backend.
 
