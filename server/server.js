@@ -1,7 +1,7 @@
 /**
  * The server for http://www.morteam.com
  * @author      Farbod Rafezy <rafezyfarbod@gmail.com>
- * @version     1.0.0-beta.3
+ * @version     1.0.0-beta.4
  */
 
 //import necessary modules
@@ -113,16 +113,11 @@ app.use(function(req, res, next) {
 //allow browser to receive images, css, and js files without being logged in
 //allow browser to receive some pages such as login.html, signup.html, etc. without being logged in
 app.use(function(req, res, next) {
+  var exceptions = ["/login.html", "/signup.html", "/fp.html", "/favicon.ico"];
   if (req.method == "GET") {
     if (req.url.contains("/css") || req.url.contains("/js") || req.url.contains("/img")) {
       next();
-    } else if (req.url == "/login.html") {
-      next();
-    } else if (req.url == "/signup.html") {
-      next();
-    } else if (req.url == "/fp.html") {
-      next();
-    } else if (req.url == "/favicon.ico") {
+    } else if ( exceptions.indexOf(req.url) > -1 ) {
       next();
     } else if (req.url == "/void.html") {
       if (req.user) {

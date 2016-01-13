@@ -267,9 +267,9 @@ module.exports = function() {
      driveBucket.deleteObject({Key: fileName}).send(callback)
    }
 
-   //suffix means extension without the '.'
-   this.resizeImage = function(buffer, size, suffix, callback){
-     lwip.open(buffer, suffix, function(err, image){
+   //ext is the extension without the period up front --> example: NOT '.txt', but rather 'txt'
+   this.resizeImage = function(buffer, size, ext, callback){
+     lwip.open(buffer, ext, function(err, image){
        if(err){
          callback(err, undefined);
        }else{
@@ -279,7 +279,7 @@ module.exports = function() {
              if(err){
                callback(err, undefined);
              }else{
-               image.toBuffer(suffix, function(err, buffer){
+               image.toBuffer(ext, function(err, buffer){
                  if(err){
                    callback(err, undefined);
                  }else{
@@ -293,7 +293,7 @@ module.exports = function() {
              if(err){
                callback(err, undefined);
              }else{
-               image.toBuffer(suffix, function(err, buffer){
+               image.toBuffer(ext, function(err, buffer){
                  if(err){
                    callback(err, undefined);
                  }else{

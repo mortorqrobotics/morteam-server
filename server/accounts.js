@@ -107,7 +107,6 @@ module.exports = function(app, util, schemas) {
     })
   });
 
-  //REFACTOR THIS MESS. HOLY CRAP
   //uses multer middleware to parse uploaded file called 'profpic' with a max file size
   app.post("/f/createUser", multer({limits: {fileSize:10*1024*1024}}).single('profpic'), function(req, res) {
     //capitalize names
@@ -121,7 +120,7 @@ module.exports = function(app, util, schemas) {
     if( validateEmail(req.body.email) && validatePhone(req.body.phone) ){
 
       //check if a user with either same username, email, or phone already exists
-      User.find({
+      User.findOne({
         $or: [{
           username: req.body.username
         }, {
@@ -129,168 +128,84 @@ module.exports = function(app, util, schemas) {
         }, {
           phone: req.body.phone
         }]
-      }, function(err, users) {
+      }, function(err, user) {
         if(err){
           console.error(err);
           res.end("fail");
         }else{
-          if(users){
-            if (users.length != 0) {
-              //user exists
+          if (user) {
+            //user exists
+            res.end("exists");
+          } else {
+            if(req.body.password == req.body.password_confirm){
 
-              res.end("exists");
-            } else {
-              //user does not exist
-
-              if(req.body.password == req.body.password_confirm){
-                if(req.file){
-                  var ext = req.file.originalname.substring(req.file.originalname.lastIndexOf(".")+1).toLowerCase() || "unknown";
-                  var mime = extToMime[ext]
-                  if(mime == undefined){
-                    mime = "application/octet-stream"
-                  }
-                  var suffix = req.file.originalname.substring(req.file.originalname.lastIndexOf(".")+1).toLowerCase();
-                  lwip.open(req.file.buffer, suffix, function(err, image){
-                    if(err){
-                      console.error(err);
-                      res.end("fail");
-                    }else{
-                      var hToWRatio = image.height()/image.width();
-                      if(hToWRatio >= 1){
-                        image.resize(60, 60*hToWRatio, function(err, image){
-                          if(err){
-                            console.error(err);
-                            res.end("fail");
-                          }else{
-                            image.toBuffer(suffix, function(err, buffer){
-                              if(err){
-                                console.error(err);
-                                res.end("fail");
-                              }else{
-                                uploadToProfPics(buffer, req.body.username + "-60", mime, function(err, data){
-                                  if(err){
-                                    console.error(err);
-                                    res.end("fail");
-                                  }
-                                });
-                              }
-                            })
-                          }
-                        })
-                      }else{
-                        image.resize(60/hToWRatio, 60, function(err, image){
-                          if(err){
-                            console.error(err);
-                            res.end("fail");
-                          }else{
-                            image.toBuffer(suffix, function(err, buffer){
-                              if(err){
-                                console.error(err);
-                                res.end("fail");
-                              }else{
-                                uploadToProfPics(buffer, req.body.username + "-60", mime, function(err, data){
-                                  if(err){
-                                    console.error(err);
-                                    res.end("fail");
-                                  }
-                                });
-                              }
-                            })
-                          }
-                        })
-                      }
-                    }
-                  });
-                  lwip.open(req.file.buffer, suffix, function(err, image){
-                    if(err){
-                      console.error(err);
-                      res.end("fail");
-                    }else{
-                      var hToWRatio = image.height()/image.width();
-                      if(hToWRatio >= 1){
-                        image.resize(300, 300*hToWRatio, function(err, image){
-                          if(err){
-                            console.error(err);
-                            res.end("fail");
-                          }else{
-                            image.toBuffer(suffix, function(err, buffer){
-                              if(err){
-                                console.error(err);
-                                res.end("fail");
-                              }else{
-                                uploadToProfPics(buffer, req.body.username + "-300", mime, function(err, data){
-                                  if(err){
-                                    console.error(err);
-                                    res.end("fail");
-                                  }
-                                });
-                              }
-                            })
-                          }
-                        })
-                      }else{
-                        image.resize(300/hToWRatio, 300, function(err, image){
-                          if(err){
-                            console.error(err);
-                            res.end("fail");
-                          }else{
-                            image.toBuffer(suffix, function(err, buffer){
-                              if(err){
-                                console.error(err);
-                                res.end("fail");
-                              }else{
-                                uploadToProfPics(buffer, req.body.username + "-300", mime, function(err, data){
-                                  if(err){
-                                    console.error(err);
-                                    res.end("fail");
-                                  }
-                                });
-                              }
-                            })
-                          }
-                        })
-                      }
-                    }
-                  });
-                  User.create({
-                    username: req.body.username,
-                    password: req.body.password,
-                    firstname: req.body.firstname,
-                    lastname: req.body.lastname,
-                    email: req.body.email,
-                    phone: req.body.phone,
-                    profpicpath: "/pp/" + /*req.file.key.substring( 2 )*/ req.body.username
-                  }, function(err, user) {
-                    if (err) {
-                      res.end("fail");
-                      console.error(err);
-                    } else {
-                      res.end("success");
-                      console.log("User " + user._id + ", " + user.firstname + " " + user.lastname + " was saved!");
-                    }
-                  });
-                }else{
-                  User.create({
-                    username: req.body.username,
-                    password: req.body.password,
-                    firstname: req.body.firstname,
-                    lastname: req.body.lastname,
-                    email: req.body.email,
-                    phone: req.body.phone,
-                    profpicpath: "/images/user.jpg"
-                  }, function(err, user) {
-                    if (err) {
-                      res.end("fail");
-                      console.error(err);
-                    } else {
-                      console.log("User " + user._id + ", " + user.firstname + " " + user.lastname + " was saved!");
-                      res.end("success");
-                    }
-                  });
-                }
-              }else{
-                res.end("password mismatch");
+              var userInfo = {
+                username: req.body.username,
+                password: req.body.password,
+                firstname: req.body.firstname,
+                lastname: req.body.lastname,
+                email: req.body.email,
+                phone: req.body.phone,
               }
+
+              //if user uploaded a profile pic
+              if(req.file){
+
+                //get extension, get mimetype
+                var ext = req.file.originalname.substring(req.file.originalname.lastIndexOf(".")+1).toLowerCase() || "unknown";
+                var mime = extToMime[ext]
+                if(mime == undefined){
+                  mime = "application/octet-stream"
+                }
+
+                //resize image to 60px and upload to AWS S3
+                resizeImage(req.file.buffer, 60, ext, function(err, buffer){
+                  if(err){
+                    console.error(err);
+                    res.end("fail");
+                  }else{
+                    uploadToProfPics(buffer, req.body.username + "-60", mime, function(err, data){
+                      if(err){
+                        console.error(err);
+                        res.end("fail");
+                      }
+                    });
+                  }
+                });
+                //resize image to 300px and upload to AWS S3
+                resizeImage(req.file.buffer, 300, ext, function(err, buffer){
+                  if(err){
+                    console.error(err);
+                    res.end("fail");
+                  }else{
+                    uploadToProfPics(buffer, req.body.username + "-300", mime, function(err, data){
+                      if(err){
+                        console.error(err);
+                        res.end("fail");
+                      }
+                    });
+                  }
+                });
+
+                //set profpicpath if user did upload profile picture
+                userInfo.profpicpath = "/pp/" + req.body.username;
+              }else{
+                //set profpicpath if user did NOT upload profile picture
+                userInfo.profpicpath = "/images/user.jpg";
+              }
+
+              //create user in database with userInfo object created earlier
+              User.create(userInfo, function(err, user) {
+                if (err) {
+                  res.end("fail");
+                  console.error(err);
+                } else {
+                  res.end("success");
+                }
+              });
+
+            }else{
+              res.end("password mismatch");
             }
           }
         }

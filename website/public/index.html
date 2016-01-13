@@ -251,7 +251,7 @@
         onOpen: function() {
             // $($(this)[0].content).attr("data-author", author._id);
             $($(this)[0].content).attr("data-chatid", chatid);
-            $($(this)[0].content).addClass("messageNotification");
+            $($(this)[0].content).parent().parent().addClass("messageNotification");
         }
     });
   };

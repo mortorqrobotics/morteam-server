@@ -1,4 +1,4 @@
-#MorTeam Beta 3
+#MorTeam Beta 4
 ***
 ##Usage
 This is the REST format for the MorTeam server. It can be used to create or improve upon clients that wish to use MorTeam as their backend.
@@ -17,7 +17,7 @@ IMPORTANT NOTES:
 		<key>: <value>,
 
 		<key>: <value>,
-		
+
 		...
 
 	server sends:
@@ -252,7 +252,7 @@ IMPORTANT NOTES:
 ```
 /f/getChatsForUser:
 
-	server receives: 
+	server receives:
 
 		nothing
 
@@ -396,10 +396,10 @@ When someone becomes online or offline
 ```JavaScript
 socket.on(“joined”, function(data){
   //data._id is the _id of whoever just joined
-}); 
+});
 socket.on(“left”, function(data){
   //data._id is the _id of whoever just left
-}); 
+});
 ```
 
 When a new chat is made where the user is a recipient
@@ -477,14 +477,14 @@ Send when user creates new chat
 ```JavaScript
 //private chat
 socket.emit('new chat', {
-  type: "private", 
+  type: "private",
   receiver: _id of the other user
   chat_id: _id of the new chat
 });
 
 //group chat
 socket.emit('new chat', {
-  type: "group", 
+  type: "group",
   userMembers: SE
   subdivisionMembers: SE
   name: SE
@@ -642,4 +642,3 @@ socket.emit('new chat', {
 		success: "success"
 ```
 To be continued...
-
