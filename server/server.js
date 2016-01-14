@@ -122,8 +122,14 @@ app.use(function(req, res, next) {
     } else if (req.url == "/void.html") {
       if (req.user) {
         if (req.user.teams.length > 0) {
+          if(!req.user.current_team){
+            req.session.user.current_team.id = req.user.teams[0].id;
+            req.session.user.current_team.position = req.user.teams[0].position;
+            req.user.current_team.id = req.user.teams[0].id;
+            req.user.current_team.position = req.user.teams[0].position;
+          }
           res.redirect("/");
-        } else { //TODO: In the future, add an else if(current_team is undefined) res.redirect
+        } else {
           next();
         }
       } else {

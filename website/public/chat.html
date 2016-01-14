@@ -690,8 +690,10 @@
               }
           });
           $.post("/f/getMembersOfChat", {chat_id: chat_id}, function(responseText){
-            var members = JSON.parse(responseText);
-            if(!(members.subdivisionMembers.length == 0 && members.userMembers.length == 2)){
+            var data = JSON.parse(responseText);
+            var members = data.members;
+            var isGroup = data.group;
+            if(isGroup){
               var container = document.createElement("span");
               var change_name = '<input type="text" class="change_name" value="'+ currentName +'"></input><br/>'
               var div = document.createElement("div");

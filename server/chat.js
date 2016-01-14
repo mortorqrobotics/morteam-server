@@ -26,7 +26,7 @@ module.exports = function(app, util, schemas) {
 
     if(req.body.type == "private"){
       //private chat
-      
+
       Chat.findOne({
         group: false,
         team: req.user.current_team.id,
@@ -163,7 +163,7 @@ module.exports = function(app, util, schemas) {
     });
   });
   app.post("/f/getMembersOfChat", requireLogin, function(req, res){
-    Chat.findOne({_id: req.body.chat_id}, {userMembers: 1, subdivisionMembers: 1}, function(err, chat){
+    Chat.findOne({_id: req.body.chat_id}, {userMembers: 1, subdivisionMembers: 1, group: 1}, function(err, chat){
       if(err){
         console.error(err);
         res.end("fail");
@@ -189,7 +189,7 @@ module.exports = function(app, util, schemas) {
                 for(var i = 0; i < subdivisions.length; i++){
                   members.subdivisionMembers.push(subdivisions[i]);
                 }
-                res.end(JSON.stringify(members));
+                res.end(JSON.stringify({members: members, group: chat.group}));
               }
             })
           }

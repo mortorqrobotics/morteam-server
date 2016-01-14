@@ -314,7 +314,7 @@ NOTE: the following two requests are similar but should not be confused.
 
 		error: "fail"
 
-		success: JSON object of members
+		success: {members: SE, group: <boolean>}
 ```
 * * *
 ```

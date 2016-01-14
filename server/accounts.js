@@ -3,6 +3,7 @@ module.exports = function(app, util, schemas) {
   var extToMime = require("./extToMime.json"); //used to convert file extensions to mime types
   var lwip = require('lwip'); //image processing module
   var multer = require('multer'); //for file uploads
+  var ObjectId = require('mongoose').Types.ObjectId;
 
   //assign variables to util functions(and objects) and database schemas (example: var myFunc = util.myFunc;)
   for(key in util){
@@ -220,18 +221,6 @@ module.exports = function(app, util, schemas) {
       res.json(user);
     })
   })
-  app.post("/f/deleteUser", requireLogin, function(req, res) {
-    User.findOneAndRemove({
-      _id: req.body._id
-    }, function(err) {
-      if (err) {
-        res.end("fail");
-        console.error(err);
-      } else {
-        res.end("success");
-      }
-    });
-  });
   app.post("/f/changePosition", requireLogin, function(req, res){
 
     //position hierarchy
@@ -241,6 +230,8 @@ module.exports = function(app, util, schemas) {
       "admin": 2
     }
     var current_position;
+
+    //find target user
     User.findOne({_id: req.body.user_id}, function(err, user){
       if(err){
         console.error(err);
@@ -426,10 +417,13 @@ module.exports = function(app, util, schemas) {
   app.post("/f/removeUserFromTeam", requireLogin, requireAdmin, function(req, res){
     User.update({_id: req.body.user_id}, { '$pull': {
       'teams': {id: req.user.current_team.id},
+      'subdivisions': {team: req.user.current_team.id}
     },
-    '$push': {
+    /*'$push': {
       'bannedFromTeams': req.user.current_team.id //bans user from rejoining
-    }}, function(err, model){
+    },*/
+
+    }, function(err, model){
       if(err){
         console.error(err);
         res.end("fail");
@@ -447,7 +441,49 @@ module.exports = function(app, util, schemas) {
                   console.error(err);
                   res.end("fail");
                 }else{
-                  res.end("success");
+                  Chat.update({
+                    team: req.user.current_team.id,
+                    userMembers: new ObjectId(req.body.user_id)
+                  }, {
+                    '$pull': {
+                      'userMembers': req.body.user_id
+                    }
+                  }, function(err, model){
+                    if(err){
+                      console.error(err);
+                      res.end("fail");
+                    }else{
+                      Folder.update({
+                        team: req.user.current_team.id,
+                        userMembers: new ObjectId(req.body.user_id)
+                      }, {
+                        '$pull': {
+                          'userMembers': req.body.user_id
+                        }
+                      }, function(err, model){
+                        if(err){
+                          console.error(err);
+                          res.end("fail");
+                        }else{
+                          Event.update({
+                            team: req.user.current_team.id,
+                            userAttendees: new ObjectId(req.body.user_id)
+                          }, {
+                            '$pull': {
+                              'userAttendees': req.body.user_id
+                            }
+                          }, function(err, model){
+                            if(err){
+                              console.error(err);
+                              res.end("fail");
+                            }else{
+                              res.end("success");
+                            }
+                          })
+                        }
+                      })
+                    }
+                  })
                 }
               })
             }
