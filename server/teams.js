@@ -192,4 +192,14 @@ module.exports = function(app, util, schemas) {
       }
     });
   });
+  app.post("/f/getTeamNum", requireLogin, function(req, res){
+    Team.findOne({id: req.user.current_team.id}, function(err, team){
+      if(err){
+        console.error(err);
+        res.end("fail");
+      }else{
+        res.end(String(team.number));
+      }
+    })
+  })
 };

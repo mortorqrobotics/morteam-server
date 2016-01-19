@@ -30,7 +30,7 @@ module.exports = function(app, util, schemas) {
       Chat.findOne({
         group: false,
         team: req.user.current_team.id,
-        $or: [ { userMembers: [req.user._id, req.body.user2] }, { userMembers: [req.body.user2, req.user._id] } ] //check to see if private convo exists
+        $or: [ { userMembers: [req.user._id, req.body.user2] }, { userMembers: [req.body.user2, req.user._id] } ] //check to see if private convo already exists
       }, function(err, chat){
         if(err){
           console.error(err);
@@ -48,6 +48,7 @@ module.exports = function(app, util, schemas) {
                 console.error(err);
                 res.end("fail");
               }else{
+                //get the user that is not the person making this request
                 var user2_id = getUserOtherThanSelf(chat.userMembers, req.user._id.toString());
                 User.findOne({_id: user2_id}, function(err, user){
                   if(err){
@@ -69,7 +70,9 @@ module.exports = function(app, util, schemas) {
         }
       });
     }else{
-      if(req.body.name.length < 20){
+      //group chat
+
+      if(req.body.name.length < 20){ //name character limit
         Chat.create({
           team: req.user.current_team.id,
           name: req.body.name,
@@ -90,11 +93,13 @@ module.exports = function(app, util, schemas) {
     }
   })
   app.post("/f/getChatsForUser", requireLogin, function(req, res){
+    //get an array of _ids of subdivisions of which the user is a member. (dat proper grammar doe)
     var userSubdivisionIds = req.user.subdivisions.map(function(subdivision) {
       if (subdivision.accepted == true) {
         return new ObjectId(subdivision._id);
       }
     });
+    //find a chat in the current team that also has said user as a member or has a subdivision of which said user is a member.
     Chat.find({
       team: req.user.current_team.id,
       $or: [
@@ -116,17 +121,18 @@ module.exports = function(app, util, schemas) {
       subdivisionMembers: 1,
       updated_at: 1
     }).slice('messages', [0, 1]).populate("userMembers subdivisionMembers", "-password").sort('-updated_at').exec(function(err, chats){
+      // ^ the code above gets the latest message from the chat (for previews in iOS and Android) and orders the list by most recent.
       if(err){
         console.error(err);
         res.end("fail");
       }else{
-        // online_clients[req.user._id.toString()]["chats"] =  getIdsFromObjects(chats);
         res.end(JSON.stringify(chats));
       }
     })
   });
   app.post("/f/loadMessagesForChat", requireLogin, function(req, res){ //TODO: maybe in the future combine this with getUsersInChat to improve performance
     var skip = parseInt(req.body.skip)
+    //loads 20 messages after skip many messages. example: if skip is 0, it loads messages 0-19, if it's 20, loads 20-39, etc.
     Chat.findOne( {_id: req.body.chat_id} ).slice('messages', [skip, 20]).populate('messages.author').exec(function(err, chat){
       if (err) {
         console.error(err);

@@ -14,6 +14,8 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
     <link rel="stylesheet" href="css/index.css" type="text/css">
     <link href="jbox/jBox.css" rel="stylesheet">
+    <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
+    <script type="text/javascript" src="js/teamLocations.js"></script>
   </head>
   <body>
       <div id="audio-files" style="display: none;">
@@ -83,8 +85,8 @@
     <!-- END OF NAVIGATION BAR -->
 
     <!-- BODY -->
-    <div class="wide_body">
-      <h1 class="undcon">Under Construction</h1>
+    <div id="map" class="wide_body">
+      <!--<h1 class="undcon">Under Construction</h1>-->
     </div>
     <!-- END OF BODY -->
 
@@ -96,10 +98,41 @@
     <script type="text/javascript" src="js/velocity.min.js"></script>
     <script type="text/javascript" src="js/main.js"></script>
     <script type="text/javascript">
-      $(document).ready(function(){
-        //
+
+      $.post("/f/getTeamNum", function(responseText){
+        var currentTeam = data[responseText];
+
+        if( currentTeam ){
+          var map = new google.maps.Map(document.getElementById("map"), {
+            zoom: 15,
+            center: new google.maps.LatLng(currentTeam.longitude, currentTeam.latitude),
+            mapTypeId: google.maps.MapTypeId.ROADMAP
+          });
+        }else{
+          var map = new google.maps.Map(document.getElementById("map"), {
+            zoom: 4,
+            center: new google.maps.LatLng(39.9583086,-98.3331244),
+            mapTypeId: google.maps.MapTypeId.ROADMAP
+          });
+        }
+
+        var infoWindow = new google.maps.InfoWindow();
+
+        for (var team in data)(function() {
+          var teamNum = team;
+
+          var marker = new google.maps.Marker({
+            position: new google.maps.LatLng(data[team].longitude, data[team].latitude),
+            map: map
+          });
+
+          google.maps.event.addListener(marker, "click", function() {
+            infoWindow.setContent("<a target='_blank' href='http://thebluealliance.com/team/" + teamNum + "'>Team " + teamNum + "</a>");
+            infoWindow.open(map, marker);
+          });
+        })();
       });
-      window.onunload = function(){};
+
     </script>
 
   <script>
