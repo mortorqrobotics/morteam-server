@@ -88,6 +88,11 @@
     <div id="map" class="wide_body">
       <!--<h1 class="undcon">Under Construction</h1>-->
     </div>
+
+    <div id="leftbar" class="leftbar initial">
+      <!-- <div class="leftbar_item bold" id="teamNum"></div> -->
+    </div>
+    <span class="glyphicon glyphicon-chevron-right initial hide_leftbar"></span>
     <!-- END OF BODY -->
 
 
@@ -98,6 +103,17 @@
     <script type="text/javascript" src="js/velocity.min.js"></script>
     <script type="text/javascript" src="js/main.js"></script>
     <script type="text/javascript">
+
+      function hideLeftbar(time, button){
+        $(".leftbar").velocity({left: "-260px"}, { duration: time, queue: false });
+        $(button).removeClass("glyphicon-chevron-left").addClass("glyphicon-chevron-right");
+        $(button).velocity({left: "10px"}, { duration: time, queue: false });
+      }
+      function showLeftbar(time, button){
+        $(".leftbar").velocity({left: "0px"}, { duration: time, queue: false });
+        $(button).removeClass("glyphicon-chevron-right").addClass("glyphicon-chevron-left");
+        $(button).velocity({left: "220px"}, { duration: time, queue: false });
+      }
 
       $.post("/f/getTeamNum", function(responseText){
         var currentTeam = data[responseText];
@@ -127,10 +143,101 @@
           });
 
           google.maps.event.addListener(marker, "click", function() {
-            infoWindow.setContent("<a target='_blank' href='http://thebluealliance.com/team/" + teamNum + "'>Team " + teamNum + "</a>");
-            infoWindow.open(map, marker);
+            // infoWindow.setContent("<a class='teamNumLink' style='cursor: pointer' target='_blank' >Team " + teamNum + "</a>");
+            // infoWindow.open(map, marker);
+
+            $.post("/f/isTeamOnMorTeam", {teamNum: teamNum}, function(responseText){
+              $(".leftbar").empty()
+
+              if(responseText != "false" && responseText != "fail") {
+                var team = responseText
+
+                var teamDisplay = document.createElement("div");
+                $(teamDisplay).addClass("leftbar_item");
+                $(teamDisplay).addClass("bold");
+                $(teamDisplay).attr("id", "teamNum");
+                $(teamDisplay).append("Team " + team.number);
+                $(teamDisplay).append("<br/>");
+                $(teamDisplay).append("<span id='teamName'>"+team.name+"</span>");
+
+                showLeftbar(300, $(".hide_leftbar")[0]);
+                $("#leftbar").append($(teamDisplay))
+
+              }else{
+                var teamDisplay = document.createElement("div");
+                $(teamDisplay).addClass("leftbar_item");
+                $(teamDisplay).addClass("bold");
+                $(teamDisplay).attr("id", "teamNum");
+                $(teamDisplay).append("Team " + teamNum);
+
+                showLeftbar(300, $(".hide_leftbar")[0]);
+                $("#leftbar").append($(teamDisplay))
+              }
+
+              var TBALinkDiv = document.createElement("div");
+              $(TBALinkDiv).addClass("leftbar_item");
+              var TBALink = document.createElement("a");
+              $(TBALink).attr("target", "_blank");
+              $(TBALink).attr("href", "http://www.thebluealliance.com/team/" + teamNum);
+              $(TBALink).html("TheBlueAlliance Link For Team " + teamNum);
+              $(TBALinkDiv).append($(TBALink));
+              $(".leftbar").append($(TBALinkDiv));
+
+            })
+
           });
         })();
+      });
+
+      $(document).on("click", ".teamNumLink", function(){
+        var $this = $(this);
+        var clickedTeamNum = $.trim($(this).html().substring(5, 9))
+        $.post("/f/isTeamOnMorTeam", {teamNum: clickedTeamNum}, function(responseText){
+          $(".leftbar").empty()
+
+          if(responseText != "false" && responseText != "fail") {
+            var team = responseText
+
+            var teamDisplay = document.createElement("div");
+            $(teamDisplay).addClass("leftbar_item");
+            $(teamDisplay).addClass("bold");
+            $(teamDisplay).attr("id", "teamNum");
+            $(teamDisplay).append(team.number);
+            $(teamDisplay).append("<br/>");
+            $(teamDisplay).append("<span id='teamName'>"+team.name+"</span>");
+
+            showLeftbar(300, $(".hide_leftbar")[0]);
+            $("#leftbar").append($(teamDisplay))
+
+          }else{
+            var teamDisplay = document.createElement("div");
+            $(teamDisplay).addClass("leftbar_item");
+            $(teamDisplay).addClass("bold");
+            $(teamDisplay).attr("id", "teamNum");
+            $(teamDisplay).append($this.html());
+
+            showLeftbar(300, $(".hide_leftbar")[0]);
+            $("#leftbar").append($(teamDisplay))
+          }
+
+          var TBALinkDiv = document.createElement("div");
+          $(TBALinkDiv).addClass("leftbar_item");
+          var TBALink = document.createElement("a");
+          $(TBALink).attr("target", "_blank");
+          $(TBALink).attr("href", "http://www.thebluealliance.com/team/" + $.trim( $this.html().substring(5, 9) ));
+          $(TBALink).html("TheBlueAlliance Link For Team " + $.trim( $this.html().substring(5, 9) ));
+          $(TBALinkDiv).append($(TBALink));
+          $(".leftbar").append($(TBALinkDiv));
+
+        })
+      })
+
+      $(".hide_leftbar").click(function(){
+        if($(this).hasClass("glyphicon-chevron-left")){
+          hideLeftbar(300, this);
+        }else{
+          showLeftbar(300, this);
+        }
       });
 
     </script>

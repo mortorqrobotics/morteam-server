@@ -201,5 +201,19 @@ module.exports = function(app, util, schemas) {
         res.end(String(team.number));
       }
     })
-  })
+  });
+  app.post("/f/isTeamOnMorTeam", requireLogin, function(req, res){
+    Team.find({number: parseInt(req.body.teamNum)}, function(err, teams){
+      if(err){
+        console.error(err);
+        res.end("fail");
+      }else{
+        if(teams.length > 0){
+          res.json(teams[0]);
+        }else{
+          res.end("false");
+        }
+      }
+    });
+  });
 };

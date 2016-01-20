@@ -2590,3 +2590,19 @@ th{
 	top: 0px;
 	left: 0px;
 }
+
+#teamNum{
+	font-size: 24px;
+	background-color: orange;
+}
+#teamName{
+	font-size: 20px;
+}
+
+.leftbar.initial{
+	left: -260px;
+}
+
+.hide_leftbar.initial{
+	left: 10px;
+}
