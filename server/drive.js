@@ -3,6 +3,7 @@ module.exports = function(app, util, schemas) {
   var ObjectId = require('mongoose').Types.ObjectId;
   var multer = require('multer');
   var extToMime = require("./extToMime.json");
+  var lwip = require('lwip');
 
   //assign variables to util functions(and objects) and database schemas
   for(key in util){

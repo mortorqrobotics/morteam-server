@@ -49,7 +49,7 @@ module.exports = function(io, util, schemas) {
           }
         }
       })
-    }else{
+    }else if(sess){
       for( var user_id in online_clients ){
         if( online_clients[user_id].chats.hasAnythingFrom( online_clients[sess._id].chats ) && user_id != sess._id  ){
           io.to( online_clients[user_id].socket ).emit("joined", {_id: sess._id});

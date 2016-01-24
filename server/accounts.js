@@ -320,84 +320,83 @@ module.exports = function(app, util, schemas) {
     }
   });
   app.post("/f/editProfile", requireLogin, multer().single('new_prof_pic'), function(req, res){
-    if(validateEmail(req.body.email)){
-      if(validatePhone(req.body.phone)){
-        if(req.file){ //if user chose to update their profile picture too
 
-          //get extension and corresponding mime type
-          var ext = req.file.originalname.substring(req.file.originalname.lastIndexOf(".")+1).toLowerCase() || "unknown";
-          var mime = extToMime[ext]
-          if(mime == undefined){
-            mime = "application/octet-stream"
-          }
+    var updatedUser = {
+      firstname: req.body.firstname,
+      lastname: req.body.lastname,
+      email: req.body.email,
+      phone: req.body.phone,
+    }
 
-          //NOTE: for explanations of the functions used here, see util.js
+    if(req.body.parentEmail != ""){
+      updatedUser.parentEmail = req.body.parentEmail
+    }
 
-          //resize image to 300px
-          resizeImage(req.file.buffer, 300, ext, function(err, buffer){
-            if(err){
-              console.error(err);
-              res.end("fail");
-            }else{
-              //upload to profile picture bucket in AWS
-              uploadToProfPics(buffer, req.user.username+"-300", mime, function(err, data){
-                if(err){
-                  console.error(err);
-                  res.end("fail");
-                }else{
-                  //resize image to 60px
-                  resizeImage(req.file.buffer, 60, ext, function(err, buffer){
-                    if(err){
-                      console.error(err);
-                      res.end("fail");
-                    }else{
-                      //upload to profile picture bucket in AWS
-                      uploadToProfPics(buffer, req.user.username+"-60", mime, function(err, data){
-                        if(err){
-                          console.error(err);
-                          res.end("fail");
-                        }else{
-                          //update rest of user info in database
-                          User.findOneAndUpdate({_id: req.user._id}, {
-                            firstname: req.body.firstname,
-                            lastname: req.body.lastname,
-                            email: req.body.email,
-                            phone: req.body.phone,
-  			                    profpicpath: "/pp/" +  req.user.username
-                          }, function(err, user){
-                            if(err){
-                              console.error(err);
-                              res.end("fail");
-                            }else{
-                              res.end("success");
-                            }
-                          })
-                        }
-                      })
-                    }
-                  })
-                }
-              });
-            }
-          });
-        }else{
-          //update user info in database
-          User.findOneAndUpdate({_id: req.user._id}, {
-            firstname: req.body.firstname,
-            lastname: req.body.lastname,
-            email: req.body.email,
-            phone: req.body.phone
-          }, function(err, user){
-            if(err){
-              console.error(err);
-              res.end("fail");
-            }else{
-              res.end("success");
-            }
-          })
+    if(validateEmail(req.body.email) && validatePhone(req.body.phone)){
+      if(req.file){ //if user chose to update their profile picture too
+
+        updatedUser.profpicpath = "/pp/" +  req.user.username
+
+        //get extension and corresponding mime type
+        var ext = req.file.originalname.substring(req.file.originalname.lastIndexOf(".")+1).toLowerCase() || "unknown";
+        var mime = extToMime[ext]
+        if(mime == undefined){
+          mime = "application/octet-stream"
         }
+
+        //NOTE: for explanations of the functions used here, see util.js
+
+        //resize image to 300px
+        resizeImage(req.file.buffer, 300, ext, function(err, buffer){
+          if(err){
+            console.error(err);
+            res.end("fail");
+          }else{
+            //upload to profile picture bucket in AWS
+            uploadToProfPics(buffer, req.user.username+"-300", mime, function(err, data){
+              if(err){
+                console.error(err);
+                res.end("fail");
+              }else{
+                //resize image to 60px
+                resizeImage(req.file.buffer, 60, ext, function(err, buffer){
+                  if(err){
+                    console.error(err);
+                    res.end("fail");
+                  }else{
+                    //upload to profile picture bucket in AWS
+                    uploadToProfPics(buffer, req.user.username+"-60", mime, function(err, data){
+                      if(err){
+                        console.error(err);
+                        res.end("fail");
+                      }else{
+                        //update rest of user info in database
+                        User.findOneAndUpdate({_id: req.user._id}, updatedUser, function(err, user){
+                          if(err){
+                            console.error(err);
+                            res.end("fail");
+                          }else{
+                            res.end("success");
+                          }
+                        })
+                      }
+                    })
+                  }
+                })
+              }
+            });
+          }
+        });
       }else{
-        res.end("fail");
+        //update user info in database
+        User.findOneAndUpdate({_id: req.user._id}, updatedUser, function(err, user){
+          if(err){
+            console.error(err);
+            res.end("fail");
+          }else{
+            res.end("success");
+          }
+        });
       }
     }else{
       res.end("fail");

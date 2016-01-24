@@ -211,7 +211,7 @@ module.exports = function() {
    this.createRecepientList = function(users){
      var result = "";
      users.forEach(function(user){
-       result += user.email + ", ";
+       result += user.email + ", " + user.parentEmail + ", ";
      });
      result = result.substring(0, result.length-2);
      return result;
@@ -260,11 +260,11 @@ module.exports = function() {
    }
 
    this.getFileFromDrive = function(fileName, callback){ //not being used
-     driveBucket.getObject({Key: fileName}).send(callback)
+     self.driveBucket.getObject({Key: fileName}).send(callback)
    }
 
    this.deleteFileFromDrive = function(fileName, callback){
-     driveBucket.deleteObject({Key: fileName}).send(callback)
+     self.driveBucket.deleteObject({Key: fileName}).send(callback)
    }
 
    //ext is the extension without the period up front --> example: NOT '.txt', but rather 'txt'

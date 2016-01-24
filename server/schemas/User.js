@@ -12,6 +12,7 @@ var userSchema = new Schema({
   firstname:    { type: String, required: true },
   lastname:     { type: String, required: true },
   email:        { type: String, required: true, unique: true },
+  parentEmail:  String,
   phone:        { type: Number, required: true, unique: true },
   created_at:   Date,
   updated_at:   Date,
