@@ -2606,3 +2606,11 @@ th{
 .hide_leftbar.initial{
 	left: 10px;
 }
+
+.audience_globe{
+	margin-left: 5px;
+	color: #a9a9a9;
+}
+.audience_globe:hover{
+	color: #555555;
+}

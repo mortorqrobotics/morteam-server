@@ -28,9 +28,9 @@
   </script>
   <script src="js/spin.js"></script>
   <script type="text/javascript">
-      var loadingDiv = document.createElement("div");
-      loadingDiv.className = "loading_circle";
-      loadingDiv.id = "loading_circle";
+      // var loadingDiv = document.createElement("div");
+      // loadingDiv.className = "loading_circle";
+      // loadingDiv.id = "loading_circle";
   </script>
 </head>
 
@@ -371,6 +371,30 @@
       new_modal.open();
     })
     return new_modal;
+  }
+  function getAudienceText(obj){
+    var result = "";
+
+    if(obj.entireTeam == true){
+      return "Everyone";
+    }
+
+    if( obj.userAudience.length != 0 ){
+      for(var i = 0; i < obj.userAudience.length; i++){
+        result += obj.userAudience[i].firstname + " " + obj.userAudience[i].lastname + ", ";
+      }
+    }
+
+    if( obj.subdivisionAudience.length != 0 ){
+      for(var i = 0; i < obj.subdivisionAudience.length; i++){
+        result += obj.subdivisionAudience[i].name + ", ";
+      }
+    }
+
+    result = result.substring(0, result.length-2);
+
+    return result;
+
   }
   var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
   $(document).ready(function(){
@@ -738,9 +762,15 @@
           $(timestamp).addClass("announcement_timestamp")
           $(span).html( announcements[i].author.firstname + " " + announcements[i].author.lastname )
           $(timestamp).html( " - " + standardizeTime(shownDate) + " - " + months[shownDate.getMonth()] + " " + shownDate.getDate() + ", " + shownDate.getFullYear() );
+          var audienceGlobe = document.createElement("span");
+          $(audienceGlobe).addClass("glyphicon glyphicon-globe audience_globe");
+          var audienceText = getAudienceText(announcements[i]);
+          $(audienceGlobe).attr("title", audienceText);
           $(announcementTopDiv).append( img );
           $(announcementTopDiv).append( span );
           $(announcementTopDiv).append( timestamp );
+          $(announcementTopDiv).append( audienceGlobe );
+
           $(announcementDiv).append( announcementTopDiv );
           if(localStorage._id == announcements[i].author._id || localStorage.c_team_position == "admin"){
             var deleteButton = document.createElement("span")
@@ -758,6 +788,11 @@
             // spinner.stop();
           }
         }
+        $('.audience_globe').jBox('Tooltip', {
+            delayOpen: 0,
+            delayClose: 0,
+            theme: "TooltipDark"
+        });
         setTimeout(function(){
             $ann = $(".announcements_list").isotope({
                 itemSelector: ".announcement",

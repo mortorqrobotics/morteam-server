@@ -211,7 +211,10 @@ module.exports = function() {
    this.createRecepientList = function(users){
      var result = "";
      users.forEach(function(user){
-       result += user.email + ", " + user.parentEmail + ", ";
+       result += user.email + ", ";
+       if(user.parentEmail){
+          result += user.parentEmail + ", "
+       }
      });
      result = result.substring(0, result.length-2);
      return result;

@@ -1,7 +1,7 @@
 var mongoose = require('mongoose');
 var bcrypt = require('bcrypt');
 var Schema = mongoose.Schema;
-var util = require("../util.js");
+var util = require("../util.js")();
 SALT_WORK_FACTOR = 10;
 
 var createToken = util.createToken;
