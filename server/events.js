@@ -16,9 +16,9 @@ module.exports = function(app, util, schemas) {
         return new ObjectId(subdivision._id);
       }
     });
-    var numberOfDays = new Date(req.body.year, req.body.month-1, 0).getDate(); //month is 1 based
-    var start = new Date(req.body.year, req.body.month, 1); //month is 0 based
-    var end = new Date(req.body.year, req.body.month, numberOfDays); //month is 0 based
+    var numberOfDays = new Date(req.body.year, req.body.month, 0).getDate(); //month is 1 based
+    var start = new Date(req.body.year, req.body.month-1, 1); //month is 0 based
+    var end = new Date(req.body.year, req.body.month-1, numberOfDays); //month is 0 based
     Event.find({
       team: req.user.current_team.id,
       $or: [

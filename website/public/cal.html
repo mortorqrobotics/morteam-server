@@ -448,7 +448,7 @@
             var scrollPix = $(".day[data-day='"+ today +"']").offset().top - $(window).height()*0.5 + $(".day[data-day='"+ today +"']").height()*0.5;
             $('.timeline').scrollTop(scrollPix);
           }
-          $.post("/f/getEventsForUserInTeamInMonth", {year: year, month: month-1}, function(responseText){
+          $.post("/f/getEventsForUserInTeamInMonth", {year: year, month: month}, function(responseText){
             if(responseText != "fail"){
               var events = responseText;
               for(var i = 0; i < events.length; i++){

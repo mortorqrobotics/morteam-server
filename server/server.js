@@ -115,7 +115,7 @@ app.use(function(req, res, next) {
 app.use(function(req, res, next) {
   var exceptions = ["/login.html", "/signup.html", "/fp.html", "/favicon.ico"];
   if (req.method == "GET") {
-    if (req.path.startsWith("/css/") || req.path.startsWith("/js/") || req.path.startsWith("/img/")) {
+    if (req.path.contains("/css/") || req.path.contains("/js/") || req.path.contains("/img/")) {
       next();
     } else if ( exceptions.indexOf(req.url) > -1 ) {
       next();
