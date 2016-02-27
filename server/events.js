@@ -17,8 +17,8 @@ module.exports = function(app, util, schemas) {
       }
     });
     var numberOfDays = new Date(req.body.year, req.body.month, 0).getDate(); //month is 1 based
-    var start = new Date(req.body.year, req.body.month-1, 1); //month is 0 based
-    var end = new Date(req.body.year, req.body.month-1, numberOfDays); //month is 0 based
+    var start = new Date(req.body.year, req.body.month-1, 1, 0, 0, 0); //month is 0 based
+    var end = new Date(req.body.year, req.body.month-1, numberOfDays, 23, 59, 59); //month is 0 based
     Event.find({
       team: req.user.current_team.id,
       $or: [
@@ -26,7 +26,7 @@ module.exports = function(app, util, schemas) {
         { userAttendees: req.user._id },
         { subdivisionAttendees: { "$in": userSubdivisionIds } }
       ],
-      date: {$gte: start, $lt: end}
+      date: {$gte: start, $lte: end}
     }, function(err, events){
       if(err){
         console.error(err);
