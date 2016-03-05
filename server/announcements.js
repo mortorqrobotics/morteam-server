@@ -40,7 +40,7 @@ module.exports = function(app, util, schemas) {
             if(err){
               console.error(err);
               res.end("fail");
-            }else{
+            }else if(req.user.current_team.position != "member") {
               //creates a string which is a list of recepients with the following format: "a@a.com, b@b.com, c@c.com"
               var list = createRecepientList(users);
               notify.sendMail({
@@ -57,8 +57,8 @@ module.exports = function(app, util, schemas) {
                   console.log(info);
                 }
               });
-              res.end(announcement._id.toString());
             }
+            res.end(announcement._id.toString());
           })
         }
       });
@@ -80,7 +80,7 @@ module.exports = function(app, util, schemas) {
               if(err){
                 console.error(err);
                 res.end("fail");
-              }else{
+              }else if(req.user.current_team.position != "member") {
                 //creates a string which is a list of recepients with the following format: "a@a.com, b@b.com, c@c.com"
                 var list = createRecepientList(users);
                 notify.sendMail({
@@ -97,8 +97,8 @@ module.exports = function(app, util, schemas) {
                     console.log(info);
                   }
                 });
-                res.end(announcement._id.toString());
               }
+              res.end(announcement._id.toString());
             })
           }
         });
