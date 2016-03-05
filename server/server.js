@@ -49,7 +49,7 @@ mongoose.connect('mongodb://localhost:27017/' + config.dbName);
 
 //start server
 var port = process.argv[2] || 8080;
-var io = require("socket.io").listen(app.listen(port, "172.31.31.34"));
+var io = require("socket.io").listen(app.listen(port));
 console.log('server started on port %s', port);
 
 //check for any errors in all requests

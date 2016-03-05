@@ -172,7 +172,7 @@ module.exports = function(app, util, schemas) {
       subdivisionAudience: 1,
       entireTeam: 1
       //populate author and sort by timestamp, skip and limit are for pagination
-    }).populate("author", "-password").populate("userAudience").populate("subdivisionAudience").sort('-timestamp').skip(req.body.skip).limit(20).exec(function(err, announcements){
+    }).populate("author", "-password").populate("userAudience").populate("subdivisionAudience").sort('-timestamp').skip(Number(req.body.skip)).limit(20).exec(function(err, announcements){
       if(err){
         console.error(err);
         res.end("fail");
