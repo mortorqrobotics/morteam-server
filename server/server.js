@@ -13,9 +13,24 @@ var mongoose = require('mongoose'); //MongoDB ODM
 var session = require('express-session');
 var MongoStore = require('connect-mongo')(session);
 var ObjectId = mongoose.Types.ObjectId; //this is used to cast strings to MongoDB ObjectIds
-var config = require("./config.json"); //contains passwords and other sensitive info
-var util = require("./util.js")(); //contains functions and objects that are used across all the modules
 var multer = require('multer'); //for file uploads
+
+var config; // contains passwords and other sensitive info
+if(fs.existsSync("config.json")) {
+	config = require("./config.json");
+}
+else {
+	config = {
+		"sessionSecret": "secret",
+		"mailgunUesr": "user@morteam.com",
+		"malgunPass": "password",
+		"dbName": "morteam"
+	};
+	fs.writeFileSync("config.json", JSON.stringify(config, null, "\t"));
+	console.log("Generated default config.json");
+}
+
+var util = require("./util.js")(); //contains functions and objects that are used across all the modules
 
 //create express application and define global static directories
 var app = express();
