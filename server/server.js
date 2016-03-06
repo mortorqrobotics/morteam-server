@@ -173,6 +173,35 @@ app.use(express.static(publicDir));
 app.set('view engine', 'ejs');
 app.set('views', __dirname + '/../website');
 
+// morsout integration with morteam
+function requireMorscout(req, res, next) {
+	var host = req.headers.host;
+	if(host.startsWith("scout.")) {
+		next();
+	}
+}
+var morscout = require("../../morscout-server/morscout.js");
+morscout(new (function() {
+	var insertArg = function(list, index) {
+		var args = Array.prototype.slice(list, 0, index);
+		args.push(requireMorscout);
+		args = args.concat(Array.prototype.slice(list, index));
+		return args;
+	};
+	this.post = function(path) {
+		app.post.apply(null, insertArg(arguments, 1));
+	};
+	this.get = function(path) {
+		app.get.apply(null, insertArg(arguments, 1));
+	};
+	this.use = function(path) {
+		app.use.apply(null, insertArg(arguments, 0));
+	}
+})());
+app.use(requireMorscout, function(req, res, next) {
+	// do not proceed
+});
+
 //load homepage
 app.get("/", function(req, res) {
   fs.createReadStream("../website/public/index.html").pipe(res);
