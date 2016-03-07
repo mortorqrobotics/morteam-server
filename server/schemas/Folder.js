@@ -24,6 +24,7 @@ folderSchema.pre('save', function(next){
   next();
 });
 
-var Folder = mongoose.model('Folder', folderSchema);
-
-module.exports = Folder;
+module.exports = function(db) {
+	var Folder = db.model('Folder', folderSchema);
+	return Folder;
+};

@@ -25,6 +25,7 @@ chatSchema.pre('save', function(next){
   next();
 });
 
-var Chat = mongoose.model('Chat', chatSchema);
-
-module.exports = Chat;
+module.exports = function(db) {
+	var Chat = db.model('Chat', chatSchema);
+	return Chat;
+};

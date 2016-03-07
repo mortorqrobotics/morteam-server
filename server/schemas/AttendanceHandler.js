@@ -22,6 +22,7 @@ attendanceHandlerSchema.pre('save', function(next){
   next();
 });
 
-var attendanceHandler = mongoose.model('attendanceHandler', attendanceHandlerSchema);
-
-module.exports = attendanceHandler;
+module.exports = function(db) {
+	var attendanceHandler = db.model('attendanceHandler', attendanceHandlerSchema);
+	return attendanceHandler;
+};

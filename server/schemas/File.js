@@ -22,6 +22,7 @@ fileSchema.pre('save', function(next){
   next();
 });
 
-var File = mongoose.model('File', fileSchema);
-
-module.exports = File;
+module.exports = function(db) {
+	var File = db.model('File', fileSchema);
+	return File;
+};

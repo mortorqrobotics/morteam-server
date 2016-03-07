@@ -22,6 +22,7 @@ announcementSchema.pre('save', function(next){
   next();
 });
 
-var Announcement = mongoose.model('Announcement', announcementSchema);
-
-module.exports = Announcement;
+module.exports = function(db) {
+	var Announcement = db.model('Announcement', announcementSchema);
+	return Announcement;
+};

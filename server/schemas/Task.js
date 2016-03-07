@@ -22,6 +22,7 @@ taskSchema.pre('save', function(next){
   next();
 });
 
-var Task = mongoose.model('Task', taskSchema);
-
-module.exports = Task;
+module.exports = function(db) {
+	var Task = db.model('Task', taskSchema);
+	return Task;
+};

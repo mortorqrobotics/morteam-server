@@ -4,14 +4,13 @@
  * @version     1.0.0-beta.4
  */
 
+// wrap everything for the network
+module.exports = function(app, networkSchemas) {
+
 //import necessary modules
-var express = require('express');
 var http = require('http');
 var fs = require('fs');
-var bodyParser = require('body-parser');
 var mongoose = require('mongoose'); //MongoDB ODM
-var session = require('express-session');
-var MongoStore = require('connect-mongo')(session);
 var ObjectId = mongoose.Types.ObjectId; //this is used to cast strings to MongoDB ObjectIds
 var multer = require('multer'); //for file uploads
 
@@ -21,8 +20,7 @@ if(fs.existsSync("config.json")) {
 }
 else {
 	config = {
-		"sessionSecret": "secret",
-		"mailgunUesr": "user@morteam.com",
+		"mailgunUser": "user@morteam.com",
 		"malgunPass": "password",
 		"dbName": "morteam"
 	};
@@ -32,23 +30,26 @@ else {
 
 var util = require("./util.js")(); //contains functions and objects that are used across all the modules
 
-//create express application and define global static directories
-var app = express();
 publicDir = require("path").join(__dirname, "../website/public");
 profpicDir = 'http://profilepics.morteam.com.s3.amazonaws.com/'
 
+//connect to mongodb server
+var db = mongoose.createConnection('mongodb://localhost:27017/' + config.dbName);
+
 //import mongodb schemas
 var schemas = {
-  User: require('./schemas/User.js'),
-  Team: require('./schemas/Team.js'),
-  Subdivision: require('./schemas/Subdivision.js'),
-  Announcement: require('./schemas/Announcement.js'),
-  Chat: require('./schemas/Chat.js'),
-  Event: require('./schemas/Event.js'),
-  AttendanceHandler: require('./schemas/AttendanceHandler.js'),
-  Folder: require('./schemas/Folder.js'),
-  File: require('./schemas/File.js'),
-  Task: require('./schemas/Task.js'),
+  Subdivision: require('./schemas/Subdivision.js')(db),
+  Announcement: require('./schemas/Announcement.js')(db),
+  Chat: require('./schemas/Chat.js')(db),
+  Event: require('./schemas/Event.js')(db),
+  AttendanceHandler: require('./schemas/AttendanceHandler.js')(db),
+  Folder: require('./schemas/Folder.js')(db),
+  File: require('./schemas/File.js')(db),
+  Task: require('./schemas/Task.js')(db),
+};
+// add network schemas
+for(var key in networkSchemas) {
+	schemas[key] = networkSchemas[key];
 }
 
 //assign variables to imported util functions(and objects) and database schemas (example: var myFunc = util.myFunc;)
@@ -59,57 +60,8 @@ for(key in schemas){
   eval("var " + key + " = schemas." + key + ";");
 }
 
-//connect to mongodb server
-mongoose.connect('mongodb://localhost:27017/' + config.dbName);
-
 //start server
-var port = process.argv[2] || 8080;
-var io = require("socket.io").listen(app.listen(port));
-console.log('server started on port %s', port);
-
-//check for any errors in all requests
-app.use(function(err, req, res, next) {
-  console.error(err.stack);
-  res.status(500).send('Oops, something went wrong!');
-});
-
-//middleware to get request body
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({
-  extended: true
-}));
-
-var sessionMiddleware = session({
-  secret: config.sessionSecret,
-  saveUninitialized: false,
-  resave: false,
-  store: new MongoStore({ mongooseConnection: mongoose.connection })
-});
-
-//can now use session info (cookies) with socket.io requests
-io.use(function(socket, next){
-  sessionMiddleware(socket.request, socket.request.res, next);
-});
-//can now use session info (cookies) with regular requests
-app.use(sessionMiddleware);
-
-//load user info from session cookie into req.user object for each request
-app.use(function(req, res, next) {
-  if (req.session && req.session.user) {
-    User.findOne({
-      username: req.session.user.username
-    }, function(err, user) {
-      if (user) {
-        req.user = user;
-        delete req.user.password;
-        req.session.user = user;
-      }
-      next();
-    });
-  } else {
-    next();
-  }
-});
+console.log("MorTeam started");
 
 //add .html to end of filename if it did not have it already
 app.use(function(req, res, next) {
@@ -173,35 +125,6 @@ app.use(express.static(publicDir));
 app.set('view engine', 'ejs');
 app.set('views', __dirname + '/../website');
 
-// morsout integration with morteam
-function requireMorscout(req, res, next) {
-	var host = req.headers.host;
-	if(host.startsWith("scout.")) {
-		next();
-	}
-}
-var morscout = require("../../morscout-server/morscout.js");
-morscout(new (function() {
-	var insertArg = function(list, index) {
-		var args = Array.prototype.slice(list, 0, index);
-		args.push(requireMorscout);
-		args = args.concat(Array.prototype.slice(list, index));
-		return args;
-	};
-	this.post = function(path) {
-		app.post.apply(null, insertArg(arguments, 1));
-	};
-	this.get = function(path) {
-		app.get.apply(null, insertArg(arguments, 1));
-	};
-	this.use = function(path) {
-		app.use.apply(null, insertArg(arguments, 0));
-	}
-})());
-app.use(requireMorscout, function(req, res, next) {
-	// do not proceed
-});
-
 //load homepage
 app.get("/", function(req, res) {
   fs.createReadStream("../website/public/index.html").pipe(res);
@@ -222,3 +145,7 @@ require("./sio.js")(io, util, schemas);
 app.get('*', function(req, res) {
   send404(res);
 });
+
+
+// end network wrapping
+}

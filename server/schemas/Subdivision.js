@@ -18,6 +18,7 @@ subdivisionSchema.pre('save', function(next){
   next();
 });
 
-var Subdivision = mongoose.model('Subdivision', subdivisionSchema);
-
-module.exports = Subdivision;
+module.exports = function(db) {
+	var Subdivision = db.model('Subdivision', subdivisionSchema);
+	return Subdivision;
+}
