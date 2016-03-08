@@ -67,7 +67,7 @@ module.exports = function(app, util, schemas) {
 
     User.findOne({
       $or: [{username: req.body.username}, {email: req.body.username}]
-    }, function(err, user) {
+  	}, function(err, user) {
       if(err){
         console.error(err);
         res.end("fail");
@@ -83,7 +83,7 @@ module.exports = function(app, util, schemas) {
                 req.session.user = user;
                 if(req.body.rememberMe){
                   req.session.cookie.maxAge = 365 * 24 * 60 * 60 * 1000; //change cookie expiration date to one year
-                }
+			  	}
                 res.json(user);
               } else {
                 res.end("inc/password"); //incorrect password

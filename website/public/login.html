@@ -71,7 +71,7 @@
         var password = $("#password_box").val();
         $.post("/f/login", {"username": username, "password": password, "rememberMe": $('#remember_box').is(':checked')}, function(responseText){
           if(responseText != "inc/username" && responseText != "inc/password" && responseText != "fail"){
-            var user = responseText
+            var user = responseText;
             localStorage.username = user.username;
             localStorage.firstname = user.firstname;
             localStorage.lastname = user.lastname;

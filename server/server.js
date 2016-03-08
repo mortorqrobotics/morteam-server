@@ -5,9 +5,10 @@
  */
 
 // wrap everything for the network
-module.exports = function(app, networkSchemas) {
+module.exports = function(app, networkSchemas, io) {
 
 //import necessary modules
+var express = require("express");
 var http = require('http');
 var fs = require('fs');
 var mongoose = require('mongoose'); //MongoDB ODM
@@ -38,7 +39,6 @@ var db = mongoose.createConnection('mongodb://localhost:27017/' + config.dbName)
 
 //import mongodb schemas
 var schemas = {
-  Subdivision: require('./schemas/Subdivision.js')(db),
   Announcement: require('./schemas/Announcement.js')(db),
   Chat: require('./schemas/Chat.js')(db),
   Event: require('./schemas/Event.js')(db),
@@ -118,17 +118,17 @@ app.use(function(req, res, next) {
   }
 });
 
+//load homepage
+app.get("/", function(req, res, next) {
+  fs.createReadStream("../website/public/index.html").pipe(res);
+});
+
 //load any file in /website/public (aka publicDir)
 app.use(express.static(publicDir));
 
 //use EJS as default view engine and specifies location of EJS files
 app.set('view engine', 'ejs');
 app.set('views', __dirname + '/../website');
-
-//load homepage
-app.get("/", function(req, res) {
-  fs.createReadStream("../website/public/index.html").pipe(res);
-});
 
 //import all modules that handle specific GET and POST requests
 require("./accounts.js")(app, util, schemas);
