@@ -142,7 +142,8 @@ module.exports = function(app, util, schemas) {
     //creates an array of the _ids of the subdivisions that the user is a member of
     var userSubdivisionIds = req.user.subdivisions.map(function(subdivision) {
       if (subdivision.accepted == true) {
-        return new ObjectId(subdivision._id);
+        // return new ObjectId(subdivision._id);
+		return subdivision._id;
       }
     });
     //find announcements that the user should be able to see
