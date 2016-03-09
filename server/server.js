@@ -5,7 +5,7 @@
  */
 
 // wrap everything for the network
-module.exports = function(app, networkSchemas, io) {
+module.exports = function(app, networkSchemas, io, db) {
 
 //import necessary modules
 var express = require("express");
@@ -35,7 +35,8 @@ publicDir = require("path").join(__dirname, "../website/public");
 profpicDir = 'http://profilepics.morteam.com.s3.amazonaws.com/'
 
 //connect to mongodb server
-var db = mongoose.createConnection('mongodb://localhost:27017/' + config.dbName);
+// var db = mongoose.createConnection('mongodb://localhost:27017/' + config.dbName);
+// var db = networkDb.useDb(config.dbName);
 
 //import mongodb schemas
 var schemas = {
@@ -120,7 +121,7 @@ app.use(function(req, res, next) {
 
 //load homepage
 app.get("/", function(req, res, next) {
-  fs.createReadStream("../website/public/index.html").pipe(res);
+  fs.createReadStream(publicDir + "/index.html").pipe(res);
 });
 
 //load any file in /website/public (aka publicDir)

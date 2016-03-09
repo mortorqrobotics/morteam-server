@@ -6,6 +6,7 @@ var chatSchema = new Schema({
   team:        { type: String, required: true },
   group:       Boolean,
   userMembers: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+  // userMembers: [{ $type: Schema.Types.DBRef, $ref: "users", $db: "MorNetwork" }],
   subdivisionMembers: [{ type: Schema.Types.ObjectId, ref: 'Subdivision' }],
   messages : [{
     author: { type: Schema.Types.ObjectId, ref: 'User' },

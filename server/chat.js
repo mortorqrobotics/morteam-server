@@ -98,13 +98,13 @@ module.exports = function(app, util, schemas) {
       if (subdivision.accepted == true) {
         return new ObjectId(subdivision._id);
       }
-  });console.log(req.user._id);
+  });
     //find a chat in the current team that also has said user as a member or has a subdivision of which said user is a member.
     Chat.find({
       team: req.user.current_team.id,
       $or: [
         {
-          userMembers: new ObjectId(req.user._id)
+          userMembers: req.user._id
         },
         {
           subdivisionMembers: {

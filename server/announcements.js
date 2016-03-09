@@ -153,7 +153,7 @@ module.exports = function(app, util, schemas) {
           entireTeam: true
         },
         {
-          userAudience: new ObjectId(req.user._id)
+          userAudience: req.user._id
         },
         {
           subdivisionAudience: {
