@@ -230,7 +230,7 @@ module.exports = function(app, util, schemas) {
   app.post("/f/sendMessage", requireLogin, function(req, res){
     Chat.update({_id: req.body.chat_id}, { '$push': {
       'messages': {
-        "$each": [ {author: new ObjectId(req.user._id), content: normalizeDisplayedText(req.body.content), timestamp: new Date()} ],
+        "$each": [ {author: req.user._id, content: normalizeDisplayedText(req.body.content), timestamp: new Date()} ],
         "$position": 0
       }
     }, updated_at: new Date()}, function(err, model){
