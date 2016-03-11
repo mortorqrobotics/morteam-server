@@ -90,7 +90,19 @@
 				localStorage.teamName = user.current_team.name;
               }
             }
-            location="/";
+			if(location.search != "?scout") {
+            	location="/";
+			}
+			else {
+				var host = location.host;
+				var lastIndex = host.lastIndexOf(".");
+				var secondLastIndex = host.slice(0, lastIndex).lastIndexOf(".");
+				if(secondLastIndex == -1) {
+					secondLastIndex = 0;
+					host = "." + host;
+				}
+				location = "http://scout" + host.slice(secondLastIndex);
+			}
           }else if(responseText == "inc/password" || responseText == "inc/username"){
             alert("incorrect username/password");
             $this.val("Log in");

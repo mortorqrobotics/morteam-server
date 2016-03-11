@@ -69,8 +69,16 @@ app.use(function(req, res, next) {
   if (req.path.indexOf('.') === -1) {
     var file = publicDir + req.path + '.html';
     fs.exists(file, function(exists) {
-      if (exists)
-        req.url += '.html';
+      if (exists) {
+	    req.path += '.html';
+	  	if(req.url.contains("?")) {
+			var index = req.url.indexOf("?");
+			req.url = req.url.slice(0, index) + ".html" + req.url.slice(index);
+		}
+		else {
+			req.url += ".html";
+		}
+	  }
       next();
     });
   } else
@@ -85,9 +93,9 @@ app.use(function(req, res, next) {
   if (req.method == "GET") {
     if (req.path.contains("/css/") || req.path.contains("/js/") || req.path.contains("/img/")) {
       next();
-    } else if ( exceptions.indexOf(req.url) > -1 ) {
+  } else if ( exceptions.indexOf(req.path) > -1 ) {
       next();
-    } else if (req.url == "/void.html") {
+  } else if (req.url == "/void.html") {
       if (req.user) {
         if (req.user.teams.length > 0) {
           if(!req.user.current_team){

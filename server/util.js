@@ -20,6 +20,13 @@ module.exports = function() {
    var daysInWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
    var months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
+	this.includesRank = function(position, target) {
+		var order = ["member", "leader", "admin"];
+		var positionIndex = order.indexOf(position.toLowerCase());
+		var targetIndex = order.indexOf(position.toLowerCase());
+		return positionIndex >= targetIndex;
+	};
+
    //email transport
    this.notify = nodemailer.createTransport({
        service: 'Mailgun',
