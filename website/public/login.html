@@ -64,10 +64,11 @@
 	$(document).ready(function(){
 
 		// clear cache and reset cookies and localStorage for update if not already done
-		if(!localStorage.hasReset) {
+		var resetCount = 1; // increment this whenever another reset is needed
+		if(typeof(localStorage.resets) != "number" || localStorage.resets < resetCount) {
 			sessionStorage.clear();
 			localStorage.clear();
-			localStorage.hasReset = true;
+			localStorage.resets = resetCount;
 			document.cookie = "connect.sid=; expires=Thu, 01 Jan 1970 00:00:01 GMT;";
 			location.reload(true);
 		}
