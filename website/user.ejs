@@ -588,7 +588,7 @@
           $('#audio-files').find('audio#click-sound')[0].currentTime = 0;
         });
 
-        $(document).on("click", "#show-morscout-profile", function(){
+        $(document).on("click", "#show_morscout_profile", function(){
           var user_id = window.location.pathname.substring(window.location.pathname.lastIndexOf("/") + 1)
           location = "http://www.scout.morteam.com/profile.html?id=" + user_id
         });
