@@ -16,7 +16,7 @@ module.exports = function(app, util, schemas) {
   app.get('/file/:fileId', requireLogin, function(req, res){
     var userSubdivisionIds = req.user.subdivisions.map(function(subdivision) {
       if (subdivision.accepted == true) {
-        return new ObjectId(subdivision._id);
+        return subdivision._id;
       }
     });
     if(req.params.fileId.indexOf("-preview") == -1){
@@ -57,7 +57,7 @@ module.exports = function(app, util, schemas) {
   app.post("/f/getTeamFolders", requireLogin, function(req, res){
     var userSubdivisionIds = req.user.subdivisions.map(function(subdivision) {
       if (subdivision.accepted == true) {
-        return new ObjectId(subdivision._id);
+        return subdivision._id;
       }
     });
     Folder.find({team: req.user.current_team.id, parentFolder: { "$exists": false }, $or: [
@@ -76,7 +76,7 @@ module.exports = function(app, util, schemas) {
   app.post("/f/getSubFolders", requireLogin, function(req, res){
     var userSubdivisionIds = req.user.subdivisions.map(function(subdivision) {
       if (subdivision.accepted == true) {
-        return new ObjectId(subdivision._id);
+        return subdivision._id;
       }
     });
     Folder.find({team: req.user.current_team.id, parentFolder: req.body.folder_id, $or: [

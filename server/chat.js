@@ -96,7 +96,7 @@ module.exports = function(app, util, schemas) {
     //get an array of _ids of subdivisions of which the user is a member. (dat proper grammar doe)
     var userSubdivisionIds = req.user.subdivisions.map(function(subdivision) {
       if (subdivision.accepted == true) {
-        return new ObjectId(subdivision._id);
+        return subdivision._id;
       }
   });
     //find a chat in the current team that also has said user as a member or has a subdivision of which said user is a member.

@@ -13,7 +13,7 @@ module.exports = function(app, util, schemas) {
   app.post("/f/getEventsForUserInTeamInMonth", requireLogin, function(req, res){
     var userSubdivisionIds = req.user.subdivisions.map(function(subdivision) {
       if (subdivision.accepted == true) {
-        return new ObjectId(subdivision._id);
+        return subdivision._id;
       }
     });
     var numberOfDays = new Date(req.body.year, req.body.month, 0).getDate(); //month is 1 based
@@ -39,7 +39,7 @@ module.exports = function(app, util, schemas) {
   app.post("/f/getUpcomingEventsForUser", requireLogin, function(req, res){
     var userSubdivisionIds = req.user.subdivisions.map(function(subdivision) {
       if (subdivision.accepted == true) {
-        return new ObjectId(subdivision._id);
+        return subdivision._id;
       }
     });
     Event.find({
