@@ -1,4 +1,5 @@
-var mongoose = require('mongoose');
+module.exports = function(mongoose) {
+	
 Schema = mongoose.Schema;
 
 var chatSchema = new Schema({
@@ -26,7 +27,6 @@ chatSchema.pre('save', function(next){
   next();
 });
 
-module.exports = function(db) {
-	var Chat = db.model('Chat', chatSchema);
-	return Chat;
+var Chat = mongoose.model('Chat', chatSchema);
+return Chat;
 };

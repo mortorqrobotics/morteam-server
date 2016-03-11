@@ -5,13 +5,12 @@
  */
 
 // wrap everything for the network
-module.exports = function(app, networkSchemas, io, db) {
+module.exports = function(app, networkSchemas, io, mongoose) {
 
 //import necessary modules
 var express = require("express");
 var http = require('http');
 var fs = require('fs');
-var mongoose = require('mongoose'); //MongoDB ODM
 var ObjectId = mongoose.Types.ObjectId; //this is used to cast strings to MongoDB ObjectIds
 var multer = require('multer'); //for file uploads
 
@@ -38,6 +37,7 @@ profpicDir = 'http://profilepics.morteam.com.s3.amazonaws.com/'
 // var db = mongoose.createConnection('mongodb://localhost:27017/' + config.dbName);
 // var db = networkDb.useDb(config.dbName);
 
+var db = mongoose;
 //import mongodb schemas
 var schemas = {
   Announcement: require('./schemas/Announcement.js')(db),

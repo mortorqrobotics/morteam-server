@@ -1,4 +1,5 @@
-var mongoose = require('mongoose');
+module.exports = function(mongoose) {
+
 Schema = mongoose.Schema;
 
 var folderSchema = new Schema({
@@ -24,7 +25,6 @@ folderSchema.pre('save', function(next){
   next();
 });
 
-module.exports = function(db) {
-	var Folder = db.model('Folder', folderSchema);
-	return Folder;
+var Folder = mongoose.model('Folder', folderSchema);
+return Folder;
 };

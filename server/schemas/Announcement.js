@@ -1,4 +1,5 @@
-var mongoose = require('mongoose');
+module.exports = function(mongoose) {
+
 Schema = mongoose.Schema;
 
 var announcementSchema = new Schema({
@@ -22,7 +23,6 @@ announcementSchema.pre('save', function(next){
   next();
 });
 
-module.exports = function(db) {
-	var Announcement = db.model('Announcement', announcementSchema);
-	return Announcement;
+var Announcement = mongoose.model('Announcement', announcementSchema);
+return Announcement;
 };

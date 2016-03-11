@@ -1,4 +1,5 @@
-var mongoose = require('mongoose');
+module.exports = function(mongoose) {
+
 Schema = mongoose.Schema;
 
 var taskSchema = new Schema({
@@ -22,7 +23,6 @@ taskSchema.pre('save', function(next){
   next();
 });
 
-module.exports = function(db) {
-	var Task = db.model('Task', taskSchema);
-	return Task;
+var Task = mongoose.model('Task', taskSchema);
+return Task;
 };

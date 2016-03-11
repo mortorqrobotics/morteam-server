@@ -1,4 +1,5 @@
-var mongoose = require('mongoose');
+module.exports = function(mongoose) {
+
 Schema = mongoose.Schema;
 
 var attendanceHandlerSchema = new Schema({
@@ -22,7 +23,6 @@ attendanceHandlerSchema.pre('save', function(next){
   next();
 });
 
-module.exports = function(db) {
-	var attendanceHandler = db.model('attendanceHandler', attendanceHandlerSchema);
-	return attendanceHandler;
+var attendanceHandler = mongoose.model('attendanceHandler', attendanceHandlerSchema);
+return attendanceHandler;
 };

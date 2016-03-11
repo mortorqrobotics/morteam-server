@@ -1,4 +1,5 @@
-var mongoose = require('mongoose');
+module.exports = function(mongoose) {
+	
 Schema = mongoose.Schema;
 
 var fileSchema = new Schema({
@@ -22,7 +23,6 @@ fileSchema.pre('save', function(next){
   next();
 });
 
-module.exports = function(db) {
-	var File = db.model('File', fileSchema);
-	return File;
+var File = mongoose.model('File', fileSchema);
+return File;
 };

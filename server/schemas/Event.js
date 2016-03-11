@@ -1,4 +1,5 @@
-var mongoose = require('mongoose');
+module.exports = function(mongoose) {
+
 Schema = mongoose.Schema;
 
 var eventSchema = new Schema({
@@ -24,7 +25,6 @@ eventSchema.pre('save', function(next){
   next();
 });
 
-module.exports = function(db) {
-	var Event = db.model('Event', eventSchema);
-	return Event;
+var Event = mongoose.model('Event', eventSchema);
+return Event;
 };
