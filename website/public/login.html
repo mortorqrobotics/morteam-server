@@ -65,7 +65,7 @@
 
 		// clear cache and reset cookies and localStorage for update if not already done
 		var resetCount = 1; // increment this whenever another reset is needed
-		if(typeof(localStorage.resets) != "number" || localStorage.resets < resetCount) {
+		if(parseInt(localStorage.resets).toString() != localStorage.resets || localStorage.resets < resetCount) {
 			sessionStorage.clear();
 			localStorage.clear();
 			localStorage.resets = resetCount;
