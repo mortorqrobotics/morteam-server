@@ -57,6 +57,9 @@
           <li class="navbar_item glyph_link networks_btn menu_btn" onclick="location='../networks'">
               <span class="glyphicon glyphicon-globe"></span>
           </li>
+          <li class="navbar_item glyph_link networks_btn menu_btn" onclick="location='http://www.scout.morteam.com'">
+              <span class="glyphicon glyphicon-pencil"></span>
+          </li>
           <div class="navbar_item right_links">
             <li class="navbar_item glyph_link menu">
                 <span class="glyphicon glyphicon-menu-hamburger"></span>
@@ -148,6 +151,7 @@
       <!-- <div class="leftbar_item" id="leftbar_title">Vice President of Programming</div> -->
       <div class="leftbar_item"><span id="leftbar_email"><%= email %></span></div>
       <div class="leftbar_item"><span id="leftbar_phone"><%= phone %></span></div>
+      <div class="leftbar_item"><input id="show_morscout_profile" type="button" class="button leftbar_btn" value="View MorScout Profile"></input></div>
       <div class="others_only">
       <% if(viewerUserId.toString() == _id.toString()){ %>
         <div class="leftbar_item"><input id="edit_profile" type="button" class="button leftbar_btn" value="Edit Profile"></input></div>
@@ -582,7 +586,12 @@
           }
           $('#audio-files').find('audio#click-sound')[0].play();
           $('#audio-files').find('audio#click-sound')[0].currentTime = 0;
-        })
+        });
+
+        $(document).on("click", "#show-morscout-profile", function(){
+          var user_id = window.location.pathname.substring(window.location.pathname.lastIndexOf("/") + 1)
+          location = "http://www.scout.morteam.com/profile.html?id=" + user_id
+        });
 
       });
     </script>
