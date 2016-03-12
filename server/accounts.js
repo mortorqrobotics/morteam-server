@@ -217,8 +217,20 @@ module.exports = function(app, util, schemas) {
   });
   app.post("/f/getUser", requireLogin, function(req, res){
     User.findOne({_id: req.body._id}, '-password', function(err, user){
-      handleError(err);
+      if(err){
+        console.error(err);
+        res.end("fail");
+      }
       res.json(user);
+    })
+  })
+  app.post("/f/getUserTeams", requireLogin, function(req, res){
+    User.findOne({_id: req.body._id}, '-password', function(err, user){
+      if(err){
+        console.error(err);
+        res.end("fail");
+      }
+      res.json({"teams": user.teams, "current_team": user.current_team});
     })
   })
   app.post("/f/changePosition", requireLogin, function(req, res){
