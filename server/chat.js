@@ -94,11 +94,7 @@ module.exports = function(app, util, schemas) {
   })
   app.post("/f/getChatsForUser", requireLogin, function(req, res){
     //get an array of _ids of subdivisions of which the user is a member. (dat proper grammar doe)
-    var userSubdivisionIds = req.user.subdivisions.map(function(subdivision) {
-      if (subdivision.accepted == true) {
-        return subdivision._id;
-      }
-  });
+    var userSubdivisionIds = activeSubdivisionIds(req.user.subdivisions);
     //find a chat in the current team that also has said user as a member or has a subdivision of which said user is a member.
     Chat.find({
       team: req.user.current_team.id,

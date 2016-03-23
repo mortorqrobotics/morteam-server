@@ -14,11 +14,7 @@ module.exports = function(app, util, schemas) {
   }
 
   app.get('/file/:fileId', requireLogin, function(req, res){
-    var userSubdivisionIds = req.user.subdivisions.map(function(subdivision) {
-      if (subdivision.accepted == true) {
-        return subdivision._id;
-      }
-    });
+    var userSubdivisionIds = activeSubdivisionIds(req.user.subdivisions);
     if(req.params.fileId.indexOf("-preview") == -1){
       File.findOne({_id: req.params.fileId}).populate('folder').exec(function(err, file){
         if(err){
@@ -55,11 +51,7 @@ module.exports = function(app, util, schemas) {
     }
   });
   app.post("/f/getTeamFolders", requireLogin, function(req, res){
-    var userSubdivisionIds = req.user.subdivisions.map(function(subdivision) {
-      if (subdivision.accepted == true) {
-        return subdivision._id;
-      }
-    });
+    var userSubdivisionIds = activeSubdivisionIds(req.user.subdivisions);
     Folder.find({team: req.user.current_team.id, parentFolder: { "$exists": false }, $or: [
       {entireTeam: true},
       {userMembers: req.user._id},
@@ -74,11 +66,7 @@ module.exports = function(app, util, schemas) {
     })
   })
   app.post("/f/getSubFolders", requireLogin, function(req, res){
-    var userSubdivisionIds = req.user.subdivisions.map(function(subdivision) {
-      if (subdivision.accepted == true) {
-        return subdivision._id;
-      }
-    });
+    var userSubdivisionIds = activeSubdivisionIds(req.user.subdivisions);
     Folder.find({team: req.user.current_team.id, parentFolder: req.body.folder_id, $or: [
       {entireTeam: true},
       {userMembers: req.user._id},

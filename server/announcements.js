@@ -140,12 +140,7 @@ module.exports = function(app, util, schemas) {
   });
   app.post("/f/getAnnouncementsForUser", requireLogin, function(req, res) {
     //creates an array of the _ids of the subdivisions that the user is a member of
-    var userSubdivisionIds = req.user.subdivisions.map(function(subdivision) {
-      if (subdivision.accepted == true) {
-        // return new ObjectId(subdivision._id);
-		return subdivision._id;
-      }
-    });
+    var userSubdivisionIds = activeSubdivisionIds(req.user.subdivisions);
     //find announcements that the user should be able to see
     Announcement.find({
       team: req.user.current_team.id,

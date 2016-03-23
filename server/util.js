@@ -20,6 +20,14 @@ module.exports = function() {
    var daysInWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
    var months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
+	this.activeSubdivisionIds = function(subdivisions) {
+		return subdivisions.filter(
+			subdivision => subdivision.accepted
+		).map(
+			subdivision => subdivision._id
+		);
+	}
+
 	this.includesRank = function(position, target) {
 		var order = ["member", "leader", "admin"];
 		var positionIndex = order.indexOf(position.toLowerCase());

@@ -11,11 +11,7 @@ module.exports = function(app, util, schemas) {
   }
 
   app.post("/f/getEventsForUserInTeamInMonth", requireLogin, function(req, res){
-    var userSubdivisionIds = req.user.subdivisions.map(function(subdivision) {
-      if (subdivision.accepted == true) {
-        return subdivision._id;
-      }
-    });
+    var userSubdivisionIds = activeSubdivisionIds(req.user.subdivisions);
     var numberOfDays = new Date(req.body.year, req.body.month, 0).getDate(); //month is 1 based
     var start = new Date(req.body.year, req.body.month-1, 1, 0, 0, 0); //month is 0 based
     var end = new Date(req.body.year, req.body.month-1, numberOfDays, 23, 59, 59); //month is 0 based
@@ -37,11 +33,7 @@ module.exports = function(app, util, schemas) {
     });
   });
   app.post("/f/getUpcomingEventsForUser", requireLogin, function(req, res){
-    var userSubdivisionIds = req.user.subdivisions.map(function(subdivision) {
-      if (subdivision.accepted == true) {
-        return subdivision._id;
-      }
-    });
+    var userSubdivisionIds = activeSubdivisionIds(req.user.subdivisions);
     Event.find({
       team: req.user.current_team.id,
       $or: [
