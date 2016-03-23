@@ -447,7 +447,8 @@ module.exports = function(app, util, schemas) {
     });
   });
   app.post("/f/removeUserFromTeam", requireLogin, requireAdmin, function(req, res){
-    User.update({_id: req.body.user_id}, { '$pull': {
+	  var remove = function() {
+	User.update({_id: req.body.user_id}, { '$pull': {
       'teams': {id: req.user.current_team.id},
       'subdivisions': {team: req.user.current_team.id}
     },
@@ -522,8 +523,31 @@ module.exports = function(app, util, schemas) {
           }
         });
       }
-    })
-  })
+  	});
+	};
+	User.findOne({
+		_id: req.body.user_id
+	}, function(err, user) {
+		if(user.current_team.position == "admin") {
+			User.count({
+				teams: {
+					id: req.user.current_team.id,
+					position: "admin"
+				}
+			}, function(err, count) {
+				if(err) {
+					res.end("fail");
+				} else if (count > 1) {
+				   remove();
+			   } else {
+					res.end("You cannot remove the only Admin on your team.");
+				}
+			});
+		} else {
+			remove();
+		}
+	});
+  });
   app.post("/f/forgotPassword", function(req, res){
     User.findOne({email: req.body.email, username: req.body.username}, function(err, user){
       if(err){
