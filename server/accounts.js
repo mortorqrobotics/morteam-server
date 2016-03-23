@@ -253,22 +253,43 @@ module.exports = function(app, util, schemas) {
           //find position of current user
           current_position = findTeamInUser(user, req.user.current_team.id).position;
           //check position hierarchy to see if it is allowed for user to change the position of target user
-          if( positionHA[req.user.current_team.position] >= positionHA[req.body.target_position] && positionHA[req.user.current_team.position] >= positionHA[current_position] ){
-            //update position of target user
-            User.update({_id: req.body.user_id, 'teams.id': req.user.current_team.id}, {'$set': {
-              'teams.$.position': req.body.target_position, //find out what .$. means and if it means selected "teams" element
-              'current_team.position': req.body.target_position //make sure in the future current_team.position is checked with "teams" array of the document when user is logging in as opposed to doing this
-            }}, function(err){
-              if(err){
-                console.error(err);
-                res.end("fail");
-              }else{
-                res.end("success");
-              }
-            });
-          }else{
-            res.end("fail");
-          }
+          var updatePosition = function() {
+			  if( positionHA[req.user.current_team.position] >= positionHA[req.body.target_position]
+				  && positionHA[req.user.current_team.position] >= positionHA[current_position] ){
+	            //update position of target user
+	            User.update({_id: req.body.user_id, 'teams.id': req.user.current_team.id}, {'$set': {
+	              'teams.$.position': req.body.target_position, //find out what .$. means and if it means selected "teams" element
+	              'current_team.position': req.body.target_position //make sure in the future current_team.position is checked with "teams" array of the document when user is logging in as opposed to doing this
+	            }}, function(err){
+	              if(err){
+	                console.error(err);
+	                res.end("fail");
+	              }else{
+	                res.end("success");
+	              }
+	            });
+	          }else{
+	            res.end("fail");
+	          }
+		  };
+		  if(current_position == "admin") {
+			  User.count({
+				  teams: {
+					  id: req.user.current_team.id,
+					  position: "admin"
+				  }
+			  }, function(err, count) {
+				  if(err) {
+					  res.end("fail");
+				  } else if (count > 1) {
+					 updatePosition();
+				 } else {
+					  res.end("You are the only Admin on your team, so you cannot demote yourself.");
+				  }
+			  });
+		  } else {
+			  updatePosition();
+		  }
         }else{
           res.end("fail");
         }
