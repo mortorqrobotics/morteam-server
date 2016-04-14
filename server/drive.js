@@ -169,7 +169,7 @@ module.exports = function(app, util, schemas) {
 			originalName: req.file.originalname,
 			folder: req.body.currentFolderId,
 			size: req.file.size,
-			type: extToType(ext),
+			type: util.extToType(ext),
 			mimetype: mime,
 			creator: req.user._id
 		}, function(err, file) {
