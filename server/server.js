@@ -32,8 +32,8 @@ else {
 
 let util = require("./util.js")(); //contains functions and objects that are used across all the modules
 
-let publicDir = require("path").join(__dirname, "../website/public");
-let profpicDir = "http://profilepics.morteam.com.s3.amazonaws.com/"
+const publicDir = require("path").join(__dirname, "../website/public");
+const profpicDir = "http://profilepics.morteam.com.s3.amazonaws.com/"
 
 //connect to mongodb server
 // let db = mongoose.createConnection("mongodb://localhost:27017/" + config.dbName);
@@ -55,6 +55,8 @@ for (let key in networkSchemas) {
 	schemas[key] = networkSchemas[key];
 }
 
+let requireLogin = util.requireLogin;
+
 //assign variables to imported util functions(and objects) and database schemas (example: let myFunc = util.myFunc;)
 for (key in util) {
 	eval("var " + key + " = util." + key + ";");
@@ -68,19 +70,19 @@ console.log("MorTeam started");
 
 //add .html to end of filename if it did not have it already
 app.use(function(req, res, next) {
+	req.filePath = req.path;
 	if (req.path.indexOf(".") === -1) {
 		let file = publicDir + req.path + ".html";
 		fs.exists(file, function(exists) {
 			if (exists) {
-			req.path += ".html";
-			if (req.url.contains("?")) {
-			let index = req.url.indexOf("?");
-			req.url = req.url.slice(0, index) + ".html" + req.url.slice(index);
-		}
-		else {
-			req.url += ".html";
-		}
-		}
+				req.filePath += ".html";
+				if (req.url.contains("?")) {
+					let index = req.url.indexOf("?");
+					req.url = req.url.slice(0, index) + ".html" + req.url.slice(index);
+				} else {
+					req.url += ".html";
+				}
+			}
 			next();
 		});
 	} else
@@ -91,11 +93,12 @@ app.use(function(req, res, next) {
 //allow browser to receive images, css, and js files without being logged in
 //allow browser to receive some pages such as login.html, signup.html, etc. without being logged in
 app.use(function(req, res, next) {
+	let path = req.filePath;
 	let exceptions = ["/login.html", "/signup.html", "/fp.html", "/favicon.ico"];
 	if (req.method == "GET") {
-		if (req.path.contains("/css/") || req.path.contains("/js/") || req.path.contains("/img/")) {
+		if (path.contains("/css/") || path.contains("/js/") || path.contains("/img/")) {
 			next();
-	} else if ( exceptions.indexOf(req.path) > -1 ) {
+	} else if ( exceptions.indexOf(path) > -1 ) {
 			next();
 	} else if (req.url == "/void.html") {
 			if (req.user) {
@@ -142,7 +145,7 @@ app.set("view engine", "ejs");
 app.set("views", __dirname + "/../website");
 
 //import all modules that handle specific GET and POST requests
-require("./accounts.js")(app, util, schemas);
+require("./accounts.js")(app, util, schemas, publicDir, profpicDir);
 require("./teams.js")(app, util, schemas);
 require("./subdivisions.js")(app, util, schemas);
 require("./announcements.js")(app, util, schemas);
@@ -154,7 +157,7 @@ require("./sio.js")(io, util, schemas);
 
 //send 404 message for any page that does not exist (IMPORTANT: The order for this does matter. Keep it at the end.)
 app.get("*", function(req, res) {
-	send404(res);
+	util.send404(res);
 });
 
 

@@ -2,6 +2,12 @@
 
 module.exports = function(app, util, schemas) {
 
+	let requireLogin = util.requireLogin;
+	let requireLeader = util.requireLeader;
+
+	let Task = schemas.Task;
+	let User = schemas.User;
+
 	//assign variables to util functions(and objects) and database schemas
 	for (key in util) {
 		eval("var " + key + " = util." + key + ";");
@@ -37,7 +43,7 @@ module.exports = function(app, util, schemas) {
 							res.end("fail");
 						} else {
 							if (user) {
-								notify.sendMail({
+								util.notify.sendMail({
 										from: "MorTeam Notification <notify@morteam.com>",
 										to: user.email,
 										subject: "New Task Assigned By " + req.user.firstname + " " + req.user.lastname,
@@ -68,7 +74,7 @@ module.exports = function(app, util, schemas) {
 							res.end("fail");
 						} else {
 							if (user) {
-								notify.sendMail({
+								util.notify.sendMail({
 										from: "MorTeam Notification <notify@morteam.com>",
 										to: user.email,
 										subject: "New Task Assigned By " + req.user.firstname + " " + req.user.lastname,

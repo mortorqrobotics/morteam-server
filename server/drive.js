@@ -7,6 +7,12 @@ module.exports = function(app, util, schemas) {
 	let extToMime = require("./extToMime.json");
 	let lwip = require("lwip");
 
+	let requireLogin = util.requireLogin;
+	let requireAdmin = util.requireAdmin;
+
+	let Folder = schemas.Folder;
+	let File = schemas.File;
+
 	//assign variables to util functions(and objects) and database schemas
 	for (key in util) {
 		eval("var " + key + " = util." + key + ";");
@@ -16,7 +22,7 @@ module.exports = function(app, util, schemas) {
 	}
 
 	app.get("/file/:fileId", requireLogin, function(req, res) {
-		let userSubdivisionIds = activeSubdivisionIds(req.user.subdivisions);
+		let userSubdivisionIds = util.activeSubdivisionIds(req.user.subdivisions);
 		if (req.params.fileId.indexOf("-preview") == -1) {
 			File.findOne({_id: req.params.fileId}).populate("folder").exec(function(err, file) {
 				if (err) {
@@ -42,7 +48,7 @@ module.exports = function(app, util, schemas) {
 				}
 			});
 		} else {
-			driveBucket.getSignedUrl("getObject", { Key: req.params.fileId, Expires: 60 }, function (err, url) {
+			util.driveBucket.getSignedUrl("getObject", { Key: req.params.fileId, Expires: 60 }, function (err, url) {
 				if (err) {
 					console.error(err);
 					res.end("fail");
@@ -53,7 +59,7 @@ module.exports = function(app, util, schemas) {
 		}
 	});
 	app.post("/f/getTeamFolders", requireLogin, function(req, res) {
-		let userSubdivisionIds = activeSubdivisionIds(req.user.subdivisions);
+		let userSubdivisionIds = util.activeSubdivisionIds(req.user.subdivisions);
 		Folder.find({team: req.user.current_team.id, parentFolder: { "$exists": false }, $or: [
 			{entireTeam: true},
 			{userMembers: req.user._id},
@@ -68,7 +74,7 @@ module.exports = function(app, util, schemas) {
 		})
 	})
 	app.post("/f/getSubFolders", requireLogin, function(req, res) {
-		let userSubdivisionIds = activeSubdivisionIds(req.user.subdivisions);
+		let userSubdivisionIds = util.activeSubdivisionIds(req.user.subdivisions);
 		Folder.find({team: req.user.current_team.id, parentFolder: req.body.folder_id, $or: [
 			{entireTeam: true},
 			{userMembers: req.user._id},
@@ -156,7 +162,7 @@ module.exports = function(app, util, schemas) {
 			disposition = "attachment; filename="+req.body.fileName+"."+ext;
 		}
 
-		req.body.fileName = normalizeDisplayedText(req.body.fileName);
+		req.body.fileName = util.normalizeDisplayedText(req.body.fileName);
 
 		File.create({
 			name: req.body.fileName,
@@ -171,7 +177,7 @@ module.exports = function(app, util, schemas) {
 				console.error(err);
 				res.end("fail");
 			} else {
-				uploadToDrive(req.file.buffer, file._id, mime, disposition, function(err, data) {
+				util.uploadToDrive(req.file.buffer, file._id, mime, disposition, function(err, data) {
 					if (err) {
 						console.error(err);
 						res.end("fail");
@@ -196,7 +202,7 @@ module.exports = function(app, util, schemas) {
 														console.error(err);
 														res.end("fail");
 													} else {
-														uploadToDrive(buffer, file._id+"-preview", mime, disposition, function(err, data) {
+														util.uploadToDrive(buffer, file._id+"-preview", mime, disposition, function(err, data) {
 															if (err) {
 																console.error(err);
 																res.end("fail");
@@ -219,7 +225,7 @@ module.exports = function(app, util, schemas) {
 														console.error(err);
 														res.end("fail");
 													} else {
-														uploadToDrive(buffer, file._id+"-preview", mime, disposition, function(err, data) {
+														util.uploadToDrive(buffer, file._id+"-preview", mime, disposition, function(err, data) {
 															if (err) {
 																console.error(err);
 																res.end("fail");
@@ -247,7 +253,7 @@ module.exports = function(app, util, schemas) {
 				res.end("fail");
 			} else {
 				if (req.user._id.toString() == file.creator.toString() || req.user.current_team.position == "admin") {
-					deleteFileFromDrive(req.body.file_id, function(err, data) {
+					util.deleteFileFromDrive(req.body.file_id, function(err, data) {
 						if (err) {
 							console.error(err);
 							res.end("fail");
@@ -258,7 +264,7 @@ module.exports = function(app, util, schemas) {
 									res.end("fail");
 								} else {
 									if (req.body.isImg) {
-											deleteFileFromDrive(req.body.file_id+"-preview", function(err, data) {
+											util.deleteFileFromDrive(req.body.file_id+"-preview", function(err, data) {
 												if (err) {
 													console.error(err);
 													res.end("fail");

@@ -4,6 +4,8 @@ module.exports = function(io, util, schemas) {
 
 	let ObjectId = require("mongoose").Types.ObjectId;
 
+	let Chat = schemas.Chat;
+
 	//assign variables to util functions(and objects) and database schemas
 	for (key in util) {
 		eval("var " + key + " = util." + key + ";");

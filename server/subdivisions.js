@@ -4,6 +4,12 @@ module.exports = function(app, util, schemas) {
 
 	let ObjectId = require("mongoose").Types.ObjectId;
 
+	let requireLogin = util.requireLogin;
+	let requireLeader = util.requireLeader;
+	let requireAdmin = util.requireAdmin;
+
+	let Subdivision = schemas.Subdivision;
+
 	//assign variables to util functions(and objects) and database schemas
 	for (key in util) {
 		eval("var " + key + " = util." + key + ";");
@@ -19,7 +25,7 @@ module.exports = function(app, util, schemas) {
 			team: req.user.current_team.id
 		}, function(err, subdivision) {
 			if (err) {
-				send404(res);
+				util.send404(res);
 			} else {
 				if (subdivision) {
 					User.find({
@@ -31,7 +37,7 @@ module.exports = function(app, util, schemas) {
 						}
 					}, function(err, users) {
 						if (err) {
-							send404(res);
+							util.send404(res);
 						} else {
 							if (subdivision.type == "private") {
 								for (let i = 0; i < users.length; i++) {
@@ -70,7 +76,7 @@ module.exports = function(app, util, schemas) {
 						}
 					})
 				} else {
-					subdivisionNotFound(res);
+					util.subdivisionNotFound(res);
 				}
 			}
 		})

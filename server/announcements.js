@@ -5,6 +5,12 @@ module.exports = function(app, util, schemas) {
 	let Autolinker = require( "autolinker" );
 	let ObjectId = require("mongoose").Types.ObjectId;
 
+	let requireLogin = util.requireLogin;
+	let requireAdmin = util.requireAdmin;
+
+	let Announcement = schemas.Announcement;
+	let User = schemas.User;
+
 	//assign variables to util functions(and objects) and database schemas
 	for (key in util) {
 		eval("var " + key + " = util." + key + ";");
@@ -44,8 +50,8 @@ module.exports = function(app, util, schemas) {
 							res.end("fail");
 						} else if (req.user.current_team.position != "member") {
 							//creates a string which is a list of recepients with the following format: "a@a.com, b@b.com, c@c.com"
-							let list = createRecepientList(users);
-							notify.sendMail({
+							let list = util.createRecepientList(users);
+							util.notify.sendMail({
 									from: "MorTeam Notification <notify@morteam.com>",
 									to: list,
 									subject: "New Announcement By " + req.user.firstname + " " + req.user.lastname,
@@ -84,8 +90,8 @@ module.exports = function(app, util, schemas) {
 								res.end("fail");
 							} else if (req.user.current_team.position != "member") {
 								//creates a string which is a list of recepients with the following format: "a@a.com, b@b.com, c@c.com"
-								let list = createRecepientList(users);
-								notify.sendMail({
+								let list = util.createRecepientList(users);
+								util.notify.sendMail({
 										from: "MorTeam Notification <notify@morteam.com>",
 										to: list,
 										subject: "New Announcement By " + req.user.firstname + " " + req.user.lastname,
@@ -125,8 +131,8 @@ module.exports = function(app, util, schemas) {
 								res.end("fail");
 							} else {
 								//creates a string which is a list of recepients with the following format: "a@a.com, b@b.com, c@c.com"
-								let list = createRecepientList(users);
-								notify.sendMail({
+								let list = util.createRecepientList(users);
+								util.notify.sendMail({
 										from: "MorTeam Notification <notify@morteam.com>",
 										to: list,
 										subject: "New Announcement By " + req.user.firstname + " " + req.user.lastname,
@@ -142,7 +148,7 @@ module.exports = function(app, util, schemas) {
 	});
 	app.post("/f/getAnnouncementsForUser", requireLogin, function(req, res) {
 		//creates an array of the _ids of the subdivisions that the user is a member of
-		let userSubdivisionIds = activeSubdivisionIds(req.user.subdivisions);
+		let userSubdivisionIds = util.activeSubdivisionIds(req.user.subdivisions);
 		//find announcements that the user should be able to see
 		Announcement.find({
 			team: req.user.current_team.id,
@@ -197,7 +203,7 @@ module.exports = function(app, util, schemas) {
 					})
 				} else {
 					//warn me about attempted hax, bruh
-					notify.sendMail({
+					util.notify.sendMail({
 							from: "MorTeam Notification <notify@morteam.com>",
 							to: "rafezyfarbod@gmail.com",
 							subject: "MorTeam Security Alert!",

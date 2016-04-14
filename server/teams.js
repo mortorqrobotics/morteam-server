@@ -2,6 +2,13 @@
 
 module.exports = function(app, util, schemas) {
 
+	let requireLogin = util.requireLogin;
+	let requireLeader = util.requireLeader;
+	let requireAdmin = util.requireAdmin;
+
+	let User = schemas.User;
+	let Team = schemas.Team;
+
 	//assign variables to util functions(and objects) and database schemas
 	for (key in util) {
 		eval("var " + key + " = util." + key + ";");

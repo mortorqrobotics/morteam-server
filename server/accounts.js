@@ -1,11 +1,16 @@
 "use strict";
 
-module.exports = function(app, util, schemas) {
+module.exports = function(app, util, schemas, publicDir, profpicDir) {
 
 	let extToMime = require("./extToMime.json"); //used to convert file extensions to mime types
 	let lwip = require("lwip"); //image processing module
 	let multer = require("multer"); //for file uploads
 	let ObjectId = require("mongoose").Types.ObjectId;
+
+	let requireLogin = util.requireLogin;
+	let requireAdmin = util.requireAdmin;
+
+	let User = schemas.User;
 
 	//assign variables to util functions(and objects) and database schemas (example: let myFunc = util.myFunc;)
 	for (key in util) {
@@ -34,12 +39,12 @@ module.exports = function(app, util, schemas) {
 						email: user.email,
 						phone: user.phone,
 						profpicpath: user.profpicpath,
-						viewedUserPosition: findTeamInUser(user, req.user.current_team.id).position,
+						viewedUserPosition: util.findTeamInUser(user, req.user.current_team.id).position,
 						viewerUserPosition: req.user.current_team.position,
 						viewerUserId: req.user._id
 					});
 				} else {
-					userNotFound(res);
+					util.userNotFound(res);
 				}
 			}
 		})
@@ -120,7 +125,7 @@ module.exports = function(app, util, schemas) {
 		req.body.phone = req.body.phone.replace(/[- )(]/g,"")
 
 		//if phone and email are valid (see util.js for validation methods)
-		if ( validateEmail(req.body.email) && validatePhone(req.body.phone) ) {
+		if ( util.validateEmail(req.body.email) && util.validatePhone(req.body.phone) ) {
 
 			//check if a user with either same username, email, or phone already exists
 			User.findOne({
@@ -162,12 +167,12 @@ module.exports = function(app, util, schemas) {
 								}
 
 								//resize image to 60px and upload to AWS S3
-								resizeImage(req.file.buffer, 60, ext, function(err, buffer) {
+								util.resizeImage(req.file.buffer, 60, ext, function(err, buffer) {
 									if (err) {
 										console.error(err);
 										res.end("fail");
 									} else {
-										uploadToProfPics(buffer, req.body.username + "-60", mime, function(err, data) {
+										util.uploadToProfPics(buffer, req.body.username + "-60", mime, function(err, data) {
 											if (err) {
 												console.error(err);
 												res.end("fail");
@@ -176,12 +181,12 @@ module.exports = function(app, util, schemas) {
 									}
 								});
 								//resize image to 300px and upload to AWS S3
-								resizeImage(req.file.buffer, 300, ext, function(err, buffer) {
+								util.resizeImage(req.file.buffer, 300, ext, function(err, buffer) {
 									if (err) {
 										console.error(err);
 										res.end("fail");
 									} else {
-										uploadToProfPics(buffer, req.body.username + "-300", mime, function(err, data) {
+										util.uploadToProfPics(buffer, req.body.username + "-300", mime, function(err, data) {
 											if (err) {
 												console.error(err);
 												res.end("fail");
@@ -253,7 +258,7 @@ module.exports = function(app, util, schemas) {
 			} else {
 				if (user) {
 					//find position of current user
-					current_position = findTeamInUser(user, req.user.current_team.id).position;
+					current_position = util.findTeamInUser(user, req.user.current_team.id).position;
 					//check position hierarchy to see if it is allowed for user to change the position of target user
 					let updatePosition = function() {
 				if ( positionHA[req.user.current_team.position] >= positionHA[req.body.target_position]
@@ -298,6 +303,7 @@ module.exports = function(app, util, schemas) {
 			}
 		})
 	});
+
 	app.post("/f/searchForUsers", requireLogin, function(req, res) {
 		//create array of search terms
 		let terms = req.body.search.split(" ");
@@ -367,7 +373,7 @@ module.exports = function(app, util, schemas) {
 			updatedUser.parentEmail = req.body.parentEmail
 		}
 
-		if (validateEmail(req.body.email) && validatePhone(req.body.phone)) {
+		if (util.validateEmail(req.body.email) && util.validatePhone(req.body.phone)) {
 			if (req.file) { //if user chose to update their profile picture too
 
 				updatedUser.profpicpath = "/pp/" +  req.user.username
@@ -382,25 +388,25 @@ module.exports = function(app, util, schemas) {
 				//NOTE: for explanations of the functions used here, see util.js
 
 				//resize image to 300px
-				resizeImage(req.file.buffer, 300, ext, function(err, buffer) {
+				util.resizeImage(req.file.buffer, 300, ext, function(err, buffer) {
 					if (err) {
 						console.error(err);
 						res.end("fail");
 					} else {
 						//upload to profile picture bucket in AWS
-						uploadToProfPics(buffer, req.user.username+"-300", mime, function(err, data) {
+						util.uploadToProfPics(buffer, req.user.username+"-300", mime, function(err, data) {
 							if (err) {
 								console.error(err);
 								res.end("fail");
 							} else {
 								//resize image to 60px
-								resizeImage(req.file.buffer, 60, ext, function(err, buffer) {
+								util.resizeImage(req.file.buffer, 60, ext, function(err, buffer) {
 									if (err) {
 										console.error(err);
 										res.end("fail");
 									} else {
 										//upload to profile picture bucket in AWS
-										uploadToProfPics(buffer, req.user.username+"-60", mime, function(err, data) {
+										util.uploadToProfPics(buffer, req.user.username+"-60", mime, function(err, data) {
 											if (err) {
 												console.error(err);
 												res.end("fail");
@@ -569,7 +575,7 @@ module.exports = function(app, util, schemas) {
 									res.end("fail");
 								} else {
 									//email user new password
-									notify.sendMail({
+									util.notify.sendMail({
 											from: "MorTeam Notification <notify@morteam.com>",
 											to: req.body.email,
 											subject: "New MorTeam Password Request",

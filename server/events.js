@@ -4,6 +4,14 @@ module.exports = function(app, util, schemas) {
 
 	let ObjectId = require("mongoose").Types.ObjectId;
 
+	let requireLogin = util.requireLogin;
+	let requireLeader = util.requireLeader;
+	let requireAdmin = util.requireAdmin;
+
+	let User = schemas.User;
+	let Event = schemas.Event;
+	let AttendanceHandler = schemas.AttendanceHandler;
+
 	//assign variables to util functions(and objects) and database schemas
 	for (key in util) {
 		eval("var " + key + " = util." + key + ";");
@@ -13,7 +21,7 @@ module.exports = function(app, util, schemas) {
 	}
 
 	app.post("/f/getEventsForUserInTeamInMonth", requireLogin, function(req, res) {
-		let userSubdivisionIds = activeSubdivisionIds(req.user.subdivisions);
+		let userSubdivisionIds = util.activeSubdivisionIds(req.user.subdivisions);
 		let numberOfDays = new Date(req.body.year, req.body.month, 0).getDate(); //month is 1 based
 		let start = new Date(req.body.year, req.body.month-1, 1, 0, 0, 0); //month is 0 based
 		let end = new Date(req.body.year, req.body.month-1, numberOfDays, 23, 59, 59); //month is 0 based
@@ -35,7 +43,7 @@ module.exports = function(app, util, schemas) {
 		});
 	});
 	app.post("/f/getUpcomingEventsForUser", requireLogin, function(req, res) {
-		let userSubdivisionIds = activeSubdivisionIds(req.user.subdivisions);
+		let userSubdivisionIds = util.activeSubdivisionIds(req.user.subdivisions);
 		Event.find({
 			team: req.user.current_team.id,
 			$or: [
@@ -96,8 +104,8 @@ module.exports = function(app, util, schemas) {
 								res.end("fail");
 							} else {
 								if (req.body.sendEmail) {
-									let list = createRecepientList(users);
-									notify.sendMail({
+									let list = util.createRecepientList(users);
+									util.notify.sendMail({
 											from: "MorTeam Notification <notify@morteam.com>",
 											to: list,
 											subject: "New Event on " + readableDate(event.date) + " - " + event.name,
@@ -155,12 +163,12 @@ module.exports = function(app, util, schemas) {
 								res.end("fail");
 							} else {
 								if (req.body.sendEmail) {
-									let list = createRecepientList(users);
-									notify.sendMail({
+									let list = util.createRecepientList(users);
+									util.notify.sendMail({
 											from: "MorTeam Notification <notify@morteam.com>",
 											to: list,
 											subject: "New Event on " + readableDate(event.date) + " - " + event.name,
-											html: req.user.firstname + " " + req.user.lastname + " has created an event on " + readableDate(event.date) + ",<br><br>" + event.name + "<br>" + event.description
+											html: req.user.firstname + " " + req.user.lastname + " has created an event on " + util.readableDate(event.date) + ",<br><br>" + event.name + "<br>" + event.description
 									});
 								}
 								if (req.body.hasAttendance) {
@@ -172,7 +180,7 @@ module.exports = function(app, util, schemas) {
 										for (let i = 0; i < users.length; i++) {
 											attendees.push( { user: users[i]._id, status: "absent" } );
 										}
-										attendees = removeDuplicates(attendees);
+										attendees = util.removeDuplicates(attendees);
 										AttendanceHandler.create({
 											event: event._id,
 											event_date: event.date,
@@ -214,12 +222,12 @@ module.exports = function(app, util, schemas) {
 								res.end("fail");
 							} else {
 								if (req.body.sendEmail) {
-									let list = createRecepientList(users);
-									notify.sendMail({
+									let list = util.createRecepientList(users);
+									util.notify.sendMail({
 											from: "MorTeam Notification <notify@morteam.com>",
 											to: list,
 											subject: "New Event on " + readableDate(event.date) + " - " + event.name,
-											html: req.user.firstname + " " + req.user.lastname + " has created an event on " + readableDate(event.date) + ",<br><br>" + event.name
+											html: req.user.firstname + " " + req.user.lastname + " has created an event on " + util.readableDate(event.date) + ",<br><br>" + event.name
 									});
 								}
 								if (req.body.hasAttendance) {
@@ -272,12 +280,12 @@ module.exports = function(app, util, schemas) {
 								res.end("fail");
 							} else {
 								if (req.body.sendEmail) {
-									let list = createRecepientList(users);
-									notify.sendMail({
+									let list = util.createRecepientList(users);
+									util.notify.sendMail({
 											from: "MorTeam Notification <notify@morteam.com>",
 											to: list,
 											subject: "New Event on " + readableDate(event.date) + " - " + event.name,
-											html: req.user.firstname + " " + req.user.lastname + " has created an event on " + readableDate(event.date) + ",<br><br>" + event.name
+											html: req.user.firstname + " " + req.user.lastname + " has created an event on " + util.readableDate(event.date) + ",<br><br>" + event.name
 									});
 								}
 								if (req.body.hasAttendance) {

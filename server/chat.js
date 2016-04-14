@@ -4,6 +4,13 @@ module.exports = function(app, util, schemas) {
 
 	let ObjectId = require("mongoose").Types.ObjectId;
 
+	let requireLogin = util.requireLogin;
+	let requireAdmin = util.requireAdmin;
+
+	let Chat = schemas.Chat;
+	let User = schemas.User;
+	let Subdivision = schemas.Subdivision;
+
 	//assign variables to util functions(and objects) and database schemas
 	for (key in util) {
 		eval("var " + key + " = util." + key + ";");
@@ -54,7 +61,7 @@ module.exports = function(app, util, schemas) {
 								res.end("fail");
 							} else {
 								//get the user that is not the person making this request
-								let user2_id = getUserOtherThanSelf(chat.userMembers, req.user._id.toString());
+								let user2_id = util.getUserOtherThanSelf(chat.userMembers, req.user._id.toString());
 								User.findOne({_id: user2_id}, function(err, user) {
 									if (err) {
 										console.error(err);
@@ -100,7 +107,7 @@ module.exports = function(app, util, schemas) {
 
 	app.post("/f/getChatsForUser", requireLogin, function(req, res) {
 		//get an array of _ids of subdivisions of which the user is a member. (dat proper grammar doe)
-		let userSubdivisionIds = activeSubdivisionIds(req.user.subdivisions);
+		let userSubdivisionIds = util.activeSubdivisionIds(req.user.subdivisions);
 		//find a chat in the current team that also has said user as a member or has a subdivision of which said user is a member.
 		Chat.find({
 			team: req.user.current_team.id,
@@ -236,7 +243,7 @@ module.exports = function(app, util, schemas) {
 		Chat.update({_id: req.body.chat_id}, {
 			"$push": {
 				"messages": {
-					"$each": [ {author: req.user._id, content: normalizeDisplayedText(req.body.content), timestamp: new Date()} ],
+					"$each": [ {author: req.user._id, content: util.normalizeDisplayedText(req.body.content), timestamp: new Date()} ],
 					"$position": 0
 				}
 			}, updated_at: new Date()
