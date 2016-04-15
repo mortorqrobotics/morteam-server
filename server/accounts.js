@@ -225,32 +225,32 @@ module.exports = function(app, util, schemas, publicDir, profpicDir) {
 
 		let current_position;
 
-		//find target user
+		// find target user
 		User.findOne({
 			_id: req.body.user_id
 		}).exec().then(function(user) {
-			if (user) {
-				current_position = util.findTeamInUser(user, req.user.current_team.id).position;
-
-				if (current_position == "admin") {
-					return User.count({
-						teams: {
-							id: req.user.current_team.id,
-							position: "admin"
-						}
-					}).exec().then(function(count) {
-						if (count > 1) {
-					 		return Promise.resolve();
-				 		} else {
-							res.end("You are the only Admin on your team, so you cannot demote yourself.");
-							return Promise.reject();
-						}
-					});
-				} else {
-					return Promise.resolve();
-				}
-			} else {
+			if (!user) {
 				return Promise.reject();
+			}
+
+			current_position = util.findTeamInUser(user, req.user.current_team.id).position;
+
+			if (current_position == "admin") {
+				return User.count({
+					teams: {
+						id: req.user.current_team.id,
+						position: "admin"
+					}
+				}).exec().then(function(count) {
+					if (count > 1) {
+				 		return Promise.resolve();
+			 		} else {
+						res.end("You are the only Admin on your team, so you cannot demote yourself.");
+						return Promise.reject();
+					}
+				});
+			} else {
+				return Promise.resolve();
 			}
 		}).then(function() {
 			// check position hierarchy to see if it is allowed for user to change the position of target user
@@ -263,12 +263,12 @@ module.exports = function(app, util, schemas, publicDir, profpicDir) {
 				}, {"$set": {
 					"teams.$.position": req.body.target_position, // find out what .$. means and if it means selected "teams" element
 					"current_team.position": req.body.target_position // make sure in the future current_team.position is checked with "teams" array of the document when user is logging in as opposed to doing this
-				}}).exec().then(function() {
-					res.end("success");
-				});
+				}}).exec();
 			} else {
 				return Promise.reject();
 			}
+		}).then(function() {
+			res.end("success");
 		}).catch(function(err) {
 			if (err) {
 				console.error(err);
@@ -278,60 +278,57 @@ module.exports = function(app, util, schemas, publicDir, profpicDir) {
 	});
 
 	app.post("/f/searchForUsers", requireLogin, function(req, res) {
-		//create array of search terms
+		// create array of search terms
 		let terms = req.body.search.split(" ");
 		let regexString = "";
-		//create regular expression
+		// create regular expression
 		for (let i = 0; i < terms.length; i++) {
 			regexString += terms[i];
 			if (i < terms.length - 1) regexString += "|";
 		}
 		let re = new RegExp(regexString, "ig");
 
-		//find maximum of 10 users that match the search criteria
+		// find maximum of 10 users that match the search criteria
 		User.find({
 			teams: {$elemMatch: {id: req.user.current_team.id}},
 			$or: [
 				{ firstname: re }, { lastname: re }
 			]
-		}, "-password").limit(10).exec(function(err, users) {
-			if (err) {
-				console.error(err);
-				res.end("fail");
-			} else {
-				res.json(users);
-			}
+		}, "-password").limit(10).exec().then(function(users) {
+			res.json(users);
+		}).catch(function(err) {
+			console.error(err);
+			res.end("fail");
 		});
 	})
 	app.post("/f/changePassword", requireLogin, function(req, res) {
-		if (req.body.new_password == req.body.new_password_confirm) {
-			User.findOne({_id: req.user._id}, function(err, user) {
-				//check if old password is correct
-				user.comparePassword(req.body.old_password, function(err, isMatch) {
-					if (err) {
-						console.error(err);
-						res.end("fail");
-					} else {
-						if (isMatch) {
-							//set and save new password (password is automatically encrypted. see /schemas/User.js)
-							user.password = req.body.new_password;
-							user.save(function(err) {
-								if (err) {
-									console.error(err);
-									res.end("fail");
-								} else {
-									res.end("success");
-								}
-							})
-						} else {
-							res.end("fail: incorrect password");
-						}
-					}
-				})
-			})
-		} else {
-			res.end("fail: new passwords do not match");
+		if (req.body.new_password != req.body.new_password_confirm) {
+			return res.end("fail: new passwords do not match");
 		}
+		let user;
+		User.findOne({
+			_id: req.user._id
+		}).exec().then(function(_user) {
+			user = _user;
+			//check if old password is correct
+			return user.comparePassword(req.body.old_password);
+		}).then(function(isMatch) {
+			if (isMatch) {
+				//set and save new password (password is automatically encrypted. see /schemas/User.js)
+				user.password = req.body.new_password;
+				return user.save();
+			} else {
+				res.end("fail: incorrect password");
+				return Promise.reject();
+			}
+		}).then(function() {
+			res.end("success");
+		}).catch(function(err) {
+			if (err) {
+				console.error(err);
+				res.end("fail");
+			}
+		});
 	});
 	app.post("/f/editProfile", requireLogin, multer().single("new_prof_pic"), function(req, res) {
 
