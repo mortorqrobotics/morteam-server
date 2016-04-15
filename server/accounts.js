@@ -138,8 +138,6 @@ module.exports = function(app, util, schemas, publicDir, profpicDir) {
 					}
 				}
 				return Promise.break;
-			}).catch(function(err) {
-				console.log("A");
 			}).then(function() {
 
 				let userInfo = {
