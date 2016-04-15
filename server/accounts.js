@@ -414,7 +414,7 @@ module.exports = function(app, util, schemas, publicDir, profpicDir) {
 					}
 				}).then(function(count) {
 					if (count > 1) {
-						 return Promise.resolve();
+						return Promise.resolve();
 					 } else {
 						res.end("You cannot remove the only Admin on your team.");
 						return Promise.reject();
@@ -479,46 +479,37 @@ module.exports = function(app, util, schemas, publicDir, profpicDir) {
 	});
 
 	app.post("/f/forgotPassword", function(req, res) {
-		User.findOne({email: req.body.email, username: req.body.username}, function(err, user) {
+		let user;
+		let new_password;
+		User.findOne({
+			email: req.body.email, username: req.body.username
+		}).exec().then(function(_user) {
+			user = _user;
+			if (user) {
+				return user.assignNewPassword();
+			} else {
+				res.end("does not exist");
+				return Promise.reject();
+			}
+		}).then(function(_new_password) {
+			new_password = _new_password;
+			return user.save();
+		}).then(function() {
+			// email user new password
+			return Promise.promisify(util.notify.sendMail.bind(util.notify))({
+				from: "MorTeam Notification <notify@morteam.com>",
+				to: req.body.email,
+				subject: "New MorTeam Password Request",
+				text: "It seems like you requested to reset your password. Your new password is " + new_password + ". Feel free to reset it after you log in."
+			});
+		}).then(function(info) {
+			console.log(info);
+			res.end("success");
+		}).catch(function(err) {
 			if (err) {
 				console.error(err);
 				res.end("fail");
-			} else {
-				if (user) {
-					//for function explanation see /schemas/User.js
-					user.assignNewPassword(function(err, new_password) {
-						if (err) {
-							console.error(err);
-							res.end("fail");
-						} else {
-							user.save(function(err) {
-								if (err) {
-									console.error(err);
-									res.end("fail");
-								} else {
-									//email user new password
-									util.notify.sendMail({
-											from: "MorTeam Notification <notify@morteam.com>",
-											to: req.body.email,
-											subject: "New MorTeam Password Request",
-											text: "It seems like you requested to reset your password. Your new password is " + new_password + ". Feel free to reset it after you log in."
-									}, function(err, info) {
-										if (err) {
-											console.error(err);
-											res.end("fail");
-										} else {
-											console.log(info);
-											res.end("success");
-										}
-									});
-								}
-							})
-						}
-					});
-				} else {
-					res.end("does not exist");
-				}
 			}
-		})
+		});
 	});
 };
