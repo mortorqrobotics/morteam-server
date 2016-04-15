@@ -1,12 +1,14 @@
+"use strict"; 
+
 module.exports = function(mongoose) {
 
-Schema = mongoose.Schema;
+let Schema = mongoose.Schema;
 
-var attendanceHandlerSchema = new Schema({
-  event:  { type: Schema.Types.ObjectId, ref: 'Event' }, //TODO: Can i use the word event?
+let attendanceHandlerSchema = new Schema({
+  event:  { type: Schema.Types.ObjectId, ref: "Event" },
   event_date: Date,
   attendees: [{
-    user: { type: Schema.Types.ObjectId, ref: 'User' },
+    user: { type: Schema.Types.ObjectId, ref: "User" },
     status: String
   }],
   entireTeam: Boolean,
@@ -14,15 +16,16 @@ var attendanceHandlerSchema = new Schema({
   updated_at:  Date,
 });
 
-attendanceHandlerSchema.pre('save', function(next){
-  now = new Date();
+attendanceHandlerSchema.pre("save", function(next) {
+  let now = new Date();
   this.updated_at = now;
-  if ( !this.created_at ) {
+  if (!this.created_at) {
     this.created_at = now;
   }
   next();
 });
 
-var attendanceHandler = mongoose.model('attendanceHandler', attendanceHandlerSchema);
+let attendanceHandler = mongoose.model("attendanceHandler", attendanceHandlerSchema);
 return attendanceHandler;
+
 };

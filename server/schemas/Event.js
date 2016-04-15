@@ -1,30 +1,33 @@
+"use strict"; 
+
 module.exports = function(mongoose) {
 
-Schema = mongoose.Schema;
+let Schema = mongoose.Schema;
 
-var eventSchema = new Schema({
+let eventSchema = new Schema({
   name:        { type: String, required: true },
   description: { type: String, required: false },
   team:        { type: String, required: true },
-  userAttendees: [{ type: Schema.Types.ObjectId, ref: 'User' }],
-  subdivisionAttendees: [{ type: Schema.Types.ObjectId, ref: 'Subdivision' }],
+  userAttendees: [{ type: Schema.Types.ObjectId, ref: "User" }],
+  subdivisionAttendees: [{ type: Schema.Types.ObjectId, ref: "Subdivision" }],
   entireTeam: Boolean,
   hasAttendance: Boolean,
   date: { type: Date, required: true },
-  creator: { type: Schema.Types.ObjectId, ref: 'User' },
+  creator: { type: Schema.Types.ObjectId, ref: "User" },
   created_at:  Date,
   updated_at:  Date,
 });
 
-eventSchema.pre('save', function(next){
-  now = new Date();
+eventSchema.pre("save", function(next) {
+  let now = new Date();
   this.updated_at = now;
-  if ( !this.created_at ) {
+  if (!this.created_at) {
     this.created_at = now;
   }
   next();
 });
 
-var Event = mongoose.model('Event', eventSchema);
+let Event = mongoose.model("Event", eventSchema);
 return Event;
+
 };
