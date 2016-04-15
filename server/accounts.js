@@ -2,9 +2,9 @@
 
 module.exports = function(app, util, schemas, publicDir, profpicDir) {
 
-	let extToMime = require("./extToMime.json"); //used to convert file extensions to mime types
-	let lwip = require("lwip"); //image processing module
-	let multer = require("multer"); //for file uploads
+	let extToMime = require("./extToMime.json"); // used to convert file extensions to mime types
+	let lwip = require("lwip"); // image processing module
+	let multer = require("multer"); // for file uploads
 	let ObjectId = require("mongoose").Types.ObjectId;
 
 	let requireLogin = util.requireLogin;
@@ -12,42 +12,36 @@ module.exports = function(app, util, schemas, publicDir, profpicDir) {
 
 	let User = schemas.User;
 
-	//assign variables to util functions(and objects) and database schemas (example: let myFunc = util.myFunc;)
-	for (key in util) {
-		eval("var " + key + " = util." + key + ";");
-	}
-	for (key in schemas) {
-		eval("var " + key + " = schemas." + key + ";");
-	}
-
-	//load profile page of any user based on _id
+	// load profile page of any user based on _id
 	app.get("/u/:id", function(req, res) {
-		User.findOne({
+		User.findOneAsync({
 			_id: req.params.id,
-			teams: {$elemMatch: {"id": req.user.current_team.id }} //said user has to be a member of the current team of whoever is loading the page
-		}, function(err, user) {
-			if (err) {
-				console.error(err);
-				send404(res);
-			} else {
-				if (user) {
-					//load user.ejs page with said user"s profile info
-					res.render("user", {
-						firstname: user.firstname,
-						lastname: user.lastname,
-						_id: user._id,
-						email: user.email,
-						phone: user.phone,
-						profpicpath: user.profpicpath,
-						viewedUserPosition: util.findTeamInUser(user, req.user.current_team.id).position,
-						viewerUserPosition: req.user.current_team.position,
-						viewerUserId: req.user._id
-					});
-				} else {
-					util.userNotFound(res);
+			teams: {
+				$elemMatch: {
+					"id": req.user.current_team.id
 				}
+			} // said user has to be a member of the current team of whoever is loading the page
+		}).then(function(user) {
+			if (user) {
+				// load user.ejs page with said user"s profile info
+				res.render("user", {
+					firstname: user.firstname,
+					lastname: user.lastname,
+					_id: user._id,
+					email: user.email,
+					phone: user.phone,
+					profpicpath: user.profpicpath,
+					viewedUserPosition: util.findTeamInUser(user, req.user.current_team.id).position,
+					viewerUserPosition: req.user.current_team.position,
+					viewerUserId: req.user._id
+				});
+			} else {
+				util.userNotFound(res);
 			}
-		})
+		}).catch(function(err) {
+			console.error(err);
+			send404(res);
+		});
 	});
 
 	//load default profile picture

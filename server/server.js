@@ -9,12 +9,14 @@
 // wrap everything for the network
 module.exports = function(app, networkSchemas, io, mongoose) {
 
-//import necessary modules
+// import necessary modules
 let express = require("express");
 let http = require("http");
 let fs = require("fs");
-let ObjectId = mongoose.Types.ObjectId; //this is used to cast strings to MongoDB ObjectIds
-let multer = require("multer"); //for file uploads
+let ObjectId = mongoose.Types.ObjectId; // this is used to cast strings to MongoDB ObjectIds
+let multer = require("multer"); // for file uploads
+
+let Promise = require("bluebird");
 
 let config; // contains passwords and other sensitive info
 if (fs.existsSync("config.json")) {
@@ -30,17 +32,17 @@ else {
 	console.log("Generated default config.json");
 }
 
-let util = require("./util.js")(); //contains functions and objects that are used across all the modules
+let util = require("./util.js")(); // contains functions and objects that are used across all the modules
 
 const publicDir = require("path").join(__dirname, "../website/public");
 const profpicDir = "http://profilepics.morteam.com.s3.amazonaws.com/"
 
-//connect to mongodb server
+// connect to mongodb server
 // let db = mongoose.createConnection("mongodb://localhost:27017/" + config.dbName);
 // let db = networkDb.useDb(config.dbName);
 
 let db = mongoose;
-//import mongodb schemas
+// import mongodb schemas
 let schemas = {
 	Announcement: require("./schemas/Announcement.js")(db),
 	Chat: require("./schemas/Chat.js")(db),
@@ -50,25 +52,18 @@ let schemas = {
 	File: require("./schemas/File.js")(db),
 	Task: require("./schemas/Task.js")(db),
 };
+Promise.promisifyAll(schemas);
 // add network schemas
-for (let key in networkSchemas) {
+for (let key in networkSchemas) { // promisified by mornetwork
 	schemas[key] = networkSchemas[key];
 }
 
 let requireLogin = util.requireLogin;
 
-//assign variables to imported util functions(and objects) and database schemas (example: let myFunc = util.myFunc;)
-for (key in util) {
-	eval("var " + key + " = util." + key + ";");
-}
-for (key in schemas) {
-	eval("var " + key + " = schemas." + key + ";");
-}
-
-//start server
+// start server
 console.log("MorTeam started");
 
-//add .html to end of filename if it did not have it already
+// add .html to end of filename if it did not have it already
 app.use(function(req, res, next) {
 	req.filePath = req.path;
 	if (req.path.indexOf(".") === -1) {
@@ -85,22 +80,23 @@ app.use(function(req, res, next) {
 			}
 			next();
 		});
-	} else
+	} else {
 		next();
+	}
 });
 
-//check to see if user is logged in before continuing any further
-//allow browser to receive images, css, and js files without being logged in
-//allow browser to receive some pages such as login.html, signup.html, etc. without being logged in
+// check to see if user is logged in before continuing any further
+// allow browser to receive images, css, and js files without being logged in
+// allow browser to receive some pages such as login.html, signup.html, etc. without being logged in
 app.use(function(req, res, next) {
 	let path = req.filePath;
 	let exceptions = ["/login.html", "/signup.html", "/fp.html", "/favicon.ico"];
 	if (req.method == "GET") {
 		if (path.contains("/css/") || path.contains("/js/") || path.contains("/img/")) {
 			next();
-	} else if ( exceptions.indexOf(path) > -1 ) {
+		} else if ( exceptions.indexOf(path) > -1 ) {
 			next();
-	} else if (req.url == "/void.html") {
+		} else if (req.url == "/void.html") {
 			if (req.user) {
 				if (req.user.teams.length > 0) {
 					if (!req.user.current_team) {
@@ -132,19 +128,19 @@ app.use(function(req, res, next) {
 	}
 });
 
-//load homepage
+// load homepage
 app.get("/", function(req, res, next) {
 	fs.createReadStream(publicDir + "/index.html").pipe(res);
 });
 
-//load any file in /website/public (aka publicDir)
+// load any file in /website/public (aka publicDir)
 app.use(express.static(publicDir));
 
-//use EJS as default view engine and specifies location of EJS files
+// use EJS as default view engine and specifies location of EJS files
 app.set("view engine", "ejs");
 app.set("views", __dirname + "/../website");
 
-//import all modules that handle specific GET and POST requests
+// import all modules that handle specific GET and POST requests
 require("./accounts.js")(app, util, schemas, publicDir, profpicDir);
 require("./teams.js")(app, util, schemas);
 require("./subdivisions.js")(app, util, schemas);
@@ -155,7 +151,7 @@ require("./events.js")(app, util, schemas);
 require("./tasks.js")(app, util, schemas);
 require("./sio.js")(io, util, schemas);
 
-//send 404 message for any page that does not exist (IMPORTANT: The order for this does matter. Keep it at the end.)
+// send 404 message for any page that does not exist (IMPORTANT: The order for this does matter. Keep it at the end.)
 app.get("*", function(req, res) {
 	util.send404(res);
 });
