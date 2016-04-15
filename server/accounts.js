@@ -164,7 +164,7 @@ module.exports = function(app, util, schemas, publicDir, profpicDir) {
 						util.resizeImageAsync(req.file.buffer, 60, ext).then(function(buffer) { // resize image to 60px and upload to AWS S3
 							return util.uploadToProfPicsAsync(buffer, req.body.username + "-60", mime);
 						}),
-						util.resizeImage(req.file.buffer, 300, ext).then(function(buffer) { // resize image to 300px and upload to AWS S3
+						util.resizeImageAsync(req.file.buffer, 300, ext).then(function(buffer) { // resize image to 300px and upload to AWS S3
 							return util.uploadToProfPicsAsync(buffer, req.body.username + "-300", mime);
 						})
 					]).then(function() {
