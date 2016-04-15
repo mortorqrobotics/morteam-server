@@ -7,6 +7,8 @@ module.exports = function(app, util, schemas, publicDir, profpicDir) {
 	let multer = require("multer"); // for file uploads
 	let ObjectId = require("mongoose").Types.ObjectId;
 
+	let Promise = require("bluebird");
+
 	let requireLogin = util.requireLogin;
 	let requireAdmin = util.requireAdmin;
 
@@ -14,14 +16,14 @@ module.exports = function(app, util, schemas, publicDir, profpicDir) {
 
 	// load profile page of any user based on _id
 	app.get("/u/:id", function(req, res) {
-		User.findOneAsync({
+		User.findOne({
 			_id: req.params.id,
 			teams: {
 				$elemMatch: {
 					"id": req.user.current_team.id
 				}
 			} // said user has to be a member of the current team of whoever is loading the page
-		}).then(function(user) {
+		}).exec().then(function(user) {
 			if (user) {
 				// load user.ejs page with said user"s profile info
 				res.render("user", {
@@ -44,22 +46,24 @@ module.exports = function(app, util, schemas, publicDir, profpicDir) {
 		});
 	});
 
-	//load default profile picture
+	// load default profile picture
 	app.get("/images/user.jpg-60", function(req, res) {
-		res.sendFile(publicDir+"/images/user.jpg");
+		res.sendFile(publicDir + "/images/user.jpg");
 	});
+
 	app.get("/images/user.jpg-300", function(req, res) {
-		res.sendFile(publicDir+"/images/user.jpg");
+		res.sendFile(publicDir + "/images/user.jpg");
 	});
-	//load user profile picture from AWS S3
+
+	// load user profile picture from AWS S3
 	app.get("/pp/:path", function(req, res) {
-		res.redirect(profpicDir+req.params.path);
+		res.redirect(profpicDir + req.params.path);
 	});
 
 	app.post("/f/login", function(req, res) {
-		//IMPORTANT: req.body.username can either be a username or an email. Please do not let this confuse you.
+		// IMPORTANT: req.body.username can either be a username or an email
 
-		//because you can"t send booleans via HTTP
+		// because you can"t send booleans via HTTP
 		if (req.body.rememberMe == "true") {
 			req.body.rememberMe = true;
 		} else {
@@ -68,37 +72,30 @@ module.exports = function(app, util, schemas, publicDir, profpicDir) {
 
 		User.findOne({
 			$or: [{username: req.body.username}, {email: req.body.username}]
-		}, function(err, user) {
-			if (err) {
-				console.error(err);
-				res.end("fail");
-			} else {
-				if (user) {
-					user.comparePassword(req.body.password, function(err, isMatch) {
-						if (err) {
-							console.error(err);
-							res.end("fail");
-						} else {
-							if (isMatch) {
-								//store user info in cookies
-								req.session.user = user;
-								if (req.body.rememberMe) {
-									req.session.cookie.maxAge = 365 * 24 * 60 * 60 * 1000; //change cookie expiration date to one year
-					}
-								res.json(user);
-							} else {
-								res.end("inc/password"); //incorrect password
-							}
+		}).exec().then(function(user) {
+			if (user) {
+				return user.comparePassword(req.body.password).then(function(isMatch) {
+					if (isMatch) {
+						// store user info in cookies
+						req.session.user = user;
+						if (req.body.rememberMe) {
+							req.session.cookie.maxAge = 365 * 24 * 60 * 60 * 1000; // change cookie expiration date to one year
 						}
-					})
-				} else {
-					res.end("inc/username") //incorrect username
-				}
+						res.json(user);
+					} else {
+						res.end("inc/password"); // incorrect password
+					}
+				});
+			} else {
+				res.end("inc/username") // incorrect username
 			}
+		}).catch(function(err) {
+			console.error(err);
+			res.end("fail");
 		});
 	});
 	app.post("/f/logout", requireLogin, function(req, res) {
-		//destroy user session cookie
+		// destroy user session cookie
 		req.session.destroy(function(err) {
 			if (err) {
 				console.error(err);
@@ -109,19 +106,19 @@ module.exports = function(app, util, schemas, publicDir, profpicDir) {
 		})
 	});
 
-	//uses multer middleware to parse uploaded file called "profpic" with a max file size
+	// uses multer middleware to parse uploaded file called "profpic" with a max file size
 	app.post("/f/createUser", multer({limits: {fileSize:10*1024*1024}}).single("profpic"), function(req, res) {
 		//capitalize names
 		req.body.firstname = req.body.firstname.capitalize();
 		req.body.lastname = req.body.lastname.capitalize();
 
-		//remove parentheses and dashes from phone number
+		// remove parentheses and dashes from phone number
 		req.body.phone = req.body.phone.replace(/[- )(]/g,"")
 
-		//if phone and email are valid (see util.js for validation methods)
+		// if phone and email are valid (see util.js for validation methods)
 		if ( util.validateEmail(req.body.email) && util.validatePhone(req.body.phone) ) {
 
-			//check if a user with either same username, email, or phone already exists
+			// check if a user with either same username, email, or phone already exists
 			User.findOne({
 				$or: [{
 					username: req.body.username
@@ -130,87 +127,63 @@ module.exports = function(app, util, schemas, publicDir, profpicDir) {
 				}, {
 					phone: req.body.phone
 				}]
-			}, function(err, user) {
-				if (err) {
-					console.error(err);
-					res.end("fail");
+			}).exec().then(function(user) {
+				if (user) { // user exists
+					res.end("exists");
 				} else {
-					if (user) {
-						//user exists
-						res.end("exists");
+					if (req.body.password == req.body.password_confirm) {
+						return Promise.resolve();
 					} else {
-						if (req.body.password == req.body.password_confirm) {
-
-							let userInfo = {
-								username: req.body.username,
-								password: req.body.password,
-								firstname: req.body.firstname,
-								lastname: req.body.lastname,
-								email: req.body.email,
-								phone: req.body.phone,
-							}
-
-							//if user uploaded a profile pic
-							if (req.file) {
-
-								//get extension, get mimetype
-								let ext = req.file.originalname.substring(req.file.originalname.lastIndexOf(".")+1).toLowerCase() || "unknown";
-								let mime = extToMime[ext]
-								if (mime == undefined) {
-									mime = "application/octet-stream"
-								}
-
-								//resize image to 60px and upload to AWS S3
-								util.resizeImage(req.file.buffer, 60, ext, function(err, buffer) {
-									if (err) {
-										console.error(err);
-										res.end("fail");
-									} else {
-										util.uploadToProfPics(buffer, req.body.username + "-60", mime, function(err, data) {
-											if (err) {
-												console.error(err);
-												res.end("fail");
-											}
-										});
-									}
-								});
-								//resize image to 300px and upload to AWS S3
-								util.resizeImage(req.file.buffer, 300, ext, function(err, buffer) {
-									if (err) {
-										console.error(err);
-										res.end("fail");
-									} else {
-										util.uploadToProfPics(buffer, req.body.username + "-300", mime, function(err, data) {
-											if (err) {
-												console.error(err);
-												res.end("fail");
-											}
-										});
-									}
-								});
-
-								//set profpicpath if user did upload profile picture
-								userInfo.profpicpath = "/pp/" + req.body.username;
-							} else {
-								//set profpicpath if user did NOT upload profile picture
-								userInfo.profpicpath = "/images/user.jpg";
-							}
-
-							//create user in database with userInfo object created earlier
-							User.create(userInfo, function(err, user) {
-								if (err) {
-									res.end("fail");
-									console.error(err);
-								} else {
-									res.end("success");
-								}
-							});
-
-						} else {
-							res.end("password mismatch");
-						}
+						res.end("password mismatch");
 					}
 				}
+				return Promise.break;
+			}).catch(function(err) {
+				console.log("A");
+			}).then(function() {
+
+				let userInfo = {
+					username: req.body.username,
+					password: req.body.password,
+					firstname: req.body.firstname,
+					lastname: req.body.lastname,
+					email: req.body.email,
+					phone: req.body.phone
+				};
+
+				// if user uploaded a profile pic
+				if (req.file) {
+
+					userInfo.profpicpath = "/pp/" + req.body.username;
+
+					let ext = req.file.originalname.substring(req.file.originalname.lastIndexOf(".") + 1).toLowerCase() || "unknown";
+					let mime = extToMime[ext]
+					if (mime == undefined) {
+						mime = "application/octet-stream";
+					}
+
+					return Promise.all([
+						util.resizeImageAsync(req.file.buffer, 60, ext).then(function(buffer) { // resize image to 60px and upload to AWS S3
+							return util.uploadToProfPicsAsync(buffer, req.body.username + "-60", mime);
+						}),
+						util.resizeImage(req.file.buffer, 300, ext).then(function(buffer) { // resize image to 300px and upload to AWS S3
+							return util.uploadToProfPicsAsync(buffer, req.body.username + "-300", mime);
+						})
+					]).then(function() {
+						return Promise.resolve(userInfo);
+					});
+
+				} else {
+					userInfo.profpicpath = "/images/user.jpg"; // default profile picture
+					return Promise.resolve(userInfo);
+				}
+			}).then(function(userInfo) {
+				return User.create(userInfo);
+			}).then(function() {
+				res.end("success");
+			}).catch(function(err) {
+				console.error(err);
+				res.end("fail");
 			});
 		} else {
 			res.end("fail: Form data is invalid");

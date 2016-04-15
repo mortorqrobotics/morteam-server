@@ -8,6 +8,8 @@ module.exports = function(app, util, schemas) {
 
 	let User = schemas.User;
 	let Team = schemas.Team;
+	let AttendanceHandler = schemas.AttendanceHandler;
+	let Folder = schemas.Folder;
 
 	//assign variables to util functions(and objects) and database schemas
 	for (key in util) {

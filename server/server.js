@@ -16,8 +16,6 @@ let fs = require("fs");
 let ObjectId = mongoose.Types.ObjectId; // this is used to cast strings to MongoDB ObjectIds
 let multer = require("multer"); // for file uploads
 
-let Promise = require("bluebird");
-
 let config; // contains passwords and other sensitive info
 if (fs.existsSync("config.json")) {
 	config = require("./config.json");
@@ -33,6 +31,10 @@ else {
 }
 
 let util = require("./util.js")(); // contains functions and objects that are used across all the modules
+
+let Promise = require("bluebird");
+Promise.break = new Promise(function() {});
+Promise.promisifyAll(util);
 
 const publicDir = require("path").join(__dirname, "../website/public");
 const profpicDir = "http://profilepics.morteam.com.s3.amazonaws.com/"
@@ -52,7 +54,6 @@ let schemas = {
 	File: require("./schemas/File.js")(db),
 	Task: require("./schemas/Task.js")(db),
 };
-Promise.promisifyAll(schemas);
 // add network schemas
 for (let key in networkSchemas) { // promisified by mornetwork
 	schemas[key] = networkSchemas[key];
