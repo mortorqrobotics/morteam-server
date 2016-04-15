@@ -13,6 +13,9 @@ module.exports = function(app, util, schemas, publicDir, profpicDir) {
 	let requireAdmin = util.requireAdmin;
 
 	let User = schemas.User;
+	let Chat = schemas.Chat;
+	let Folder = schemas.Folder;
+	let Event = schemas.Event;
 
 	// load profile page of any user based on _id
 	app.get("/u/:id", function(req, res) {
@@ -300,7 +303,8 @@ module.exports = function(app, util, schemas, publicDir, profpicDir) {
 			console.error(err);
 			res.end("fail");
 		});
-	})
+	});
+
 	app.post("/f/changePassword", requireLogin, function(req, res) {
 		if (req.body.new_password != req.body.new_password_confirm) {
 			return res.end("fail: new passwords do not match");
@@ -330,202 +334,150 @@ module.exports = function(app, util, schemas, publicDir, profpicDir) {
 			}
 		});
 	});
+
 	app.post("/f/editProfile", requireLogin, multer().single("new_prof_pic"), function(req, res) {
 
 		let updatedUser = {
 			firstname: req.body.firstname,
 			lastname: req.body.lastname,
 			email: req.body.email,
-			phone: req.body.phone,
-		}
+			phone: req.body.phone
+		};
 
 		if (req.body.parentEmail != "") {
-			updatedUser.parentEmail = req.body.parentEmail
+			updatedUser.parentEmail = req.body.parentEmail;
 		}
 
-		if (util.validateEmail(req.body.email) && util.validatePhone(req.body.phone)) {
+		if (!util.validateEmail(req.body.email) || !util.validatePhone(req.body.phone)) {
+			return res.end("fail");
+		}
+		Promise.resolve().then(function() {
 			if (req.file) { //if user chose to update their profile picture too
 
 				updatedUser.profpicpath = "/pp/" +  req.user.username
 
-				//get extension and corresponding mime type
+				// get extension and corresponding mime type
 				let ext = req.file.originalname.substring(req.file.originalname.lastIndexOf(".")+1).toLowerCase() || "unknown";
 				let mime = extToMime[ext]
 				if (mime == undefined) {
 					mime = "application/octet-stream"
 				}
 
-				//NOTE: for explanations of the functions used here, see util.js
+				// NOTE: for explanations of the functions used here, see util.js
 
-				//resize image to 300px
-				util.resizeImage(req.file.buffer, 300, ext, function(err, buffer) {
-					if (err) {
-						console.error(err);
-						res.end("fail");
-					} else {
-						//upload to profile picture bucket in AWS
-						util.uploadToProfPics(buffer, req.user.username+"-300", mime, function(err, data) {
-							if (err) {
-								console.error(err);
-								res.end("fail");
-							} else {
-								//resize image to 60px
-								util.resizeImage(req.file.buffer, 60, ext, function(err, buffer) {
-									if (err) {
-										console.error(err);
-										res.end("fail");
-									} else {
-										//upload to profile picture bucket in AWS
-										util.uploadToProfPics(buffer, req.user.username+"-60", mime, function(err, data) {
-											if (err) {
-												console.error(err);
-												res.end("fail");
-											} else {
-												//update rest of user info in database
-												User.findOneAndUpdate({_id: req.user._id}, updatedUser, function(err, user) {
-													if (err) {
-														console.error(err);
-														res.end("fail");
-													} else {
-														res.end("success");
-													}
-												})
-											}
-										})
-									}
-								})
-							}
-						});
-					}
-				});
+				return Promise.all([
+					util.resizeImageAsync(req.file.buffer, 300, ext).then(function(buffer) {
+						return util.uploadToProfPicsAsync(buffer, req.user.username + "-300", mime);
+					}),
+					util.resizeImageAsync(req.file.buffer, 60, ext).then(function(buffer) {
+						return util.uploadToProfPicsAsync(buffer, req.user.username + "-60", mime);
+					})
+				]);
+
 			} else {
-				//update user info in database
-				User.findOneAndUpdate({_id: req.user._id}, updatedUser, function(err, user) {
-					if (err) {
-						console.error(err);
-						res.end("fail");
-					} else {
-						res.end("success");
-					}
-				});
+				return Promise.resolve();
 			}
-		} else {
+		}).then(function() {
+			// update user info in database
+			return User.findOneAndUpdate({
+				_id: req.user._id
+			}, updatedUser);
+		}).then(function() {
+			res.end("success");
+		}).catch(function(err) {
+			console.error(err);
 			res.end("fail");
-		}
-	});
-	//get information about the currently logged in user
-	app.post("/f/getSelf", requireLogin, function(req, res) {
-		User.findOne({_id: req.user._id}, "-password", function(err, user) {
-			if (err) {
-				console.error(err);
-				res.end("fail");
-			} else {
-				res.end(JSON.stringify(user));
-			}
 		});
 	});
-	app.post("/f/removeUserFromTeam", requireLogin, requireAdmin, function(req, res) {
-		let remove = function() {
-	User.update({_id: req.body.user_id}, { "$pull": {
-			"teams": {id: req.user.current_team.id},
-			"subdivisions": {team: req.user.current_team.id}
-		},
-		/*"$push": {
-			"bannedFromTeams": req.user.current_team.id //bans user from rejoining
-		},*/
 
-		}, function(err, model) {
-			if (err) {
-				console.error(err);
-				res.end("fail");
-			} else {
-				User.findOne({_id: req.body.user_id}, function(err, user) {
-					if (err) {
-						console.error(err);
-						res.end("fail");
-					} else {
-						//if user is currently using the team he is being banned from
-						if (user.current_team.id == req.user.current_team.id) {
-							user.current_team = undefined //TODO: make it so that if current_team is undefined when logging in, it allows you to set current_team
-							user.save(function(err) {
-								if (err) {
-									console.error(err);
-									res.end("fail");
-								} else {
-									Chat.update({
-										team: req.user.current_team.id,
-										userMembers: new ObjectId(req.body.user_id)
-									}, {
-										"$pull": {
-											"userMembers": req.body.user_id
-										}
-									}, function(err, model) {
-										if (err) {
-											console.error(err);
-											res.end("fail");
-										} else {
-											Folder.update({
-												team: req.user.current_team.id,
-												userMembers: new ObjectId(req.body.user_id)
-											}, {
-												"$pull": {
-													"userMembers": req.body.user_id
-												}
-											}, function(err, model) {
-												if (err) {
-													console.error(err);
-													res.end("fail");
-												} else {
-													Event.update({
-														team: req.user.current_team.id,
-														userAttendees: new ObjectId(req.body.user_id)
-													}, {
-														"$pull": {
-															"userAttendees": req.body.user_id
-														}
-													}, function(err, model) {
-														if (err) {
-															console.error(err);
-															res.end("fail");
-														} else {
-															res.end("success");
-														}
-													})
-												}
-											})
-										}
-									})
-								}
-							})
-						}
+	// get information about the currently logged in user
+	app.post("/f/getSelf", requireLogin, function(req, res) {
+		User.findOne({
+			_id: req.user._id
+		}, "-password").exec().then(function(user) {
+			res.end(JSON.stringify(user));
+		}).catch(function(err) {
+			console.error(err);
+			res.end("fail");
+		});
+	});
+
+	app.post("/f/removeUserFromTeam", requireLogin, requireAdmin, function(req, res) {
+		User.findOne({
+			_id: req.body.user_id
+		}).exec().then(function(user) {
+			if (user.current_team.position == "admin") {
+				return User.count({
+					teams: {
+						id: req.user.current_team.id,
+						position: "admin"
+					}
+				}).then(function(count) {
+					if (count > 1) {
+						 return Promise.resolve();
+					 } else {
+						res.end("You cannot remove the only Admin on your team.");
+						return Promise.reject();
 					}
 				});
+			} else {
+				return Promise.resolve();
 			}
-		});
-	};
-	User.findOne({
-		_id: req.body.user_id
-	}, function(err, user) {
-		if (user.current_team.position == "admin") {
-			User.count({
-				teams: {
-					id: req.user.current_team.id,
-					position: "admin"
-				}
-			}, function(err, count) {
-				if (err) {
-					res.end("fail");
-				} else if (count > 1) {
-					 remove();
-				 } else {
-					res.end("You cannot remove the only Admin on your team.");
+		}).then(function() {
+			return User.update({
+				_id: req.body.user_id
+			}, { "$pull": {
+				"teams": {id: req.user.current_team.id},
+				"subdivisions": {team: req.user.current_team.id}
+			}});
+		}).then(function() {
+			return User.findOne({
+				_id: req.body.user_id
+			}).exec();
+		}).then(function(user) {
+			if (user.current_team.id == req.user.current_team.id) {
+				user.current_team = undefined; // TODO: make it so that if current_team is undefined when logging in, it allows you to set current_team
+				return user.save();
+			} else {
+				return Promise.reject();
+			}
+		}).then(function() {
+			return Chat.update({
+				team: req.user.current_team.id,
+				userMembers: new ObjectId(req.body.user_id)
+			}, {
+				"$pull": {
+					"userMembers": req.body.user_id
 				}
 			});
-		} else {
-			remove();
-		}
+		}).then(function() {
+			return Folder.update({
+				team: req.user.current_team.id,
+				userMembers: new ObjectId(req.body.user_id)
+			}, {
+				"$pull": {
+					"userMembers": req.body.user_id
+				}
+			});
+		}).then(function() {
+			return Event.update({
+				team: req.user.current_team.id,
+				userAttendees: new ObjectId(req.body.user_id)
+			}, {
+				"$pull": {
+					"userAttendees": req.body.user_id
+				}
+			});
+		}).then(function() {
+			res.end("success");
+		}).catch(function(err) {
+			if (err) {
+				console.error(err);
+				res.end("fail");
+			}
+		});
 	});
-	});
+
 	app.post("/f/forgotPassword", function(req, res) {
 		User.findOne({email: req.body.email, username: req.body.username}, function(err, user) {
 			if (err) {
