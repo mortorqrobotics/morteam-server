@@ -137,7 +137,7 @@ module.exports = function(app, util, schemas, publicDir, profpicDir) {
 						res.end("password mismatch");
 					}
 				}
-				return Promise.break;
+				return Promise.reject();
 			}).then(function() {
 
 				let userInfo = {
@@ -180,29 +180,38 @@ module.exports = function(app, util, schemas, publicDir, profpicDir) {
 			}).then(function() {
 				res.end("success");
 			}).catch(function(err) {
-				console.error(err);
+				if (err) {
+					console.error(err);
+				}
 				res.end("fail");
 			});
 		} else {
 			res.end("fail: Form data is invalid");
 		}
 	});
+
 	app.post("/f/getUser", requireLogin, function(req, res) {
-		User.findOne({_id: req.body._id}, "-password", function(err, user) {
-			if (err) {
-				console.error(err);
-				res.end("fail");
-			}
+		User.findOne({
+			_id: req.body._id
+		}, "-password").exec().then(function(user) {
 			res.json(user);
-		})
-	})
+		}).catch(function(err) {
+			console.error(err);
+			res.end("fail");
+		});
+	});
+
 	app.post("/f/getUserTeams", requireLogin, function(req, res) {
-		User.findOne({_id: req.body._id}, "-password", function(err, user) {
-			if (err) {
-				console.error(err);
-				res.end("fail");
-			}
-			res.json({"teams": user.teams, "current_team": user.current_team});
+		User.findOne({
+			_id: req.body._id
+		}, "-password").exec().then(function(user) {
+			res.json({
+				"teams": user.teams,
+				"current_team": user.current_team
+			});
+		}).catch(function(err) {
+			console.error(err);
+			res.end("fail");
 		})
 	})
 	app.post("/f/changePosition", requireLogin, function(req, res) {
@@ -213,60 +222,59 @@ module.exports = function(app, util, schemas, publicDir, profpicDir) {
 			"leader": 1,
 			"admin": 2
 		}
+
 		let current_position;
 
 		//find target user
-		User.findOne({_id: req.body.user_id}, function(err, user) {
-			if (err) {
-				console.error(err);
-				res.end("fail");
-			} else {
-				if (user) {
-					//find position of current user
-					current_position = util.findTeamInUser(user, req.user.current_team.id).position;
-					//check position hierarchy to see if it is allowed for user to change the position of target user
-					let updatePosition = function() {
-				if ( positionHA[req.user.current_team.position] >= positionHA[req.body.target_position]
-					&& positionHA[req.user.current_team.position] >= positionHA[current_position] ) {
-							//update position of target user
-							User.update({_id: req.body.user_id, "teams.id": req.user.current_team.id}, {"$set": {
-								"teams.$.position": req.body.target_position, //find out what .$. means and if it means selected "teams" element
-								"current_team.position": req.body.target_position //make sure in the future current_team.position is checked with "teams" array of the document when user is logging in as opposed to doing this
-							}}, function(err) {
-								if (err) {
-									console.error(err);
-									res.end("fail");
-								} else {
-									res.end("success");
-								}
-							});
-						} else {
-							res.end("fail");
+		User.findOne({
+			_id: req.body.user_id
+		}).exec().then(function(user) {
+			if (user) {
+				current_position = util.findTeamInUser(user, req.user.current_team.id).position;
+
+				if (current_position == "admin") {
+					return User.count({
+						teams: {
+							id: req.user.current_team.id,
+							position: "admin"
 						}
-			};
-			if (current_position == "admin") {
-				User.count({
-					teams: {
-						id: req.user.current_team.id,
-						position: "admin"
-					}
-				}, function(err, count) {
-					if (err) {
-						res.end("fail");
-					} else if (count > 1) {
-					 updatePosition();
-				 } else {
-						res.end("You are the only Admin on your team, so you cannot demote yourself.");
-					}
+					}).exec().then(function(count) {
+						if (count > 1) {
+					 		return Promise.resolve();
+				 		} else {
+							res.end("You are the only Admin on your team, so you cannot demote yourself.");
+							return Promise.reject();
+						}
+					});
+				} else {
+					return Promise.resolve();
+				}
+			} else {
+				return Promise.reject();
+			}
+		}).then(function() {
+			// check position hierarchy to see if it is allowed for user to change the position of target user
+			if ( positionHA[req.user.current_team.position] >= positionHA[req.body.target_position]
+				&& positionHA[req.user.current_team.position] >= positionHA[current_position] ) {
+				// update position of target user
+				return User.update({
+					_id: req.body.user_id,
+					"teams.id": req.user.current_team.id
+				}, {"$set": {
+					"teams.$.position": req.body.target_position, // find out what .$. means and if it means selected "teams" element
+					"current_team.position": req.body.target_position // make sure in the future current_team.position is checked with "teams" array of the document when user is logging in as opposed to doing this
+				}}).exec().then(function() {
+					res.end("success");
 				});
 			} else {
-				updatePosition();
+				return Promise.reject();
 			}
-				} else {
-					res.end("fail");
-				}
+		}).catch(function(err) {
+			if (err) {
+				console.error(err);
 			}
-		})
+			res.end("fail");
+		});
 	});
 
 	app.post("/f/searchForUsers", requireLogin, function(req, res) {
