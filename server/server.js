@@ -15,6 +15,7 @@ let http = require("http");
 let fs = require("fs");
 let ObjectId = mongoose.Types.ObjectId; // this is used to cast strings to MongoDB ObjectIds
 let multer = require("multer"); // for file uploads
+let lwip = require("lwip");
 
 let config; // contains passwords and other sensitive info
 if (fs.existsSync("config.json")) {
@@ -35,6 +36,8 @@ let util = require("./util.js")(); // contains functions and objects that are us
 let Promise = require("bluebird");
 Promise.break = new Promise(function() {});
 Promise.promisifyAll(util);
+Promise.promisifyAll(lwip);
+Promise.promisifyAll(fs);
 
 const publicDir = require("path").join(__dirname, "../website/public");
 const profpicDir = "http://profilepics.morteam.com.s3.amazonaws.com/"

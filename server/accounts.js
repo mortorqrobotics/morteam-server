@@ -135,7 +135,7 @@ module.exports = function(app, util, schemas, publicDir, profpicDir) {
 					res.end("exists");
 				} else {
 					if (req.body.password == req.body.password_confirm) {
-						return Promise.resolve();
+						return;
 					} else {
 						res.end("password mismatch");
 					}
@@ -171,12 +171,12 @@ module.exports = function(app, util, schemas, publicDir, profpicDir) {
 							return util.uploadToProfPicsAsync(buffer, req.body.username + "-300", mime);
 						})
 					]).then(function() {
-						return Promise.resolve(userInfo);
+						return userInfo;
 					});
 
 				} else {
 					userInfo.profpicpath = "/images/user.jpg"; // default profile picture
-					return Promise.resolve(userInfo);
+					return userInfo;
 				}
 			}).then(function(userInfo) {
 				return User.create(userInfo);
@@ -224,7 +224,7 @@ module.exports = function(app, util, schemas, publicDir, profpicDir) {
 			"member": 0,
 			"leader": 1,
 			"admin": 2
-		}
+		};
 
 		let current_position;
 
@@ -246,14 +246,14 @@ module.exports = function(app, util, schemas, publicDir, profpicDir) {
 					}
 				}).exec().then(function(count) {
 					if (count > 1) {
-				 		return Promise.resolve();
+				 		return;
 			 		} else {
 						res.end("You are the only Admin on your team, so you cannot demote yourself.");
 						return Promise.reject();
 					}
 				});
 			} else {
-				return Promise.resolve();
+				return;
 			}
 		}).then(function() {
 			// check position hierarchy to see if it is allowed for user to change the position of target user
@@ -375,7 +375,7 @@ module.exports = function(app, util, schemas, publicDir, profpicDir) {
 				]);
 
 			} else {
-				return Promise.resolve();
+				return;
 			}
 		}).then(function() {
 			// update user info in database
@@ -414,14 +414,14 @@ module.exports = function(app, util, schemas, publicDir, profpicDir) {
 					}
 				}).then(function(count) {
 					if (count > 1) {
-						return Promise.resolve();
+						return;
 					 } else {
 						res.end("You cannot remove the only Admin on your team.");
 						return Promise.reject();
 					}
 				});
 			} else {
-				return Promise.resolve();
+				return;
 			}
 		}).then(function() {
 			return User.update({

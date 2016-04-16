@@ -5,10 +5,10 @@
  */
 module.exports = function() {
 
-	//import necessary modules
+	// import necessary modules
 	let fs = require("fs");
 	let config = require("./config.json");
-	let Autolinker = require( "autolinker" );
+	let Autolinker = require("autolinker");
 	let nodemailer = require("nodemailer");
 	let lwip = require("lwip");
 	let AWS = require("aws-sdk");
@@ -17,7 +17,7 @@ module.exports = function() {
 
  return new (function() {
 
-	 let self = this; //now "self" can be used to refer to this class inside the scope of the functions
+	 let self = this; // now "self" can be used to refer to this class inside the scope of the functions
 
 	 let daysInWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 	 let months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
@@ -38,19 +38,35 @@ module.exports = function() {
 	};
 
 	 //email transport
-	 this.notify = nodemailer.createTransport({
-			 service: "Mailgun",
-			 auth: {
-					 user: config.mailgunUser,
-					 pass: config.mailgunPass
-			 }
-	 });
+	this.notify = nodemailer.createTransport({
+		service: "Mailgun",
+		auth: {
+			user: config.mailgunUser,
+			pass: config.mailgunPass
+		}
+	});
+	this.sendEmail = function(options) {
+		return new Promise(function(resolve, reject) {
+			self.notify.sendMail({
+				from: "MorTeam Notification <notify@morteam.com>",
+				to: options.to,
+				subject: options.subject,
+				html: options.html
+			}, function(err, info) {
+				if (err) {
+					reject(err);
+				} else {
+					resolve(info);
+				}
+			})
+		});
+	};
 
-	 //define AWS S3 buckets used
+	 // define AWS S3 buckets used
 	 this.profPicBucket = new AWS.S3({params: {Bucket: "profilepics.morteam.com"}});
 	 this.driveBucket = new AWS.S3({params: {Bucket: "drive.morteam.com"}});
 
-	 //quick way to send a 404: not found error
+	 // quick way to send a 404: not found error
 	 this.send404 = function(res) {
 		 res.writeHead(404, {
 			 "Content-Type": "text/plain"
@@ -58,25 +74,25 @@ module.exports = function() {
 		 res.end("404: Page Not Found");
 	 }
 
-	 //parses JSON without crashing when parsing invalid JSON
+	 // parses JSON without crashing when parsing invalid JSON
 	 this.parseJSON = function(str) { //not being used
 		 try {
 			 return JSON.parse(String(str));
 		 } catch (ex) {}
 	 }
 
-	 //checks if user provided email adress is valid
+	 // checks if user provided email adress is valid
 	 this.validateEmail = function(email) {
 		 let re = /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i;
 		 return re.test(email);
 	 }
 
-	 //checks if user provided phone number adress is valid
+	 // checks if user provided phone number adress is valid
 	 this.validatePhone = function(phone) {
 		 return phone.match(/\d/g).length===10;
 	 }
 
-	 //creates random string of any size
+	 // creates random string of any size
 	 this.createToken = function(size) {
 		 let token = "";
 		 for (let i = 0; i < size; i++) {
@@ -86,7 +102,7 @@ module.exports = function() {
 		 return token;
 	 }
 
-	 //can be used as middleware to check if user is logged in
+	 // can be used as middleware to check if user is logged in
 	 this.requireLogin = function(req, res, next) {
 		 if (!req.user) {
 			 res.end("fail");
@@ -95,7 +111,7 @@ module.exports = function() {
 		 }
 	 }
 
-	 //can be used as middleware to check if user is an admin
+	 // can be used as middleware to check if user is an admin
 	 this.requireAdmin = function(req, res, next) {
 		 if (req.user.current_team.position != "admin") {
 			 notfiy.sendMail({
@@ -110,7 +126,7 @@ module.exports = function() {
 		 }
 	 }
 
-	 //can be used as middleware to check if user is a leader or admin
+	 // can be used as middleware to check if user is a leader or admin
 	 this.requireLeader = function(req, res, next) {
 		 if (req.user.current_team.position == "admin" || req.user.current_team.position == "leader") {
 			 next();
@@ -139,7 +155,7 @@ module.exports = function() {
 		 response.end("Subdivision not found");
 	 }
 
-	 //makes handling errors very easy
+	 // makes handling errors very easy
 	 this.handleError = function(err, res) {
 		 if (err) {
 			 console.error(err);
@@ -152,7 +168,7 @@ module.exports = function() {
 		 }
 	 }
 
-	 //checks if user provided phone number adress is valid
+	 // checks if user provided phone number adress is valid
 	 this.validPhoneNum = function(num) { //not being used
 		 let phone = /^\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$/;
 		 if (num.value.match(phone)) {
@@ -162,7 +178,7 @@ module.exports = function() {
 		 }
 	 }
 
-	 //returns the team object with an id of teamId of a user
+	 // returns the team object with an id of teamId of a user
 	 this.findTeamInUser = function(user, teamId) {
 		 for (let i = 0; i < user.teams.length; i++) {
 			 if (user.teams[i].id == teamId) {
@@ -171,7 +187,7 @@ module.exports = function() {
 		 }
 	 }
 
-	 //returns an array of _ids provided an array of objects that contain a _id variable
+	 // returns an array of _ids provided an array of objects that contain a _id variable
 	 this.getIdsFromObjects = function(objects) { //not being used
 		 result = [];
 		 for (let i = 0; i < objects.length; i++) {
@@ -180,8 +196,8 @@ module.exports = function() {
 		 return result;
 	 }
 
-	 //receives an array of _ids of users with a length of 2 and another user _id
-	 //returns the other user
+	 // receives an array of _ids of users with a length of 2 and another user _id
+	 // returns the other user
 	 this.getUserOtherThanSelf = function(twoUsers, selfId) {
 		 if (twoUsers[0] == selfId) {
 			 return twoUsers[1];
@@ -190,7 +206,7 @@ module.exports = function() {
 		 }
 	 }
 
-	 //removes duplicates from an array
+	 // removes duplicates from an array
 	 this.removeDuplicates = function(arr) {
 		 let result = [];
 		 for (let i = 0; i < arr.length; i++) {
@@ -213,18 +229,18 @@ module.exports = function() {
 		 //  text.replace(/\<(?!a|br).*?\>/g, "");
 	 }
 
-	 //removes html and adds hyperlinks to some text
+	 // removes html and adds hyperlinks to some text
 	 this.normalizeDisplayedText = function(text) {
 		 return Autolinker.link(self.removeHTML(text));
 	 }
 
-	 //converts date string into human readable date
+	 // converts date string into human readable date
 	 this.readableDate = function(datestr) {
 		 let date = new Date(datestr);
 		 return months[date.getMonth()] + " " + date.getDate() + ", " + date.getFullYear();
 	 }
 
-	 //creates a list of email adresses seperated by ", " provided an array of user objects
+	 // creates a list of email adresses seperated by ", " provided an array of user objects
 	 this.createRecepientList = function(users) {
 		 let result = "";
 		 users.forEach(function(user) {
@@ -237,7 +253,7 @@ module.exports = function() {
 		 return result;
 	 }
 
-	 //determins "type" of file based on extension (is used for color coding files on the client)
+	 // determins "type" of file based on extension (is used for color coding files on the client)
 	 this.extToType = function(ext) {
 		 let spreadsheet = ["xls", "xlsx", "numbers", "_xls", "xlsb", "xlsm", "xltx", "xlt"];
 		 let word = ["doc", "rtf", "pages", "txt", "docx"];
@@ -287,7 +303,7 @@ module.exports = function() {
 		 self.driveBucket.deleteObject({Key: fileName}).send(callback)
 	 }
 
-	 //ext is the extension without the period up front --> example: NOT ".txt", but rather "txt"
+	 // ext is the extension without the period up front --> example: NOT ".txt", but rather "txt"
 	 this.resizeImage = function(buffer, size, ext, callback) {
 		 lwip.open(buffer, ext, function(err, image) {
 			 if (err) {
