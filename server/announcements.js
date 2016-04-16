@@ -12,11 +12,13 @@ module.exports = function(app, util, schemas) {
 	let Announcement = schemas.Announcement;
 	let User = schemas.User;
 
-	app.post("/f/postAnnouncement", requireLogin, function(req, res) {
+	app.post("/f/postAnnouncement", requireLogin, Promise.coroutine(function*(req, res) {
+
 		// attempt to convert audience request to JSON in case client does not explicitly send it as a JSON type
 		try {
 			req.body.audience = JSON.parse(req.body.audience);
-		}  catch(e) { }
+		}  catch(e) {}
+
 		// add <a> tags to detected links
 		req.body.content = Autolinker.link(req.body.content);
 		let announcement = {
@@ -25,55 +27,67 @@ module.exports = function(app, util, schemas) {
 			team: req.user.current_team.id,
 			timestamp: new Date()
 		};
-		Promise.try(function() {
-			if (typeof(req.body.audience) == "object") { //this means user has selected "custom" audience
+
+		try {
+
+			let users;
+
+			if (typeof(req.body.audience) == "object") { // this means user has selected "custom" audience
+	
 				announcement.subdivisionAudience = req.body.audience.subdivisionMembers;
 				announcement.userAudience = req.body.audience.userMembers;
-				return Announcement.create(announcement).then(function(_announcement) {
-					announcement = _announcement;
-					return User.find({$or: [
-						{ _id: { $in: req.body.audience.userMembers } },
-						// users that have a subdivision which has an _id that is in the audience.subdivisionMembers array
-						{ subdivisions: { $elemMatch: { "_id": { $in: req.body.audience.subdivisionMembers } } } }
-					] }, "-password").exec();
-				});
+				announcement = yield Announcement.create(announcement);
+	
+				users = yield User.find({$or: [
+					{ _id: { $in: req.body.audience.userMembers } },
+					// users that have a subdivision which has an _id that is in the audience.subdivisionMembers array
+					{ subdivisions: { $elemMatch: { "_id": { $in: req.body.audience.subdivisionMembers } } } }
+				] }, "-password").exec();
+	
 			} else if (req.body.audience == "everyone") {
+	
 				announcement.entireTeam = true;
-				return Announcement.create(announcement).then(function(_announcement) {
-					announcement = _announcement;
-					// find all users in the current team
-					return User.find({ teams: {
-						$elemMatch: {id: req.user.current_team.id }}
-					}, "-password").exec();
-				});
+				announcement = yield Announcement.create(announcement);
+	
+				// find all users in the current team
+				users = yield User.find({ teams: {
+					$elemMatch: {id: req.user.current_team.id }}
+				}, "-password").exec();
+			
 			} else { // this means that the user selected a specific subdivision to send the announcement to
+	
 				annoucenement.subdivisionAudience = [new ObjectId(String(req.body.audience))];
-				return Announcement.create(announcement).then(function(_announcement) {
-					announcement = _announcement;
-					// find users that have a subdivision which has an _id that is equal to req.body.audience(the subdivision _id)
-					return User.find({
+				announcement = yield Announcement.create(announcement);
+	
+				// find users that have a subdivision which has an _id that is equal to req.body.audience(the subdivision _id)
+				users = yield User.find({
 						subdivisions: { $elemMatch: { _id: req.body.audience } }
-					}, "-password").exec();
-				});
+				}, "-password").exec();
+	
 			}
-		}).then(function(users) { // send emails
+	
 			res.end(announcement._id.toString());
+	
+		   	// send emails
 			if (req.user.current_team.position != "member") {
+	
 				// creates a string which is a list of recepients with the following format: "a@a.com, b@b.com, c@c.com"
-				let list = util.createRecepientList(users);
-				return util.sendEmail({
-					to: list,
+				let recipients = util.createRecepientList(users);
+	
+				let info = yield util.sendEmail({
+					to: recipients,
 					subject: "New Announcement By " + req.user.firstname + " " + req.user.lastname,
 					html: announcement.content
-				}).then(function(info) {
-					console.log(info);
 				});
+				console.log(info);
+	
 			}
-		}).catch(function(err) {
+
+		} catch (err) {
 			console.error(err);
 			res.end("fail");
-		});
-	});
+		}
+	}));
 
 	app.post("/f/getAnnouncementsForUser", requireLogin, function(req, res) {
 		// creates an array of the _ids of the subdivisions that the user is a member of
