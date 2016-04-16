@@ -89,48 +89,51 @@ module.exports = function(app, util, schemas) {
 		}
 	}));
 
-	app.post("/f/getAnnouncementsForUser", requireLogin, function(req, res) {
+	app.post("/f/getAnnouncementsForUser", requireLogin, Promise.coroutine(function*(req, res) {
 		// creates an array of the _ids of the subdivisions that the user is a member of
 		let userSubdivisionIds = util.activeSubdivisionIds(req.user.subdivisions);
-		// find announcements that the user should be able to see
-		Announcement.find({
-			team: req.user.current_team.id,
-			$or: [
-				{
-					entireTeam: true
-				}, {
-					userAudience: req.user._id
-				}, {
-					subdivisionAudience: {
-						"$in": userSubdivisionIds
+
+		try {
+
+			// find announcements that the user should be able to see
+			let announcements = yield Announcement.find({
+				team: req.user.current_team.id,
+				$or: [
+					{
+						entireTeam: true
+					}, {
+						userAudience: req.user._id
+					}, {
+						subdivisionAudience: {
+							"$in": userSubdivisionIds
+						}
 					}
-				}
-			]
-		}, {
-			// only respond with _id, author, content and timestamp
-			_id: 1,
-			author: 1,
-			content: 1,
-			timestamp: 1,
-			userAudience: 1,
-			subdivisionAudience: 1,
-			entireTeam: 1
-			// populate author and sort by timestamp, skip and limit are for pagination
-		}).populate("author", "-password")
-			.populate("userAudience")
-			.populate("subdivisionAudience")
-			.sort("-timestamp")
-			.skip(Number(req.body.skip))
-			.limit(20)
-			.exec()
-			.then(function(announcements) {
-				res.json(announcements)
-			})
-			.catch(function(err) {
-				console.error(err);
-				res.end("fail");
-			});
-	});
+				]
+			}, {
+				// only respond with _id, author, content and timestamp
+				_id: 1,
+				author: 1,
+				content: 1,
+				timestamp: 1,
+				userAudience: 1,
+				subdivisionAudience: 1,
+				entireTeam: 1
+				// populate author and sort by timestamp, skip and limit are for pagination
+			}).populate("author", "-password")
+				.populate("userAudience")
+				.populate("subdivisionAudience")
+				.sort("-timestamp")
+				.skip(Number(req.body.skip))
+				.limit(20)
+				.exec();
+
+			res.json(announcements);
+
+		} catch (err) {
+			console.error(err);
+			res.end("fail");
+		}
+	}));
 
 	app.post("/f/deleteAnnouncement", requireLogin, function(req, res) {
 		Announcement.findOne({
