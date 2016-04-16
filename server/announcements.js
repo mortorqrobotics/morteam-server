@@ -135,31 +135,27 @@ module.exports = function(app, util, schemas) {
 		}
 	}));
 
-	app.post("/f/deleteAnnouncement", requireLogin, function(req, res) {
-		Announcement.findOne({
-			_id: req.body._id
-		}).exec().then(function(announcement) {
+	app.post("/f/deleteAnnouncement", requireLogin, Promise.coroutine(function*(req, res) {
+		try {
+			let announcement = yield Announcement.findOne({_id: req.body._id}).exec();
+
 			// check if user is eligible to delete said announcement
 			if (req.user._id == announcement.author.toString() || req.user.current_team.position == "admin") {
-				return announcement.remove().then(function() {
-					res.end("success");
-				});
+				yield announcement.remove();
+				res.end("success");
 			} else {
 				// warn me about attempted hax, bruh
-				util.notify.sendMail({
-						from: "MorTeam Notification <notify@morteam.com>",
+				yield util.sendEmail({
 						to: "rafezyfarbod@gmail.com",
 						subject: "MorTeam Security Alert!",
 						text: "The user " + req.user.firstname + " " + req.user.lastname + " tried to perform administrator tasks. User ID: " + req.user._id
 				});
-				return Promise.reject();
+				res.end("fail");
 			}
-		}).catch(function(err) {
-			if (err) {
-				console.error(err);
-			}
+		} catch (err) {
+			console.error(err);
 			res.end("fail");
-		});
-	});
+		}
+	}));
 
 };
