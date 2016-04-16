@@ -4,6 +4,7 @@ module.exports = function(app, util, schemas) {
 
 	let Autolinker = require( "autolinker" );
 	let ObjectId = require("mongoose").Types.ObjectId;
+	let Promise = require("bluebird");
 
 	let requireLogin = util.requireLogin;
 	let requireAdmin = util.requireAdmin;
@@ -24,7 +25,7 @@ module.exports = function(app, util, schemas) {
 			team: req.user.current_team.id,
 			timestamp: new Date()
 		};
-		Promise.resolve().then(function() {
+		Promise.try(function() {
 			if (typeof(req.body.audience) == "object") { //this means user has selected "custom" audience
 				announcement.subdivisionAudience = req.body.audience.subdivisionMembers;
 				announcement.userAudience = req.body.audience.userMembers;
@@ -134,10 +135,12 @@ module.exports = function(app, util, schemas) {
 						subject: "MorTeam Security Alert!",
 						text: "The user " + req.user.firstname + " " + req.user.lastname + " tried to perform administrator tasks. User ID: " + req.user._id
 				});
-				res.end("fail");
+				return Promise.reject();
 			}
 		}).catch(function(err) {
-			console.error(err);
+			if (err) {
+				console.error(err);
+			}
 			res.end("fail");
 		});
 	});
