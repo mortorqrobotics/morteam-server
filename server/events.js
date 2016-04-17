@@ -145,73 +145,97 @@ module.exports = function(app, util, schemas) {
 		}
 	}));
 
-	app.post("/f/deleteEvent", requireLogin, requireLeader, function(req, res) {
-		Event.findOneAndRemove({_id: req.body.event_id}, function(err) {
-			if (err) {
-				console.error(err);
-				res.end("fail")
-			} else {
-				AttendanceHandler.findOneAndRemove({event: req.body.event_id}, function(err) {
-					if (err) {
-						console.error(err);
-						res.end("fail");
-					} else {
-						res.end("success");
-					}
-				})
-			}
-		});
-	});
-	app.post("/f/getEventAttendees", requireLogin, requireLeader, function(req, res) {
-		AttendanceHandler.findOne({event: req.body.event_id}).populate("attendees.user").exec(function(err, attendanceHandler) {
-			if (err) {
-				console.error(err);
-				res.end("fail");
-			} else {
-				res.end(JSON.stringify(attendanceHandler.attendees));
-			}
-		});
-	});
-	app.post("/f/updateAttendanceForEvent", requireLogin, requireLeader, function(req, res) {
-		AttendanceHandler.update({event: req.body.event_id}, {"$set": {attendees: req.body.updatedAttendees}}, function(err, model) {
-			if (err) {
-				console.error(err);
-				res.end("fail");
-			} else {
-				res.end("success");
-			}
-		});
-	});
-	app.post("/f/getUserAbsences", requireLogin, function(req, res) {
-		AttendanceHandler.find({event_date:{ "$lte": new Date() }, "attendees.user": req.body.user_id}).populate("event").exec(function(err, attendanceHandlers) {
-			if (err) {
-				console.error(err);
-				res.end("fail");
-			} else {
-				let absences = [];
-				let present = 0;
-				for (let i = 0; i < attendanceHandlers.length; i++) {
-					for (let j = 0; j < attendanceHandlers[i].attendees.length; j++) {
-						if (attendanceHandlers[i].attendees[j].user == req.body.user_id && attendanceHandlers[i].attendees[j].status == "absent") {
-							absences.push(attendanceHandlers[i].event);
-						} else if (attendanceHandlers[i].attendees[j].user == req.body.user_id && attendanceHandlers[i].attendees[j].status == "present") {
+	app.post("/f/deleteEvent", requireLogin, requireLeader, Promise.coroutine(function*(req, res) {
+		try {
+
+			yield Event.findOneAndRemove({_id: req.body.event_id});
+			
+			yield AttendanceHandler.findOneAndRemove({event: req.body.event_id});
+			
+			res.end("success");
+
+		} catch (err) {
+			console.error(err);
+			res.end("fail");
+		}
+	}));
+
+	app.post("/f/getEventAttendees", requireLogin, requireLeader, Promise.coroutine(function*(req, res) {
+		try {
+
+			let handler = yield AttendanceHandler.findOne({event: req.body.event_id}).populate("attendees.user").exec();
+			
+			res.end(JSON.stringify(handler.attendees));
+
+		} catch (err) {
+			console.error(err);
+			res.end("fail");
+		}
+	}));
+
+	app.post("/f/updateAttendanceForEvent", requireLogin, requireLeader, Promise.coroutine(function*(req, res) {
+		try {
+		
+			yield AttendanceHandler.update({
+				event: req.body.event_id
+			}, {
+				"$set": {attendees: req.body.updatedAttendees}
+			});
+
+			res.end("success");
+
+		} catch (err) {
+			console.error(err);
+			res.end("fail");
+		}
+	}));
+
+	app.post("/f/getUserAbsences", requireLogin, Promise.coroutine(function*(req, res) {
+		try {
+
+			let handlers = yield AttendanceHandler.find({
+				event_date:{ "$lte": new Date() },
+				"attendees.user": req.body.user_id
+			}).populate("event").exec();
+
+			let absences = [];
+			let present = 0;
+			for (let handler of handlers) {
+				for (let attendee of handler.attendees) {
+					if (attendee.user == req.body.user_id) {
+						if (attendee.status == "absent") {
+							absences.push(handler.event);
+						} else if (attendee.status == "present") {
 							present++;
 						}
 					}
 				}
-				res.end(JSON.stringify({present: present, absences: absences}));
 			}
-		})
-	})
-	app.post("/f/excuseAbsence", requireLogin, requireLeader, function(req, res) {
-		AttendanceHandler.update({event : req.body.event_id , "attendees.user": req.body.user_id} , {"$set": {"attendees.$.status": "excused"}}, function(err, model) {
-			if (err) {
-				console.error(err);
-				res.end("fail");
-			} else {
-				res.end("success");
-			}
-		})
-	})
+
+			res.end(JSON.stringify({present: present, absences: absences}));
+
+		} catch (err) {
+			console.error(err);
+			res.end("fail");
+		}
+	}));
+
+	app.post("/f/excuseAbsence", requireLogin, requireLeader, Promise.coroutine(function*(req, res) {
+		try {
+
+			yield AttendanceHandler.update({
+				event : req.body.event_id,
+				"attendees.user": req.body.user_id
+			}, {
+				"$set": {"attendees.$.status": "excused"}
+			});
+			
+			res.end("success");
+
+		} catch (err) {
+			console.error(err);
+			res.end("fail");
+		}
+	}));
 
 };

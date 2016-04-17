@@ -18,7 +18,7 @@ let multer = require("multer"); // for file uploads
 let lwip = require("lwip");
 
 let config; // contains passwords and other sensitive info
-if (fs.existsSync("config.json")) {
+if (fs.existsSync(require("path").join(__dirname, "config.json"))) {
 	config = require("./config.json");
 }
 else {
