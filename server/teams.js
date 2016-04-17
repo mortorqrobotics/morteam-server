@@ -2,6 +2,8 @@
 
 module.exports = function(app, util, schemas) {
 
+	let Promise = require("bluebird");
+
 	let requireLogin = util.requireLogin;
 	let requireLeader = util.requireLeader;
 	let requireAdmin = util.requireAdmin;
@@ -11,27 +13,27 @@ module.exports = function(app, util, schemas) {
 	let AttendanceHandler = schemas.AttendanceHandler;
 	let Folder = schemas.Folder;
 
-	//assign variables to util functions(and objects) and database schemas
-	for (key in util) {
-		eval("var " + key + " = util." + key + ";");
-	}
-	for (key in schemas) {
-		eval("var " + key + " = schemas." + key + ";");
-	}
+	app.get("/team", requireLogin, Promise.coroutine(function*(req, res) {
+		try {
 
-	app.get("/team", requireLogin, function(req, res) {
-		User.find({ teams: { $elemMatch: { id: req.user.current_team.id } } }, "-password", function(err, users) {
-			Team.findOne({id: req.user.current_team.id}, function(err, team) {
-				res.render("team", {
-					teamName: team.name,
-					teamNum: team.number,
-					teamId: team.id,
-					members: users,
-					viewerIsAdmin: req.user.current_team.position=="admin",
-				});
+			let users = yield User.find({ teams: { $elemMatch: { id: req.user.current_team.id } } });
+
+			let team = yield Team.findOne({id: req.user.current_team.id});
+
+			res.render("team", {
+				teamName: team.name,
+				teamNum: team.number,
+				teamId: team.id,
+				members: users,
+				viewerIsAdmin: req.user.current_team.position == "admin",
 			});
-		});
-	});
+
+		} catch (err) {
+			console.error(err);
+			res.end("fail");
+		}
+	}));
+
 	app.post("/f/getUsersInTeam", requireLogin, function(req, res) {
 		User.find({
 			teams: {$elemMatch: {id: req.user.current_team.id }}

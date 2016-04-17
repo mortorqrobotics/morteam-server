@@ -83,7 +83,7 @@ module.exports = function(app, util, schemas) {
 	app.post("/f/getPendingUserTasks", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
-			let tasks = Task.find({
+			let tasks = yield Task.find({
 				for: req.body.user_id,
 				completed: false
 			}).populate("creator").exec();
