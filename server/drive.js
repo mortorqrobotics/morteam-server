@@ -107,7 +107,7 @@ module.exports = function(app, util, schemas) {
 
 	app.post("/f/createFolder", requireLogin, Promise.coroutine(function*(req, res) {
 
-		if (req.body.name.length < 22) {
+		if (req.body.name.length >= 22) {
 			return res.end("fail");
 		}
 
@@ -180,11 +180,13 @@ module.exports = function(app, util, schemas) {
 			
 				let image = yield lwip.openAsync(req.file.buffer, ext);
 
+				Promise.promisifyAll(image);
+
 				let hToWRatio = image.height() / image.width();
 				if (hToWRatio >= 1) {
-					image = yield image.resize(280, 280 * hToWRatio);
+					image = yield image.resizeAsync(280, 280 * hToWRatio);
 				} else {
-					image = yield image.resize(280 / hToWRatio, 280);
+					image = yield image.resizeAsync(280 / hToWRatio, 280);
 				}
 
 				Promise.promisifyAll(image);
