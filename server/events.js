@@ -3,6 +3,7 @@
 module.exports = function(app, util, schemas) {
 
 	let ObjectId = require("mongoose").Types.ObjectId;
+	let Promise = require("bluebird");
 
 	let requireLogin = util.requireLogin;
 	let requireLeader = util.requireLeader;
@@ -12,56 +13,57 @@ module.exports = function(app, util, schemas) {
 	let Event = schemas.Event;
 	let AttendanceHandler = schemas.AttendanceHandler;
 
-	//assign variables to util functions(and objects) and database schemas
-	for (key in util) {
-		eval("var " + key + " = util." + key + ";");
-	}
-	for (key in schemas) {
-		eval("var " + key + " = schemas." + key + ";");
-	}
+	app.post("/f/getEventsForUserInTeamInMonth", requireLogin, Promise.coroutine(function*(req, res) {
+		let userSubdivisionIds = util.activeSubdivisionIds(req.user.subdivisions);
 
-	app.post("/f/getEventsForUserInTeamInMonth", requireLogin, function(req, res) {
+		let numberOfDays = new Date(req.body.year, req.body.month, 0).getDate(); // month is 1 based
+		let start = new Date(req.body.year, req.body.month - 1, 1, 0, 0, 0); // month is 0 based
+		let end = new Date(req.body.year, req.body.month - 1, numberOfDays, 23, 59, 59); // month is 0 based
+
+		try {
+
+			let events = yield Event.find({
+				team: req.user.current_team.id,
+				$or: [
+					{ entireTeam: true },
+					{ userAttendees: req.user._id },
+					{ subdivisionAttendees: { "$in": userSubdivisionIds } }
+				],
+				date: {$gte: start, $lte: end}
+			});
+			
+			res.json(events);
+
+		} catch (err) {
+			console.error(err);
+			res.end("fail");
+		}
+	}));
+
+	app.post("/f/getUpcomingEventsForUser", requireLogin, Promise.coroutine(function*(req, res) {
 		let userSubdivisionIds = util.activeSubdivisionIds(req.user.subdivisions);
-		let numberOfDays = new Date(req.body.year, req.body.month, 0).getDate(); //month is 1 based
-		let start = new Date(req.body.year, req.body.month-1, 1, 0, 0, 0); //month is 0 based
-		let end = new Date(req.body.year, req.body.month-1, numberOfDays, 23, 59, 59); //month is 0 based
-		Event.find({
-			team: req.user.current_team.id,
-			$or: [
-				{ entireTeam: true },
-				{ userAttendees: req.user._id },
-				{ subdivisionAttendees: { "$in": userSubdivisionIds } }
-			],
-			date: {$gte: start, $lte: end}
-		}, function(err, events) {
-			if (err) {
-				console.error(err);
-				res.end("fail");
-			} else {
-				res.json(events)
-			}
-		});
-	});
-	app.post("/f/getUpcomingEventsForUser", requireLogin, function(req, res) {
-		let userSubdivisionIds = util.activeSubdivisionIds(req.user.subdivisions);
-		Event.find({
-			team: req.user.current_team.id,
-			$or: [
-				{ entireTeam: true },
-				{ userAttendees: req.user._id },
-				{ subdivisionAttendees: { "$in": userSubdivisionIds } }
-			],
-			date: {$gte: new Date()}
-		}).sort("date").exec(function(err, events) {
-			if (err) {
-				console.error(err);
-				res.end("fail");
-			} else {
-				res.end( JSON.stringify(events) );
-			}
-		});
-	});
-	app.post("/f/createEvent", requireLogin, requireLeader, function(req, res) {
+
+		try {
+
+			let events = yield Event.find({
+				team: req.user.current_team.id,
+				$or: [
+					{ entireTeam: true },
+					{ userAttendees: req.user._id },
+					{ subdivisionAttendees: { "$in": userSubdivisionIds } }
+				],
+				date: {$gte: new Date()}
+			}).sort("date").exec();
+			
+			res.end( JSON.stringify(events) );
+
+		} catch (err) {
+			console.error(err);
+			res.end("fail");
+		}
+	}));
+
+	app.post("/f/createEvent", requireLogin, requireLeader, Promise.coroutine(function*(req, res) {
 
 		if (req.body.userAttendees == undefined) {
 			req.body.userAttendees = []
@@ -81,7 +83,6 @@ module.exports = function(app, util, schemas) {
 		} else {
 			req.body.sendEmail = false;
 		}
-
 
 		if (req.body.description != "") {
 			if (req.body.entireTeam == "true") {
