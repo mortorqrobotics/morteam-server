@@ -7,6 +7,7 @@ module.exports = function(app, util, schemas) {
 	let extToMime = require("./extToMime.json");
 	let lwip = require("lwip");
 	let Promise = require("bluebird");
+	let https = require("https");
 
 	let requireLogin = util.requireLogin;
 	let requireAdmin = util.requireAdmin;
@@ -35,7 +36,10 @@ module.exports = function(app, util, schemas) {
 			}
 
 			let url = yield util.driveBucket.getSignedUrlAsync("getObject", { Key: req.params.fileId, Expires: 60 });
-			res.redirect(url);
+			// res.redirect(url);
+			http.get(url, function(response) {
+				response.pipe(res);
+			});
 			
 		} catch (err) {
 			console.error(err);
