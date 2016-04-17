@@ -34,7 +34,7 @@ module.exports = function(app, util, schemas) {
 				}
 			}
 
-			let url = yield util.driveBucket.getSignedUrl("getObject", { Key: req.params.fileId, Expires: 60 });
+			let url = yield util.driveBucket.getSignedUrlAsync("getObject", { Key: req.params.fileId, Expires: 60 });
 			res.redirect(url);
 			
 		} catch (err) {
