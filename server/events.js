@@ -65,263 +65,86 @@ module.exports = function(app, util, schemas) {
 
 	app.post("/f/createEvent", requireLogin, requireLeader, Promise.coroutine(function*(req, res) {
 
-		if (req.body.userAttendees == undefined) {
-			req.body.userAttendees = []
-		}
-		if (req.body.subdivisionAttendees == undefined) {
-			req.body.subdivisionAttendees = []
+		req.body.userAttendees = req.body.userAttendees || [];
+		req.body.subdivisionAttendees = req.body.subdivisionAttendees || [];
+
+		req.body.hasAttendance = req.body.hasAttendance == "true";
+		req.body.sendEmail = req.body.sendEmail == "true";
+		req.body.entireTeam = req.body.entireTeam == "true";
+
+		let event = {
+			name: req.body.name,
+			date: new Date(req.body.date),
+			team: req.user.current_team.id,
+			creator: req.user._id,
+			hasAttendance: req.body.hasAttendance
+		};
+
+		if (req.body.description.length > 0) {
+			event.description = req.body.description;
 		}
 
-		if (req.body.hasAttendance == "true") {
-			req.body.hasAttendance = true;
-		} else {
-			req.body.hasAttendance = false;
-		}
+		try {
 
-		if (req.body.sendEmail == "true") {
-			req.body.sendEmail = true;
-		} else {
-			req.body.sendEmail = false;
-		}
+			let users; // TODO: do not query for users unless either email or attendance is true
 
-		if (req.body.description != "") {
-			if (req.body.entireTeam == "true") {
-				Event.create({
-					name: req.body.name,
-					description: req.body.description,
-					entireTeam: true,
-					date: new Date(req.body.date),
-					team: req.user.current_team.id,
-					creator: req.user._id,
-					hasAttendance: req.body.hasAttendance
-				}, function(err, event) {
-					if (err) {
-						console.error(err);
-						res.end("fail");
-					} else {
-						User.find({ teams: {$elemMatch: {id: req.user.current_team.id }} }, "-password", function(err, users) {
-							if (err) {
-								console.error(err);
-								res.end("fail");
-							} else {
-								if (req.body.sendEmail) {
-									let list = util.createRecepientList(users);
-									util.notify.sendMail({
-											from: "MorTeam Notification <notify@morteam.com>",
-											to: list,
-											subject: "New Event on " + readableDate(event.date) + " - " + event.name,
-											html: req.user.firstname + " " + req.user.lastname + " has created an event on " + readableDate(event.date) + ",<br><br>" + event.name + "<br>" + event.description
-									});
-								}
-								if (req.body.hasAttendance) {
-									let attendees = [];
-									User.find({ teams: {$elemMatch: {id: req.user.current_team.id }} }, function(err, users) {
-										for (let i = 0; i < users.length; i++) {
-											attendees.push( { user: users[i]._id, status: "absent" } );
-										}
-										AttendanceHandler.create({
-											event: event._id,
-											event_date: event.date,
-											attendees: attendees,
-											entireTeam: true
-										}, function(err, attendanceHandler) {
-											if (err) {
-												console.error(err);
-												res.end("fail");
-											} else {
-												res.end(JSON.stringify(event));
-											}
-										});
-									});
-								} else {
-									res.end(JSON.stringify(event));
-								}
-							}
-						})
-					}
-				});
+			if (req.body.entireTeam) {
+
+				event.entireTeam = true;
+
+				users = yield User.find({
+					teams: {$elemMatch: {id: req.user.current_team.id}}
+				}, "-password");
+
 			} else {
-				Event.create({
-					name: req.body.name,
-					description: req.body.description,
-					userAttendees: req.body.userAttendees,
-					subdivisionAttendees: req.body.subdivisionAttendees,
-					date: new Date(req.body.date),
-					team: req.user.current_team.id,
-					creator: req.user._id,
-					hasAttendance: req.body.hasAttendance
-				}, function(err, event) {
-					if (err) {
-						console.error(err);
-						res.end("fail");
-					} else {
-						User.find({ $or: [
-							{ _id: { $in: req.body.userAttendees } },
-							{ subdivisions: { $elemMatch: { "_id": { $in: req.body.subdivisionAttendees } } } }
-						] }, "-password", function(err, users) {
-							if (err) {
-								console.error(err);
-								res.end("fail");
-							} else {
-								if (req.body.sendEmail) {
-									let list = util.createRecepientList(users);
-									util.notify.sendMail({
-											from: "MorTeam Notification <notify@morteam.com>",
-											to: list,
-											subject: "New Event on " + readableDate(event.date) + " - " + event.name,
-											html: req.user.firstname + " " + req.user.lastname + " has created an event on " + util.readableDate(event.date) + ",<br><br>" + event.name + "<br>" + event.description
-									});
-								}
-								if (req.body.hasAttendance) {
-									let attendees = [];
-									for (let i = 0; i < req.body.userAttendees.length; i++) {
-										attendees.push( { user: req.body.userAttendees[i], status: "absent" } );
-									}
-									User.find({ subdivisions: { $elemMatch: { _id: {"$in": req.body.subdivisionAttendees} } } }, function(err, users) {
-										for (let i = 0; i < users.length; i++) {
-											attendees.push( { user: users[i]._id, status: "absent" } );
-										}
-										attendees = util.removeDuplicates(attendees);
-										AttendanceHandler.create({
-											event: event._id,
-											event_date: event.date,
-											attendees: attendees
-										}, function(err, attendanceHandler) {
-											if (err) {
-												console.error(err);
-												res.end("fail");
-											} else {
-												res.end( JSON.stringify(event) )
-											}
-										});
-									});
-								} else {
-									res.end(JSON.stringify(event));
-								}
-							}
-						})
-					}
+
+				event.userAttendees = req.body.userAttendees;
+				event.subdivisionAttendees = req.body.subdivisionAttendees;
+
+				users = yield User.find({ $or: [
+					{ _id: { $in: req.body.userAttendees } },
+					{ subdivisions: { $elemMatch: { "_id": { $in: req.body.subdivisionAttendees } } } }
+				] }, "-password");
+
+			}
+
+			event = yield Event.create(event);
+
+			if (req.body.sendEmail) {
+
+				let list = util.createRecepientList(users);
+
+				yield util.sendEmail({
+					to: list,
+					subject: "New Event on " + util.readableDate(event.date) + " - " + event.name,
+					html: req.user.firstname + " " + req.user.lastname + " has created an event on " + util.readableDate(event.date) + ",<br><br>" + event.name + "<br>" + req.body.description
+				});
+
+			}
+
+			if (req.body.hasAttendance) {
+
+				let attendees = users.map(attendee => ({
+					user: attendee._id,
+					status: "absent"
+				}));
+
+				yield AttendanceHandler.create({
+					event: event._id,
+					event_date: event.date,
+					attendees: attendees,
+					entireTeam: req.body.entireTeam
 				});
 			}
-		} else {
-			if (req.body.entireTeam == "true") {
-				Event.create({
-					name: req.body.name,
-					entireTeam: true,
-					date: new Date(req.body.date),
-					team: req.user.current_team.id,
-					creator: req.user._id,
-					hasAttendance: req.body.hasAttendance
-				}, function(err, event) {
-					if (err) {
-						console.error(err);
-						res.end("fail");
-					} else {
-						User.find({ teams: {$elemMatch: {id: req.user.current_team.id }} }, "-password", function(err, users) {
-							if (err) {
-								console.error(err);
-								res.end("fail");
-							} else {
-								if (req.body.sendEmail) {
-									let list = util.createRecepientList(users);
-									util.notify.sendMail({
-											from: "MorTeam Notification <notify@morteam.com>",
-											to: list,
-											subject: "New Event on " + readableDate(event.date) + " - " + event.name,
-											html: req.user.firstname + " " + req.user.lastname + " has created an event on " + util.readableDate(event.date) + ",<br><br>" + event.name
-									});
-								}
-								if (req.body.hasAttendance) {
-									let attendees = [];
-									User.find({ teams: {$elemMatch: {id: req.user.current_team.id }} }, function(err, users) {
-										for (let i = 0; i < users.length; i++) {
-											attendees.push( { user: users[i]._id, status: "absent" } );
-										}
-										AttendanceHandler.create({
-											event: event._id,
-											event_date: event.date,
-											attendees: attendees,
-											entireTeam: true
-										}, function(err, attendanceHandler) {
-											if (err) {
-												console.error(err);
-												res.end("fail");
-											} else {
-												res.end( JSON.stringify(event) )
-											}
-										});
-									});
-								} else {
-									res.end(JSON.stringify(event));
-								}
-							}
-						})
-					}
-				});
-			} else {
-				Event.create({
-					name: req.body.name,
-					userAttendees: req.body.userAttendees,
-					subdivisionAttendees: req.body.subdivisionAttendees,
-					date: new Date(req.body.date),
-					team: req.user.current_team.id,
-					creator: req.user._id,
-					hasAttendance: req.body.hasAttendance
-				}, function(err, event) {
-					if (err) {
-						console.error(err);
-						res.end("fail");
-					} else {
-						User.find({ $or: [
-							{ _id: { $in: req.body.userAttendees } },
-							{ subdivisions: { $elemMatch: { "_id": { $in: req.body.subdivisionAttendees } } } }
-						] }, "-password", function(err, users) {
-							if (err) {
-								console.error(err);
-								res.end("fail");
-							} else {
-								if (req.body.sendEmail) {
-									let list = util.createRecepientList(users);
-									util.notify.sendMail({
-											from: "MorTeam Notification <notify@morteam.com>",
-											to: list,
-											subject: "New Event on " + readableDate(event.date) + " - " + event.name,
-											html: req.user.firstname + " " + req.user.lastname + " has created an event on " + util.readableDate(event.date) + ",<br><br>" + event.name
-									});
-								}
-								if (req.body.hasAttendance) {
-									let attendees = [];
-									for (let i = 0; i < req.body.userAttendees.length; i++) {
-										attendees.push( { user: req.body.userAttendees[i], status: "absent" } );
-									}
-									User.find({ subdivisions: { $elemMatch: { _id: {"$in": req.body.subdivisionAttendees} } } }, function(err, users) {
-										for (let i = 0; i < users.length; i++) {
-											attendees.push( { user: users[i]._id, status: "absent" } );
-										}
-										attendees = removeDuplicates(attendees);
-										AttendanceHandler.create({
-											event: event._id,
-											event_date: event.date,
-											attendees: attendees
-										}, function(err, attendanceHandler) {
-											if (err) {
-												console.error(err);
-												res.end("fail");
-											} else {
-												res.end( JSON.stringify(event) )
-											}
-										});
-									});
-								} else {
-									res.end(JSON.stringify(event));
-								}
-							}
-						})
-					}
-				});
-			}
+		
+			res.end(JSON.stringify(event));
+
+		} catch (err) {
+			console.error(err);
+			res.end("fail");
 		}
-	});
+	}));
+
 	app.post("/f/deleteEvent", requireLogin, requireLeader, function(req, res) {
 		Event.findOneAndRemove({_id: req.body.event_id}, function(err) {
 			if (err) {
