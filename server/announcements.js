@@ -56,7 +56,7 @@ module.exports = function(app, util, schemas) {
 			
 			} else { // this means that the user selected a specific subdivision to send the announcement to
 	
-				annoucenement.subdivisionAudience = [new ObjectId(String(req.body.audience))];
+				announcement.subdivisionAudience = [new ObjectId(String(req.body.audience))];
 				announcement = yield Announcement.create(announcement);
 	
 				// find users that have a subdivision which has an _id that is equal to req.body.audience(the subdivision _id)
