@@ -29,7 +29,7 @@ module.exports = function(app, util, schemas, publicDir, profpicDir) {
 				} // said user has to be a member of the current team of whoever is loading the page
 			}).exec();
 			if (user) {
-				// load user.ejs page with said user"s profile info
+				// load user.ejs page with said user's profile info
 				res.render("user", {
 					firstname: user.firstname,
 					lastname: user.lastname,

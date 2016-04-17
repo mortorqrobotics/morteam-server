@@ -37,10 +37,12 @@ module.exports = function(app, util, schemas) {
 
 			let url = yield util.driveBucket.getSignedUrlAsync("getObject", { Key: req.params.fileId, Expires: 60 });
 			// res.redirect(url);
+			// this caused a security flaw
+			// the S3 key was included in the url and sent to the user
 			https.get(url, function(response) {
 				response.pipe(res);
 			});
-			
+		
 		} catch (err) {
 			console.error(err);
 			res.end("fail");
@@ -69,84 +71,84 @@ module.exports = function(app, util, schemas) {
 		}
 	}));
 
-	app.post("/f/getSubFolders", requireLogin, function(req, res) {
+	app.post("/f/getSubFolders", requireLogin, Promise.coroutine(function*(req, res) {
 		let userSubdivisionIds = util.activeSubdivisionIds(req.user.subdivisions);
-		Folder.find({team: req.user.current_team.id, parentFolder: req.body.folder_id, $or: [
-			{entireTeam: true},
-			{userMembers: req.user._id},
-			{subdivisionMembers: {"$in": userSubdivisionIds} }
-		]}, function(err, folders) {
-			if (err) {
-				console.error(err);
-				res.end("fail");
-			} else {
-				res.end(JSON.stringify(folders));
-			}
-		})
-	})
-	app.post("/f/getFilesInFolder", requireLogin, function(req, res) {
-		File.find({folder: req.body.folder_id}, function(err, files) {
-			if (err) {
-				console.error(err);
-				res.end("fail");
-			} else {
-				res.end(JSON.stringify(files));
-			}
-		})
-	})
-	app.post("/f/createFolder", requireLogin, function(req, res) {
-		if (req.body.name.length < 22) {
-			if (req.body.type == "teamFolder") {
-				Folder.create({
-					name: req.body.name,
-					team: req.user.current_team.id,
-					userMembers: req.body.userMembers,
-					subdivisionMembers: req.body.subdivisionMembers,
-					creator: req.user._id,
-					parentFolder: undefined,
-					ancestors: [],
-					defaultFolder: false
-				}, function(err, folder) {
-					if (err) {
-						console.error(err);
-						res.end("fail");
-					} else {
-						res.end(JSON.stringify(folder));
-					}
-				});
-			} else if (req.body.type == "subFolder") {
-				Folder.create({
-					name: req.body.name,
-					team: req.user.current_team.id,
-					userMembers: req.body.userMembers,
-					subdivisionMembers: req.body.subdivisionMembers,
-					parentFolder: req.body.parentFolder,
-					ancestors: req.body.ancestors.concat([req.body.parentFolder]),
-					creator: req.user._id,
-					defaultFolder: false
-				}, function(err, folder) {
-					if (err) {
-						console.error(err);
-						res.end("fail");
-					} else {
-						res.end(JSON.stringify(folder));
-					}
-				});
-			} else {
-				res.end("fail");
-			}
-		} else {
+		try {
+
+			let folders = yield Folder.find({
+				team: req.user.current_team.id,
+				parentFolder: req.body.folder_id, $or: [
+					{entireTeam: true},
+					{userMembers: req.user._id},
+					{subdivisionMembers: {"$in": userSubdivisionIds} }
+				]
+			});
+
+			res.end(JSON.stringify(folders));
+
+		} catch (err) {
+			console.error(err);
 			res.end("fail");
 		}
-	});
-	app.post("/f/uploadFile", requireLogin, multer({limits: 50*1000000 /* 50 megabytes */}).single("uploadedFile"), function(req, res) {
+	}));
 
-		File.find({}).populate( "folder", null, { team: req.user.current_team.id } ).exec(function(err, files) {
-			if (err) console.error(err);
-			console.log(files);
-		});
+	app.post("/f/getFilesInFolder", requireLogin, Promise.coroutine(function*(req, res) {
+		try {
 
-		let ext = req.file.originalname.substring(req.file.originalname.lastIndexOf(".")+1).toLowerCase() || "unknown";
+			let files = yield File.find({folder: req.body.folder_id});
+
+			res.end(JSON.stringify(files));
+
+		} catch (err) {
+			console.error(err);
+			res.end("fail");
+		}
+	}));
+
+	app.post("/f/createFolder", requireLogin, Promise.coroutine(function*(req, res) {
+
+		if (req.body.name.length < 22) {
+			return res.end("fail");
+		}
+
+		if (req.body.type != "teamFolder" && req.body.type != "subFolder") {
+			return res.end("fail");
+		}
+
+		try {
+
+			let folder = {
+				name: req.body.name,
+				team: req.user.current_team.id,
+				userMembers: req.body.userMembers,
+				subdivisionMembers: req.body.subdivisionMembers,
+				creator: req.user._id,
+				defaultFolder: false
+			};
+
+			if (req.body.type == "teamFolder") {
+				folder.parentFolder = undefined;
+				folder.ancestors = [];
+			} else if (req.body.type == "subFolder") {
+				folder.parentFolder = req.body.parentFolder;
+				folder.ancestors = req.body.ancestors.concat([req.body.parentFolder]);
+			}
+
+			folder = yield Folder.create(folder);
+
+			res.end(JSON.stringify(folder));
+
+		} catch (err) {
+			console.error(err);
+			res.end("fail");
+		}
+	}));
+
+	app.post("/f/uploadFile", requireLogin, multer({
+		limits: 50 * 1000000 // 50 megabytes
+	}).single("uploadedFile"), Promise.coroutine(function*(req, res) {
+
+		let ext = req.file.originalname.substring(req.file.originalname.lastIndexOf(".") + 1).toLowerCase() || "unknown";
 
 		let mime = extToMime[ext];
 		let disposition;
@@ -160,126 +162,70 @@ module.exports = function(app, util, schemas) {
 
 		req.body.fileName = util.normalizeDisplayedText(req.body.fileName);
 
-		File.create({
-			name: req.body.fileName,
-			originalName: req.file.originalname,
-			folder: req.body.currentFolderId,
-			size: req.file.size,
-			type: util.extToType(ext),
-			mimetype: mime,
-			creator: req.user._id
-		}, function(err, file) {
-			if (err) {
-				console.error(err);
-				res.end("fail");
-			} else {
-				util.uploadToDrive(req.file.buffer, file._id, mime, disposition, function(err, data) {
-					if (err) {
-						console.error(err);
-						res.end("fail");
-					} else {
-						if (file.type != "image") {
-							res.end(JSON.stringify(file));
-						} else {
-							lwip.open(req.file.buffer, ext, function(err, image) {
-								if (err) {
-									console.error(err);
-									res.end("fail");
-								} else {
-									let hToWRatio = image.height()/image.width();
-									if (hToWRatio >= 1) {
-										image.resize(280, 280*hToWRatio, function(err, image) {
-											if (err) {
-												console.error(err);
-												res.end("fail");
-											} else {
-												image.toBuffer(ext, function(err, buffer) {
-													if (err) {
-														console.error(err);
-														res.end("fail");
-													} else {
-														util.uploadToDrive(buffer, file._id+"-preview", mime, disposition, function(err, data) {
-															if (err) {
-																console.error(err);
-																res.end("fail");
-															} else {
-																res.end(JSON.stringify(file));
-															}
-														});
-													}
-												})
-											}
-										})
-									} else {
-										image.resize(280/hToWRatio, 280, function(err, image) {
-											if (err) {
-												console.error(err);
-												res.end("fail");
-											} else {
-												image.toBuffer(ext, function(err, buffer) {
-													if (err) {
-														console.error(err);
-														res.end("fail");
-													} else {
-														util.uploadToDrive(buffer, file._id+"-preview", mime, disposition, function(err, data) {
-															if (err) {
-																console.error(err);
-																res.end("fail");
-															} else {
-																res.end(JSON.stringify(file));
-															}
-														});
-													}
-												})
-											}
-										})
-									}
-								}
-							});
-						}
-					}
-				});
-			}
-		})
-	})
-	app.post("/f/deleteFile", requireLogin, function(req, res) {
-		File.findOne({_id: req.body.file_id}, function(err, file) {
-			if (err) {
-				console.error(err);
-				res.end("fail");
-			} else {
-				if (req.user._id.toString() == file.creator.toString() || req.user.current_team.position == "admin") {
-					util.deleteFileFromDrive(req.body.file_id, function(err, data) {
-						if (err) {
-							console.error(err);
-							res.end("fail");
-						} else {
-							file.remove(function(err) {
-								if (err) {
-									console.error(err);
-									res.end("fail");
-								} else {
-									if (req.body.isImg) {
-											util.deleteFileFromDrive(req.body.file_id+"-preview", function(err, data) {
-												if (err) {
-													console.error(err);
-													res.end("fail");
-												} else {
-													res.end("success");
-												}
-											})
-									} else {
-										res.end("success");
-									}
-								}
-							});
-						}
-					})
+		try {
+
+			let file = yield File.create({
+				name: req.body.fileName,
+				originalName: req.file.originalname,
+				folder: req.body.currentFolderId,
+				size: req.file.size,
+				type: util.extToType(ext),
+				mimetype: mime,
+				creator: req.user._id
+			});
+
+			yield util.uploadToDriveAsync(req.file.buffer, file._id, mime, disposition);
+			
+			if (file.type == "image") {
+			
+				let image = yield lwip.openAsync(req.file.buffer, ext);
+
+				let hToWRatio = image.height() / image.width();
+				if (hToWRatio >= 1) {
+					image = yield image.resize(280, 280 * hToWRatio);
 				} else {
-					res.end("fail");
+					image = yield image.resize(280 / hToWRatio, 280);
 				}
+
+				Promise.promisifyAll(image);
+				let buffer = yield image.toBufferAsync(ext);
+
+				util.uploadToDriveAsync(buffer, file._id + "-preview", mime, disposition);
 			}
-		});
-	});
+
+			res.end(JSON.stringify(file));
+
+		} catch (err) {
+			console.error(err);
+			res.end("fail");
+		}
+	}));
+
+	app.post("/f/deleteFile", requireLogin, Promise.coroutine(function*(req, res) {
+		try {
+
+			let file = yield File.findOne({_id: req.body.file_id}).populate("folder").exec();
+
+			if (req.user._id.toString() != file.creator.toString()
+					&& !( req.user.current_team.position == "admin"
+						&& (file.folder.team == req.user.current_team.id))) {
+				return res.end("fail");
+			}
+
+			yield util.deleteFileFromDriveAsync(req.body.file_id);
+			
+			yield file.remove();
+			
+			if (req.body.isImg) {
+				yield util.deleteFileFromDriveAsync(req.body.file_id + "-preview");
+			}
+
+			res.end("success");
+
+		} catch (err) {
+			console.error(err);
+			res.end("fail");
+		}
+	}));
 
 };
