@@ -14,6 +14,7 @@ module.exports = function() {
 	let AWS = require("aws-sdk");
 	let AWSConfigPath = require("path").join(__dirname, "/aws-config.json");
 	AWS.config.loadFromPath(AWSConfigPath);
+	let Promise = require("bluebird");
 
  return new (function() {
 
@@ -65,6 +66,9 @@ module.exports = function() {
 	 // define AWS S3 buckets used
 	 this.profPicBucket = new AWS.S3({params: {Bucket: "profilepics.morteam.com"}});
 	 this.driveBucket = new AWS.S3({params: {Bucket: "drive.morteam.com"}});
+
+	 Promise.promisifyAll(this.profPicBucket);
+	 Promise.promisifyAll(this.driveBucket);
 
 	 // quick way to send a 404: not found error
 	 this.send404 = function(res) {

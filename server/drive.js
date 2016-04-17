@@ -6,6 +6,7 @@ module.exports = function(app, util, schemas) {
 	let multer = require("multer");
 	let extToMime = require("./extToMime.json");
 	let lwip = require("lwip");
+	let Promise = require("bluebird");
 
 	let requireLogin = util.requireLogin;
 	let requireAdmin = util.requireAdmin;
@@ -13,66 +14,57 @@ module.exports = function(app, util, schemas) {
 	let Folder = schemas.Folder;
 	let File = schemas.File;
 
-	//assign variables to util functions(and objects) and database schemas
-	for (key in util) {
-		eval("var " + key + " = util." + key + ";");
-	}
-	for (key in schemas) {
-		eval("var " + key + " = schemas." + key + ";");
-	}
+	app.get("/file/:fileId", requireLogin, Promise.coroutine(function*(req, res) {
+		let userSubdivisionIds = util.activeSubdivisionIds(req.user.subdivisions);
+		try {
 
-	app.get("/file/:fileId", requireLogin, function(req, res) {
-		let userSubdivisionIds = util.activeSubdivisionIds(req.user.subdivisions);
-		if (req.params.fileId.indexOf("-preview") == -1) {
-			File.findOne({_id: req.params.fileId}).populate("folder").exec(function(err, file) {
-				if (err) {
-					console.error(err);
-					res.end("fail");
-				} else {
-					if (file) {
-						if ( (file.folder.team == req.user.current_team.id && file.folder.entireTeam) || file.folder.userMembers.indexOf(req.user._id)>-1 || file.folder.subdivisionMembers.hasAnythingFrom(userSubdivisionIds) ) {
-							driveBucket.getSignedUrl("getObject", { Key: req.params.fileId, Expires: 60 }, function (err, url) {
-								if (err) {
-									console.error(err);
-									res.end("fail");
-								} else {
-									res.redirect(url);
-								}
-							});
-						} else {
-							res.end("restricted");
-						}
-					} else {
-						res.end("fail");
-					}
+			if (req.params.fileId.indexOf("-preview") == -1) {
+				
+				let file = yield File.findOne({_id: req.params.fileId}).populate("folder").exec();
+				
+				if (!file) {
+					return res.end("fail");
 				}
-			});
-		} else {
-			util.driveBucket.getSignedUrl("getObject", { Key: req.params.fileId, Expires: 60 }, function (err, url) {
-				if (err) {
-					console.error(err);
-					res.end("fail");
-				} else {
-					res.redirect(url);
+
+				if (!( (file.folder.team == req.user.current_team.id && file.folder.entireTeam)
+					|| file.folder.userMembers.indexOf(req.user._id) > -1
+					|| file.folder.subdivisionMembers.hasAnythingFrom(userSubdivisionIds) )) {
+				
+					return res.end("restricted");
 				}
-			});
-		}
-	});
-	app.post("/f/getTeamFolders", requireLogin, function(req, res) {
-		let userSubdivisionIds = util.activeSubdivisionIds(req.user.subdivisions);
-		Folder.find({team: req.user.current_team.id, parentFolder: { "$exists": false }, $or: [
-			{entireTeam: true},
-			{userMembers: req.user._id},
-			{subdivisionMembers: {"$in": userSubdivisionIds} }
-		]}, function(err, folders) {
-			if (err) {
-				console.error(err);
-				res.end("fail");
-			} else {
-				res.end(JSON.stringify(folders));
 			}
-		})
-	})
+
+			let url = yield util.driveBucket.getSignedUrl("getObject", { Key: req.params.fileId, Expires: 60 });
+			res.redirect(url);
+			
+		} catch (err) {
+			console.error(err);
+			res.end("fail");
+		}
+	}));
+
+	app.post("/f/getTeamFolders", requireLogin, Promise.coroutine(function*(req, res) {
+		let userSubdivisionIds = util.activeSubdivisionIds(req.user.subdivisions);
+		try {
+
+			let folders = yield Folder.find({
+				team: req.user.current_team.id,
+				parentFolder: { "$exists": false },
+				$or: [
+					{entireTeam: true},
+					{userMembers: req.user._id},
+					{subdivisionMembers: {"$in": userSubdivisionIds} }
+				]
+			});
+
+			res.end(JSON.stringify(folders));
+
+		} catch (err) {
+			console.error(err);
+			res.end("fail");
+		}
+	}));
+
 	app.post("/f/getSubFolders", requireLogin, function(req, res) {
 		let userSubdivisionIds = util.activeSubdivisionIds(req.user.subdivisions);
 		Folder.find({team: req.user.current_team.id, parentFolder: req.body.folder_id, $or: [
