@@ -77,7 +77,8 @@ module.exports = function(app, util, schemas, publicDir, profpicDir) {
 
 			let user = yield User.findOne({
 				$or: [{username: req.body.username}, {email: req.body.username}]
-			}).exec();
+			}).select("+password").exec();
+
 			if (user) {
 				let isMatch = yield user.comparePassword(req.body.password);
 				if (isMatch) {
