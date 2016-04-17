@@ -105,10 +105,10 @@ module.exports = function(app, util, schemas) {
 				id: req.body.team_id,
 				position: users.length == 0 ? "admin" : "member"
 			};
-			user.teams.push(newTeam);
 			if (user.teams.length == 0) {
 				user.current_team = newTeam;
 			}
+			user.teams.push(newTeam);
 
 			// TODO: does this do what it is supposed to do?
 			yield AttendanceHandler.update({

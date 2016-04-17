@@ -20,6 +20,7 @@ module.exports = function(app, util, schemas, publicDir, profpicDir) {
 	// load profile page of any user based on _id
 	app.get("/u/:id", Promise.coroutine(function*(req, res) {
 		try {
+
 			let user = yield User.findOne({
 				_id: req.params.id,
 				teams: {
@@ -28,22 +29,24 @@ module.exports = function(app, util, schemas, publicDir, profpicDir) {
 					}
 				} // said user has to be a member of the current team of whoever is loading the page
 			}).exec();
-			if (user) {
-				// load user.ejs page with said user's profile info
-				res.render("user", {
-					firstname: user.firstname,
-					lastname: user.lastname,
-					_id: user._id,
-					email: user.email,
-					phone: user.phone,
-					profpicpath: user.profpicpath,
-					viewedUserPosition: util.findTeamInUser(user, req.user.current_team.id).position,
-					viewerUserPosition: req.user.current_team.position,
-					viewerUserId: req.user._id
-				});
-			} else {
-				util.userNotFound(res);
+
+			if (!user) {
+				return util.userNotFound(res);
 			}
+
+			// load user.ejs page with said user's profile info
+			res.render("user", {
+				firstname: user.firstname,
+				lastname: user.lastname,
+				_id: user._id,
+				email: user.email,
+				phone: user.phone,
+				profpicpath: user.profpicpath,
+				viewedUserPosition: util.findTeamInUser(user, req.user.current_team.id).position,
+				viewerUserPosition: req.user.current_team.position,
+				viewerUserId: req.user._id
+			});
+
 		} catch (err) {
 			console.error(err);
 			send404(res);
