@@ -18,16 +18,16 @@ let multer = require("multer"); // for file uploads
 let lwip = require("lwip");
 
 let config; // contains passwords and other sensitive info
-if (fs.existsSync(require("path").join(__dirname, "config.json"))) {
+let configPath = require("path").join(__dirname, "config.json")
+if (fs.existsSync(configPath)) {
 	config = require("./config.json");
-}
-else {
+} else {
 	config = {
 		"mailgunUser": "user@morteam.com",
 		"malgunPass": "password",
 		"dbName": "morteam"
 	};
-	fs.writeFileSync("config.json", JSON.stringify(config, null, "\t"));
+	fs.writeFileSync(configPath, JSON.stringify(config, null, "\t"));
 	console.log("Generated default config.json");
 }
 
