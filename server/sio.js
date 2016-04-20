@@ -70,6 +70,7 @@ module.exports = function(io, util, schemas) {
 		});
 
 		socket.on("message", function(msg) {
+			msg.content = util.normalizeDisplayedText(msg.content);
 			for ( let user_id in online_clients ) {
 				let client_chats = online_clients[user_id].chats.map(chat_id => chat_id.toString());
 				if ( ~client_chats.indexOf( msg.chat_id ) && user_id != sess._id ) {
