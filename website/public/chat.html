@@ -772,11 +772,11 @@
 
             $.post("/f/sendMessage", {chat_id: $(".chat_name.selected").attr("data-chatid"), content:  $(".reply_textarea").val() }, function(responseText){
               if(responseText == "success"){
-                var newMsgContent = normalizeDisplayedText( $(".reply_textarea").val() );
+                var newMsgContent = $(".reply_textarea").val(); // normalizeDisplayedText( $(".reply_textarea").val() );
                 if( $('.bubble_wrapper.istyping').length != 0 ){
                   $('.bubble_wrapper.istyping').before("<div class='bubble_wrapper'><div class='self_bubble'>" + newMsgContent + "</div></div>");
                 }else{
-                  $('.chat_area').append("<div class='bubble_wrapper'><div class='self_bubble'>" + newMsgContent + "</div></div>");
+                  $('.chat_area').append("<div class='bubble_wrapper'><div class='self_bubble'>" + normalizeDisplayedText(newMsgContent) + "</div></div>");
                 }
                 $(".chat_area").animate({
                     scrollTop: $('.chat_area')[0].scrollHeight
