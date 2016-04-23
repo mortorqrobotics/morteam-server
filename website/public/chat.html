@@ -767,16 +767,18 @@
           }
         })
         $(document).on("click", ".send_button", function(){
-          if($(".reply_textarea").val() != ""){
+			var content = $(".reply_textarea").val(); 
+          if(content != ""){
             var $this = $(this);
 
-            $.post("/f/sendMessage", {chat_id: $(".chat_name.selected").attr("data-chatid"), content:  $(".reply_textarea").val() }, function(responseText){
+            $.post("/f/sendMessage", {chat_id: $(".chat_name.selected").attr("data-chatid"), content:  content }, function(responseText){
+
               if(responseText == "success"){
-                var newMsgContent = $(".reply_textarea").val(); // normalizeDisplayedText( $(".reply_textarea").val() );
+                var newMsgContent = normalizeDisplayedText( content );
                 if( $('.bubble_wrapper.istyping').length != 0 ){
                   $('.bubble_wrapper.istyping').before("<div class='bubble_wrapper'><div class='self_bubble'>" + newMsgContent + "</div></div>");
                 }else{
-                  $('.chat_area').append("<div class='bubble_wrapper'><div class='self_bubble'>" + normalizeDisplayedText(newMsgContent) + "</div></div>");
+                  $('.chat_area').append("<div class='bubble_wrapper'><div class='self_bubble'>" + newMsgContent + "</div></div>");
                 }
                 $(".chat_area").animate({
                     scrollTop: $('.chat_area')[0].scrollHeight
@@ -789,14 +791,14 @@
                 if( $(".chat_name.selected").hasClass("group_chat") ){
                   socket.emit("message", {
                     chat_id: $(".chat_name.selected").attr("data-chatid"),
-                    content: newMsgContent,
+                    content: content,
                     chat_name: $(".chat_name.selected > span").html(),
                     type: "group"
                   });
                 }else{
                   socket.emit("message", {
                     chat_id: $(".chat_name.selected").attr("data-chatid"),
-                    content: newMsgContent,
+                    content: content,
                     type: "private"
                   })
                 }
