@@ -771,45 +771,58 @@
           if(content != ""){
             var $this = $(this);
 
+			var chat_id = $(".chat_name.selected").attr("data-chatid");
+
+			var messageHtml = "<div class='bubble_wrapper'><div class='self_bubble pending'>" + normalizeDisplayedText(content) + "</div></div>";
+			if ($("bubble_wrapper.istyping").length != 0) {
+				$(".bubble_wrapper.istyping").before(messageHtml);
+			} else {
+				$(".chat_area").append(messageHtml);
+			}
+
+			$(".chat_area").animate({
+				scrollTop: $('.chat_area')[0].scrollHeight
+			}, 400);
+
+			$(".reply_textarea").val("");
+			autosize.update(ta); // resizes reply text box
+			$('.chat_area').css('height', "calc(100vh - 58px - " + $this.height() + "px)"); // resizes div.chat_area according to changes that
+
             $.post("/f/sendMessage", {chat_id: $(".chat_name.selected").attr("data-chatid"), content:  content }, function(responseText){
 
-              if(responseText == "success"){
-                var newMsgContent = normalizeDisplayedText( content );
-                if( $('.bubble_wrapper.istyping').length != 0 ){
-                  $('.bubble_wrapper.istyping').before("<div class='bubble_wrapper'><div class='self_bubble'>" + newMsgContent + "</div></div>");
-                }else{
-                  $('.chat_area').append("<div class='bubble_wrapper'><div class='self_bubble'>" + newMsgContent + "</div></div>");
-                }
-                $(".chat_area").animate({
-                    scrollTop: $('.chat_area')[0].scrollHeight
-                }, 400);
+				var pending = $(".pending");
+				if (pending.length == 0) {
+					return; // TODO: is there anything else to do here?
+				}
+				pending = $(pending.get(0));
 
-                $(".reply_textarea").val("");
-                autosize.update(ta); // resizes reply text box
-                $('.chat_area').css('height', "calc(100vh - 58px - " + $this.height() + "px)"); // resizes div.chat_area according to changes that
+              if(responseText == "success"){
+				pending.removeClass("pending");
 
                 if( $(".chat_name.selected").hasClass("group_chat") ){
                   socket.emit("message", {
-                    chat_id: $(".chat_name.selected").attr("data-chatid"),
+                    chat_id: chat_id,
                     content: content,
                     chat_name: $(".chat_name.selected > span").html(),
                     type: "group"
                   });
                 }else{
                   socket.emit("message", {
-                    chat_id: $(".chat_name.selected").attr("data-chatid"),
+                    chat_id: chat_id,
                     content: content,
                     type: "private"
                   })
                 }
-                socket.emit('stop typing', {chat_id: $(".chat_name.selected").attr("data-chatid") });
+                socket.emit('stop typing', {chat_id: chat_id });
 
 
                 if( $(".chat_name:not(.compose)").get(0) != $(".chat_name.selected") ){
                   $(".chat_search_li").after( $(".chat_name.selected") );
                 }
 
-              }
+			  } else {
+				pending.remove(); // TODO: more error handling here?
+			  }
             })
           }
         });

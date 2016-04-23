@@ -2614,3 +2614,7 @@ th{
 .audience_globe:hover{
 	color: #555555;
 }
+
+.pending {
+	color: #777777;
+}
