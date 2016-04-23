@@ -774,7 +774,7 @@
 			var chat_id = $(".chat_name.selected").attr("data-chatid");
 
 			var messageHtml = "<div class='bubble_wrapper'><div class='self_bubble pending'>" + normalizeDisplayedText(content) + "</div></div>";
-			if ($("bubble_wrapper.istyping").length != 0) {
+			if ($(".bubble_wrapper.istyping").length != 0) {
 				$(".bubble_wrapper.istyping").before(messageHtml);
 			} else {
 				$(".chat_area").append(messageHtml);
