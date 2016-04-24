@@ -46,21 +46,17 @@ function getTimeNow() {
     return Hours + ":" + Minutes + " " + suffix;
 }
 function standardizeTime(date) {
-    var Hours = date.getHours();
-    var suffix;
-    if (parseInt(Hours) > 12) {
-        Hours = (parseInt(Hours) - 12).toString();
-        suffix = "PM";
-    } else if (Hours == "12") {
-        suffix = "PM";
-    } else {
-        suffix = "AM";
+    var hours = date.getHours();
+    var suffix = hours < 12 ? "AM" : "PM";
+	hours = (hours + 11) % 12 + 1; // probably too clever
+	hours = hours.toString();
+
+    var minutes = date.getMinutes().toString();
+    if (minutes.length == 1) {
+        minutes = "0" + minutes;
     }
-    var Minutes = date.getMinutes();
-    if (parseInt(Minutes) < 10) {
-        Minutes = "0" + Minutes;
-    }
-    return Hours + ":" + Minutes + " " + suffix;
+
+    return hours + ":" + minutes + " " + suffix;
 }
 function removeHTML(text){
   return text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
