@@ -525,19 +525,15 @@
       $(window).resize(function(){
         if( $(".ad").css("display") == "none" ){
           if($(".hide_leftbar").hasClass("glyphicon-chevron-left")){
-            console.log("no ad, sidebar");
             $(".chat_wrapper").css("width", "calc(100vw - 260px)");
           }else{
             $(".chat_wrapper").css("width", "100vw");
-            console.log("no ad, no sidebar");
           }
         }else{
           if($(".hide_leftbar").hasClass("glyphicon-chevron-left")){
             $(".chat_wrapper").css("width", "calc(100vw - 460px)");
-            console.log("ad, sidebar");
           }else{
             $(".chat_wrapper").css("width", "calc(100vw - 200px)");
-            console.log("ad, no sidebar");
           }
         }
       });
@@ -951,19 +947,15 @@
         function fixAdLayout(){
           if( $(".ad").css("display") == "none" ){
             if($(".hide_leftbar").hasClass("glyphicon-chevron-left")){
-              console.log("no ad, sidebar");
               $(".chat_wrapper").css("width", "calc(100vw - 260px)");
             }else{
               $(".chat_wrapper").css("width", "100vw");
-              console.log("no ad, no sidebar");
             }
           }else{
             if($(".hide_leftbar").hasClass("glyphicon-chevron-left")){
               $(".chat_wrapper").css("width", "calc(100vw - 460px)");
-              console.log("ad, sidebar");
             }else{
               $(".chat_wrapper").css("width", "calc(100vw - 200px)");
-              console.log("ad, no sidebar");
             }
           }
         }
