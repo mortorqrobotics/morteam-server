@@ -112,7 +112,7 @@ module.exports = function(io, util, schemas) {
 		socket.on("get clients", function() {
 			var obj = {};
 			for (let key in online_clients) {
-				obj[key] = 0; // yeah... don't want to break mobile quite yet
+				obj[key] = true; // yeah... don't want to break mobile quite yet
 				// TODO: break mobile and make this sane
 			}
 			socket.emit("get clients", obj);
