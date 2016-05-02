@@ -175,7 +175,7 @@ module.exports = function(app, util, schemas) {
 
 	app.post("/f/updateAttendanceForEvent", requireLogin, requireLeader, Promise.coroutine(function*(req, res) {
 		try {
-		
+
 			yield AttendanceHandler.update({
 				event: req.body.event_id
 			}, {
@@ -190,29 +190,61 @@ module.exports = function(app, util, schemas) {
 		}
 	}));
 
+	function getPresencesAbsences(attendanceHandlers, userId) {
+		let absences = [];
+		let present = 0;
+		for (let handler of attendanceHandlers) {
+			for (let attendee of handler.attendees) {
+				if (attendee.user == userId) {
+					if (attendee.status == "absent") {
+						absences.push(handler.event);
+					} else if (attendee.status == "present") {
+						present++;
+					}
+					// do nothing if the absense is excused
+				}
+			}
+		}
+		return {present: present, absences: absences};
+	}
+
 	app.post("/f/getUserAbsences", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
 			let handlers = yield AttendanceHandler.find({
-				event_date:{ "$lte": new Date() },
+				event_date: { "$lte": new Date() },
 				"attendees.user": req.body.user_id
 			}).populate("event").exec();
 
-			let absences = [];
-			let present = 0;
-			for (let handler of handlers) {
-				for (let attendee of handler.attendees) {
-					if (attendee.user == req.body.user_id) {
-						if (attendee.status == "absent") {
-							absences.push(handler.event);
-						} else if (attendee.status == "present") {
-							present++;
-						}
-					}
-				}
-			}
+			let result = getPresencesAbsences(handlers, req.body.user_id);
 
-			res.end(JSON.stringify({present: present, absences: absences}));
+			res.end(JSON.stringify(result));
+
+		} catch (err) {
+			console.error(err);
+			res.end("fail");
+		}
+	}));
+
+	app.post("/f/getUserAbsencesBetweenDates", requireLogin, Promise.coroutine(function*(req, res) {
+
+		let startDate = new Date(req.body.startDate);
+		let endDate = new Date(req.body.endDate);
+		let userId = req.body.userId;
+
+		try {
+
+			let handlers = yield AttendanceHandler.find({
+				event_date: {
+					"$gte": startDate,
+					"$lte": endDate
+				},
+				"attendees.user": userId
+			}).populate("event").exec();
+
+			let result = getPresencesAbsences(handlers, userId);
+
+			res.end(JSON.stringify(results));
 
 		} catch (err) {
 			console.error(err);
