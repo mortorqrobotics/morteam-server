@@ -59,7 +59,15 @@ function standardizeTime(date) {
     return hours + ":" + minutes + " " + suffix;
 }
 function removeHTML(text){
-  return text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  var replacements = [
+	  [/&/g, "&amp;"],
+	  [/</g, "&lt;"],
+	  [/>/g, "&gt;"]
+  ];
+  for (var i = 0; i < replacements.length; i++) {
+    text = text.replace(replacements[i][0], replacements[i][1]);
+  }
+  return text;
 }
 function normalizeDisplayedText(text){
   return Autolinker.link(removeHTML(text));

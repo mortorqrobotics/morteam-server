@@ -228,7 +228,15 @@ module.exports = function() {
 	};
 
 	this.removeHTML = function(text) {
-		return text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+		let replacements = [
+			[/&/g, "&amp;"],
+			[/</g, "&lt;"],
+			[/>/g, "&gt;"]
+		];
+		for (let replacement of replacements) {
+			text = text.replace(replacement[0], replacement[1]);
+		}
+		return text;
 		//  text.replace(/\<(?!a|br).*?\>/g, "");
 	};
 

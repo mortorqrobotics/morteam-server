@@ -84,7 +84,6 @@ module.exports = function(io, util, schemas) {
 				if (user_id == sess._id) {
 					continue; // don't send messages to the user that sent them
 				}
-				console.log(online_clients[user_id].sockets.length);
 				let client_chats = online_clients[user_id].chats.map(chat_id => chat_id.toString());
 				if ( client_chats.indexOf( msg.chat_id ) != -1 ) { // if the user is part of the chat the message was sent to
 					let message = {
