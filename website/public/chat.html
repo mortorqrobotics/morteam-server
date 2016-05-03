@@ -574,7 +574,7 @@
                       user_id: user2._id.toString(),
                       chat_id: chats[i]._id.toString()
                     });
-                    if( online_clients[user2._id.toString()] != undefined ){
+                    if( online_clients.indexOf(user2._id.toString()) != -1 ){
                       $(img).addClass("online");
                     }else{
                       $(img).addClass("offline");

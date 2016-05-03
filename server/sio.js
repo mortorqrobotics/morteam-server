@@ -109,12 +109,7 @@ module.exports = function(io, util, schemas) {
 		});
 
 		socket.on("get clients", function() {
-			var obj = {};
-			for (let key in online_clients) {
-				obj[key] = true; // yeah... don't want to break mobile quite yet
-				// TODO: break mobile and make this sane
-			}
-			socket.emit("get clients", obj);
+			socket.emit("get clients", Object.keys(online_clients));
 		});
 
 		socket.on("new chat", Promise.coroutine(function*(data) {
