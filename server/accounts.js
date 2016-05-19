@@ -86,7 +86,7 @@ module.exports = function(app, util, schemas, publicDir, profpicDir) {
 				let isMatch = yield user.comparePassword(req.body.password);
 				if (isMatch) {
 					// store user info in cookies
-					req.session.user = user;
+					req.session.userId = user._id;
 					if (req.body.rememberMe) {
 						req.session.cookie.maxAge = 365 * 24 * 60 * 60 * 1000; // change cookie expiration date to one year
 					}
