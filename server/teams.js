@@ -1,24 +1,30 @@
 "use strict";
 
-module.exports = function(app, util, schemas) {
+let Promise = require("bluebird");
+let util = require("./util.js");
+let express = require("express");
 
-	let Promise = require("bluebird");
+let requireLogin = util.requireLogin;
+let requireLeader = util.requireLeader;
+let requireAdmin = util.requireAdmin;
 
-	let requireLogin = util.requireLogin;
-	let requireLeader = util.requireLeader;
-	let requireAdmin = util.requireAdmin;
+module.exports = function(schemas) {
 
 	let User = schemas.User;
 	let Team = schemas.Team;
 	let AttendanceHandler = schemas.AttendanceHandler;
 	let Folder = schemas.Folder;
 
-	app.get("/team", requireLogin, Promise.coroutine(function*(req, res) {
+	let router = express.Router();
+
+	router.get("/", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
-			let users = yield User.find({ teams: { $elemMatch: { id: req.user.current_team.id } } });
+			let users = yield User.find({
+				teams: { $elemMatch: { id: req.user.current_team.id } }
+			});
 
-			let team = yield Team.findOne({id: req.user.current_team.id});
+			let team = yield Team.findById(req.user.current_team.id);
 
 			res.render("team", {
 				teamName: team.name,
@@ -34,14 +40,14 @@ module.exports = function(app, util, schemas) {
 		}
 	}));
 
-	app.post("/f/getUsersInTeam", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/users", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
 			let users = yield User.find({
 				teams: {$elemMatch: {id: req.user.current_team.id }}
 			});
 
-			res.end(JSON.stringify(users));
+			res.json(users);
 
 		} catch (err) {
 			console.error(err);
@@ -49,12 +55,10 @@ module.exports = function(app, util, schemas) {
 		}
 	}));
 
-	app.post("/f/createTeam", requireLogin, Promise.coroutine(function*(req, res) {
+	router.post("/", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
-			let teams = yield Team.find({id: req.body.id});
-
-			if (teams.length != 0) {
+			if (yield Team.findOne({ id: req.body.id })) {
 				return res.end("fail");
 			}
 
@@ -80,30 +84,25 @@ module.exports = function(app, util, schemas) {
 		}
 	}));
 
-	app.post("/f/joinTeam", requireLogin, Promise.coroutine(function*(req, res) {
+	router.put("/:teamId/join", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
-			let team = yield Team.findOne({id: req.body.team_id});
+			let team = yield Team.findOne({id: req.params.teamId});
 			
 			if (!team) {
 				return res.end("no such team");
 			}
 
-			let user = yield User.findOne({_id: req.user._id});
-
-			if (!user) {
-				return res.end("fail");
-			}
-
-			if ( user.bannedFromTeams.length > 0 && user.bannedFromTeams.indexOf(req.body.team_id) > -1 ) {
+			if (req.user.bannedFromTeams.length > 0
+					&& req.user.bannedFromTeams.indexOf(req.params.teamId) != -1 ) {
 				return res.end("banned");
 			}
 
-			let users = yield User.find({teams: {$elemMatch: {"id": req.body.team_id}}});
+			let users = yield User.find({ teams: { $elemMatch: { "id": req.params.teamId } } });
 
 			let newTeam = {
-				id: req.body.team_id,
-				position: users.length == 0 ? "admin" : "member"
+				id: req.params.teamId,
+				position: users.length == 0 ? "admin" : "member" // make the first member an admin
 			};
 			if (user.teams.length == 0) {
 				user.current_team = newTeam;
@@ -115,15 +114,15 @@ module.exports = function(app, util, schemas) {
 				entireTeam: true,
 				event_date: { $gte: new Date() }
 			}, {"$push": {
-				"attendees": {user: req.user._id, status: "absent"}
+				"attendees": { user: req.user._id, status: "absent" }
 			}});
 			
 			yield user.save();
 			
 			yield Folder.create({
 				name: "Personal Files",
-				team: req.body.team_id,
-				userMembers: req.user._id,
+				team: req.params.teamId,
+				userMembers: req.user._id, // TODO: should this be an [req.user._id] instead?
 				creator: req.user._id,
 				defaultFolder: true
 			});
@@ -136,7 +135,7 @@ module.exports = function(app, util, schemas) {
 		}
 	}));
 
-	app.post("/f/getTeamNum", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/number", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
 			let team = yield Team.findOne({id: req.user.current_team.id});
@@ -149,12 +148,10 @@ module.exports = function(app, util, schemas) {
 		}
 	}));
 
-	app.post("/f/isTeamOnMorTeam", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/:teamNum/exists", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 			
-			let teams = Team.find({number: parseInt(req.body.teamNum)});
-
-			if (teams.length > 0) {
+			if (yield Team.find({number: parseInt(req.params.teamNum)})) {
 				res.json(teams[0]); // TODO: should this just be "true" instead?
 			} else {
 				res.end("false");
@@ -165,5 +162,7 @@ module.exports = function(app, util, schemas) {
 			res.end("fail");
 		}
 	}));
+
+	return router;
 
 };

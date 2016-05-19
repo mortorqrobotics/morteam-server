@@ -1,16 +1,20 @@
 "use strict";
 
-module.exports = function(app, util, schemas) {
+let Promise = require("bluebird");
+let express = require("express");
+let util = require("./util.js");
 
-	let Promise = require("bluebird");
+let requireLogin = util.requireLogin;
+let requireLeader = util.requireLeader;
 
-	let requireLogin = util.requireLogin;
-	let requireLeader = util.requireLeader;
+module.exports = function(schemas) {
 
 	let Task = schemas.Task;
 	let User = schemas.User;
 
-	app.post("/f/assignTask", requireLogin, requireLeader, Promise.coroutine(function*(req, res) {
+	let router = express.Router();
+
+	router.post("/assign", requireLogin, requireLeader, Promise.coroutine(function*(req, res) {
 
 		// for iOS and Android
 		if (typeof(req.body.due_date) == "string") {
@@ -20,29 +24,21 @@ module.exports = function(app, util, schemas) {
 		let task = {
 			name: req.body.task_name,
 			team: req.user.current_team.id,
-			for: req.body.user_id,
+			for: req.body.user_id, // why a reserved word :/
 			due_date: req.body.due_date,
-			creator: req.user._id,
+			creator: req.user._id, // req.body.user_id vs req.user._id ...
 			completed: false
 		};
 
 		if (req.body.task_description) {
-			task.description = req.body.task_description;
+			task.description = req.body.task_description; // TODO: rename to just description?
 		}
 
 		try {
 
-			task = Task.create({
-				name: req.body.task_name,
-				description: req.body.task_description,
-				team: req.user.current_team.id,
-				for: req.body.user_id,
-				due_date: req.body.due_date,
-				creator: req.user._id,
-				completed: false
-			});
+			task = yield Task.create(task);
 
-			let user = yield User.findOne({_id: req.body.user_id});
+			let recipient = yield User.findById(task.for);
 
 			if (!user) {
 				return res.end("fail");
@@ -51,7 +47,7 @@ module.exports = function(app, util, schemas) {
 			yield util.sendEmail({
 				to: user.email,
 				subject: "New Task Assigned By " + req.user.firstname + " " + req.user.lastname,
-				text: "View your new task at http://www.morteam.com/u/" + req.body.user_id
+				text: "View your new task at http://www.morteam.com/u/" + task.for
 			});
 
 			res.end(task._id.toString());
@@ -62,11 +58,11 @@ module.exports = function(app, util, schemas) {
 		}
 	}));
 
-	app.post("/f/getCompletedUserTasks", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/user/:userId/completed", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
 			let tasks = yield Task.find({
-				for: req.body.user_id,
+				for: req.params.userId,
 				completed: true
 			}).populate("creator").exec();
 
@@ -80,15 +76,15 @@ module.exports = function(app, util, schemas) {
 
 	// TODO: should completed and pending tasks be put into one request?
 
-	app.post("/f/getPendingUserTasks", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/user/:userId/pending", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
 			let tasks = yield Task.find({
-				for: req.body.user_id,
+				for: req.params.userId,
 				completed: false
 			}).populate("creator").exec();
 
-			res.end(JSON.stringify(tasks));
+			res.json(tasks);
 
 		} catch (err) {
 			console.error(err);
@@ -96,9 +92,9 @@ module.exports = function(app, util, schemas) {
 		}
 	}));
 
-	app.post("/f/markTaskAsCompleted", requireLogin, Promise.coroutine(function*(req, res) {
+	router.put("/:taskId/markCompleted", requireLogin, Promise.coroutine(function*(req, res) {
 
-		if (req.user._id != req.body.target_user
+		if (req.user._id != req.body.target_user // TODO: targetUserId instead?
 				&& req.user.current_team.position != "admin"
 				&& req.user.current_team.position != "leader" ) {
 
@@ -108,7 +104,9 @@ module.exports = function(app, util, schemas) {
 
 		try {
 
-			yield Task.update({_id: req.body.task_id}, {"$set": {completed: true}});
+			yield Task.findByIdAndUpdate(req.params.taskId, {
+				"$set": { completed: true }
+			});
 
 			res.end("success");
 
@@ -117,5 +115,7 @@ module.exports = function(app, util, schemas) {
 			res.end("fail");
 		}
 	}));
+
+	return router;
 
 };
