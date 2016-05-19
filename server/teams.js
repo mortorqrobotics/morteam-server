@@ -17,7 +17,7 @@ module.exports = function(schemas) {
 
 	let router = express.Router();
 
-	router.get("/", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/current", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
 			let users = yield User.find({
@@ -40,7 +40,7 @@ module.exports = function(schemas) {
 		}
 	}));
 
-	router.get("/users", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/current/users", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
 			let users = yield User.find({
@@ -135,7 +135,7 @@ module.exports = function(schemas) {
 		}
 	}));
 
-	router.get("/number", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/current/number", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
 			let team = yield Team.findOne({id: req.user.current_team.id});
