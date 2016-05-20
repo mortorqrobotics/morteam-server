@@ -1,19 +1,23 @@
 "use strict";
 
-module.exports = function(app, util, schemas) {
+module.exports = function(imports) {
 
-	let ObjectId = require("mongoose").Types.ObjectId;
-	let Promise = require("bluebird");
+	let express = imports.modules.express;
+	let ObjectId = imports.modules.mongoose.Types.ObjectId;
+	let Promise = imports.modules.Promise;
+	let util = imports.util;
 
 	let requireLogin = util.requireLogin;
 	let requireLeader = util.requireLeader;
 	let requireAdmin = util.requireAdmin;
 
-	let User = schemas.User;
-	let Event = schemas.Event;
-	let AttendanceHandler = schemas.AttendanceHandler;
+	let User = imports.models.User;
+	let Event = imports.models.Event;
+	let AttendanceHandler = imports.models.AttendanceHandler;
 
-	app.post("/f/getEventsForUserInTeamInMonth", requireLogin, Promise.coroutine(function*(req, res) {
+	let router = express.Router();
+
+	router.post("/f/getEventsForUserInTeamInMonth", requireLogin, Promise.coroutine(function*(req, res) {
 		let userSubdivisionIds = util.activeSubdivisionIds(req.user.subdivisions);
 
 		let numberOfDays = new Date(req.body.year, req.body.month, 0).getDate(); // month is 1 based
@@ -40,7 +44,7 @@ module.exports = function(app, util, schemas) {
 		}
 	}));
 
-	app.post("/f/getUpcomingEventsForUser", requireLogin, Promise.coroutine(function*(req, res) {
+	router.post("/f/getUpcomingEventsForUser", requireLogin, Promise.coroutine(function*(req, res) {
 		let userSubdivisionIds = util.activeSubdivisionIds(req.user.subdivisions);
 
 		try {

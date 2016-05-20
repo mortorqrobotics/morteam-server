@@ -1,13 +1,13 @@
 "use strict";
 
-let Promise = require("bluebird");
-let express = require("express");
-let util = require("./util.js");
+module.exports = function(imports) {
 
-let requireLogin = util.requireLogin;
-let requireLeader = util.requireLeader;
+	let express = imports.modules.express;
+	let Promise = imports.modules.Promise;
+	let util = imports.util;
 
-module.exports = function(schemas) {
+	let requireLogin = util.requireLogin;
+	let requireLeader = util.requireLeader;
 
 	let Task = schemas.Task;
 	let User = schemas.User;

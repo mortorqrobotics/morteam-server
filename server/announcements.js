@@ -1,16 +1,20 @@
 "use strict";
 
-module.exports = function(app, util, schemas) {
+module.exports = function(imports) {
 
-	let Autolinker = require( "autolinker" );
-	let ObjectId = require("mongoose").Types.ObjectId;
-	let Promise = require("bluebird");
+	let express = imports.modules.express;
+	let Autolinker = imports.modules.autolinker;
+	let ObjectId = imports.modules.mongoose.Types.ObjectId;
+	let Promise = imports.modules.Promise;
+	let util = imports.util;
 
 	let requireLogin = util.requireLogin;
 	let requireAdmin = util.requireAdmin;
 
-	let Announcement = schemas.Announcement;
-	let User = schemas.User;
+	let Announcement = imports.models.Announcement;
+	let User = imports.models.User;
+
+	let router = express.Router();
 
 	app.post("/f/postAnnouncement", requireLogin, Promise.coroutine(function*(req, res) {
 

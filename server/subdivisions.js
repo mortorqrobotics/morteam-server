@@ -1,20 +1,20 @@
 "use strict";
 
-let ObjectId = require("mongoose").Types.ObjectId;
-let Promise = require("bluebird");
-let express = require("express");
-let util = require("./util.js");
+module.exports = function(imports) {
 
-let requireLogin = util.requireLogin;
-let requireLeader = util.requireLeader;
-let requireAdmin = util.requireAdmin;
+	let express = imports.modules.express;
+	let Promise = imports.modules.Promise;
+	let util = imports.util;
+	let ObjectId = imports.modules.mongoose.Types.ObjectId;
 
-module.exports = function(schemas) {
+	let requireLogin = util.requireLogin;
+	let requireLeader = util.requireLeader;
+	let requireAdmin = util.requireAdmin;
 
-	let Subdivision = schemas.Subdivision;
-	let User = schemas.User;
-	let Event = schemas.Event;
-	let AttendanceHandler = schemas.AttendanceHandler;
+	let Subdivision = imports.models.Subdivision;
+	let User = imports.models.User;
+	let Event = imports.models.Event;
+	let AttendanceHandler = imports.models.AttendanceHandler;
 
 	let router = express.Router();
 

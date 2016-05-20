@@ -18,6 +18,8 @@ module.exports = function(imports) {
 
 	imports.util = require("./util.js");
 
+	// TODO: add config here
+
 	return imports;
 
 };

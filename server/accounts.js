@@ -1,21 +1,24 @@
 "use strict";
 
-module.exports = function(app, util, schemas, publicDir, profpicDir) {
+module.exports = function(imports, publicDir, profpicDir) {
 
-	let extToMime = require("./extToMime.json"); // used to convert file extensions to mime types
-	let lwip = require("lwip"); // image processing module
-	let multer = require("multer"); // for file uploads
-	let ObjectId = require("mongoose").Types.ObjectId;
-
-	let Promise = require("bluebird");
+	let express = imports.modules.express;
+	let lwip = imports.modules.lwip; // image processing module
+	let multer = imports.modules.multer; // for file uploads
+	let ObjectId = imports.modules.mongoose.Types.ObjectId;
+	let Promise = imports.modules.Promise;
+	let util = imports.util;
+	let extToMime = require("./extToMime.json"); // used to convert file extensions to MIME types
 
 	let requireLogin = util.requireLogin;
 	let requireAdmin = util.requireAdmin;
 
-	let User = schemas.User;
-	let Chat = schemas.Chat;
-	let Folder = schemas.Folder;
-	let Event = schemas.Event;
+	let User = imports.models.User;
+	let Chat = imports.models.Chat;
+	let Folder = imports.models.Folder;
+	let Event = imports.models.Event;
+
+	let router = express.Router();
 
 	// load profile page of any user based on _id
 	app.get("/u/:id", Promise.coroutine(function*(req, res) {

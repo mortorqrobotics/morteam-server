@@ -1,8 +1,13 @@
 "use strict";
 
-module.exports = function(app, util, schemas) {
+// this file is currently unused
+// it is for google cloud messaging for android
+// android currently does not have the functionality for this
+// I am leaving this file here in case it does in the future
 
-	let gcm = require("node-gcm");
+module.exports = function(imports) {
+
+	let gcm = require("node-gcm"); // move this to initImports.js if this file is ever resurrected
 	let config = require("./config.json");
 
 	let message = new gcm.Message();

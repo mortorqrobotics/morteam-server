@@ -1,16 +1,20 @@
 "use strict";
 
-module.exports = function(app, util, schemas) {
+module.exports = function(imports) {
 
-	let ObjectId = require("mongoose").Types.ObjectId;
-	let Promise = require("bluebird");
+	let express = imports.modules.express;
+	let ObjectId = imports.modules.mongoose.Types.ObjectId;
+	let Promise = imports.modules.Promise;
+	let util = imports.util;
 
 	let requireLogin = util.requireLogin;
 	let requireAdmin = util.requireAdmin;
 
-	let Chat = schemas.Chat;
-	let User = schemas.User;
-	let Subdivision = schemas.Subdivision;
+	let Chat = imports.models.Chat;
+	let User = imports.models.User;
+	let Subdivision = imports.models.Subdivision;
+
+	let router = express.Router();
 
 	app.post("/f/createChat", requireLogin, Promise.coroutine(function*(req, res) {
 

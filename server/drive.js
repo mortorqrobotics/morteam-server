@@ -1,19 +1,23 @@
 "use strict";
 
-module.exports = function(app, util, schemas) {
+module.exports = function(imports) {
 
-	let ObjectId = require("mongoose").Types.ObjectId;
-	let multer = require("multer");
+	let express = imports.modules.express;
+	let ObjectId = imports.modules.mongoose.Types.ObjectId;
+	let multer = imports.modules.multer;
 	let extToMime = require("./extToMime.json");
-	let lwip = require("lwip");
-	let Promise = require("bluebird");
+	let lwip = imports.modules.lwip;
+	let Promise = imports.modules.Promise;
 	let https = require("https");
+	let util = imports.util;
 
 	let requireLogin = util.requireLogin;
 	let requireAdmin = util.requireAdmin;
 
-	let Folder = schemas.Folder;
-	let File = schemas.File;
+	let Folder = imports.models.Folder;
+	let File = imports.models.File;
+
+	let router = express.Router();
 
 	app.get("/file/:fileId", requireLogin, Promise.coroutine(function*(req, res) {
 		let userSubdivisionIds = util.activeSubdivisionIds(req.user.subdivisions);

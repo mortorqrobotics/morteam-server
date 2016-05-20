@@ -127,7 +127,7 @@ module.exports = function(imports) {
 	router.set("views", require("path").join(__dirname, "/../website"));
 
 	// import all modules that handle specific requests
-	router.use("/users", require("./accounts.js")(imports)); // TODO: /users?
+	router.use("/users", require("./accounts.js")(imports, publicDir, profpicDir)); // TODO: /users?
 	router.use("/teams", require("./teams.js")(imports));
 	router.use("/subdivisions", require("./subdivisions.js")(imports));
 	router.use("/announcements", require("./announcements.js")(imports));
