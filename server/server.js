@@ -7,15 +7,24 @@
  */
 
 // wrap everything for the network
-module.exports = function(networkSchemas, mongoose, io) {
+module.exports = function(imports) {
 
-	// import necessary modules
-	let express = require("express");
+	imports = initImports(imports);
+
+	let express = imports.modules.express;
 	let http = require("http");
 	let fs = require("fs");
+	let mongoose = imports.modules.mongoose;
 	let ObjectId = mongoose.Types.ObjectId; // this is used to cast strings to MongoDB ObjectIds
-	let multer = require("multer"); // for file uploads
-	let lwip = require("lwip");
+	let multer = imports.modules.multer; // for file uploads
+	let lwip = imports.modules.lwip;
+	let Promise = imports.modules.Promise;
+	let util = imports.util;
+	let requireLogin = util.requireLogin;
+
+	Promise.promisifyAll(util);
+	Promise.promisifyAll(lwip);
+	Promise.promisifyAll(fs);
 
 	let config; // contains passwords and other sensitive info
 	let configPath = require("path").join(__dirname, "config.json")
@@ -31,43 +40,17 @@ module.exports = function(networkSchemas, mongoose, io) {
 		console.log("Generated default config.json");
 	}
 
-	let util = require("./util.js")(); // contains functions and objects that are used across all the modules
-
-	let Promise = require("bluebird");
-	Promise.promisifyAll(util);
-	Promise.promisifyAll(lwip);
-	Promise.promisifyAll(fs);
 
 	const publicDir = require("path").join(__dirname, "../website/public");
 	const profpicDir = "http://profilepics.morteam.com.s3.amazonaws.com/"
 
-	// connect to mongodb server
-	// let db = mongoose.createConnection("mongodb://localhost:27017/" + config.dbName);
-	// let db = networkDb.useDb(config.dbName);
-
-	let db = mongoose;
-	// import mongodb schemas
-	let schemas = {
-		Announcement: require("./schemas/Announcement.js")(db),
-		Chat: require("./schemas/Chat.js")(db),
-		Event: require("./schemas/Event.js")(db),
-		AttendanceHandler: require("./schemas/AttendanceHandler.js")(db),
-		Folder: require("./schemas/Folder.js")(db),
-		File: require("./schemas/File.js")(db),
-		Task: require("./schemas/Task.js")(db),
-	};
-	// add network schemas
-	for (let key in networkSchemas) { // promisified by mornetwork
-		schemas[key] = networkSchemas[key];
-	}
-
-	let requireLogin = util.requireLogin;
-
-	// start server
 	console.log("MorTeam started");
 
+	// define the main router passed to mornetwork
+	let router = express.Router();
+
 	// add .html to end of filename if it did not have it already
-	app.use(function(req, res, next) {
+	router.use(function(req, res, next) {
 		req.filePath = req.path;
 		if (req.path.indexOf(".") === -1) {
 			let file = publicDir + req.path + ".html";
@@ -91,7 +74,7 @@ module.exports = function(networkSchemas, mongoose, io) {
 	// check to see if user is logged in before continuing any further
 	// allow browser to receive images, css, and js files without being logged in
 	// allow browser to receive some pages such as login.html, signup.html, etc. without being logged in
-	app.use(function(req, res, next) {
+	router.use(function(req, res, next) {
 		let path = req.filePath;
 		let exceptions = ["/login.html", "/signup.html", "/fp.html", "/favicon.ico"];
 		if (req.method == "GET") {
@@ -132,30 +115,30 @@ module.exports = function(networkSchemas, mongoose, io) {
 	});
 
 	// load homepage
-	app.get("/", function(req, res, next) {
+	router.get("/", function(req, res, next) {
 		fs.createReadStream(publicDir + "/index.html").pipe(res);
 	});
 
 	// load any file in /website/public (aka publicDir)
-	app.use(express.static(publicDir));
+	router.use(express.static(publicDir));
 
 	// use EJS as default view engine and specifies location of EJS files
-	app.set("view engine", "ejs");
-	app.set("views", require("path").join(__dirname, "/../website"));
+	router.set("view engine", "ejs");
+	router.set("views", require("path").join(__dirname, "/../website"));
 
 	// import all modules that handle specific requests
-	app.use("/users", require("./accounts.js")(schemas, publicDir, profpicDir)); // TODO: /users?
-	app.use("/teams", require("./teams.js")(schemas));
-	app.use("/subdivisions", require("./subdivisions.js")(schemas));
-	app.use("/announcements", require("./announcements.js")(schemas));
-	app.use("/chat", require("./chat.js")(schemas));
-	app.use("/drive", require("./drive.js")(schemas));
-	app.use("/events", require("./events.js")(schemas));
-	app.use("/tasks", require("./tasks.js")(schemas));
-	require("./sio.js")(io, schemas));
+	router.use("/users", require("./accounts.js")(imports)); // TODO: /users?
+	router.use("/teams", require("./teams.js")(imports));
+	router.use("/subdivisions", require("./subdivisions.js")(imports));
+	router.use("/announcements", require("./announcements.js")(imports));
+	router.use("/chat", require("./chat.js")(imports));
+	router.use("/drive", require("./drive.js")(imports));
+	router.use("/events", require("./events.js")(imports));
+	router.use("/tasks", require("./tasks.js")(imports));
+	require("./sio.js")(imports);
 
 	// send 404 message for any page that does not exist (IMPORTANT: The order for this does matter. Keep it at the end.)
-	app.get("*", function(req, res) {
+	router.get("*", function(req, res) { // TODO: should this be get or use?
 		util.send404(res);
 	});
 

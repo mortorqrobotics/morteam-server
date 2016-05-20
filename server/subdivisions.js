@@ -78,11 +78,13 @@ module.exports = function(schemas) {
 			});
 
 			yield User.findByIdAndUpdate(req.user._id, {
-				"$push": {"subdivisions": {
+				"$push": {
+					"subdivisions": {
 						_id: subdivision._id,
 						team: req.user.current_team.id,
 						accepted: true
-				}}
+					}
+				}
 			});
 
 			res.end(subdivision._id.toString());
