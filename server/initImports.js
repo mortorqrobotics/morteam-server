@@ -4,6 +4,9 @@ module.exports = function(imports) {
 	imports.modules.multer = require("multer");
 	imports.modules.lwip = require("lwip");
 	imports.modules.Promise = require("bluebird");
+	imports.modules.autolinker = require("autolinker");
+	imports.modules.nodemailer = require("nodemailer");
+	imports.modules.AWS = require("aws-sdk");
 
 	imports.models.Announcement = require("./models/Announcement.js")(imports);
 	imports.models.Chat = require("./models/Chat.js")(imports);
