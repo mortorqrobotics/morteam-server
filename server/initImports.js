@@ -1,5 +1,6 @@
 module.exports = function(imports) {
 
+	// mongoose comes from mornetwork
 	imports.modules.express = require("express");
 	imports.modules.multer = require("multer");
 	imports.modules.lwip = require("lwip");
@@ -8,6 +9,7 @@ module.exports = function(imports) {
 	imports.modules.nodemailer = require("nodemailer");
 	imports.modules.AWS = require("aws-sdk");
 
+	// User, Team, and Subdivision come from mornetwork
 	imports.models.Announcement = require("./models/Announcement.js")(imports);
 	imports.models.Chat = require("./models/Chat.js")(imports);
 	imports.models.Event = require("./models/Event.js")(imports);
