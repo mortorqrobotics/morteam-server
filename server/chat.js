@@ -16,7 +16,7 @@ module.exports = function(imports) {
 
 	let router = express.Router();
 
-	app.post("/f/createChat", requireLogin, Promise.coroutine(function*(req, res) {
+	router.post("/", requireLogin, Promise.coroutine(function*(req, res) {
 
 		let subdivisionMembers = req.body.subdivisionMembers || [];
 		let userMembers = req.body.userMembers || [];
@@ -78,7 +78,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	app.post("/f/getChatsForUser", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/", requireLogin, Promise.coroutine(function*(req, res) {
 		// get an array of _ids of subdivisions of which the user is a member. (dat proper grammar doe)
 		let userSubdivisionIds = util.activeSubdivisionIds(req.user.subdivisions);
 
@@ -104,19 +104,20 @@ module.exports = function(imports) {
 				subdivisionMembers: 1,
 				updated_at: 1
 			}).slice("messages", [0, 1])
-				.populate("userMembers subdivisionMembers", "-password")
+				.populate("userMembers subdivisionMembers")
 				.sort("-updated_at")
 				.exec();
 			// ^ the code above gets the latest message from the chat (for previews in iOS and Android) and orders the list by most recent.
 
-			res.end(JSON.stringify(chats));
+			res.json(chats);
+
 		} catch (err) {
 			console.error(err);
 			res.end("fail");
 		}
 	}));
 
-	app.post("/f/loadMessagesForChat", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/chats/:chatId/messages", requireLogin, Promise.coroutine(function*(req, res) {
 		// TODO: maybe in the future combine this with getUsersInChat to improve performance
 
 		let skip = parseInt(req.body.skip);
@@ -124,12 +125,12 @@ module.exports = function(imports) {
 		try {
 
 			// loads 20 messages after skip many messages. example: if skip is 0, it loads messages 0-19, if it"s 20, loads 20-39, etc.
-			let chat = yield Chat.findOne({_id: req.body.chat_id})
+			let chat = yield Chat.findOne({ _id: req.params.chatId })
 				.slice("messages", [skip, 20])
 				.populate("messages.author")
 				.exec();
 
-			res.end(JSON.stringify(chat.messages));
+			res.json(chat.messages);
 
 		} catch (err) {
 			console.error(err);
@@ -137,11 +138,13 @@ module.exports = function(imports) {
 		}
 	}));
 
-	app.post("/f/getUsersInChat", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/chat/:chatId/users", requireLogin, Promise.coroutine(function*(req, res) {
+		// user members only, not subdivision members
+
 		try {
 
 			let chat = yield Chat.findOne({
-				_id: req.body.chat_id
+				_id: req.params.chatId
 			}, {
 				userMembers: 1,
 				subdivisionMembers: 1
@@ -157,7 +160,7 @@ module.exports = function(imports) {
 				]
 			});
 
-			res.end(JSON.stringify(users));
+			res.json(users);
 
 		} catch (err) {
 			console.error(err);
@@ -165,27 +168,29 @@ module.exports = function(imports) {
 		}
 	}));
 
-	app.post("/f/getMembersOfChat", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/chat/:chatId/allMembers", requireLogin, Promise.coroutine(function*(req, res) {
+		// both user members and subdivision members
+
 		try {
 
 			let chat = yield Chat.findOne({
-				_id: req.body.chat_id
+				_id: req.params.chatId
 			}, {
 				userMembers: 1,
 				subdivisionMembers: 1,
 				group: 1
 			});
 
-			let userMembers = yield User.find({_id: { "$in": chat.userMembers }}, "-password");
-			let subdivisionMembers = yield Subdivision.find({_id: { "$in": chat.subdivisionMembers }});
+			let userMembers = yield User.find({ _id: { "$in": chat.userMembers } });
+			let subdivisionMembers = yield Subdivision.find({_id: { "$in": chat.subdivisionMembers } });
 
-			res.end(JSON.stringify({
+			res.json({
 				members: {
 					userMembers: userMembers,
 					subdivisionMembers: subdivisionMembers
 				},
 				group: chat.group
-			}));
+			});
 
 		} catch (err) {
 			console.error(err);
@@ -193,7 +198,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	app.post("/f/changeGroupName", requireLogin, Promise.coroutine(function*(req, res) {
+	router.put("/group/:chatId/name", requireLogin, Promise.coroutine(function*(req, res) {
 
 		if (req.body.newName.length >= 20) {
 			return res.end("fail");
@@ -201,7 +206,7 @@ module.exports = function(imports) {
 
 		try {
 
-			yield Chat.update({_id: req.body.chat_id}, { name: req.body.newName });
+			yield Chat.update({ _id: req.params.chatId }, { name: req.body.newName });
 
 			res.end("success");
 
@@ -211,10 +216,10 @@ module.exports = function(imports) {
 		}
 	}));
 
-	app.post("/f/deleteChat", requireAdmin, Promise.coroutine(function*(req, res) {
+	router.delete("/:chatId", requireAdmin, Promise.coroutine(function*(req, res) {
 		try {
 
-			yield Chat.findOneAndRemove({_id: req.body.chat_id});
+			yield Chat.findOneAndRemove({ _id: req.params.chatId });
 
 			return res.end("success");
 
@@ -224,10 +229,10 @@ module.exports = function(imports) {
 		}
 	}));
 
-	app.post("/f/sendMessage", requireLogin, Promise.coroutine(function*(req, res) {
+	router.post("/:chatId/message", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 			
-			yield Chat.update({_id: req.body.chat_id}, {
+			yield Chat.update({ _id: req.params.chatId }, {
 				"$push": {
 					"messages": {
 						"$each": [ {
@@ -248,5 +253,7 @@ module.exports = function(imports) {
 			res.end("fail");
 		}
 	}));
+
+	return router;
 
 };

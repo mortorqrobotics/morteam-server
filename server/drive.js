@@ -19,7 +19,7 @@ module.exports = function(imports) {
 
 	let router = express.Router();
 
-	app.get("/file/:fileId", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/file/:fileId", requireLogin, Promise.coroutine(function*(req, res) {
 		let userSubdivisionIds = util.activeSubdivisionIds(req.user.subdivisions);
 		try {
 
@@ -40,7 +40,7 @@ module.exports = function(imports) {
 			}
 
 			let url = yield util.driveBucket.getSignedUrlAsync("getObject", { Key: req.params.fileId, Expires: 60 });
-			// res.redirect(url);
+			// res.redirect(url); do not use this
 			// this caused a security flaw
 			// the S3 key was included in the url and sent to the user
 			https.get(url, function(response) {
@@ -53,7 +53,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	app.post("/f/getTeamFolders", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/folders/team", requireLogin, Promise.coroutine(function*(req, res) {
 		let userSubdivisionIds = util.activeSubdivisionIds(req.user.subdivisions);
 		try {
 
@@ -67,7 +67,7 @@ module.exports = function(imports) {
 				]
 			});
 
-			res.end(JSON.stringify(folders));
+			res.json(folders);
 
 		} catch (err) {
 			console.error(err);
@@ -75,20 +75,20 @@ module.exports = function(imports) {
 		}
 	}));
 
-	app.post("/f/getSubFolders", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/folders/:folderId/subfolders", requireLogin, Promise.coroutine(function*(req, res) {
 		let userSubdivisionIds = util.activeSubdivisionIds(req.user.subdivisions);
 		try {
 
 			let folders = yield Folder.find({
 				team: req.user.current_team.id,
-				parentFolder: req.body.folder_id, $or: [
+				parentFolder: req.params.folderId, $or: [
 					{entireTeam: true},
 					{userMembers: req.user._id},
 					{subdivisionMembers: {"$in": userSubdivisionIds} }
 				]
 			});
 
-			res.end(JSON.stringify(folders));
+			res.json(folders);
 
 		} catch (err) {
 			console.error(err);
@@ -96,12 +96,12 @@ module.exports = function(imports) {
 		}
 	}));
 
-	app.post("/f/getFilesInFolder", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/folder/:folderId/files", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
-			let files = yield File.find({folder: req.body.folder_id});
+			let files = yield File.find({ folder: req.params.folderId });
 
-			res.end(JSON.stringify(files));
+			res.json(files);
 
 		} catch (err) {
 			console.error(err);
@@ -109,7 +109,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	app.post("/f/createFolder", requireLogin, Promise.coroutine(function*(req, res) {
+	router.post("/folders", requireLogin, Promise.coroutine(function*(req, res) {
 
 		if (req.body.name.length >= 22) {
 			return res.end("fail");
@@ -140,7 +140,7 @@ module.exports = function(imports) {
 
 			folder = yield Folder.create(folder);
 
-			res.end(JSON.stringify(folder));
+			res.json(folder);
 
 		} catch (err) {
 			console.error(err);
@@ -148,7 +148,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	app.post("/f/uploadFile", requireLogin, multer({
+	router.post("/files/upload", requireLogin, multer({
 		limits: 50 * 1000000 // 50 megabytes
 	}).single("uploadedFile"), Promise.coroutine(function*(req, res) {
 
@@ -207,10 +207,10 @@ module.exports = function(imports) {
 		}
 	}));
 
-	app.post("/f/deleteFile", requireLogin, Promise.coroutine(function*(req, res) {
+	router.delete("/files/:fileId", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
-			let file = yield File.findOne({_id: req.body.file_id}).populate("folder").exec();
+			let file = yield File.findOne({ _id: req.params.fileId }).populate("folder").exec();
 
 			if (req.user._id.toString() != file.creator.toString()
 					&& !( req.user.current_team.position == "admin"
@@ -218,12 +218,12 @@ module.exports = function(imports) {
 				return res.end("fail");
 			}
 
-			yield util.deleteFileFromDriveAsync(req.body.file_id);
+			yield util.deleteFileFromDriveAsync(req.params.fileId);
 			
 			yield file.remove();
 			
 			if (req.body.isImg) {
-				yield util.deleteFileFromDriveAsync(req.body.file_id + "-preview");
+				yield util.deleteFileFromDriveAsync(req.params.fileId + "-preview");
 			}
 
 			res.end("success");
@@ -233,5 +233,7 @@ module.exports = function(imports) {
 			res.end("fail");
 		}
 	}));
+
+	return router;
 
 };

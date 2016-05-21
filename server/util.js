@@ -253,7 +253,7 @@ module.exports = function(imports) {
 		};
 
 		// creates a list of email adresses seperated by ", " provided an array of user objects
-		this.createRecepientList = function(users) {
+		this.createRecipientList = function(users) {
 			let result = "";
 			users.forEach(function(user) {
 				result += user.email + ", ";

@@ -21,17 +21,17 @@ module.exports = function(imports, publicDir, profpicDir) {
 	let router = express.Router();
 
 	// load profile page of any user based on _id
-	app.get("/u/:id", Promise.coroutine(function*(req, res) {
+	router.get("/:userId", Promise.coroutine(function*(req, res) {
 		try {
 
 			let user = yield User.findOne({
-				_id: req.params.id,
+				_id: req.params.userIdd,
 				teams: {
 					$elemMatch: {
 						"id": req.user.current_team.id
 					}
 				} // said user has to be a member of the current team of whoever is loading the page
-			}).exec();
+			});
 
 			if (!user) {
 				return util.userNotFound(res);
@@ -57,20 +57,21 @@ module.exports = function(imports, publicDir, profpicDir) {
 	}));
 
 	// load default profile picture
-	app.get("/images/user.jpg-60", function(req, res) {
+	router.get("/images/user.jpg-60", function(req, res) {
 		res.sendFile(publicDir + "/images/user.jpg");
 	});
 
-	app.get("/images/user.jpg-300", function(req, res) {
+	router.get("/images/user.jpg-300", function(req, res) {
 		res.sendFile(publicDir + "/images/user.jpg");
 	});
 
 	// load user profile picture from AWS S3
-	app.get("/pp/:path", function(req, res) {
+	router.get("/pp/:path", function(req, res) {
 		res.redirect(profpicDir + req.params.path);
 	});
 
-	app.post("/f/login", Promise.coroutine(function*(req, res) {
+	router.post("/login", Promise.coroutine(function*(req, res) {
+		// TODO: maybe move login and logout to separate file?
 		try {
 			// IMPORTANT: req.body.username can either be a username or an email
 
@@ -82,8 +83,8 @@ module.exports = function(imports, publicDir, profpicDir) {
 			}
 
 			let user = yield User.findOne({
-				$or: [{username: req.body.username}, {email: req.body.username}]
-			}).select("+password").exec();
+				$or: [{ username: req.body.username }, { email: req.body.username }]
+			}).select("+password");
 
 			if (user) {
 				let isMatch = yield user.comparePassword(req.body.password);
@@ -106,7 +107,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 		}
 	}));
 
-	app.post("/f/logout", requireLogin, function(req, res) {
+	router.post("/logout", requireLogin, function(req, res) {
 		// destroy user session cookie
 		req.session.destroy(function(err) {
 			if (err) {
@@ -119,8 +120,8 @@ module.exports = function(imports, publicDir, profpicDir) {
 	});
 
 	// uses multer middleware to parse uploaded file called "profpic" with a max file size
-	app.post("/f/createUser", multer({
-		limits: {fileSize:10*1024*1024}
+	router.post("/", multer({
+		limits: { fileSize: 10 * 1024 * 1024 }
 	}).single("profpic"), Promise.coroutine(function*(req, res) {
 		try {
 			// capitalize names
@@ -149,6 +150,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 				return res.end("exists");
 			}
 
+			// TODO: this should not be on the server, only on the client
 			if (req.body.password != req.body.password_confirm) {
 				return res.end("password mismatch");
 			}
@@ -188,24 +190,29 @@ module.exports = function(imports, publicDir, profpicDir) {
 			yield User.create(userInfo);
 			
 			res.end("success");
+
 		} catch (err) {
 			console.error(err);
 			res.end("fail");
 		}
 	}));
 
-	app.post("/f/getUser", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/:userId", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
+
 			let user = yield User.findOne({
-				_id: req.body._id
-			}, "-password").exec();
+				_id: req.params.userId
+			});
+
 			res.json(user);
+
 		} catch (err) {
 			console.error(err);
 			res.end("fail");
 		}
 	}));
 
+	// TODO: move to teams.js?
 	app.post("/f/getUserTeams", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 			let user = yield User.findOne({
@@ -221,7 +228,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 		}
 	}));
 
-	app.post("/f/changePosition", requireLogin, Promise.coroutine(function*(req, res) {
+	router.put("/:userId/position", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 			// position hierarchy
 			let positionHA = {
@@ -232,8 +239,8 @@ module.exports = function(imports, publicDir, profpicDir) {
 
 			// find target user
 			let user = yield User.findOne({
-				_id: req.body.user_id
-			}).exec();
+				_id: req.params.userId
+			});
 
 			if (!user) {
 				return res.end("fail");
@@ -246,7 +253,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 					id: req.user.current_team.id,
 					position: "admin"
 				}
-			}).exec()) <= 1) {
+			})) <= 1) {
 				return res.end("You are the only Admin on your team, so you cannot demote yourself.");
 			}
 
@@ -258,21 +265,23 @@ module.exports = function(imports, publicDir, profpicDir) {
 			
 			// update position of target user
 			yield User.update({
-				_id: req.body.user_id,
+				_id: req.params.userId,
 				"teams.id": req.user.current_team.id
-			}, {"$set": {
+			}, { "$set": {
 				"teams.$.position": req.body.target_position, // find out what .$. means and if it means selected "teams" element
 				"current_team.position": req.body.target_position // make sure in the future current_team.position is checked with "teams" array of the document when user is logging in as opposed to doing this
-			}}).exec();
+			}});
 
 			res.end("success");
+
 		} catch (err) {
 			console.error(err);
 			res.end("fail");
 		}
 	}));
 
-	app.post("/f/searchForUsers", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/search", requireLogin, Promise.coroutine(function*(req, res) {
+
 		// create array of search terms
 		let terms = req.body.search.split(" ");
 		let regexString = "";
@@ -284,27 +293,33 @@ module.exports = function(imports, publicDir, profpicDir) {
 		let re = new RegExp(regexString, "ig");
 
 		try {
+
 			// find maximum of 10 users that match the search criteria
 			let users = yield User.find({
-				teams: {$elemMatch: {id: req.user.current_team.id}},
+				teams: { $elemMatch: { id: req.user.current_team.id } },
 				$or: [
 					{ firstname: re }, { lastname: re }
 				]
-			}, "-password").limit(10).exec();
+			}).limit(10).exec();
+
 			res.json(users);
+
 		} catch (err) {
 			console.error(err);
 			res.end("fail");
 		}
 	}));
 
-	app.post("/f/changePassword", requireLogin, Promise.coroutine(function*(req, res) {
+	router.put("/password", requireLogin, Promise.coroutine(function*(req, res) {
+
+		// TODO: this check should only be client side
 		if (req.body.new_password != req.body.new_password_confirm) {
 			return res.end("fail: new passwords do not match");
 		}
+
 		try {
 
-			let user = yield User.findOne({_id: req.user._id}).exec();
+			let user = yield User.findOne({ _id: req.user._id }, "+password");
 
 			// check if old password is correct
 			if(!(yield user.comparePassword(req.body.old_password))) {
@@ -323,7 +338,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 		}
 	}));
 
-	app.post("/f/editProfile", requireLogin, multer().single("new_prof_pic"), Promise.coroutine(function*(req, res) {
+	router.put("/profile", requireLogin, multer().single("new_prof_pic"), Promise.coroutine(function*(req, res) {
 
 		let updatedUser = {
 			firstname: req.body.firstname,
@@ -361,7 +376,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 			}
 
 			// update user info in database
-			yield User.findOneAndUpdate({_id: req.user._id}, updatedUser);
+			yield User.findOneAndUpdate({ _id: req.user._id }, updatedUser);
 
 			res.end("success");
 
@@ -372,78 +387,13 @@ module.exports = function(imports, publicDir, profpicDir) {
 	}));
 
 	// get information about the currently logged in user
-	app.post("/f/getSelf", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/self", requireLogin, function(req, res) {
+		res.json(req.user);
+	});
+
+	router.post("/forgotPassword", Promise.coroutine(function*(req, res) {
 		try {
-			let user = yield User.findOne({_id: req.user._id}, "-password").exec();
-			res.end(JSON.stringify(user));
-		} catch (err) {
-			console.error(err);
-			res.end("fail");
-		}
-	}));
 
-	app.post("/f/removeUserFromTeam", requireLogin, requireAdmin, Promise.coroutine(function*(req, res) {
-		try {
-			let user = yield User.findOne({_id: req.body.user_id}).exec();
-
-			if (user.current_team.position == "admin" && (yield User.count({
-				teams: {
-					id: req.user.current_team.id,
-					position: "admin"
-				}
-			})) <= 1) {
-				return res.end("You cannot remove the only Admin on your team.");
-			}
-
-			if (user.current_team.id == req.user.current_team.id) {
-				user.current_team = undefined; // TODO: make it so that if current_team is undefined when logging in, it allows you to set current_team
-				yield user.save();
-			}
-
-			user = yield User.update({
-				_id: req.body.user_id
-			}, { "$pull": {
-				"teams": {id: req.user.current_team.id},
-				"subdivisions": {team: req.user.current_team.id}
-			}});
-
-			yield Chat.update({
-				team: req.user.current_team.id,
-				userMembers: new ObjectId(req.body.user_id)
-			}, {
-				"$pull": {
-					"userMembers": req.body.user_id
-				}
-			});
-
-			yield Folder.update({
-				team: req.user.current_team.id,
-				userMembers: new ObjectId(req.body.user_id)
-			}, {
-				"$pull": {
-					"userMembers": req.body.user_id
-				}
-			});
-
-			yield Event.update({
-				team: req.user.current_team.id,
-				userAttendees: new ObjectId(req.body.user_id)
-			}, {
-				"$pull": {
-					"userAttendees": req.body.user_id
-				}
-			});
-
-			res.end("success");
-
-		} catch (err) {
-			console.error(err);
-			res.end("fail");
-		}
-	}));
-
-	app.post("/f/forgotPassword", Promise.coroutine(function*(req, res) {
-		try {
 			let user = yield User.findOne({
 				email: req.body.email,
 				username: req.body.username
@@ -456,11 +406,15 @@ module.exports = function(imports, publicDir, profpicDir) {
 			let newPassword = yield user.assignNewPassword();
 			yield user.save();
 
+			// TODO: WE ARE EMAILING PASSWORDS IN PLAINTEXT
+			// they are temporary passwords but still
+			// see http://security.stackexchange.com/questions/32589/temporary-passwords-e-mailed-out-as-plain-text
+
 			// email user new password
 			let info = yield util.sendEmail({
 				to: req.body.email,
 				subject: "New MorTeam Password Request",
-				text: "It seems like you requested to reset your password. Your new password is " + new_password + ". Feel free to reset it after you log in."
+				text: "It seems like you requested to reset your password. Your new password is " + netPassword + ". Feel free to reset it after you log in."
 			});
 			console.log(info);
 
@@ -471,4 +425,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 			res.end("fail");
 		}
 	}));
+
+	return router;
+
 };

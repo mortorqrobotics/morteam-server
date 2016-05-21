@@ -163,6 +163,71 @@ module.exports = function(imports) {
 		}
 	}));
 
+	router.delete("/:teamId/user/:userId", requireLogin, requireAdmin, Promise.coroutine(function*(req, res) {
+		// remove a user from a team
+		try {
+
+			let user = yield User.findOne({ _id: req.params.userId });
+
+			// TODO: this logic is not quite right for multiple teams
+			// in general this route is not quite right for multiple teams
+			// it does not even use the teamId param
+			if (user.current_team.position == "admin" && (yield User.count({
+				teams: {
+					id: req.user.current_team.id,
+					position: "admin"
+				}
+			})) <= 1) {
+				return res.end("You cannot remove the only Admin on your team.");
+			}
+
+			if (user.current_team.id == req.user.current_team.id) {
+				user.current_team = undefined; // TODO: make it so that if current_team is undefined when logging in, it allows you to set current_team
+				yield user.save();
+			}
+
+			user = yield User.update({
+				_id: req.params.userId
+			}, { "$pull": {
+				"teams": { id: req.user.current_team.id },
+				"subdivisions": { team: req.user.current_team.id }
+			}});
+
+			yield Chat.update({
+				team: req.user.current_team.id,
+				userMembers: new ObjectId(req.params.userId)
+			}, {
+				"$pull": {
+					"userMembers": req.params.userId
+				}
+			});
+
+			yield Folder.update({
+				team: req.user.current_team.id,
+				userMembers: new ObjectId(req.params.userId)
+			}, {
+				"$pull": {
+					"userMembers": req.body.user_id
+				}
+			});
+
+			yield Event.update({
+				team: req.user.current_team.id,
+				userAttendees: new ObjectId(req.body.user_id)
+			}, {
+				"$pull": {
+					"userAttendees": req.params.userId
+				}
+			});
+
+			res.end("success");
+
+		} catch (err) {
+			console.error(err);
+			res.end("fail");
+		}
+	}));
+
 	return router;
 
 };
