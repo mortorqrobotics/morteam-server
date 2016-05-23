@@ -233,8 +233,8 @@ module.exports = function(app, util, schemas) {
 		let userId = req.body.userId;
 
 		let currentDate = Date.now();
-		if (currentDate.getTime() < endDate.getTime()) {
-			endDate = currentDate;
+		if (currentDate < endDate.getTime()) {
+			endDate = new Date(currentDate);
 		}
 
 		try {
