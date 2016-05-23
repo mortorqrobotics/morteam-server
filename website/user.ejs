@@ -421,6 +421,8 @@
           $("#absences_to_year").append("<option value='"+i+"'>"+i+"</option>");
         }
 
+        $('#absences_to_year option[value="'+thisYear+'"]').prop('selected',true);
+
         for(var i = 1 ; i <= new Date($("#absences_from_year").find(":selected").text(), createdMonth, 0).getDate() ; i++ ){
           $("#absences_from_day").append("<option value='"+i+"'>"+i+"</option>")
           if(i == new Date($("#absences_from_year").find(":selected").text(), createdMonth, 0).getDate()){
@@ -545,6 +547,7 @@
             endDate: new Date( $( "#absences_to_year option:selected" ).text(), $( "#absences_to_month option:selected" ).val()-1, $( "#absences_to_day option:selected" ).text()),
             userId: window.location.pathname.substring(window.location.pathname.lastIndexOf("/") + 1)
           }, function(responseText){
+            console.log(responseText)
             clearAbsencesDisplay()
             displayAbsences(responseText);
           })
