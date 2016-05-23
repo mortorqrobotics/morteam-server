@@ -31,7 +31,7 @@ module.exports = function(app, util, schemas) {
 				],
 				date: {$gte: start, $lte: end}
 			});
-			
+
 			res.json(events);
 
 		} catch (err) {
@@ -54,7 +54,7 @@ module.exports = function(app, util, schemas) {
 				],
 				date: {$gte: new Date()}
 			}).sort("date").exec();
-			
+
 			res.end( JSON.stringify(events) );
 
 		} catch (err) {
@@ -136,7 +136,7 @@ module.exports = function(app, util, schemas) {
 					entireTeam: req.body.entireTeam
 				});
 			}
-		
+
 			res.end(JSON.stringify(event));
 
 		} catch (err) {
@@ -149,9 +149,9 @@ module.exports = function(app, util, schemas) {
 		try {
 
 			yield Event.findOneAndRemove({_id: req.body.event_id});
-			
+
 			yield AttendanceHandler.findOneAndRemove({event: req.body.event_id});
-			
+
 			res.end("success");
 
 		} catch (err) {
@@ -164,7 +164,7 @@ module.exports = function(app, util, schemas) {
 		try {
 
 			let handler = yield AttendanceHandler.findOne({event: req.body.event_id}).populate("attendees.user").exec();
-			
+
 			res.end(JSON.stringify(handler.attendees));
 
 		} catch (err) {
@@ -244,7 +244,7 @@ module.exports = function(app, util, schemas) {
 
 			let result = getPresencesAbsences(handlers, userId);
 
-			res.end(JSON.stringify(results));
+			res.end(JSON.stringify(result));
 
 		} catch (err) {
 			console.error(err);
@@ -261,7 +261,7 @@ module.exports = function(app, util, schemas) {
 			}, {
 				"$set": {"attendees.$.status": "excused"}
 			});
-			
+
 			res.end("success");
 
 		} catch (err) {

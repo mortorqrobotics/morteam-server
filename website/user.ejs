@@ -102,6 +102,45 @@
         <div class="col-md-6">
           <div class="attendance_data">
             <span class="data_title bold">Attendance</span><br/>
+            <span class="data_point">From:</span>
+            <span id="absences_from" class="data_answer">
+              <select id="absences_from_month">
+                <option value="1">January</option>
+                <option value="2">February</option>
+                <option value="3">March</option>
+                <option value="4">April</option>
+                <option value="5">May</option>
+                <option value="6">June</option>
+                <option value="7">July</option>
+                <option value="8">August</option>
+                <option value="9">September</option>
+                <option value="10">October</option>
+                <option value="11">November</option>
+                <option value="12">December</option>
+              </select>
+              <select id="absences_from_day"></select>
+              <select id="absences_from_year"></select>
+            </span><br>
+            <span class="data_point">To:</span>
+            <span id="absences_to" class="data_answer">
+              <select id="absences_to_month">
+                <option value="1">January</option>
+                <option value="2">February</option>
+                <option value="3">March</option>
+                <option value="4">April</option>
+                <option value="5">May</option>
+                <option value="6">June</option>
+                <option value="7">July</option>
+                <option value="8">August</option>
+                <option value="9">September</option>
+                <option value="10">October</option>
+                <option value="11">November</option>
+                <option value="12">December</option>
+              </select>
+              <select id="absences_to_day"></select>
+              <select id="absences_to_year"></select>
+            </span>
+            <input id="refresh_attendance" type="button" class="button" value="Refresh Attendance" /><br>
             <span class="data_point">Unexcused absences:</span><span id="absences_num" class="data_answer"></span><br/>
             <span class="data_point">Presence percentage:</span><span id="presence_percent" class="data_answer"></span><br/>
             <hr class="hr_small_margin">
@@ -117,22 +156,12 @@
           <div class="tasks_data">
             <span class="data_title bold">Pending Tasks</span>
             <ul class="task_list pending">
-              <!-- <li class="data_point">Cut part<br/><div class="indented">this is the desc</div></li>
-              <li class="data_point">Send form to SC</li>
-              <li class="data_point">Clean out vacuum cleaner</li> -->
+
             </ul>
             <hr class="hr_small_margin">
             <span class="data_title bold">Completed Tasks</span>
             <ul class="task_list completed">
-              <!-- <li class="data_point">Screw in talons</li>
-              <li class="data_point">Buy wood for tests</li>
-              <li class="data_point">Destroy Gabe</li>
-              <li class="data_point">Cut part</li>
-              <li class="data_point">Send form to SC</li>
-              <li class="data_point">Clean out vacuum cleaner</li>
-              <li class="data_point">Cut part</li>
-              <li class="data_point">Send form to SC</li>
-              <li class="data_point">Clean out vacuum cleaner</li> -->
+
             </ul>
           </div>
         </div>
@@ -279,12 +308,13 @@
           $(".task_year").append("<option value='"+j+"'>"+j+"</option>"); //adds next 5 years
         }
 
-        for(var k = 1 ; k <= new Date($(".task_year").find(":selected").text(), $('.task_month option[value="'+thisMonth+'"]').val(), 0).getDate() ; k++ ){
+        for(var k = 1 ; k <= new Date($(".task_year").find(":selected").text(), thisMonth, 0).getDate() ; k++ ){
           $(".task_day").append("<option value='"+k+"'>"+k+"</option>")
           if(k == new Date($(".task_year").find(":selected").text(), $('.task_month option[value="'+thisMonth+'"]').val(), 0).getDate()){
             $(".task_day option[value='"+(parseInt(thisDay)+1).toString()+"']").prop("selected", true);
           }
         }
+
 
         $(".task_month").change(function(){
           $(".task_day").empty();
@@ -344,26 +374,96 @@
 
       }
 
-      $(document).ready(function(){
-        $.post("/f/getUserAbsences", {user_id: window.location.pathname.substring(window.location.pathname.lastIndexOf("/") + 1)}, function(responseText){
-          var data = JSON.parse(responseText);
-          var absences = data.absences;
-          var present = data.present;
-          for(var i = 0; i < absences.length; i++){
-            $(".absences_list").append('<li class="absence_date">'+ absences[i].name + ' (' + readableDate(absences[i].date) + ')' + '</li>')
-            if(localStorage.c_team_position == "leader" || localStorage.c_team_position == "admin"){
-              $(".absences_list").append('<input type="button" data-eventid="'+absences[i]._id+'" class="button excuse_btn" value="Excuse" style="float: right;" /><br/>');
-            }else{
-              $(".absences_list").append("<br/>");
-            }
-          }
-
-          $("#absences_num").html(absences.length);
-          if( !isNaN(100*present/(absences.length+present)) ){
-            $("#presence_percent").html( Math.round(100*present/(absences.length+present)) + "%" );
+      function displayAbsences(responseText) {
+        var data = JSON.parse(responseText);
+        var absences = data.absences;
+        var present = data.present;
+        for(var i = 0; i < absences.length; i++){
+          $(".absences_list").append('<li class="absence_date">'+ absences[i].name + ' (' + readableDate(absences[i].date) + ')' + '</li>')
+          if(localStorage.c_team_position == "leader" || localStorage.c_team_position == "admin"){
+            $(".absences_list").append('<input type="button" data-eventid="'+absences[i]._id+'" class="button excuse_btn" value="Excuse" style="float: right;" /><br/>');
           }else{
-            $("#presence_percent").html( "N/A" );
+            $(".absences_list").append("<br/>");
           }
+        }
+
+        $("#absences_num").html(absences.length);
+        if( !isNaN(100*present/(absences.length+present)) ){
+          $("#presence_percent").html( Math.round(100*present/(absences.length+present)) + "%" );
+        }else{
+          $("#presence_percent").html( "N/A" );
+        }
+      }
+
+      function clearAbsencesDisplay() {
+        $(".absences_list").empty();
+        $("#absences_num").html("");
+        $("#presence_percent").html("");
+      }
+
+      $(document).ready(function(){
+
+        var userCreatedDate = new Date("<%= created_at %>")
+
+        var thisYear = new Date().getFullYear();
+        var thisMonth = new Date().getMonth()+1;
+        var thisDay = new Date().getDate();
+
+        var createdYear = userCreatedDate.getFullYear();
+        var createdMonth = userCreatedDate.getMonth()+1;
+        var createdDay = userCreatedDate.getDate();
+
+        $('#absences_from_month option[value="'+createdMonth+'"]').prop('selected',true);
+        $('#absences_to_month option[value="'+thisMonth+'"]').prop('selected',true);
+
+        for(var i = userCreatedDate.getFullYear() ; i <= thisYear ; i++){
+          $("#absences_from_year").append("<option value='"+i+"'>"+i+"</option>");
+          $("#absences_to_year").append("<option value='"+i+"'>"+i+"</option>");
+        }
+
+        for(var i = 1 ; i <= new Date($("#absences_from_year").find(":selected").text(), createdMonth, 0).getDate() ; i++ ){
+          $("#absences_from_day").append("<option value='"+i+"'>"+i+"</option>")
+          if(i == new Date($("#absences_from_year").find(":selected").text(), createdMonth, 0).getDate()){
+            $("#absences_from_day option[value='"+createdDay+"']").prop("selected", true);
+          }
+        }
+
+        for(var i = 1 ; i <= new Date($("#absences_to_year").find(":selected").text(), thisMonth, 0).getDate() ; i++ ){
+          $("#absences_to_day").append("<option value='"+i+"'>"+i+"</option>")
+          if(i == new Date($("#absences_to_year").find(":selected").text(), thisMonth, 0).getDate()){
+            $("#absences_to_day option[value='"+thisDay+"']").prop("selected", true);
+          }
+        }
+
+        $("#absences_from_month").change(function(){
+          $("#absences_from_day").empty();
+          for(var i = 1 ; i <= new Date($("#absences_from_year").find(":selected").text(), $("#absences_from_month").find(":selected").val(), 0).getDate() ; i++ ){
+            $("#absences_from_day").append("<option value='"+i+"'>"+i+"</option>")
+          }
+        });
+        $("#absences_from_year").change(function(){
+          $("#absences_from_day").empty();
+          for(var i = 1 ; i <= new Date($(this).find(":selected").text(), $("#absences_from_month").find(":selected").val(), 0).getDate() ; i++){
+            $("#absences_from_day").append("<option value='"+i+"'>"+i+"</option>");
+          }
+        })
+
+        $("#absences_to_month").change(function(){
+          $("#absences_to_day").empty();
+          for(var i = 1 ; i <= new Date($("#absences_to_year").find(":selected").text(), $("#absences_to_month").find(":selected").val(), 0).getDate() ; i++ ){
+            $("#absences_to_day").append("<option value='"+i+"'>"+i+"</option>")
+          }
+        });
+        $("#absences_to_year").change(function(){
+          $("#absences_to_day").empty();
+          for(var i = 1 ; i <= new Date($(this).find(":selected").text(), $("#absences_to_month").find(":selected").val(), 0).getDate() ; i++){
+            $("#absences_to_day").append("<option value='"+i+"'>"+i+"</option>");
+          }
+        })
+
+        $.post("/f/getUserAbsences", {user_id: window.location.pathname.substring(window.location.pathname.lastIndexOf("/") + 1)}, function(responseText){
+          clearAbsencesDisplay();
+          displayAbsences(responseText);
         })
         $.post("/f/getCompletedUserTasks", {user_id: window.location.pathname.substring(window.location.pathname.lastIndexOf("/") + 1)}, function(responseText){
           if(responseText != "fail"){
@@ -435,6 +535,21 @@
         }else{
           $(".profile_id.ejs").attr("src", localStorage.profpicpath + "-60");
         }
+
+        $(document).on("click", "#refresh_attendance", function(){
+          // console.log(new Date( $( "#absences_from_year option:selected" ).text(), $( "#absences_from_month option:selected" ).val()-1, $( "#absences_from_day option:selected" ).text()))
+          // console.log(new Date( $( "#absences_to_year option:selected" ).text(), $( "#absences_to_month option:selected" ).val()-1, $( "#absences_to_day option:selected" ).text()))
+          // console.log(window.location.pathname.substring(window.location.pathname.lastIndexOf("/") + 1))
+          $.post("/f/getUserAbsencesBetweenDates", {
+            startDate: new Date( $( "#absences_from_year option:selected" ).text(), $( "#absences_from_month option:selected" ).val()-1, $( "#absences_from_day option:selected" ).text()),
+            endDate: new Date( $( "#absences_to_year option:selected" ).text(), $( "#absences_to_month option:selected" ).val()-1, $( "#absences_to_day option:selected" ).text()),
+            userId: window.location.pathname.substring(window.location.pathname.lastIndexOf("/") + 1)
+          }, function(responseText){
+            clearAbsencesDisplay()
+            displayAbsences(responseText);
+          })
+        })
+
         $(document).on("click", "#change_password", function(){
           change_password_modal = changePasswordModal("Change Password");
         })

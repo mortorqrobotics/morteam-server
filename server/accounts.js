@@ -42,6 +42,7 @@ module.exports = function(app, util, schemas, publicDir, profpicDir) {
 				email: user.email,
 				phone: user.phone,
 				profpicpath: user.profpicpath,
+				created_at: user.created_at,
 				viewedUserPosition: util.findTeamInUser(user, req.user.current_team.id).position,
 				viewerUserPosition: req.user.current_team.position,
 				viewerUserId: req.user._id
@@ -183,7 +184,7 @@ module.exports = function(app, util, schemas, publicDir, profpicDir) {
 			}
 
 			yield User.create(userInfo);
-			
+
 			res.end("success");
 		} catch (err) {
 			console.error(err);
@@ -252,7 +253,7 @@ module.exports = function(app, util, schemas, publicDir, profpicDir) {
 					&& positionHA[req.user.current_team.position] >= positionHA[current_position])) {
 				return res.end("fail");
 			}
-			
+
 			// update position of target user
 			yield User.update({
 				_id: req.body.user_id,
