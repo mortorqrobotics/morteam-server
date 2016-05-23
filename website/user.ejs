@@ -539,15 +539,11 @@
         }
 
         $(document).on("click", "#refresh_attendance", function(){
-          // console.log(new Date( $( "#absences_from_year option:selected" ).text(), $( "#absences_from_month option:selected" ).val()-1, $( "#absences_from_day option:selected" ).text()))
-          // console.log(new Date( $( "#absences_to_year option:selected" ).text(), $( "#absences_to_month option:selected" ).val()-1, $( "#absences_to_day option:selected" ).text()))
-          // console.log(window.location.pathname.substring(window.location.pathname.lastIndexOf("/") + 1))
           $.post("/f/getUserAbsencesBetweenDates", {
             startDate: new Date( $( "#absences_from_year option:selected" ).text(), $( "#absences_from_month option:selected" ).val()-1, $( "#absences_from_day option:selected" ).text()),
             endDate: new Date( $( "#absences_to_year option:selected" ).text(), $( "#absences_to_month option:selected" ).val()-1, $( "#absences_to_day option:selected" ).text()),
             userId: window.location.pathname.substring(window.location.pathname.lastIndexOf("/") + 1)
           }, function(responseText){
-            console.log(responseText)
             clearAbsencesDisplay()
             displayAbsences(responseText);
           })
