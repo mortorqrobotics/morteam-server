@@ -232,6 +232,11 @@ module.exports = function(app, util, schemas) {
 		let endDate = new Date(req.body.endDate);
 		let userId = req.body.userId;
 
+		let currentDate = Date.now();
+		if (currentDate.getTime() < endDate.getTime()) {
+			endDate = currentDate;
+		}
+
 		try {
 
 			let handlers = yield AttendanceHandler.find({

@@ -272,7 +272,7 @@ module.exports = function(app, util, schemas, publicDir, profpicDir) {
 
 	app.post("/f/searchForUsers", requireLogin, Promise.coroutine(function*(req, res) {
 		// create array of search terms
-		let terms = req.body.search.split(" ");
+		let terms = String(req.body.search).trim().split(" ");
 		let regexString = "";
 		// create regular expression
 		for (let i = 0; i < terms.length; i++) {
