@@ -164,30 +164,25 @@ $(document).ready(function() {
 		});
 	});
 	$(document).on("click", "#logout_button", function() {
-		$.post("/f/logout", JSON.stringify({"id": getId(), "token": getToken()}), function(responseText) {
-			if (responseText == "success") {
-				removeFromStorage("id");
-				removeFromStorage("username");
-				removeFromStorage("firstname");
-				removeFromStorage("lastname");
-				removeFromStorage("email");
-				removeFromStorage("phone");
-				removeFromStorage("teams");
-				removeFromStorage("c_team");
-				removeFromStorage("c_team_position");
-				location="login";
+		sendAjax("POST", "/logout", function(response) {
+			if (response == "success") {
+				var props = ["id", "username", "firstname", "email", "phone", "teams", "c_team", "c_team_position"];
+				for (var i = 0; i < props.length; i++) {
+					removeFromStorage(props[i]);
+				}
+				location.assign("/login");
 			}
 		});
 	});
 	$(document).on("click", "#view_prof_button", function() {
-		location="u/"+localStorage._id;
+		location.assign("/profile/" + localStorage._id);
 	});
 	$("#view_prof_button_ejs").click(function() {
-		location="../u/"+localStorage._id;
+		location.assign("/profile/" + localStorage._id);
 	});
 
 	$("#aboutus_link").click(function() {
-		location="about";
+		location.assign("/about");
 	});
 	$(".menu").click(function() {
 		if ($(".nav_dropdown").css("top").indexOf("-") != -1) {
@@ -201,7 +196,7 @@ $(document).ready(function() {
 		}
 	});
 	$(document).on("click", ".user-link", function() {
-		location="/u/"+$(this).attr("data-userid");
+		location.assign("/profile/" + $(this).attr("data-userid"));
 	})
 
 	var typingTimer;
@@ -215,11 +210,13 @@ $(document).ready(function() {
 	})
 	function doneTyping() {
 		if ($(".searchbox").val() != "") {
-			$.post("/f/searchForUsers", {search: $(".searchbox").val()}, function(responseText) {
-				if (responseText != "fail") {
+			sendAjax("GET", "/users/search". {
+				search: $(".searchbox").val()
+			}, function(response) {
+				if (response != "fail") {
 					$(".search_drop").show();
 					$(".search_drop_items").empty();
-					var matchedUsers = responseText;
+					var matchedUsers = response;
 					for (var i = 0; i < matchedUsers.length; i++) {
 						$(".search_drop_items").append('<li class="user-link" data-userid="'+matchedUsers[i]._id+'"><img id="small_prof_pic" src="'+matchedUsers[i].profpicpath+'-60" onError="this.src=\'../images/user.jpg\'"></img>&nbsp;&nbsp;<span style="vertical-align:middle;">'+matchedUsers[i].firstname + ' ' + matchedUsers[i].lastname+'</span></li>')
 					}
@@ -232,6 +229,6 @@ $(document).ready(function() {
 		}
 	}
 	$(document).on("click", ".messageNotification", function() {
-		location="chat";
+		location.assign("chat");
 	})
 });
