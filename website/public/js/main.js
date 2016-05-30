@@ -10,7 +10,7 @@ function sendAjax() {
 		options = args.pop(); // any additional options
 	}
 	options.method = args.shift(); // method
-	options.url = args.shift(); // url
+	options.url = getPath(args.shift()); // url
 	if (typeof args[0] != "function") {
 		options.data = args.shift(); // request body
 	}
@@ -21,6 +21,13 @@ function sendAjax() {
 		}
 	}
 	$.ajax(options);
+}
+
+function getPath(arg) {
+	if (Array.isArray(arg)) {
+		return "/" + arg.join("/");
+	}
+	return arg;
 }
 
 Array.prototype.last = function() {
