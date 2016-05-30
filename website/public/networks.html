@@ -1,260 +1,262 @@
 <!DOCTYPE html>
 <html lang="en">
 
-  <head>
-  	<meta charset="utf-8" />
-  	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-  	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>MorTeam - Network</title>
-  	<link href='http://fonts.googleapis.com/css?family=Open+Sans:700,300,400' rel='stylesheet' type='text/css'>
-  	<link href='http://fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'>
-  	<link href='http://fonts.googleapis.com/css?family=Exo+2:400,300,200' rel='stylesheet' type='text/css'>
-    <link href='http://fonts.googleapis.com/css?family=Titillium+Web' rel='stylesheet' type='text/css'>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
-    <link rel="stylesheet" href="css/index.css" type="text/css">
-    <link href="jbox/jBox.css" rel="stylesheet">
-    <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
-    <script type="text/javascript" src="js/teamLocations.js"></script>
-  </head>
-  <body>
-      <div id="audio-files" style="display: none;">
-          <audio id="click-sound">
-              <source src="jbox/audio/bling2.wav" type="audio/wav" />
-          </audio>
-      </div>
-    <!-- NAVIGATION BAR -->
-    <div class="nav_dropdown">
-      <p onclick="location='index'">Home</p>
-      <p onclick="location='chat'">Chat</p>
-      <p onclick="location='drive'">Drive</p>
-      <p onclick="location='cal'">Calendar</p>
-      <p onclick="location='networks'" style="background-color: orange">Networks</p>
-    </div>
-    <div class="navigation_bar">
-        <ul id="navbar_list">
-          <li class="navbar_item navbar_title" onclick="location='/'">
-              MorTeam
-          </li>
-          <li class="navbar_item searchbox_list_item">
-              <input type="text" placeholder="search" class="searchbox"></input>
-              <div class="search_drop">
-                <ul class="search_drop_items">
+	<head>
+		<meta charset="utf-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+		<title>MorTeam - Network</title>
+		<link href='http://fonts.googleapis.com/css?family=Open+Sans:700,300,400' rel='stylesheet' type='text/css'>
+		<link href='http://fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'>
+		<link href='http://fonts.googleapis.com/css?family=Exo+2:400,300,200' rel='stylesheet' type='text/css'>
+		<link href='http://fonts.googleapis.com/css?family=Titillium+Web' rel='stylesheet' type='text/css'>
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
+		<link rel="stylesheet" href="css/index.css" type="text/css">
+		<link href="jbox/jBox.css" rel="stylesheet">
+		<script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
+		<script type="text/javascript" src="js/teamLocations.js"></script>
+	</head>
 
-                </ul>
-              </div>
-          </li>
-          <li class="navbar_item glyph_link chat_btn menu_btn" onclick="location='chat'">
-              <span class="glyphicon glyphicon-comment"></span>
-          </li>
-          <li class="navbar_item glyph_link drive_btn menu_btn" onclick="location='drive'">
-              <span class="glyphicon glyphicon-hdd"></span>
-          </li>
-          <li class="navbar_item glyph_link cal_btn menu_btn" onclick="location='cal'">
-              <span class="glyphicon glyphicon-calendar"></span>
-          </li>
-          <li class="navbar_item glyph_link networks_btn menu_btn active" onclick="location='networks'">
-              <span class="glyphicon glyphicon-globe"></span>
-          </li>
-          <li class="navbar_item glyph_link networks_btn menu_btn" onclick="location='http://www.scout.morteam.com'">
-              <span class="glyphicon glyphicon-pencil"></span>
-          </li>
-          <div class="navbar_item right_links">
-            <li class="navbar_item glyph_link menu">
-                <span class="glyphicon glyphicon-menu-hamburger"></span>
-            </li>
-            <li class="navbar_item glyph_link" id="notif_button">
-                <span class="glyphicon glyphicon-inbox"></span>
-            </li>
-            <img class="profile_id" id="small_prof_pic" src="./images/user.jpg"></img>
-            <span class="profile_name" id="name_link"></span>
-          </div>
-        </ul>
-    </div>
-    <div id="notif_drop" class="hidden">
-      <ul>
-        <li class="notif_list_item">hey</li>
-        <li class="notif_list_item">hi</li>
-        <li class="notif_list_item">ho</li>
-      </ul>
-    </div>
-    <div id="prof_drop" class="hidden">
-      <ul>
-        <li class="notif_list_item" id="view_prof_button">View Profile and Settings</li>
-        <li class="notif_list_item" id="logout_button">Log Out</li>
-      </ul>
-    </div>
-    <div id="darken" class="hidden"></div>
-    <!-- END OF NAVIGATION BAR -->
+	<body>
+		<div id="audio-files" style="display: none;">
+			<audio id="click-sound">
+				<source src="jbox/audio/bling2.wav" type="audio/wav" />
+			</audio>
+		</div>
+		<!-- NAVIGATION BAR -->
+		<div class="nav_dropdown">
+			<p onclick="location='index'">Home</p>
+			<p onclick="location='chat'">Chat</p>
+			<p onclick="location='drive'">Drive</p>
+			<p onclick="location='cal'">Calendar</p>
+			<p onclick="location='networks'" style="background-color: orange">Networks</p>
+		</div>
+		<div class="navigation_bar">
+			<ul id="navbar_list">
+				<li class="navbar_item navbar_title" onclick="location='/'">
+					MorTeam
+				</li>
+				<li class="navbar_item searchbox_list_item">
+					<input type="text" placeholder="search" class="searchbox"></input>
+					<div class="search_drop">
+						<ul class="search_drop_items">
 
-    <!-- BODY -->
-    <div id="map" class="wide_body">
-      <!--<h1 class="undcon">Under Construction</h1>-->
-    </div>
+						</ul>
+					</div>
+				</li>
+				<li class="navbar_item glyph_link chat_btn menu_btn" onclick="location='chat'">
+					<span class="glyphicon glyphicon-comment"></span>
+				</li>
+				<li class="navbar_item glyph_link drive_btn menu_btn" onclick="location='drive'">
+					<span class="glyphicon glyphicon-hdd"></span>
+				</li>
+				<li class="navbar_item glyph_link cal_btn menu_btn" onclick="location='cal'">
+					<span class="glyphicon glyphicon-calendar"></span>
+				</li>
+				<li class="navbar_item glyph_link networks_btn menu_btn active" onclick="location='networks'">
+					<span class="glyphicon glyphicon-globe"></span>
+				</li>
+				<li class="navbar_item glyph_link networks_btn menu_btn" onclick="location='http://www.scout.morteam.com'">
+					<span class="glyphicon glyphicon-pencil"></span>
+				</li>
+				<div class="navbar_item right_links">
+					<li class="navbar_item glyph_link menu">
+						<span class="glyphicon glyphicon-menu-hamburger"></span>
+					</li>
+					<li class="navbar_item glyph_link" id="notif_button">
+						<span class="glyphicon glyphicon-inbox"></span>
+					</li>
+					<img class="profile_id" id="small_prof_pic" src="./images/user.jpg"></img>
+					<span class="profile_name" id="name_link"></span>
+				</div>
+			</ul>
+		</div>
+		<div id="notif_drop" class="hidden">
+			<ul>
+				<li class="notif_list_item">hey</li>
+				<li class="notif_list_item">hi</li>
+				<li class="notif_list_item">ho</li>
+			</ul>
+		</div>
+		<div id="prof_drop" class="hidden">
+			<ul>
+				<li class="notif_list_item" id="view_prof_button">View Profile and Settings</li>
+				<li class="notif_list_item" id="logout_button">Log Out</li>
+			</ul>
+		</div>
+		<div id="darken" class="hidden"></div>
+		<!-- END OF NAVIGATION BAR -->
 
-    <div id="leftbar" class="leftbar initial">
-      <!-- <div class="leftbar_item bold" id="teamNum"></div> -->
-    </div>
-    <span class="glyphicon glyphicon-chevron-right initial hide_leftbar"></span>
-    <!-- END OF BODY -->
+		<!-- BODY -->
+		<div id="map" class="wide_body">
+			<!--<h1 class="undcon">Under Construction</h1>-->
+		</div>
+
+		<div id="leftbar" class="leftbar initial">
+			<!-- <div class="leftbar_item bold" id="teamNum"></div> -->
+		</div>
+		<span class="glyphicon glyphicon-chevron-right initial hide_leftbar"></span>
+		<!-- END OF BODY -->
 
 
-    <script src="jbox/jBox.min.js"></script>
-    <script type="text/javascript" src="js/socket.io.js"></script>
-    <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
-    <script type="text/javascript" src="js/velocity.min.js"></script>
-    <script type="text/javascript" src="js/main.js"></script>
-    <script type="text/javascript">
+		<script src="jbox/jBox.min.js"></script>
+		<script type="text/javascript" src="js/socket.io.js"></script>
+		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+		<script type="text/javascript" src="js/velocity.min.js"></script>
+		<script type="text/javascript" src="js/main.js"></script>
+		<script type="text/javascript">
 
-      function hideLeftbar(time, button){
-        $(".leftbar").velocity({left: "-260px"}, { duration: time, queue: false });
-        $(button).removeClass("glyphicon-chevron-left").addClass("glyphicon-chevron-right");
-        $(button).velocity({left: "10px"}, { duration: time, queue: false });
-      }
-      function showLeftbar(time, button){
-        $(".leftbar").velocity({left: "0px"}, { duration: time, queue: false });
-        $(button).removeClass("glyphicon-chevron-right").addClass("glyphicon-chevron-left");
-        $(button).velocity({left: "220px"}, { duration: time, queue: false });
-      }
+			function hideLeftbar(time, button) {
+				$(".leftbar").velocity({left: "-260px"}, { duration: time, queue: false });
+				$(button).removeClass("glyphicon-chevron-left").addClass("glyphicon-chevron-right");
+				$(button).velocity({left: "10px"}, { duration: time, queue: false });
+			}
+			function showLeftbar(time, button) {
+				$(".leftbar").velocity({left: "0px"}, { duration: time, queue: false });
+				$(button).removeClass("glyphicon-chevron-right").addClass("glyphicon-chevron-left");
+				$(button).velocity({left: "220px"}, { duration: time, queue: false });
+			}
 
-      $.post("/f/getTeamNum", function(responseText){
-        var currentTeam = data[responseText];
+			$.post("/f/getTeamNum", function(responseText) {
+				var currentTeam = data[responseText];
 
-        if( currentTeam ){
-          var map = new google.maps.Map(document.getElementById("map"), {
-            zoom: 15,
-            center: new google.maps.LatLng(currentTeam.longitude, currentTeam.latitude),
-            mapTypeId: google.maps.MapTypeId.ROADMAP
-          });
-        }else{
-          var map = new google.maps.Map(document.getElementById("map"), {
-            zoom: 4,
-            center: new google.maps.LatLng(39.9583086,-98.3331244),
-            mapTypeId: google.maps.MapTypeId.ROADMAP
-          });
-        }
+				if (currentTeam) {
+					var map = new google.maps.Map(document.getElementById("map"), {
+						zoom: 15,
+						center: new google.maps.LatLng(currentTeam.longitude, currentTeam.latitude),
+						mapTypeId: google.maps.MapTypeId.ROADMAP
+					});
+				} else {
+					var map = new google.maps.Map(document.getElementById("map"), {
+						zoom: 4,
+						center: new google.maps.LatLng(39.9583086,-98.3331244),
+						mapTypeId: google.maps.MapTypeId.ROADMAP
+					});
+				}
 
-        var infoWindow = new google.maps.InfoWindow();
+				var infoWindow = new google.maps.InfoWindow();
 
-        for (var team in data)(function() {
-          var teamNum = team;
+				for (var team in data)(function() {
+					var teamNum = team;
 
-          var marker = new google.maps.Marker({
-            position: new google.maps.LatLng(data[team].longitude, data[team].latitude),
-            map: map
-          });
+					var marker = new google.maps.Marker({
+						position: new google.maps.LatLng(data[team].longitude, data[team].latitude),
+						map: map
+					});
 
-          google.maps.event.addListener(marker, "click", function() {
-            // infoWindow.setContent("<a class='teamNumLink' style='cursor: pointer' target='_blank' >Team " + teamNum + "</a>");
-            // infoWindow.open(map, marker);
+					google.maps.event.addListener(marker, "click", function() {
+//						infoWindow.setContent("<a class='teamNumLink' style='cursor: pointer' target='_blank' >Team " + teamNum + "</a>");
+//						infoWindow.open(map, marker);
 
-            $.post("/f/isTeamOnMorTeam", {teamNum: teamNum}, function(responseText){
-              $(".leftbar").empty()
+						$.post("/f/isTeamOnMorTeam", {teamNum: teamNum}, function(responseText) {
+							$(".leftbar").empty()
 
-              if(responseText != "false" && responseText != "fail") {
-                var team = responseText
+							if (responseText != "false" && responseText != "fail") {
+								var team = responseText
 
-                var teamDisplay = document.createElement("div");
-                $(teamDisplay).addClass("leftbar_item");
-                $(teamDisplay).addClass("bold");
-                $(teamDisplay).attr("id", "teamNum");
-                $(teamDisplay).append("Team " + team.number);
-                $(teamDisplay).append("<br/>");
-                $(teamDisplay).append("<span id='teamName'>"+team.name+"</span>");
+								var teamDisplay = document.createElement("div");
+								$(teamDisplay).addClass("leftbar_item");
+								$(teamDisplay).addClass("bold");
+								$(teamDisplay).attr("id", "teamNum");
+								$(teamDisplay).append("Team " + team.number);
+								$(teamDisplay).append("<br/>");
+								$(teamDisplay).append("<span id='teamName'>"+team.name+"</span>");
 
-                showLeftbar(300, $(".hide_leftbar")[0]);
-                $("#leftbar").append($(teamDisplay))
+								showLeftbar(300, $(".hide_leftbar")[0]);
+								$("#leftbar").append($(teamDisplay))
 
-              }else{
-                var teamDisplay = document.createElement("div");
-                $(teamDisplay).addClass("leftbar_item");
-                $(teamDisplay).addClass("bold");
-                $(teamDisplay).attr("id", "teamNum");
-                $(teamDisplay).append("Team " + teamNum);
+							} else {
+								var teamDisplay = document.createElement("div");
+								$(teamDisplay).addClass("leftbar_item");
+								$(teamDisplay).addClass("bold");
+								$(teamDisplay).attr("id", "teamNum");
+								$(teamDisplay).append("Team " + teamNum);
 
-                showLeftbar(300, $(".hide_leftbar")[0]);
-                $("#leftbar").append($(teamDisplay))
-              }
+								showLeftbar(300, $(".hide_leftbar")[0]);
+								$("#leftbar").append($(teamDisplay))
+							}
 
-              var TBALinkDiv = document.createElement("div");
-              $(TBALinkDiv).addClass("leftbar_item");
-              var TBALink = document.createElement("a");
-              $(TBALink).attr("target", "_blank");
-              $(TBALink).attr("href", "http://www.thebluealliance.com/team/" + teamNum);
-              $(TBALink).html("Team " + teamNum + " on TheBlueAlliance");
-              $(TBALinkDiv).append($(TBALink));
-              $(".leftbar").append($(TBALinkDiv));
+							var TBALinkDiv = document.createElement("div");
+							$(TBALinkDiv).addClass("leftbar_item");
+							var TBALink = document.createElement("a");
+							$(TBALink).attr("target", "_blank");
+							$(TBALink).attr("href", "http://www.thebluealliance.com/team/" + teamNum);
+							$(TBALink).html("Team " + teamNum + " on TheBlueAlliance");
+							$(TBALinkDiv).append($(TBALink));
+							$(".leftbar").append($(TBALinkDiv));
 
-            })
+						})
 
-          });
-        })();
-      });
+					});
+				})();
+			});
 
-      $(document).on("click", ".teamNumLink", function(){
-        var $this = $(this);
-        var clickedTeamNum = $.trim($(this).html().substring(5, 9))
-        $.post("/f/isTeamOnMorTeam", {teamNum: clickedTeamNum}, function(responseText){
-          $(".leftbar").empty()
+			$(document).on("click", ".teamNumLink", function() {
+				var $this = $(this);
+				var clickedTeamNum = $.trim($(this).html().substring(5, 9))
+				$.post("/f/isTeamOnMorTeam", {teamNum: clickedTeamNum}, function(responseText) {
+					$(".leftbar").empty()
 
-          if(responseText != "false" && responseText != "fail") {
-            var team = responseText
+					if (responseText != "false" && responseText != "fail") {
+						var team = responseText
 
-            var teamDisplay = document.createElement("div");
-            $(teamDisplay).addClass("leftbar_item");
-            $(teamDisplay).addClass("bold");
-            $(teamDisplay).attr("id", "teamNum");
-            $(teamDisplay).append(team.number);
-            $(teamDisplay).append("<br/>");
-            $(teamDisplay).append("<span id='teamName'>"+team.name+"</span>");
+						var teamDisplay = document.createElement("div");
+						$(teamDisplay).addClass("leftbar_item");
+						$(teamDisplay).addClass("bold");
+						$(teamDisplay).attr("id", "teamNum");
+						$(teamDisplay).append(team.number);
+						$(teamDisplay).append("<br/>");
+						$(teamDisplay).append("<span id='teamName'>"+team.name+"</span>");
 
-            showLeftbar(300, $(".hide_leftbar")[0]);
-            $("#leftbar").append($(teamDisplay))
+						showLeftbar(300, $(".hide_leftbar")[0]);
+						$("#leftbar").append($(teamDisplay))
 
-          }else{
-            var teamDisplay = document.createElement("div");
-            $(teamDisplay).addClass("leftbar_item");
-            $(teamDisplay).addClass("bold");
-            $(teamDisplay).attr("id", "teamNum");
-            $(teamDisplay).append($this.html());
+					} else {
+						var teamDisplay = document.createElement("div");
+						$(teamDisplay).addClass("leftbar_item");
+						$(teamDisplay).addClass("bold");
+						$(teamDisplay).attr("id", "teamNum");
+						$(teamDisplay).append($this.html());
 
-            showLeftbar(300, $(".hide_leftbar")[0]);
-            $("#leftbar").append($(teamDisplay))
-          }
+						showLeftbar(300, $(".hide_leftbar")[0]);
+						$("#leftbar").append($(teamDisplay))
+					}
 
-          var TBALinkDiv = document.createElement("div");
-          $(TBALinkDiv).addClass("leftbar_item");
-          var TBALink = document.createElement("a");
-          $(TBALink).attr("target", "_blank");
-          $(TBALink).attr("href", "http://www.thebluealliance.com/team/" + $.trim( $this.html().substring(5, 9) ));
-          $(TBALink).html("TheBlueAlliance Link For Team " + $.trim( $this.html().substring(5, 9) ));
-          $(TBALinkDiv).append($(TBALink));
-          $(".leftbar").append($(TBALinkDiv));
+					var TBALinkDiv = document.createElement("div");
+					$(TBALinkDiv).addClass("leftbar_item");
+					var TBALink = document.createElement("a");
+					$(TBALink).attr("target", "_blank");
+					$(TBALink).attr("href", "http://www.thebluealliance.com/team/" + $.trim($this.html().substring(5, 9)));
+					$(TBALink).html("TheBlueAlliance Link For Team " + $.trim($this.html().substring(5, 9)));
+					$(TBALinkDiv).append($(TBALink));
+					$(".leftbar").append($(TBALinkDiv));
 
-        })
-      })
+				})
+			})
 
-      $(".hide_leftbar").click(function(){
-        if($(this).hasClass("glyphicon-chevron-left")){
-          hideLeftbar(300, this);
-        }else{
-          showLeftbar(300, this);
-        }
-      });
+			$(".hide_leftbar").click(function() {
+				if ($(this).hasClass("glyphicon-chevron-left")) {
+					hideLeftbar(300, this);
+				} else {
+					showLeftbar(300, this);
+				}
+			});
 
-    </script>
+		</script>
 
-  <script>
-  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+	<script>
+	(function(i,s,o,g,r,a,m) {i['GoogleAnalyticsObject']=r;i[r]=i[r]||function() {
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
 
-  ga('create', 'UA-67504156-1', 'auto');
-  ga('send', 'pageview');
+	ga('create', 'UA-67504156-1', 'auto');
+	ga('send', 'pageview');
 
-  </script>
+	</script>
 
-  </body>
+	</body>
+
 </html>

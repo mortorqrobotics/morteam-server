@@ -1,861 +1,829 @@
 <!DOCTYPE html>
 <html>
 
-<head>
-  <meta charset="utf-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="google-site-verification" content="iZPx5YPDKe6xaZTCKdgkb9u9r2DDKHVPkgFDkCgPqJg" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>MorTeam</title>
-  <meta name="description" content="The Standard Robotics Management Platform. Communicate with teammmates using team-wide and subdivision-specific announcements, chats, group drives, calendar events, attendance, and more.">
-  <link href='http://fonts.googleapis.com/css?family=Open+Sans:700,300,400' rel='stylesheet' type='text/css'>
-  <link href='http://fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'>
-  <link href='http://fonts.googleapis.com/css?family=Exo+2:400,300,200' rel='stylesheet' type='text/css'>
-  <link href='http://fonts.googleapis.com/css?family=Titillium+Web' rel='stylesheet' type='text/css'>
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
-  <link rel="stylesheet" href="css/index.css" type="text/css">
-  <link href="jbox/themes/TooltipDark.css" rel="stylesheet">
-  <link href="jbox/jBox.css" rel="stylesheet">
-  <script src="http://js.nicedit.com/nicEdit-latest.js" type="text/javascript"></script>
-  <script type="text/javascript">
-    bkLib.onDomLoaded(function() {
-      new nicEditor({
-          buttonList: ['bold', 'italic', 'underline', 'left', 'center', 'right', 'justify', 'removeformat', 'hr', 'upload']
-      }).panelInstance('main_textarea');
-    });
-  </script>
-  <script src="js/spin.js"></script>
-  <script type="text/javascript">
-      // var loadingDiv = document.createElement("div");
-      // loadingDiv.className = "loading_circle";
-      // loadingDiv.id = "loading_circle";
-  </script>
-</head>
+	<head>
+		<meta charset="utf-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="google-site-verification" content="iZPx5YPDKe6xaZTCKdgkb9u9r2DDKHVPkgFDkCgPqJg" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+		<title>MorTeam</title>
+		<meta name="description" content="The Standard Robotics Management Platform. Communicate with teammmates using team-wide and subdivision-specific announcements, chats, group drives, calendar events, attendance, and more.">
+		<link href='http://fonts.googleapis.com/css?family=Open+Sans:700,300,400' rel='stylesheet' type='text/css'>
+		<link href='http://fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'>
+		<link href='http://fonts.googleapis.com/css?family=Exo+2:400,300,200' rel='stylesheet' type='text/css'>
+		<link href='http://fonts.googleapis.com/css?family=Titillium+Web' rel='stylesheet' type='text/css'>
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
+		<link rel="stylesheet" href="css/index.css" type="text/css">
+		<link href="jbox/themes/TooltipDark.css" rel="stylesheet">
+		<link href="jbox/jBox.css" rel="stylesheet">
+		<script src="http://js.nicedit.com/nicEdit-latest.js" type="text/javascript"></script>
+		<script type="text/javascript">
+			bkLib.onDomLoaded(function() {
+				new nicEditor({
+						buttonList: ['bold', 'italic', 'underline', 'left', 'center', 'right', 'justify', 'removeformat', 'hr', 'upload']
+				}).panelInstance('main_textarea');
+			});
+		</script>
+		<script src="js/spin.js"></script>
+		<script type="text/javascript">
+				// var loadingDiv = document.createElement("div");
+				// loadingDiv.className = "loading_circle";
+				// loadingDiv.id = "loading_circle";
+		</script>
+	</head>
 
-<body>
-  <div id="audio-files" style="display: none;">
-    <audio id="click-sound">
-        <source src="jbox/audio/bling2.wav" type="audio/wav" />
-    </audio>
-  </div>
-  <!-- NAVIGATION BAR -->
-  <div class="nav_dropdown">
-    <p onclick="location='index'" style="background-color: orange">Home</p>
-    <p onclick="location='chat'">Chat</p>
-    <p onclick="location='drive'">Drive</p>
-    <p onclick="location='cal'">Calendar</p>
-    <p onclick="location='networks'">Networks</p>
-  </div>
-  <div class="navigation_bar">
-      <ul id="navbar_list">
-        <li class="navbar_item navbar_title" onclick="location='/'">
-            MorTeam
-        </li>
-        <li class="navbar_item searchbox_list_item">
-            <input type="text" placeholder="search" class="searchbox"></input>
-            <div class="search_drop">
-              <ul class="search_drop_items">
+	<body>
+		<div id="audio-files" style="display: none;">
+			<audio id="click-sound">
+				<source src="jbox/audio/bling2.wav" type="audio/wav" />
+			</audio>
+		</div>
+		<!-- NAVIGATION BAR -->
+		<div class="nav_dropdown">
+			<p onclick="location='index'" style="background-color: orange">Home</p>
+			<p onclick="location='chat'">Chat</p>
+			<p onclick="location='drive'">Drive</p>
+			<p onclick="location='cal'">Calendar</p>
+			<p onclick="location='networks'">Networks</p>
+		</div>
+		<div class="navigation_bar">
+			<ul id="navbar_list">
+				<li class="navbar_item navbar_title" onclick="location='/'">
+					MorTeam
+				</li>
+				<li class="navbar_item searchbox_list_item">
+					<input type="text" placeholder="search" class="searchbox"></input>
+					<div class="search_drop">
+						<ul class="search_drop_items">
 
-              </ul>
-            </div>
-        </li>
-        <li class="navbar_item glyph_link chat_btn menu_btn" onclick="location='chat'">
-            <span class="glyphicon glyphicon-comment"></span>
-        </li>
-        <li class="navbar_item glyph_link drive_btn menu_btn" onclick="location='drive'">
-            <span class="glyphicon glyphicon-hdd"></span>
-        </li>
-        <li class="navbar_item glyph_link cal_btn menu_btn" onclick="location='cal'">
-            <span class="glyphicon glyphicon-calendar"></span>
-        </li>
-        <li class="navbar_item glyph_link networks_btn menu_btn" onclick="location='networks'">
-            <span class="glyphicon glyphicon-globe"></span>
-        </li>
-        <li class="navbar_item glyph_link networks_btn menu_btn" onclick="location='http://www.scout.morteam.com'">
-            <span class="glyphicon glyphicon-pencil"></span>
-        </li>
-        <div class="navbar_item right_links">
-          <li class="navbar_item glyph_link menu">
-              <span class="glyphicon glyphicon-menu-hamburger"></span>
-          </li>
-          <li class="navbar_item glyph_link" id="notif_button">
-              <span class="glyphicon glyphicon-inbox"></span>
-              <span class="unseen_count bold">3</span>
-          </li>
-          <img class="profile_id" id="small_prof_pic" src="./images/user.jpg"></img>
-          <span class="profile_name" id="name_link"></span>
-        </div>
-      </ul>
-  </div>
-  <!-- <div class="triangle_thing_notif hidden"></div>
-  <div class="triangle_thing_prof hidden"></div> -->
-  <div id="notif_drop" class="hidden">
-      <ul>
-          <li class="notif_list_item">hey</li>
-          <li class="notif_list_item">hi</li>
-          <li class="notif_list_item">ho</li>
-      </ul>
-  </div>
-  <div id="prof_drop" class="hidden">
-      <ul>
-          <li class="notif_list_item" id="view_prof_button">View Profile and Settings</li>
-          <li class="notif_list_item" id="logout_button">Log Out</li>
-      </ul>
-  </div>
-  <div class="hidden" id="darken"></div>
-  <!-- END OF NAVIGATION BAR -->
-  <!-- BODY -->
-  <div class="announcements_container" style="margin-top: 60px;">
+						</ul>
+					</div>
+				</li>
+				<li class="navbar_item glyph_link chat_btn menu_btn" onclick="location='chat'">
+					<span class="glyphicon glyphicon-comment"></span>
+				</li>
+				<li class="navbar_item glyph_link drive_btn menu_btn" onclick="location='drive'">
+					<span class="glyphicon glyphicon-hdd"></span>
+				</li>
+				<li class="navbar_item glyph_link cal_btn menu_btn" onclick="location='cal'">
+					<span class="glyphicon glyphicon-calendar"></span>
+				</li>
+				<li class="navbar_item glyph_link networks_btn menu_btn" onclick="location='networks'">
+					<span class="glyphicon glyphicon-globe"></span>
+				</li>
+				<li class="navbar_item glyph_link networks_btn menu_btn" onclick="location='http://www.scout.morteam.com'">
+					<span class="glyphicon glyphicon-pencil"></span>
+				</li>
+				<div class="navbar_item right_links">
+					<li class="navbar_item glyph_link menu">
+						<span class="glyphicon glyphicon-menu-hamburger"></span>
+					</li>
+					<li class="navbar_item glyph_link" id="notif_button">
+						<span class="glyphicon glyphicon-inbox"></span>
+						<span class="unseen_count bold">3</span>
+					</li>
+					<img class="profile_id" id="small_prof_pic" src="./images/user.jpg"></img>
+					<span class="profile_name" id="name_link"></span>
+				</div>
+			</ul>
+		</div>
+		<!-- <div class="triangle_thing_notif hidden"></div>
+		<div class="triangle_thing_prof hidden"></div> -->
+		<div id="notif_drop" class="hidden">
+			<ul>
+				<li class="notif_list_item">hey</li>
+				<li class="notif_list_item">hi</li>
+				<li class="notif_list_item">ho</li>
+			</ul>
+		</div>
+		<div id="prof_drop" class="hidden">
+			<ul>
+				<li class="notif_list_item" id="view_prof_button">View Profile and Settings</li>
+				<li class="notif_list_item" id="logout_button">Log Out</li>
+			</ul>
+		</div>
+		<div class="hidden" id="darken"></div>
+		<!-- END OF NAVIGATION BAR -->
+		<!-- BODY -->
+		<div class="announcements_container" style="margin-top: 60px;">
 
-      <div class="announcements_left">
-        <p id="view_prof_button">View Profile</p>
-        <p id="logout_button">Log Out</p>
-        <p id="team_button">Team</p>
-        <hr>
-        <div id="your_subdivisions">
-            <h5 style="margin-bottom: 15px;">Your Subdivisions</h5>
-        </div>
-        <hr>
-        <div id="public_subdivisions">
-            <h5 style="margin-bottom: 15px;">Public Subdivisions</h5>
-        </div>
-        <hr>
-        <div id="invited_subdivisions">
-            <h5 style="margin-bottom: 15px;">Subdivision Invites</h5>
-        </div>
-        <!-- <hr>
-        <p class="new_subdivision"><span class="glyphicon glyphicon-plus"></span> Make a Subdivision</p> -->
-        <hr>
-        <span style="color: gray; display: inline-block; margin-bottom: 6px;">© 2015 MorTeam</span><br/>
-        <span><a style="color: gray;" href="terms">Privacy and Terms</a></span>
-      </div>
-      <div class="announcements_center">
-        <div class="post_announcement cf">
-            <textarea class="announcement_textarea" id="main_textarea" placeholder="Make an announcement..."></textarea>
-            <input type="button" class="announcement_post_button" value="Post"></input>
-            <div class=" announcement_audience_button btn-group">
-                <button class="button dropdown-toggle" data-toggle="dropdown"><span class="audience_selection">Everyone</span>
-                    <span class="caret"></span>
-                </button>
-                <ul class="dropdown-menu audience_drop">
-                    <li class="audience_item selected first_audience">Everyone</li>
-                    <li class="audience_item custom_audience"><span class="glyphicon glyphicon-cog"></span>&nbsp;Custom</li>
-                </ul>
-            </div>
-        </div>
-        <div class="announcements_list">
-          <!--
-          <div class="announcement" data-postNum="1">
-            <div class="announcement_top">
-              <img id="medium_prof_pic" src="./images/user.jpg"></img>
-              <span class="announcement_poster">Farbod Rafezy</span>
-            </div>
-            <span class="glyphicon glyphicon-remove delete_icon"></span><br>
-            the words go here
-          </div>
-          -->
-        </div>
-      </div>
-      <div class="announcements_right">
-        <div class="ad" style="margin-top: 0px; position: fixed;"><script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
-<!-- Home -->
-<ins class="adsbygoogle"
-     style="display:inline-block;width:160px;height:600px"
-     data-ad-client="ca-pub-6908015693715549"
-     data-ad-slot="7361971513"></ins>
-<script>
-(adsbygoogle = window.adsbygoogle || []).push({});
-</script></div>
-      </div>
+			<div class="announcements_left">
+				<p id="view_prof_button">View Profile</p>
+				<p id="logout_button">Log Out</p>
+				<p id="team_button">Team</p>
+				<hr>
+				<div id="your_subdivisions">
+					<h5 style="margin-bottom: 15px;">Your Subdivisions</h5>
+				</div>
+				<hr>
+				<div id="public_subdivisions">
+					<h5 style="margin-bottom: 15px;">Public Subdivisions</h5>
+				</div>
+				<hr>
+				<div id="invited_subdivisions">
+					<h5 style="margin-bottom: 15px;">Subdivision Invites</h5>
+				</div>
+				<!-- <hr>
+				<p class="new_subdivision"><span class="glyphicon glyphicon-plus"></span> Make a Subdivision</p> -->
+				<hr>
+				<span style="color: gray; display: inline-block; margin-bottom: 6px;">© 2015 MorTeam</span><br/>
+				<span><a style="color: gray;" href="terms">Privacy and Terms</a></span>
+			</div>
+			<div class="announcements_center">
+				<div class="post_announcement cf">
+					<textarea class="announcement_textarea" id="main_textarea" placeholder="Make an announcement..."></textarea>
+					<input type="button" class="announcement_post_button" value="Post"></input>
+					<div class=" announcement_audience_button btn-group">
+						<button class="button dropdown-toggle" data-toggle="dropdown">
+							<span class="audience_selection">Everyone</span>
+							<span class="caret"></span>
+						</button>
+						<ul class="dropdown-menu audience_drop">
+							<li class="audience_item selected first_audience">Everyone</li>
+							<li class="audience_item custom_audience"><span class="glyphicon glyphicon-cog"></span>&nbsp;Custom</li>
+						</ul>
+					</div>
+				</div>
+				<div class="announcements_list">
+					<!--
+					<div class="announcement" data-postNum="1">
+						<div class="announcement_top">
+							<img id="medium_prof_pic" src="./images/user.jpg"></img>
+							<span class="announcement_poster">Farbod Rafezy</span>
+						</div>
+						<span class="glyphicon glyphicon-remove delete_icon"></span><br>
+						the words go here
+					</div>
+					-->
+				</div>
+			</div>
+			<div class="announcements_right">
+				<div class="ad" style="margin-top: 0px; position: fixed;"><script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+					<!-- Home -->
+					<ins class="adsbygoogle"
+							 style="display:inline-block;width:160px;height:600px"
+							 data-ad-client="ca-pub-6908015693715549"
+							 data-ad-slot="7361971513"></ins>
+					<script>
+					(adsbygoogle = window.adsbygoogle || []).push({});
+					</script>
+				</div>
+			</div>
 
-  </div>
-
-
-  <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
-  <script src="jbox/jBox.min.js"></script>
-  <script type="text/javascript" src="js/socket.io.js"></script>
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.isotope/2.2.1/isotope.pkgd.min.js"></script>
-  <script type="text/javascript" src="js/velocity.min.js"></script>
-  <script type="text/javascript" src="js/autosize.js"></script>
-  <script src="js/Autolinker.min.js"></script>
-  <script type="text/javascript" src="js/main.js"></script>
-  <script type="text/javascript">
-      autosize(document.querySelectorAll('textarea'));
-  </script>
-
-  <script>
-
-  var socket = io();
-  // socket.emit("add to clients", {_id: localStorage._id});
-
-  spinnerOpts = {
-      lines: 13 // The number of lines to draw
-          ,
-      length: 0 // The length of each line
-          ,
-      width: 20 // The line thickness
-          ,
-      radius: 42 // The radius of the inner circle
-          ,
-      scale: .5 // Scales overall size of the spinner
-          ,
-      corners: 1 // Corner roundness (0..1)
-          ,
-      color: 'orange' // #rgb or #rrggbb or array of colors
-          ,
-      opacity: 0.25 // Opacity of the lines
-          ,
-      rotate: 0 // The rotation offset
-          ,
-      direction: 1 // 1: clockwise, -1: counterclockwise
-          ,
-      speed: 1 // Rounds per second
-          ,
-      trail: 60 // Afterglow percentage
-          ,
-      fps: 20 // Frames per second when using setTimeout() as a fallback for CSS
-          ,
-      zIndex: 2e9 // The z-index (defaults to 2000000000)
-          ,
-      className: 'spinner' // The CSS class to assign to the spinner
-          ,
-      top: '50%' // Top position relative to parent
-          ,
-      left: '50%' // Left position relative to parent
-          ,
-      shadow: false // Whether to render a shadow
-          ,
-      hwaccel: false // Whether to use hardware acceleration
-          ,
-      position: 'absolute' // Element positioning
-  }
+		</div>
 
 
-  function messageNotification(title, content, chatid) {
-    var newMessageNotice = new jBox('Notice', {
-        attributes: {
-            x: 'right',
-            y: 'bottom'
-        },
-        theme: 'NoticeBorder',
-        volume: 100,
-        animation: {
-            open: 'slide:bottom',
-            close: 'slide:right'
-        },
-        content: content,
-        maxWidth: 300,
-        maxHeight: 105,
-        title: title,
-        closeOnClick: false,
-        onOpen: function() {
-            // $($(this)[0].content).attr("data-author", author._id);
-            $($(this)[0].content).attr("data-chatid", chatid);
-            $($(this)[0].content).parent().parent().addClass("messageNotification");
-        }
-    });
-  };
-  function newSubdivisionModal(title, instructions){
-    var new_modal = new jBox('Modal', {
-      width: 350,
-      height: 373,
-      title: title,
-      onClose: function(){
-        setTimeout(function(){
-          new_subdivision_modal.destroy();  //keyword "this" does not work. make sure to name the modal "new_subdivision_modal".
-        }, 100)
-      }
-    });
-    $.post("/f/getUsersInTeam", function(responseText){
-      var span = document.createElement("span");
-      var subdivision_name = '<input type="text" class="name_input" id="subdivision_name" placeholder="Subdivision Name">';
-      var public_option = '<p class="subdivision_type public selected">Public</p>';
-      var private_option = '<p class="subdivision_type private">Private</p>';
-      var help = '<span class="glyphicon glyphicon-question-sign subdivision_help" title="A public subdivision can be viewed and joined<br/> by anyone in the team, but viewing and joining<br/> a private subdivision requires an invitation."></span>';
-      var user_search = '<input type="text" placeholder="Search Names..." class="members_search" id="subdivision_members_search">';
-      var potential_members = document.createElement("div");
-      $(potential_members).attr("id", "potential_subdivision_members");
-      $(potential_members).addClass("potential_members");
-      var create_btn = '<input type="button" id="make_subdivision_btn" class="button done_button" value="Make Subdivision">'
-      var users = JSON.parse(responseText);
-      for(var i = 0; i < users.length; i++){
-        var user = document.createElement("p");
-        $(user).addClass("potential_member");
-        $(user).attr("data-userid", users[i]._id);
-        $(user).html(users[i].firstname + " " + users[i].lastname);
-        $(potential_members).append(user);
-        if(users[i]._id == localStorage._id){
-          $(user).addClass("hidden");
-        }
-      }
-      $(span).append($(subdivision_name));
-      $(span).append("<br/>");
-      $(span).append($(public_option));
-      $(span).append($(private_option));
-      $(span).append($(help));
-      $(span).append("<br/>");
-      $(span).append(instructions);
-      $(span).append("<br/>");
-      $(span).append($(user_search));
-      $(span).append("<br/>");
-      $(span).append($(potential_members));
-      $(span).append("<br/>");
-      $(span).append($(create_btn));
-      new_modal.setContent( $(span) );
-      $('.subdivision_help').jBox('Tooltip', {
-          delayOpen: 0,
-          delayClose: 300,
-          theme: "TooltipDark",
-          position: {
-              y: 'bottom'
-          }
-      });
-      new_modal.open();
-    })
-    return new_modal;
-  }
-  function customAudienceModal(title){
-    var new_modal = new jBox('Modal', {
-      width: 350,
-      height: 373,
-      title: title,
-      onClose: function(){
-        setTimeout(function(){
-          custom_audience_modal.destroy();  //keyword "this" does not work. make sure to name the modal "custom_audience_modal".
-        }, 100)
-      }
+		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+		<script src="jbox/jBox.min.js"></script>
+		<script type="text/javascript" src="js/socket.io.js"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.isotope/2.2.1/isotope.pkgd.min.js"></script>
+		<script type="text/javascript" src="js/velocity.min.js"></script>
+		<script type="text/javascript" src="js/autosize.js"></script>
+		<script src="js/Autolinker.min.js"></script>
+		<script type="text/javascript" src="js/main.js"></script>
+		<script type="text/javascript">
+				autosize(document.querySelectorAll('textarea'));
+		</script>
 
-    });
-    var span = document.createElement("span");
-    var user_search = '<input type="text" placeholder="Search Names..." class="members_search" id="audience_members_search">';
-    var potential_members = document.createElement("div");
-    $(potential_members).attr("id", "potential_audience_members");
-    $(potential_members).addClass("potential_members");
-    $(potential_members).addClass("tall");
-    var add_btn = '<input type="button" id="choose_audience_btn" class="button done_button" value="Done">'
-    $.ajax({
-      type: 'POST',
-      url: "/f/getAllSubdivisionsForUserInTeam",
-      async: false,
-      success: function(responseText){
-        var subdivisions = JSON.parse(responseText);
-        for(var i = 0; i < subdivisions.length; i++){
-          var subdivision = document.createElement("p");
-          $(subdivision).addClass("potential_subdivision");
-          $(subdivision).attr("data-subdivisionid", subdivisions[i]._id);
-          $(subdivision).html(subdivisions[i].name);
-          $(potential_members).append(subdivision);
-        }
+		<script>
 
-      }
-    });
-    $.post("/f/getUsersInTeam", function(responseText){
-      var users = JSON.parse(responseText);
-      for(var i = 0; i < users.length; i++){
-        var user = document.createElement("p");
-        $(user).addClass("potential_member");
-        $(user).attr("data-userid", users[i]._id);
-        $(user).html(users[i].firstname + " " + users[i].lastname);
-        $(potential_members).append(user);
-        if(users[i]._id == localStorage._id){
-          $(user).addClass("clicked");
-          $(user).addClass("hidden");
-        }
-      }
-      $(span).append($(user_search));
-      $(span).append("<br/>");
-      $(span).append($(potential_members));
-      $(span).append("<br/>");
-      $(span).append($(add_btn));
-      new_modal.setContent( $(span) );
-      new_modal.open();
-    })
-    return new_modal;
-  }
-  function getAudienceText(obj){
-    var result = "";
+			var socket = io();
+			// socket.emit("add to clients", {_id: localStorage._id});
 
-    if(obj.entireTeam == true){
-      return "Everyone";
-    }
+			spinnerOpts = {
+				lines: 13, // The number of lines to draw
+				length: 0, // The length of each line
+				width: 20, // The line thickness
+				radius: 42, // The radius of the inner circle
+				scale: .5, // Scales overall size of the spinner
+				corners: 1, // Corner roundness (0..1)
+				color: 'orange', // #rgb or #rrggbb or array of colors
+				opacity: 0.25, // Opacity of the lines
+				rotate: 0, // The rotation offset
+				direction: 1, // 1: clockwise, -1: counterclockwise
+				speed: 1, // Rounds per second
+				trail: 60, // Afterglow percentage
+				fps: 20, // Frames per second when using setTimeout() as a fallback for CSS
+				zIndex: 2e9, // The z-index (defaults to 2000000000)
+				className: 'spinner', // The CSS class to assign to the spinner
+				top: '50%', // Top position relative to parent
+				left: '50%', // Left position relative to parent
+				shadow: false, // Whether to render a shadow
+				hwaccel: false, // Whether to use hardware acceleration
+				position: 'absolute' // Element positioning
+			}
 
-    if( obj.userAudience.length != 0 ){
-      for(var i = 0; i < obj.userAudience.length; i++){
-        result += obj.userAudience[i].firstname + " " + obj.userAudience[i].lastname + ", ";
-      }
-    }
 
-    if( obj.subdivisionAudience.length != 0 ){
-      for(var i = 0; i < obj.subdivisionAudience.length; i++){
-        result += obj.subdivisionAudience[i].name + ", ";
-      }
-    }
+			function messageNotification(title, content, chatid) {
+				var newMessageNotice = new jBox('Notice', {
+					attributes: {
+						x: 'right',
+						y: 'bottom'
+					},
+					theme: 'NoticeBorder',
+					volume: 100,
+					animation: {
+						open: 'slide:bottom',
+						close: 'slide:right'
+					},
+					content: content,
+					maxWidth: 300,
+					maxHeight: 105,
+					title: title,
+					closeOnClick: false,
+					onOpen: function() {
+						$($(this)[0].content).attr("data-chatid", chatid);
+						$($(this)[0].content).parent().parent().addClass("messageNotification");
+					}
+				});
+			};
+			function newSubdivisionModal(title, instructions) {
+				var new_modal = new jBox('Modal', {
+					width: 350,
+					height: 373,
+					title: title,
+					onClose: function() {
+						setTimeout(function() {
+							new_subdivision_modal.destroy();  //keyword "this" does not work. make sure to name the modal "new_subdivision_modal".
+						}, 100)
+					}
+				});
+				$.post("/f/getUsersInTeam", function(responseText) {
+					var span = document.createElement("span");
+					var subdivision_name = '<input type="text" class="name_input" id="subdivision_name" placeholder="Subdivision Name">';
+					var public_option = '<p class="subdivision_type public selected">Public</p>';
+					var private_option = '<p class="subdivision_type private">Private</p>';
+					var help = '<span class="glyphicon glyphicon-question-sign subdivision_help" title="A public subdivision can be viewed and joined<br/> by anyone in the team, but viewing and joining<br/> a private subdivision requires an invitation."></span>';
+					var user_search = '<input type="text" placeholder="Search Names..." class="members_search" id="subdivision_members_search">';
+					var potential_members = document.createElement("div");
+					$(potential_members).attr("id", "potential_subdivision_members");
+					$(potential_members).addClass("potential_members");
+					var create_btn = '<input type="button" id="make_subdivision_btn" class="button done_button" value="Make Subdivision">'
+					var users = JSON.parse(responseText);
+					for (var i = 0; i < users.length; i++) {
+						var user = document.createElement("p");
+						$(user).addClass("potential_member");
+						$(user).attr("data-userid", users[i]._id);
+						$(user).html(users[i].firstname + " " + users[i].lastname);
+						$(potential_members).append(user);
+						if (users[i]._id == localStorage._id) {
+							$(user).addClass("hidden");
+						}
+					}
+					$(span).append($(subdivision_name));
+					$(span).append("<br/>");
+					$(span).append($(public_option));
+					$(span).append($(private_option));
+					$(span).append($(help));
+					$(span).append("<br/>");
+					$(span).append(instructions);
+					$(span).append("<br/>");
+					$(span).append($(user_search));
+					$(span).append("<br/>");
+					$(span).append($(potential_members));
+					$(span).append("<br/>");
+					$(span).append($(create_btn));
+					new_modal.setContent($(span));
+					$('.subdivision_help').jBox('Tooltip', {
+						delayOpen: 0,
+						delayClose: 300,
+						theme: "TooltipDark",
+						position: {
+							y: 'bottom'
+						}
+					});
+					new_modal.open();
+				})
+				return new_modal;
+			}
+			function customAudienceModal(title) {
+				var new_modal = new jBox('Modal', {
+					width: 350,
+					height: 373,
+					title: title,
+					onClose: function() {
+						setTimeout(function() {
+							custom_audience_modal.destroy();  //keyword "this" does not work. make sure to name the modal "custom_audience_modal".
+						}, 100)
+					}
 
-    result = result.substring(0, result.length-2);
+				});
+				var span = document.createElement("span");
+				var user_search = '<input type="text" placeholder="Search Names..." class="members_search" id="audience_members_search">';
+				var potential_members = document.createElement("div");
+				$(potential_members).attr("id", "potential_audience_members");
+				$(potential_members).addClass("potential_members");
+				$(potential_members).addClass("tall");
+				var add_btn = '<input type="button" id="choose_audience_btn" class="button done_button" value="Done">'
+				$.ajax({
+					type: 'POST',
+					url: "/f/getAllSubdivisionsForUserInTeam",
+					async: false,
+					success: function(responseText) {
+						var subdivisions = JSON.parse(responseText);
+						for (var i = 0; i < subdivisions.length; i++) {
+							var subdivision = document.createElement("p");
+							$(subdivision).addClass("potential_subdivision");
+							$(subdivision).attr("data-subdivisionid", subdivisions[i]._id);
+							$(subdivision).html(subdivisions[i].name);
+							$(potential_members).append(subdivision);
+						}
 
-    return result;
+					}
+				});
+				$.post("/f/getUsersInTeam", function(responseText) {
+					var users = JSON.parse(responseText);
+					for (var i = 0; i < users.length; i++) {
+						var user = document.createElement("p");
+						$(user).addClass("potential_member");
+						$(user).attr("data-userid", users[i]._id);
+						$(user).html(users[i].firstname + " " + users[i].lastname);
+						$(potential_members).append(user);
+						if (users[i]._id == localStorage._id) {
+							$(user).addClass("clicked");
+							$(user).addClass("hidden");
+						}
+					}
+					$(span).append($(user_search));
+					$(span).append("<br/>");
+					$(span).append($(potential_members));
+					$(span).append("<br/>");
+					$(span).append($(add_btn));
+					new_modal.setContent($(span));
+					new_modal.open();
+				})
+				return new_modal;
+			}
+			function getAudienceText(obj) {
+				var result = "";
 
-  }
-  var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
-  $(document).ready(function(){
-    // document.body.appendChild(loadingDiv);
+				if (obj.entireTeam == true) {
+					return "Everyone";
+				}
 
-    if(localStorage.c_team_position == "leader" || localStorage.c_team_position == "admin"){
-      $("#invited_subdivisions").after('<hr><p class="new_subdivision"><span class="glyphicon glyphicon-plus"></span> Make a Subdivision</p>');
-    }
+				if (obj.userAudience.length != 0) {
+					for (var i = 0; i < obj.userAudience.length; i++) {
+						result += obj.userAudience[i].firstname + " " + obj.userAudience[i].lastname + ", ";
+					}
+				}
 
-    $.post("/f/getAllSubdivisionsForUserInTeam", function(responseText){
-      var subdivisions = JSON.parse(responseText);
-      if(subdivisions.length != 0){
-        for (var i = 0; i < subdivisions.length; i++){
-          var p = document.createElement("p");
-          $(p).addClass("subdivision-link");
-          $(p).attr("data-subdivisionid", subdivisions[i]._id);
-          var glyphSpan = "<span class='glyphicon glyphicon-screenshot'></span>"
-          var nameSpan = document.createElement("span");
-          $(nameSpan).html(" " + subdivisions[i].name);
-          $(p).append(glyphSpan);
-          $(p).append(nameSpan);
-          $("#your_subdivisions").append( $(p) );
+				if (obj.subdivisionAudience.length != 0) {
+					for (var i = 0; i < obj.subdivisionAudience.length; i++) {
+						result += obj.subdivisionAudience[i].name + ", ";
+					}
+				}
 
-          var li = document.createElement("li")
-          $(li).addClass("audience_item");
-          $(li).attr("data-subdivisionid", subdivisions[i]._id);
-          $(li).html(subdivisions[i].name);
-          $(li).insertAfter( $(".first_audience") );
-        }
-      }else{
-        $("#your_subdivisions").append( "none" );
-      }
-    });
-    $.post("/f/getPublicSubdivisions", function(responseText){
-      var subdivisions = JSON.parse(responseText);
-      if(subdivisions.length != 0){
-        for(var i = 0 ; i < subdivisions.length; i++){
-          var p = document.createElement("p");
-          $(p).addClass("subdivision-link");
-          $(p).attr("data-subdivisionid", subdivisions[i]._id);
-          var glyphSpan = "<span class='glyphicon glyphicon-screenshot'></span>"
-          var nameSpan = document.createElement("span");
-          $(nameSpan).html(" " + subdivisions[i].name);
-          $(p).append(glyphSpan);
-          $(p).append(nameSpan);
-          $("#public_subdivisions").append( $(p) );
+				result = result.substring(0, result.length-2);
 
-        }
-      }else{
-        $("#public_subdivisions").append( "none" );
-      }
-    });
-    $.post("/f/loadSubdivisionInvitations", function(responseText){
-      var invites = JSON.parse(responseText);
-      if(invites.length != 0){
-        for (var i = 0; i < invites.length; i++){
-          var p = document.createElement("p");
-          $(p).addClass("subdivision-invite");
-          $(p).attr("data-subdivisionid", invites[i]._id);
-          var glyphSpan = "<span class='glyphicon glyphicon-screenshot'></span>"
-          var nameSpan = document.createElement("span");
-          $(nameSpan).html(" " + invites[i].name);
-          $(nameSpan).addClass("nameSpan");
-          $(p).append(glyphSpan);
-          $(p).append(nameSpan);
-          $("#invited_subdivisions").append( $(p) );
-        }
-      }else{
-        $("#invited_subdivisions").append( "none" );
-      }
-    });
+				return result;
 
-    $(document).on("click", ".accept-invite", function(){
-      var subdivision_id = $(this).parent().attr("data-subdivisionid");
-      var invite = $(this).parent();
-      $.post("/f/acceptSubdivisionInvitation", {subdivision_id: subdivision_id}, function(responseText){
-        if(responseText == "success"){
-          invite.remove();
-        }
-      })
-    });
-    var subdivision_invite_modal = new jBox('Modal', {
-      width: 'auto',
-      height: 'auto',
-      title: 'subdivision Invitation',
-    });
+			}
+			var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+			$(document).ready(function() {
+				// document.body.appendChild(loadingDiv);
 
-    $(document).on("click", ".subdivision-link", function(){
-      location = "/s/" + $(this).attr("data-subdivisionid");
-    });
-    $(document).on("click", ".subdivision-invite", function(){
-      subdivision_invite_modal.setContent('<span><span class="inviter"></span> You have been invited to the subdivision: <span class="invited_scope_name">'+$(this).find(".nameSpan").html()+'</span></span><br/><div style="text-align: center"><input type="button" class="button invite_btn accept_invite_btn" data-subdivisionid="'+$(this).attr("data-subdivisionid")+'" value="Accept"></input><input type="button" class="button invite_btn ignore_invite_btn" data-subdivisionid="'+$(this).attr("data-subdivisionid")+'" value="Hide"></input></div>')
-      subdivision_invite_modal.open();
-    });
-    $(document).on("click", ".accept_invite_btn", function(){
-      var $this = $(this);
-      $.post("/f/acceptSubdivisionInvitation", {subdivision_id: $(this).attr("data-subdivisionid")}, function(responseText){
-        if(responseText=="success"){
-          subdivision_invite_modal.close();
-          var acceptedSubdivision = $("#invited_subdivisions p[data-subdivisionid='"+ $this.attr("data-subdivisionid") +"']").clone();
-          acceptedSubdivision.removeClass("subdivision-invite");
-          acceptedSubdivision.addClass("subdivision-link");
-          if( $("#your_subdivisions")[0].innerHTML.indexOf("none") > -1 ){
-            $("#your_subdivisions").empty();
-            $("#your_subdivisions").append('<h5 style="margin-bottom: 15px;">Your Subdivisions</h5>');
-          }
-          $("#your_subdivisions").append(acceptedSubdivision);
-          $("#invited_subdivisions p[data-subdivisionid='"+ $this.attr("data-subdivisionid") +"']").remove();
-        }else{
-          alert("fail");
-        }
-      });
-    });
-    $(document).on("click", ".ignore_invite_btn", function(){
-      var $this = $(this);
-      $.post("/f/ignoreSubdivisionInvite", {subdivision_id: $(this).attr("data-subdivisionid")}, function(responseText){
-        if(responseText=="success"){
-          subdivision_invite_modal.close();
-          $("#invited_subdivisions p[data-subdivisionid='"+ $this.attr("data-subdivisionid") +"']").remove();
-        }else{
-          alert("fail");
-        }
-      });
-    });
-    $(document).on("click", ".delete_icon", function(){
-      if (window.confirm("Are you sure?")) {
-        var announcement = $(this).parent();
-        var postid = $(this).parent().attr("data-postid");
-        $.post("/f/deleteAnnouncement", {_id: postid}, function(responseText){
-          if(responseText == "success"){
-            $ann.isotope('remove', announcement).isotope();
-          }else{
-            alert(responseText);
-          }
-        })
-      }
-    });
+				if (localStorage.c_team_position == "leader" || localStorage.c_team_position == "admin") {
+					$("#invited_subdivisions").after('<hr><p class="new_subdivision"><span class="glyphicon glyphicon-plus"></span> Make a Subdivision</p>');
+				}
 
-    $(document).on("click", "#team_button", function(){
-      location="team";
-    });
-    $(document).on("click", ".announcement_poster", function(){
-      location="/u/" + $(this).attr("data-userid");
-    })
+				$.post("/f/getAllSubdivisionsForUserInTeam", function(responseText) {
+					var subdivisions = JSON.parse(responseText);
+					if (subdivisions.length != 0) {
+						for (var i = 0; i < subdivisions.length; i++) {
+							var p = document.createElement("p");
+							$(p).addClass("subdivision-link");
+							$(p).attr("data-subdivisionid", subdivisions[i]._id);
+							var glyphSpan = "<span class='glyphicon glyphicon-screenshot'></span>"
+							var nameSpan = document.createElement("span");
+							$(nameSpan).html(" " + subdivisions[i].name);
+							$(p).append(glyphSpan);
+							$(p).append(nameSpan);
+							$("#your_subdivisions").append($(p));
 
-    //audience stuff
-    subdivisionAudience = [];
-    userAudience = [];
-    $(document).on("click", ".audience_item:not(.custom_audience)", function(){
-      $(".audience_item").removeClass("selected");
-      $(this).addClass("selected");
-      $(".audience_selection").html( $(this).html() );
-    });
-    $(document).on("click", ".custom_audience", function(){
-      custom_audience_modal = customAudienceModal("Custom Audience");
-    });
-    $(document).on("click", "#choose_audience_btn", function(){
-      var p_selected_users = $(".potential_member.clicked");
-      var p_selected_subdivisions = $(".potential_subdivision.clicked");
+							var li = document.createElement("li")
+							$(li).addClass("audience_item");
+							$(li).attr("data-subdivisionid", subdivisions[i]._id);
+							$(li).html(subdivisions[i].name);
+							$(li).insertAfter($(".first_audience"));
+						}
+					} else {
+						$("#your_subdivisions").append("none");
+					}
+				});
+				$.post("/f/getPublicSubdivisions", function(responseText) {
+					var subdivisions = JSON.parse(responseText);
+					if (subdivisions.length != 0) {
+						for (var i = 0 ; i < subdivisions.length; i++) {
+							var p = document.createElement("p");
+							$(p).addClass("subdivision-link");
+							$(p).attr("data-subdivisionid", subdivisions[i]._id);
+							var glyphSpan = "<span class='glyphicon glyphicon-screenshot'></span>"
+							var nameSpan = document.createElement("span");
+							$(nameSpan).html(" " + subdivisions[i].name);
+							$(p).append(glyphSpan);
+							$(p).append(nameSpan);
+							$("#public_subdivisions").append($(p));
 
-      subdivisionAudience = [];
-      userAudience = []
+						}
+					} else {
+						$("#public_subdivisions").append("none");
+					}
+				});
+				$.post("/f/loadSubdivisionInvitations", function(responseText) {
+					var invites = JSON.parse(responseText);
+					if (invites.length != 0) {
+						for (var i = 0; i < invites.length; i++) {
+							var p = document.createElement("p");
+							$(p).addClass("subdivision-invite");
+							$(p).attr("data-subdivisionid", invites[i]._id);
+							var glyphSpan = "<span class='glyphicon glyphicon-screenshot'></span>"
+							var nameSpan = document.createElement("span");
+							$(nameSpan).html(" " + invites[i].name);
+							$(nameSpan).addClass("nameSpan");
+							$(p).append(glyphSpan);
+							$(p).append(nameSpan);
+							$("#invited_subdivisions").append($(p));
+						}
+					} else {
+						$("#invited_subdivisions").append("none");
+					}
+				});
 
-      for (var i = 0; i < p_selected_users.length; i++) {
-        userAudience.push($(p_selected_users[i]).attr("data-userid"));
-      }
-      for (var i = 0; i < p_selected_subdivisions.length; i++) {
-        subdivisionAudience.push($(p_selected_subdivisions[i]).attr("data-subdivisionid"));
-      }
+				$(document).on("click", ".accept-invite", function() {
+					var subdivision_id = $(this).parent().attr("data-subdivisionid");
+					var invite = $(this).parent();
+					$.post("/f/acceptSubdivisionInvitation", {subdivision_id: subdivision_id}, function(responseText) {
+						if (responseText == "success") {
+							invite.remove();
+						}
+					})
+				});
+				var subdivision_invite_modal = new jBox('Modal', {
+					width: 'auto',
+					height: 'auto',
+					title: 'subdivision Invitation',
+				});
 
-      $(".audience_item").removeClass("selected");
-      $(".custom_audience").addClass("selected");
-      $(".audience_selection").html( "Custom" );
+				$(document).on("click", ".subdivision-link", function() {
+					location = "/s/" + $(this).attr("data-subdivisionid");
+				});
+				$(document).on("click", ".subdivision-invite", function() {
+					subdivision_invite_modal.setContent('<span><span class="inviter"></span> You have been invited to the subdivision: <span class="invited_scope_name">'+$(this).find(".nameSpan").html()+'</span></span><br/><div style="text-align: center"><input type="button" class="button invite_btn accept_invite_btn" data-subdivisionid="'+$(this).attr("data-subdivisionid")+'" value="Accept"></input><input type="button" class="button invite_btn ignore_invite_btn" data-subdivisionid="'+$(this).attr("data-subdivisionid")+'" value="Hide"></input></div>')
+					subdivision_invite_modal.open();
+				});
+				$(document).on("click", ".accept_invite_btn", function() {
+					var $this = $(this);
+					$.post("/f/acceptSubdivisionInvitation", {subdivision_id: $(this).attr("data-subdivisionid")}, function(responseText) {
+						if (responseText=="success") {
+							subdivision_invite_modal.close();
+							var acceptedSubdivision = $("#invited_subdivisions p[data-subdivisionid='"+ $this.attr("data-subdivisionid") +"']").clone();
+							acceptedSubdivision.removeClass("subdivision-invite");
+							acceptedSubdivision.addClass("subdivision-link");
+							if ($("#your_subdivisions")[0].innerHTML.indexOf("none") > -1) {
+								$("#your_subdivisions").empty();
+								$("#your_subdivisions").append('<h5 style="margin-bottom: 15px;">Your Subdivisions</h5>');
+							}
+							$("#your_subdivisions").append(acceptedSubdivision);
+							$("#invited_subdivisions p[data-subdivisionid='"+ $this.attr("data-subdivisionid") +"']").remove();
+						} else {
+							alert("fail");
+						}
+					});
+				});
+				$(document).on("click", ".ignore_invite_btn", function() {
+					var $this = $(this);
+					$.post("/f/ignoreSubdivisionInvite", {subdivision_id: $(this).attr("data-subdivisionid")}, function(responseText) {
+						if (responseText=="success") {
+							subdivision_invite_modal.close();
+							$("#invited_subdivisions p[data-subdivisionid='"+ $this.attr("data-subdivisionid") +"']").remove();
+						} else {
+							alert("fail");
+						}
+					});
+				});
+				$(document).on("click", ".delete_icon", function() {
+					if (window.confirm("Are you sure?")) {
+						var announcement = $(this).parent();
+						var postid = $(this).parent().attr("data-postid");
+						$.post("/f/deleteAnnouncement", {_id: postid}, function(responseText) {
+							if (responseText == "success") {
+								$ann.isotope('remove', announcement).isotope();
+							} else {
+								alert(responseText);
+							}
+						})
+					}
+				});
 
-      $(".potential_member").removeClass("clicked");
-      $(".potential_subdivision").removeClass("clicked");
-      custom_audience_modal.close();
-    });
-    $(document).on("click", ".announcement_post_button", function(){
-      var message = (new nicEditors.findEditor('main_textarea')).getContent();
-      var filteredMessage = message.replace("(<((?!br|a|/a|img|b|/b|i|/i|u|/u|div|/div|hr)[^>]+)>)", "").replace(/(<div\s+.*?class=").*?(".*)/gi, "");
-      if( filteredMessage != "<br>" ){
-        if($(".audience_item.selected").hasClass("first_audience")){
-          var targetAudience = "everyone"
-        }else if ($(".audience_item.selected").hasClass("custom_audience")) {
-          var targetAudience = {
-            userMembers: userAudience,
-            subdivisionMembers: subdivisionAudience
-          }
+				$(document).on("click", "#team_button", function() {
+					location="team";
+				});
+				$(document).on("click", ".announcement_poster", function() {
+					location="/u/" + $(this).attr("data-userid");
+				})
 
-        }else{
-          var targetAudience = $(".audience_item.selected").attr("data-subdivisionid");
-        }
-        nicEditors.findEditor('main_textarea').setContent('');
-        $.post("/f/postAnnouncement", {audience: targetAudience, content: filteredMessage}, function(responseText){
-          if(responseText!="fail"){
-            var announcementDiv = document.createElement("div");
-            $(announcementDiv).addClass("announcement");
-            $(announcementDiv).attr("data-postid", responseText);
-            var announcementTopDiv = document.createElement("div");
-            $(announcementTopDiv).addClass("announcement_top");
-            var img = document.createElement("img");
-            $(img).attr("id", "medium_prof_pic");
-            $(img).attr("src", localStorage.profpicpath + "-60");
-            $(img).addClass("user-link")
-            $(img).attr("data-userid", localStorage._id)
-            var span = document.createElement("span");
-            $(span).addClass("announcement_poster");
-            $(span).attr("data-userid", localStorage._id);
-            var now = new Date()
-            var timestamp = document.createElement("span");
-            $(timestamp).addClass("announcement_timestamp")
-            $(span).html( localStorage.firstname + " " + localStorage.lastname )
-            $(timestamp).html( " - " + "just now");
-            $(announcementTopDiv).append( img );
-            $(announcementTopDiv).append( span );
-            $(announcementTopDiv).append( timestamp );
-            $(announcementDiv).append( announcementTopDiv );
-            var deleteButton = document.createElement("span")
-            $(deleteButton).addClass("glyphicon");
-            $(deleteButton).addClass("glyphicon-remove");
-            $(deleteButton).addClass("delete_icon");
-            $(announcementDiv).append(deleteButton);
-            $(announcementDiv).append("<br/>");
-            $(announcementDiv).append( Autolinker.link(filteredMessage) );
+				//audience stuff
+				subdivisionAudience = [];
+				userAudience = [];
+				$(document).on("click", ".audience_item:not(.custom_audience)", function() {
+					$(".audience_item").removeClass("selected");
+					$(this).addClass("selected");
+					$(".audience_selection").html($(this).html());
+				});
+				$(document).on("click", ".custom_audience", function() {
+					custom_audience_modal = customAudienceModal("Custom Audience");
+				});
+				$(document).on("click", "#choose_audience_btn", function() {
+					var p_selected_users = $(".potential_member.clicked");
+					var p_selected_subdivisions = $(".potential_subdivision.clicked");
 
-            $('.announcements_list').prepend(announcementDiv).isotope('prepended', announcementDiv)
-            document.getElementById('main_textarea').value = "";
-            $('#main_textarea').css("height", "56px");
-          }else{
-            alert(responseText);
-          }
-        });
-      }
-    });
+					subdivisionAudience = [];
+					userAudience = []
+
+					for (var i = 0; i < p_selected_users.length; i++) {
+						userAudience.push($(p_selected_users[i]).attr("data-userid"));
+					}
+					for (var i = 0; i < p_selected_subdivisions.length; i++) {
+						subdivisionAudience.push($(p_selected_subdivisions[i]).attr("data-subdivisionid"));
+					}
+
+					$(".audience_item").removeClass("selected");
+					$(".custom_audience").addClass("selected");
+					$(".audience_selection").html("Custom");
+
+					$(".potential_member").removeClass("clicked");
+					$(".potential_subdivision").removeClass("clicked");
+					custom_audience_modal.close();
+				});
+				$(document).on("click", ".announcement_post_button", function() {
+					var message = (new nicEditors.findEditor('main_textarea')).getContent();
+					var filteredMessage = message.replace("(<((?!br|a|/a|img|b|/b|i|/i|u|/u|div|/div|hr)[^>]+)>)", "").replace(/(<div\s+.*?class=").*?(".*)/gi, "");
+					if (filteredMessage != "<br>") {
+						if ($(".audience_item.selected").hasClass("first_audience")) {
+							var targetAudience = "everyone"
+						} else if ($(".audience_item.selected").hasClass("custom_audience")) {
+							var targetAudience = {
+								userMembers: userAudience,
+								subdivisionMembers: subdivisionAudience
+							}
+
+						} else {
+							var targetAudience = $(".audience_item.selected").attr("data-subdivisionid");
+						}
+						nicEditors.findEditor('main_textarea').setContent('');
+						$.post("/f/postAnnouncement", {audience: targetAudience, content: filteredMessage}, function(responseText) {
+							if (responseText!="fail") {
+								var announcementDiv = document.createElement("div");
+								$(announcementDiv).addClass("announcement");
+								$(announcementDiv).attr("data-postid", responseText);
+								var announcementTopDiv = document.createElement("div");
+								$(announcementTopDiv).addClass("announcement_top");
+								var img = document.createElement("img");
+								$(img).attr("id", "medium_prof_pic");
+								$(img).attr("src", localStorage.profpicpath + "-60");
+								$(img).addClass("user-link")
+								$(img).attr("data-userid", localStorage._id)
+								var span = document.createElement("span");
+								$(span).addClass("announcement_poster");
+								$(span).attr("data-userid", localStorage._id);
+								var now = new Date()
+								var timestamp = document.createElement("span");
+								$(timestamp).addClass("announcement_timestamp")
+								$(span).html(localStorage.firstname + " " + localStorage.lastname)
+								$(timestamp).html(" - " + "just now");
+								$(announcementTopDiv).append(img);
+								$(announcementTopDiv).append(span);
+								$(announcementTopDiv).append(timestamp);
+								$(announcementDiv).append(announcementTopDiv);
+								var deleteButton = document.createElement("span")
+								$(deleteButton).addClass("glyphicon");
+								$(deleteButton).addClass("glyphicon-remove");
+								$(deleteButton).addClass("delete_icon");
+								$(announcementDiv).append(deleteButton);
+								$(announcementDiv).append("<br/>");
+								$(announcementDiv).append(Autolinker.link(filteredMessage));
+
+								$('.announcements_list').prepend(announcementDiv).isotope('prepended', announcementDiv)
+								document.getElementById('main_textarea').value = "";
+								$('#main_textarea').css("height", "56px");
+							} else {
+								alert(responseText);
+							}
+						});
+					}
+				});
 
 
 
-    //general modal stuff
-    $(document).on("click", ".potential_member", function(){
-      if($(this).hasClass("clicked")){
-        $(this).removeClass("clicked");
-      }else{
-        $(this).addClass("clicked");
-      }
-    });
-    $(document).on("click", ".potential_subdivision", function(){
-      if($(this).hasClass("clicked")){
-        $(this).removeClass("clicked");
-      }else{
-        $(this).addClass("clicked");
-      }
-    });
-    $(document).on("keyup", '.members_search', function() {
-      var val = $.trim($(this).val()).replace(/ +/g, ' ').toLowerCase();
-      $('.potential_members p').show().filter(function() {
-          var text = $(this).text().replace(/\s+/g, ' ').toLowerCase();
-          console.log(!~text.indexOf(val));
-          return !~text.indexOf(val);
-      }).hide();
-    });
+				//general modal stuff
+				$(document).on("click", ".potential_member", function() {
+					if ($(this).hasClass("clicked")) {
+						$(this).removeClass("clicked");
+					} else {
+						$(this).addClass("clicked");
+					}
+				});
+				$(document).on("click", ".potential_subdivision", function() {
+					if ($(this).hasClass("clicked")) {
+						$(this).removeClass("clicked");
+					} else {
+						$(this).addClass("clicked");
+					}
+				});
+				$(document).on("keyup", '.members_search', function() {
+					var val = $.trim($(this).val()).replace(/ +/g, ' ').toLowerCase();
+					$('.potential_members p').show().filter(function() {
+							var text = $(this).text().replace(/\s+/g, ' ').toLowerCase();
+							console.log(!~text.indexOf(val));
+							return !~text.indexOf(val);
+					}).hide();
+				});
 
-    //new subdivision modal
-    $(document).on("click", ".new_subdivision", function(){
-      new_subdivision_modal = newSubdivisionModal("New subdivision", "Please select some initial members");
-    })
-    $(document).on("click", ".subdivision_type", function(){
-      $(".subdivision_type").removeClass("selected");
-      $(this).addClass("selected");
-    });
-    $(document).on("click", '#make_subdivision_btn', function() {
-      $(this).val("Loading");
-      $(this).prop("disabled",true);
-      if($("#subdivision_name").val() != ""){
-        if($("#subdivision_name").val().length < 22){
-          var type;
-          if ($(".public").hasClass("selected")){
-            type = "public";
-          }else{
-            type = "private";
-          }
-          var p_selected_users = $("p.clicked");
-          var selectedUsers = [];
-          for (var i = 0; i < p_selected_users.length; i++) {
-            selectedUsers.push($(p_selected_users[i]).attr("data-userid"));
-          }
-          $.post("/f/createSubdivision", {name: $("#subdivision_name").val(), type: type}, function(responseText){
-            if(responseText != "fail"){
-              for(var i=0; i<selectedUsers.length; i++){
-                $.post("/f/inviteToSubdivision", {user_id: selectedUsers[i], subdivision_id: responseText}, function(responseText){
-                  if(responseText == "success"){
-                    //
-                  }else{
-                    alert("fail");
-                  }
-                });
-              }
-              new_subdivision_modal.close();
-              location="/"; //TODO: possibly make this better
-            }else{
-              alert("failed to create");
-            }
-          });
-        }else{
-          alert("The name can only have 21 letters or less.");
-        }
-      }else{
-        alert("You forgot to name the subdivision.");
-      }
-    });
+				//new subdivision modal
+				$(document).on("click", ".new_subdivision", function() {
+					new_subdivision_modal = newSubdivisionModal("New subdivision", "Please select some initial members");
+				})
+				$(document).on("click", ".subdivision_type", function() {
+					$(".subdivision_type").removeClass("selected");
+					$(this).addClass("selected");
+				});
+				$(document).on("click", '#make_subdivision_btn', function() {
+					$(this).val("Loading");
+					$(this).prop("disabled",true);
+					if ($("#subdivision_name").val() != "") {
+						if ($("#subdivision_name").val().length < 22) {
+							var type;
+							if ($(".public").hasClass("selected")) {
+								type = "public";
+							} else {
+								type = "private";
+							}
+							var p_selected_users = $("p.clicked");
+							var selectedUsers = [];
+							for (var i = 0; i < p_selected_users.length; i++) {
+								selectedUsers.push($(p_selected_users[i]).attr("data-userid"));
+							}
+							$.post("/f/createSubdivision", {name: $("#subdivision_name").val(), type: type}, function(responseText) {
+								if (responseText != "fail") {
+									for (var i=0; i<selectedUsers.length; i++) {
+										$.post("/f/inviteToSubdivision", {user_id: selectedUsers[i], subdivision_id: responseText}, function(responseText) {
+											if (responseText == "success") {
+												//
+											} else {
+												alert("fail");
+											}
+										});
+									}
+									new_subdivision_modal.close();
+									location="/"; //TODO: possibly make this better
+								} else {
+									alert("failed to create");
+								}
+							});
+						} else {
+							alert("The name can only have 21 letters or less.");
+						}
+					} else {
+						alert("You forgot to name the subdivision.");
+					}
+				});
 
-    socket.on('message', function(msg){
-      if(msg.type == "group"){
-        messageNotification(msg.author_fn+" "+msg.author_ln+" in "+msg.chat_name, msg.content, msg.chat_id);
-      }else{
-        messageNotification(msg.author_fn+" "+msg.author_ln, msg.content, msg.chat_id);
-      }
-      $('#audio-files').find('audio#click-sound')[0].play();
-      $('#audio-files').find('audio#click-sound')[0].currentTime = 0;
-    })
+				socket.on('message', function(msg) {
+					if (msg.type == "group") {
+						messageNotification(msg.author_fn+" "+msg.author_ln+" in "+msg.chat_name, msg.content, msg.chat_id);
+					} else {
+						messageNotification(msg.author_fn+" "+msg.author_ln, msg.content, msg.chat_id);
+					}
+					$('#audio-files').find('audio#click-sound')[0].play();
+					$('#audio-files').find('audio#click-sound')[0].currentTime = 0;
+				})
 
-  });
-  function appendLater(announcementDiv){
-    $('.announcements_list').append(announcementDiv).isotope('appended', announcementDiv);
-  }
-  function appendFirst(announcementDiv){
-    $('.announcements_list').append( announcementDiv );
-  }
+			});
+			function appendLater(announcementDiv) {
+				$('.announcements_list').append(announcementDiv).isotope('appended', announcementDiv);
+			}
+			function appendFirst(announcementDiv) {
+				$('.announcements_list').append(announcementDiv);
+			}
 
-  function loadAnnouncements(callback){
-    // spinner = new Spinner(spinnerOpts).spin(loadingDiv);
-    $.post("/f/getAnnouncementsForUser", {skip: 20*localStorage.page},function(responseText){
-      if(responseText != "fail"){
-        var announcements = responseText;
-        // var announcementsArr = JSON.parse(responseText);
-        // var announcements = announcementsArr.map(function(ann) {
-        //   return ann.obj;
-        // });
-        // var announcement_fns = announcementsArr.map(function(ann) {
-        //   return ann.author_fn;
-        // });
-        // var announcement_lns = announcementsArr.map(function(ann) {
-        //   return ann.author_ln;
-        // });
-        // var profpics = announcementsArr.map(function(ann){
-        //   return ann.profpicpath;
-        // })
+			function loadAnnouncements(callback) {
+				// spinner = new Spinner(spinnerOpts).spin(loadingDiv);
+				$.post("/f/getAnnouncementsForUser", {skip: 20*localStorage.page},function(responseText) {
+					if (responseText != "fail") {
+						var announcements = responseText;
 
-        for (var i = 0; i < announcements.length; i++) {
-          var announcementDiv = document.createElement("div");
-          $(announcementDiv).addClass("announcement");
-          $(announcementDiv).attr("data-postid", announcements[i]._id);
-          var announcementTopDiv = document.createElement("div");
-          $(announcementTopDiv).addClass("announcement_top");
-          var img = document.createElement("img");
-          $(img).attr("id", "medium_prof_pic");
-          $(img).attr("src", announcements[i].author.profpicpath + "-60");
-          $(img).addClass("user-link")
-          $(img).attr("data-userid", announcements[i].author._id)
-          var span = document.createElement("span");
-          $(span).addClass("announcement_poster");
-          $(span).attr("data-userid", announcements[i].author._id);
-          var shownDate = new Date( announcements[i].timestamp );
-          var timestamp = document.createElement("span");
-          $(timestamp).addClass("announcement_timestamp")
-          $(span).html( announcements[i].author.firstname + " " + announcements[i].author.lastname )
-          $(timestamp).html( " - " + standardizeTime(shownDate) + " - " + months[shownDate.getMonth()] + " " + shownDate.getDate() + ", " + shownDate.getFullYear() );
-          var audienceGlobe = document.createElement("span");
-          $(audienceGlobe).addClass("glyphicon glyphicon-globe audience_globe");
-          var audienceText = getAudienceText(announcements[i]);
-          $(audienceGlobe).attr("title", audienceText);
-          $(announcementTopDiv).append( img );
-          $(announcementTopDiv).append( span );
-          $(announcementTopDiv).append( timestamp );
-          $(announcementTopDiv).append( audienceGlobe );
+						for (var i = 0; i < announcements.length; i++) {
+							var announcementDiv = document.createElement("div");
+							$(announcementDiv).addClass("announcement");
+							$(announcementDiv).attr("data-postid", announcements[i]._id);
+							var announcementTopDiv = document.createElement("div");
+							$(announcementTopDiv).addClass("announcement_top");
+							var img = document.createElement("img");
+							$(img).attr("id", "medium_prof_pic");
+							$(img).attr("src", announcements[i].author.profpicpath + "-60");
+							$(img).addClass("user-link")
+							$(img).attr("data-userid", announcements[i].author._id)
+							var span = document.createElement("span");
+							$(span).addClass("announcement_poster");
+							$(span).attr("data-userid", announcements[i].author._id);
+							var shownDate = new Date(announcements[i].timestamp);
+							var timestamp = document.createElement("span");
+							$(timestamp).addClass("announcement_timestamp")
+							$(span).html(announcements[i].author.firstname + " " + announcements[i].author.lastname)
+							$(timestamp).html(" - " + standardizeTime(shownDate) + " - " + months[shownDate.getMonth()] + " " + shownDate.getDate() + ", " + shownDate.getFullYear());
+							var audienceGlobe = document.createElement("span");
+							$(audienceGlobe).addClass("glyphicon glyphicon-globe audience_globe");
+							var audienceText = getAudienceText(announcements[i]);
+							$(audienceGlobe).attr("title", audienceText);
+							$(announcementTopDiv).append(img);
+							$(announcementTopDiv).append(span);
+							$(announcementTopDiv).append(timestamp);
+							$(announcementTopDiv).append(audienceGlobe);
 
-          $(announcementDiv).append( announcementTopDiv );
-          if(localStorage._id == announcements[i].author._id || localStorage.c_team_position == "admin"){
-            var deleteButton = document.createElement("span")
-            $(deleteButton).addClass("glyphicon");
-            $(deleteButton).addClass("glyphicon-remove");
-            $(deleteButton).addClass("delete_icon");
-            $(announcementDiv).append(deleteButton);
-          }
-          $(announcementDiv).append("<br/>");
-          $(announcementDiv).append( announcements[i].content );
-          callback( announcementDiv );
-          document.getElementById('main_textarea').value = "";
-          $('#main_textarea').css("height", "56px");
-          if( i == announcements.length-1 ){
-            // spinner.stop();
-          }
-        }
-        $('.audience_globe').jBox('Tooltip', {
-            delayOpen: 0,
-            delayClose: 0,
-            theme: "TooltipDark"
-        });
-        setTimeout(function(){
-            $ann = $(".announcements_list").isotope({
-                itemSelector: ".announcement",
-                layoutMode: "vertical"
-            });
-        }, 1);
-        var intervalCounter = 0;
-        var isotopeInterval = setInterval(function(){
-          if(intervalCounter == 3){
-            clearInterval(isotopeInterval);
-          }else{
-            $ann.isotope()
-          }
-          intervalCounter++
-        }, 1000)
-        localStorage.page++;
-      }else{
-        alert("failed to load announcements");
-      }
-    });
-  }
+							$(announcementDiv).append(announcementTopDiv);
+							if (localStorage._id == announcements[i].author._id || localStorage.c_team_position == "admin") {
+								var deleteButton = document.createElement("span")
+								$(deleteButton).addClass("glyphicon");
+								$(deleteButton).addClass("glyphicon-remove");
+								$(deleteButton).addClass("delete_icon");
+								$(announcementDiv).append(deleteButton);
+							}
+							$(announcementDiv).append("<br/>");
+							$(announcementDiv).append(announcements[i].content);
+							callback(announcementDiv);
+							document.getElementById('main_textarea').value = "";
+							$('#main_textarea').css("height", "56px");
+							if (i == announcements.length-1) {
+								// spinner.stop();
+							}
+						}
+						$('.audience_globe').jBox('Tooltip', {
+								delayOpen: 0,
+								delayClose: 0,
+								theme: "TooltipDark"
+						});
+						setTimeout(function() {
+								$ann = $(".announcements_list").isotope({
+										itemSelector: ".announcement",
+										layoutMode: "vertical"
+								});
+						}, 1);
+						var intervalCounter = 0;
+						var isotopeInterval = setInterval(function() {
+							if (intervalCounter == 3) {
+								clearInterval(isotopeInterval);
+							} else {
+								$ann.isotope()
+							}
+							intervalCounter++
+						}, 1000)
+						localStorage.page++;
+					} else {
+						alert("failed to load announcements");
+					}
+				});
+			}
 
-  $(window).load(function(){
-    localStorage.page = 0;
-    loadAnnouncements(appendFirst);
+			$(window).load(function() {
+				localStorage.page = 0;
+				loadAnnouncements(appendFirst);
 
-     function bindScroll(){
-       if($(window).scrollTop() + $(window).height() > $(document).height() - 300) {
-         $(window).unbind('scroll');
-         loadAnnouncements(appendLater);
-       }
-     }
+				 function bindScroll() {
+					 if ($(window).scrollTop() + $(window).height() > $(document).height() - 300) {
+						 $(window).unbind('scroll');
+						 loadAnnouncements(appendLater);
+					 }
+				 }
 
-    $(window).scroll(bindScroll);
+				$(window).scroll(bindScroll);
 
-    $("div.nicEdit-main").addClass('wordwrap');
-    var textareaWidthNum;
-    var textareaWidth;
-    $(window).resize(function(){
-      textareaWidthNum = $(".post_announcement").width();
-      textareaWidth = textareaWidthNum + "px";
-      $(".nicEdit-main").css("width", textareaWidth);
-      $(".post_announcement").children().not(".announcement_post_button").not(".announcement_audience_button").css("width", textareaWidth);
-      console.log($(".nicEdit-main").css("width"));
-    });
+				$("div.nicEdit-main").addClass('wordwrap');
+				var textareaWidthNum;
+				var textareaWidth;
+				$(window).resize(function() {
+					textareaWidthNum = $(".post_announcement").width();
+					textareaWidth = textareaWidthNum + "px";
+					$(".nicEdit-main").css("width", textareaWidth);
+					$(".post_announcement").children().not(".announcement_post_button").not(".announcement_audience_button").css("width", textareaWidth);
+					console.log($(".nicEdit-main").css("width"));
+				});
 
-  })
-  </script>
+			})
+			</script>
 
-  <script>
-  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+			<script>
+			(function(i,s,o,g,r,a,m) {i['GoogleAnalyticsObject']=r;i[r]=i[r]||function() {
+			(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+			m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+			})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
 
-  ga('create', 'UA-67504156-1', 'auto');
-  ga('send', 'pageview');
+			ga('create', 'UA-67504156-1', 'auto');
+			ga('send', 'pageview');
 
-  </script>
+		</script>
 
-</body>
-
+	</body> 
 </html>
