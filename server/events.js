@@ -197,7 +197,8 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.put("/events/:eventId/excuseAbsence", requireLogin, requireLeader, Promise.coroutine(function*(req, res) {
+	// TODO: rename this route?
+	router.put("/events/:eventId/users/:userId/excuseAbsence", requireLogin, requireLeader, Promise.coroutine(function*(req, res) {
 		try {
 
 			yield AttendanceHandler.update({

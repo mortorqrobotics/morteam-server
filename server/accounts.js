@@ -213,7 +213,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 		}
 	}));
 
-	router.put("/users/:userId/position", requireLogin, Promise.coroutine(function*(req, res) {
+	router.put("/users/:userId/position/:newPosition", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 			// position hierarchy
 			let positionHA = {
@@ -231,6 +231,8 @@ module.exports = function(imports, publicDir, profpicDir) {
 				return res.end("fail");
 			}
 
+			req.params.newPosition = req.params.newPosition.toLowerCase();
+
 			let current_position = util.findTeamInUser(user, req.user.current_team.id).position;
 
 			if (current_position == "admin" && (yield User.count({
@@ -243,7 +245,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 			}
 
 			// check position hierarchy to see if it is allowed for user to change the position of target user
-			if (!(positionHA[req.user.current_team.position] >= positionHA[req.body.target_position]
+			if (!(positionHA[req.user.current_team.position] >= positionHA[req.params.newPosition]
 					&& positionHA[req.user.current_team.position] >= positionHA[current_position])) {
 				return res.end("fail");
 			}
@@ -253,8 +255,8 @@ module.exports = function(imports, publicDir, profpicDir) {
 				_id: req.params.userId,
 				"teams.id": req.user.current_team.id
 			}, { "$set": {
-				"teams.$.position": req.body.target_position, // find out what .$. means and if it means selected "teams" element
-				"current_team.position": req.body.target_position // make sure in the future current_team.position is checked with "teams" array of the document when user is logging in as opposed to doing this
+				"teams.$.position": req.params.newPosition, // find out what .$. means and if it means selected "teams" element
+				"current_team.position": req.params.newPosition // make sure in the future current_team.position is checked with "teams" array of the document when user is logging in as opposed to doing this
 			}});
 
 			res.end("success");
@@ -298,7 +300,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 	router.put("/password", requireLogin, Promise.coroutine(function*(req, res) {
 
 		// TODO: this check should only be client side
-		if (req.body.new_password != req.body.new_password_confirm) {
+		if (req.body.newPassword != req.body.newPasswordConfirm) {
 			return res.end("fail: new passwords do not match");
 		}
 
@@ -307,12 +309,12 @@ module.exports = function(imports, publicDir, profpicDir) {
 			let user = yield User.findOne({ _id: req.user._id }, "+password");
 
 			// check if old password is correct
-			if(!(yield user.comparePassword(req.body.old_password))) {
+			if(!(yield user.comparePassword(req.body.oldPassword))) {
 				return res.end("fail: incorrect password");
 			}
 
 			// set and save new password (password is automatically encrypted. see /schemas/User.js)
-			user.password = req.body.new_password;
+			user.password = req.body.newPassword;
 			yield user.save();
 
 			res.end("success");

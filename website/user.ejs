@@ -337,10 +337,9 @@
 							}, 100)
 						}
 				});
-				new_modal.setContent('<form action="/f/editProfile" enctype="multipart/form-data" method="post" id="edit_profile_form"><input type="text" name="firstname" class="edit_firstname modal_textbox"></input><br/><input type="text" name="lastname" class="edit_lastname modal_textbox"></input><br/><input type="text" name="email" class="edit_email modal_textbox"></input><br/><input type="text" name="phone" class="edit_phone modal_textbox"></input><br/><input type="text" name="parentEmail" placeholder="Parent Email" class="edit_parent_email modal_textbox"></input><br/><input name="new_prof_pic" type="file" id="new_prof_pic" class="hidden" accept="image/*" /><input type="button" class="button edit_prof_pic modal_button" value="Change Profile Picture"></input><br/><input type="submit" class="button modal_button save_prof" value="Save"></input></form>')
+				new_modal.setContent('<form action="/profile" enctype="multipart/form-data" method="put" id="edit_profile_form"><input type="text" name="firstname" class="edit_firstname modal_textbox"></input><br/><input type="text" name="lastname" class="edit_lastname modal_textbox"></input><br/><input type="text" name="email" class="edit_email modal_textbox"></input><br/><input type="text" name="phone" class="edit_phone modal_textbox"></input><br/><input type="text" name="parentEmail" placeholder="Parent Email" class="edit_parent_email modal_textbox"></input><br/><input name="new_prof_pic" type="file" id="new_prof_pic" class="hidden" accept="image/*" /><input type="button" class="button edit_prof_pic modal_button" value="Change Profile Picture"></input><br/><input type="submit" class="button modal_button save_prof" value="Save"></input></form>')
 
-				$.post("/f/getSelf", function(responseText) {
-					var self = JSON.parse(responseText);
+				sendAjax("GET", "/users/self", function(self) {
 					$(".modal_textbox").val("");
 					$(".edit_firstname").val(self.firstname)
 					$(".edit_lastname").val(self.lastname)
@@ -355,7 +354,7 @@
 
 			$(document).ready(function() {
 				var userId = window.location.pathname.substring(window.location.pathname.lastIndexOf("/") + 1);
-				sendAjax("GET", "/users/" + userId + "/absences", function(data) {
+				sendAjax("GET", ["users", userId, "absences"], function(data) {
 					var absences = data.absences;
 					var present = data.present;
 					for (var i = 0; i < absences.length; i++) {
@@ -374,8 +373,8 @@
 						$("#presence_percent").html("N/A");
 					}
 				});
-				$.post("/f/getCompletedUserTasks", {user_id: window.location.pathname.substring(window.location.pathname.lastIndexOf("/") + 1)}, function(responseText) {
-					if (responseText != "fail") {
+				sendAjax("GET", ["users", userId, "tasks/completed"], function(response) {
+					if (response != "fail") {
 						var tasks = JSON.parse(responseText);
 						if (tasks.length > 0) {
 							for (var i = 0; i < tasks.length; i++) {
@@ -393,17 +392,17 @@
 						} else {
 							$(".task_list.completed").append("<li class='data_point'>none</li>");
 						}
-						$('.assigned_by').jBox('Tooltip', {
+						$(".assigned_by").jBox("Tooltip", {
 								delayOpen: 0,
 								delayClose: 0,
 								theme: "TooltipDark"
 						});
 					} else {
-						alert(responseText);
+						alert(response);
 					}
-				})
-				$.post("/f/getPendingUserTasks", {user_id: window.location.pathname.substring(window.location.pathname.lastIndexOf("/") + 1)}, function(responseText) {
-					if (responseText != "fail") {
+				});
+				sendAjax("GET", ["users", userId, "tasks/pending"], function(response) {
+					if (response != "fail") {
 						var tasks = JSON.parse(responseText);
 						if (tasks.length > 0) {
 							for (var i = 0; i < tasks.length; i++) {
@@ -436,11 +435,11 @@
 								theme: "TooltipDark"
 						});
 					} else {
-						alert(responseText);
+						alert(response);
 					}
 				})
 				if (localStorage.profpicpath == "images/user.jpg") {
-					$(".profile_id.ejs").attr("src", "../"+localStorage.profpicpath + "-60");
+					$(".profile_id.ejs").attr("src", localStorage.profpicpath + "-60");
 				} else {
 					$(".profile_id.ejs").attr("src", localStorage.profpicpath + "-60");
 				}
@@ -448,17 +447,20 @@
 					change_password_modal = changePasswordModal("Change Password");
 				})
 				$(document).on("click", ".save_password", function() {
-					if ($(".new_password").val() == $(".new_password_confirm").val()) {
-						$.post("/f/changePassword", {
-							old_password: $(".old_password").val(),
-							new_password: $(".new_password").val(),
-							new_password_confirm: $(".new_password_confirm").val()
-						}, function(responseText) {
-							if (responseText == "success") {
+					var oldPass = $(".old_password").val();
+					var newPass = $(".new_password").val();
+					var newPassConfirm = $(".new_password_confirm").val()
+					if (newPass == newPassConfirm) {
+						sendAjax("PUT", "/password", {
+							oldPassword: oldPass,
+							newPassword: newPass,
+							newPasswordConfirm: newPassConfirm
+						}, function(response) {
+							if (response == "success") {
 								alert("Successfully changed password");
 								change_password_modal.close();
 							} else {
-								alert(responseText);
+								alert(response);
 							}
 						});
 					} else {
@@ -475,7 +477,7 @@
 					e.preventDefault();
 					if (validateEmail($(".edit_email").val())) {
 						if (validatePhone($(".edit_phone").val())) {
-							$(".edit_firstname").val($(".edit_firstname").val().replace(/[^\w\s]/gi, '').capitalize())
+							$(".edit_firstname").val($(".edit_firstname").val().replace(/[^\w\s]/gi, "").capitalize())
 							$(".edit_lastname").val($(".edit_lastname").val().replace(/[^\w\s]/gi, '').capitalize())
 							$(this).ajaxSubmit({
 									error: function(xhr) {
@@ -505,13 +507,13 @@
 					task_modal = assignTaskModal('Assign a Task');
 				});
 				$(document).on("click", ".submit_task", function() {
-					$.post("/f/assignTask", {
-						user_id: window.location.pathname.substring(window.location.pathname.lastIndexOf("/") + 1),
+					var userId = window.location.pathname.substring(window.location.pathname.lastIndexOf("/") + 1);
+					sendAjax("POST", ["users", userId, "tasks"], {
 						task_name: $(".task_name").val(),
 						task_description: $(".task_description").val(),
 						due_date: new Date($(".task_year option:selected").text(), $(".task_month option:selected").val()-1, $(".task_day option:selected").text())
-					}, function(responseText) {
-						if (responseText != "fail") {
+					}, function(response) {
+						if (response != "fail") {
 							var li = document.createElement("li");
 							$(li).addClass("data_point");
 							$(li).html($(".task_name").val() + " <span class='due_date_display'>(By " + readableDate(new Date($(".task_year option:selected").text(), $(".task_month option:selected").val()-1, $(".task_day option:selected").text())) + ")</span> <span style='vertical-align: -5%; font-size: 14px' title='Assigned By "+ localStorage.firstname + " " + localStorage.lastname +"' class='assigned_by glyphicon glyphicon-info-sign'></span>");
@@ -528,7 +530,7 @@
 							$(mark_as_completed).addClass("button");
 							$(li).append($(mark_as_completed));
 							$(".task_list.pending").append($(li));
-							$('.assigned_by').jBox('Tooltip', {
+							$(".assigned_by").jBox("Tooltip", {
 									delayOpen: 0,
 									delayClose: 0,
 									theme: "TooltipDark"
@@ -536,24 +538,25 @@
 							task_modal.close();
 							task_modal.destroy();
 						} else {
-							alert(responseText);
+							alert(response);
 						}
 					})
 				});
 				$(document).on("click", ".task_complete", function() {
 					if (window.confirm("Are you sure? This action is irreversible. You can, and will be held accountable if you mark this dishonestly.")) {
 						var $this = $(this);
-						$.post("/f/markTaskAsCompleted", {
-							task_id: $this.attr("data-taskid"),
+						var taskId = $this.attr("data-taskid");
+						sendAjax("POST", ["tasks", taskId, "markCompleted"], {
 							target_user: window.location.pathname.substring(window.location.pathname.lastIndexOf("/") + 1)
-						}, function(responseText) {
-							if (responseText == "success") {
+							// TODO: does target user really have to be sent to the server?
+						}, function(response) {
+							if (response == "success") {
 								var completedTask = $this.parent().clone();
 								$this.parent().remove();
 								completedTask.find(".task_complete").remove();
 								completedTask.appendTo($(".task_list.completed"));
 							} else {
-								alert(responseText);
+								alert(response);
 							}
 						});
 					}
@@ -561,13 +564,15 @@
 				$(document).on("click", ".position_item", function() {
 					if (window.confirm("Are you sure?")) {
 						var $this = $(this);
-						$.post("/f/changePosition", {user_id: $this.parent().parent().attr("data-userid"), target_position: $this.text().toLowerCase()}, function(responseText) {
-							if (responseText == "success") {
+						var userId = $this.parent().parent().attr("data-userid");
+						var newPosition = $this.text().toLowerCase();
+						sendAjax("PUT", ["users", userId, "position", newPosition], function(response) {
+							if (response == "success") {
 								$(".position_item").removeClass("selected");
 								$this.addClass("selected");
 								$this.parent().prev().html($this.text() + '<span class="caret"></span>');
 							} else {
-								alert(responseText);
+								alert(response);
 							}
 						});
 					}
@@ -575,11 +580,10 @@
 				$(document).on("click", ".excuse_btn", function() {
 					if (window.confirm("Are you sure?")) {
 						var $this = $(this);
-						$.post("/f/excuseAbsence", {
-							event_id: $this.attr("data-eventid"),
-							user_id: window.location.pathname.substring(window.location.pathname.lastIndexOf("/") + 1)
-						}, function(responseText) {
-							if (responseText == "success") {
+						var eventId = $this.attr("data-eventid");
+						var userId = window.location.pathname.substring(window.location.pathname.lastIndexOf("/") + 1);
+						sendAjax("PUT", ["events", eventId, "users", userId, "excuseAbsences"], function(response) {
+							if (response == "success") {
 								$this.attr("value", "Excused!");
 								$this.addClass("excused-btn");
 							}

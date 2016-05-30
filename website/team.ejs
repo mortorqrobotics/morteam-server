@@ -123,7 +123,7 @@
 					if (window.confirm("Are you sure?")) {
 						var $this = $(this);
 						var userId = $this.parent().attr("data-userid");
-						sendAjax("DELETE", "/teams/current/users/" + userId, function(response) {
+						sendAjax("DELETE", ["teams/current/users", userId], function(response) {
 							if (response == "success") {
 								$this.parent().find("#small_prof_pic").remove();
 								$this.parent().find(".user_link").html("Removed");
