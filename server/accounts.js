@@ -25,7 +25,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 		try {
 
 			let user = yield User.findOne({
-				_id: req.params.userIdd,
+				_id: req.params.userId,
 				teams: {
 					$elemMatch: {
 						"id": req.user.current_team.id
