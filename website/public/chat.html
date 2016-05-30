@@ -748,19 +748,19 @@
 
         })
         $(document).on("click", ".save_options", function(){
-          if(normalizeDisplayedText($(".change_name").val()).length < 20){
-            var chat_id = $(this).attr("data-chatid");
-            $.post("/f/changeGroupName", {chat_id: chat_id, newName: normalizeDisplayedText($(".change_name").val())}, function(responseText){
-              if(responseText == "success"){
-                options_modal.close();
-                $(".chat_name[data-chatid='"+ chat_id +"'] > span").first().html( $(".change_name").val() )
-              }else{
-                alert(responseText);
-              }
-            });
-          }else{
-            alert("Name has to be 19 characters or fewer.")
-          }
+          var chat_id = $(this).attr("data-chatid");
+          var newName = $(".change_name").val();
+          $.post("/f/changeGroupName", {
+            chat_id: chat_id,
+            newName: newName
+          }, function(responseText){
+            if (responseText == "success") {
+              options_modal.close();
+              $(".chat_name[data-chatid='"+ chat_id +"'] > span").first().html(normalizeDisplayedText(newName));
+            } else {
+              alert(responseText);
+            }
+          });
         })
         $(document).on("click", ".send_button", function(){
 			var content = $(".reply_textarea").val(); 

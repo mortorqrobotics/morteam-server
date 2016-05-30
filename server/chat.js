@@ -192,12 +192,16 @@ module.exports = function(app, util, schemas) {
 	app.post("/f/changeGroupName", requireLogin, Promise.coroutine(function*(req, res) {
 
 		if (req.body.newName.length >= 20) {
-			return res.end("fail");
+			return res.end("Name has to be 19 characters or fewer.");
 		}
 
 		try {
 
-			yield Chat.update({_id: req.body.chat_id}, { name: req.body.newName });
+			yield Chat.update({
+				_id: req.body.chat_id
+			}, {
+				name: util.normalizeDisplayedText(req.body.newName)
+			});
 
 			res.end("success");
 
