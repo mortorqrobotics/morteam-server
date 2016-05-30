@@ -1,3 +1,32 @@
+// usage:
+// sendAjax(method, url, [data], success, [fail], [options])
+// this function will live forever
+function sendAjax() {
+	// shift removes the first element from the array and returns it
+	// pop removes the last element from the array and returns it
+	var args = Array.prototype.slice.call(arguments);
+	var options = {};
+	if (typeof (args.last()) == "object") {
+		options = args.pop(); // any additional options
+	}
+	options.method = args.shift(); // method
+	options.url = args.shift(); // url
+	if (typeof args[0] != "function") {
+		options.data = args.shift(); // request body
+	}
+	if (args.length > 0) {
+		options.success = args[0]; // success handler
+		if (args.length > 1) {
+			options.error = args[1]; // fail handler
+		}
+	}
+	$.ajax(options);
+}
+
+Array.prototype.last = function() {
+	return this[this.length - 1];
+};
+
 function getUsername() {
 	return localStorage.username || sessionStorage.username;
 }

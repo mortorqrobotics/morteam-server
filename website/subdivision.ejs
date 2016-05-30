@@ -24,15 +24,15 @@
 	</div>
 	<!-- NAVIGATION BAR -->
 	<div class="nav_dropdown">
-		<p onclick="location='../index'">Home</p>
-		<p onclick="location='../chat'">Chat</p>
-		<p onclick="location='../drive'">Drive</p>
-		<p onclick="location='../cal'">Calendar</p>
-		<p onclick="location='../networks'">Networks</p>
+		<p onclick="location='/index'">Home</p>
+		<p onclick="location='/chat'">Chat</p>
+		<p onclick="location='/drive'">Drive</p>
+		<p onclick="location='/cal'">Calendar</p>
+		<p onclick="location='/networks'">Networks</p>
 	</div>
 	<div class="navigation_bar">
 		<ul id="navbar_list">
-			<li class="navbar_item navbar_title" onclick="location='../'">
+			<li class="navbar_item navbar_title" onclick="location='/'">
 				MorTeam
 			</li>
 			<li class="navbar_item searchbox_list_item">
@@ -43,16 +43,16 @@
 					</ul>
 				</div>
 			</li>
-			<li class="navbar_item glyph_link chat_btn menu_btn" onclick="location='../chat'">
+			<li class="navbar_item glyph_link chat_btn menu_btn" onclick="location='/chat'">
 				<span class="glyphicon glyphicon-comment"></span>
 			</li>
-			<li class="navbar_item glyph_link drive_btn menu_btn" onclick="location='../drive'">
+			<li class="navbar_item glyph_link drive_btn menu_btn" onclick="location='/drive'">
 				<span class="glyphicon glyphicon-hdd"></span>
 			</li>
-			<li class="navbar_item glyph_link cal_btn menu_btn" onclick="location='../cal'">
+			<li class="navbar_item glyph_link cal_btn menu_btn" onclick="location='/cal'">
 				<span class="glyphicon glyphicon-calendar"></span>
 			</li>
-			<li class="navbar_item glyph_link networks_btn menu_btn" onclick="location='../networks'">
+			<li class="navbar_item glyph_link networks_btn menu_btn" onclick="location='/networks'">
 				<span class="glyphicon glyphicon-globe"></span>
 			</li>
 			<li class="navbar_item glyph_link networks_btn menu_btn" onclick="location='http://www.scout.morteam.com'">
@@ -65,7 +65,7 @@
 				<li class="navbar_item glyph_link" id="notif_button">
 					<span class="glyphicon glyphicon-inbox"></span>
 				</li>
-				<img class="profile_id ejs" id="small_prof_pic" src="../images/user.jpg"></img>
+				<img class="profile_id ejs" id="small_prof_pic" src="/images/user.jpg"></img>
 				<span class="profile_name" id="name_link"></span>
 			</div>
 		</ul>
@@ -75,6 +75,7 @@
 			<li class="notif_list_item">hey</li>
 			<li class="notif_list_item">hi</li>
 			<li class="notif_list_item">ho</li>
+			<!-- TODO: can this be deleted... -->
 		</ul>
 	</div>
 	<div id="prof_drop" class="hidden">
@@ -118,14 +119,14 @@
 					<% members.forEach(function(member) { %>
 						<% if(member._id != current_user_id){ %>
 							<li class="user-link subdivision_member" data-userid="<%= member._id %>" id="<%= member._id %>">
-								<img src="..<%= member.profpicpath %>-60" onerror="this.src='../images/user.jpg'" class="small_prof_pic show" id="small_prof_pic"><%= member.firstname %> <%= member.lastname %>
+								<img src="<%= member.profpicpath %>-60" onerror="this.src='/images/user.jpg'" class="small_prof_pic show" id="small_prof_pic"><%= member.firstname %> <%= member.lastname %>
 							</li>
 							<li class="user_remove_btn" data-userid="<%= member._id %>">
 								<span class="glyphicon glyphicon-trash"></span>
 							</li><br>
 						<% } else { %>
 							<li class="user-link subdivision_member full-width" data-userid="<%= member._id %>" id="<%= member._id %>">
-								<img src="..<%= member.profpicpath %>-60" onerror="this.src='../images/user.jpg'" class="small_prof_pic show" id="small_prof_pic"><%= member.firstname %> <%= member.lastname %>
+								<img src="<%= member.profpicpath %>-60" onerror="this.src='/images/user.jpg'" class="small_prof_pic show" id="small_prof_pic"><%= member.firstname %> <%= member.lastname %>
 							</li>
 							<br>
 						<% } %>
@@ -136,7 +137,7 @@
 					<% } %>
 					<% members.forEach(function(member) { %>
 						<li class="user-link subdivision_member full-width" data-userid="<%= member._id %>" id="<%= member._id %>">
-							<img src="..<%= member.profpicpath %>-60" onerror="this.src='../images/user.jpg'" class="small_prof_pic show" id="small_prof_pic"><%= member.firstname %> <%= member.lastname %>
+							<img src="<%= member.profpicpath %>-60" onerror="this.src='/images/user.jpg'" class="small_prof_pic show" id="small_prof_pic"><%= member.firstname %> <%= member.lastname %>
 						</li>
 						<br>
 					<% }); %>
@@ -147,12 +148,12 @@
 	<!-- END OF BODY -->
 
 
-	<script src="../jbox/jBox.min.js"></script>
-	<script type="text/javascript" src="../js/socket.io.js"></script>
+	<script src="/jbox/jBox.min.js"></script>
+	<script type="text/javascript" src="/js/socket.io.js"></script>
 	<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
-	<script type="text/javascript" src="../js/velocity.min.js"></script>
-	<script type="text/javascript" src="../js/main.js"></script>
+	<script type="text/javascript" src="/js/velocity.min.js"></script>
+	<script type="text/javascript" src="/js/main.js"></script>
 	<script type="text/javascript">
 		var socket = io();
 
