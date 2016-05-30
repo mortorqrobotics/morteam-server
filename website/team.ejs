@@ -6,50 +6,50 @@
 		<meta http-equiv="X-UA-Compatible" content="IE=edge">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 		<title>MorTeam</title>
-		<link href='http://fonts.googleapis.com/css?family=Open+Sans:700,300,400' rel='stylesheet' type='text/css'>
-		<link href='http://fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'>
-		<link href='http://fonts.googleapis.com/css?family=Exo+2:400,300,200' rel='stylesheet' type='text/css'>
-		<link href='http://fonts.googleapis.com/css?family=Titillium+Web' rel='stylesheet' type='text/css'>
+		<link href="http://fonts.googleapis.com/css?family=Open+Sans:700,300,400" rel="stylesheet" type="text/css">
+		<link href="http://fonts.googleapis.com/css?family=Roboto" rel="stylesheet" type="text/css">
+		<link href="http://fonts.googleapis.com/css?family=Exo+2:400,300,200" rel="stylesheet" type="text/css">
+		<link href="http://fonts.googleapis.com/css?family=Titillium+Web" rel="stylesheet" type="text/css">
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
 		<link rel="stylesheet" href="css/index.css" type="text/css">
-		<link href="jbox/jBox.css" rel="stylesheet">
+		<link href="/jbox/jBox.css" rel="stylesheet">
 	</head>
 	<body>
 		<div id="audio-files" style="display: none;">
 			<audio id="click-sound">
-				<source src="jbox/audio/bling2.wav" type="audio/wav" />
+				<source src="/jbox/audio/bling2.wav" type="audio/wav" />
 			</audio>
 		</div>
 		<!-- NAVIGATION BAR -->
 		<div class="nav_dropdown">
-			<p onclick="location='index'">Home</p>
-			<p onclick="location='chat'">Chat</p>
-			<p onclick="location='drive'">Drive</p>
-			<p onclick="location='cal'">Calendar</p>
-			<p onclick="location='networks'">Networks</p>
+			<p onclick="location.assign('/index');">Home</p>
+			<p onclick="location.assign('/chat');">Chat</p>
+			<p onclick="location.assign('/drive');">Drive</p>
+			<p onclick="location.assign('/cal');">Calendar</p>
+			<p onclick="location.assign('/networks');">Networks</p>
 		</div>
 		<div class="navigation_bar">
 			<ul id="navbar_list">
-				<li class="navbar_item navbar_title" onclick="location='index'">
+				<li class="navbar_item navbar_title" onclick="location.assign('/index');">
 					MorTeam
 				</li>
 				<li class="navbar_item searchbox_list_item">
 					<input type="text" placeholder="search" class="searchbox"></input>
 				</li>
-				<li class="navbar_item glyph_link chat_btn menu_btn" onclick="location='chat'">
+				<li class="navbar_item glyph_link chat_btn menu_btn" onclick="location.assign('/chat');">
 						<span class="glyphicon glyphicon-comment"></span>
 				</li>
-				<li class="navbar_item glyph_link drive_btn menu_btn" onclick="location='drive'">
+				<li class="navbar_item glyph_link drive_btn menu_btn" onclick="location.assign('/drive');">
 						<span class="glyphicon glyphicon-hdd"></span>
 				</li>
-				<li class="navbar_item glyph_link cal_btn menu_btn" onclick="location='cal'">
+				<li class="navbar_item glyph_link cal_btn menu_btn" onclick="location.assign('/cal');">
 						<span class="glyphicon glyphicon-calendar"></span>
 				</li>
-				<li class="navbar_item glyph_link networks_btn menu_btn" onclick="location='networks'">
+				<li class="navbar_item glyph_link networks_btn menu_btn" onclick="location.assign('/networks');">
 						<span class="glyphicon glyphicon-globe"></span>
 				</li>
-				<li class="navbar_item glyph_link networks_btn menu_btn" onclick="location='http://www.scout.morteam.com'">
+				<li class="navbar_item glyph_link networks_btn menu_btn" onclick="location.assign('http://www.scout.morteam.com');">
 					<span class="glyphicon glyphicon-pencil"></span>
 				</li>
 				<div class="navbar_item right_links">
@@ -59,7 +59,7 @@
 					<li class="navbar_item glyph_link" id="notif_button">
 						<span class="glyphicon glyphicon-inbox"></span>
 					</li>
-					<img class="profile_id" id="small_prof_pic" src="./images/user.jpg"></img>
+					<img class="profile_id" id="small_prof_pic" src="/images/user.jpg"></img>
 					<span class="profile_name" id="name_link"></span>
 				</div>
 			</ul>
@@ -90,9 +90,9 @@
 					<% members.forEach(function(member) { %>
 						<div class="col-sm-6 col-md-4 col-lg-3">
 							<span data-userid="<%= member._id %>" class="user_display">
-								<img src="<%= member.profpicpath %>-60" onerror="this.src='images/user.jpg'" id="small_prof_pic"></img>
+								<img src="<%= member.profpicpath %>-60" onerror="this.src='/images/user.jpg'" id="small_prof_pic"></img>
 								<span class="user_link_display"><%= member.firstname %> <%= member.lastname %></span>
-								<% if(viewerIsAdmin){ %>
+								<% if (viewerIsAdmin) { %>
 									<span class="glyphicon glyphicon-trash delete_user "></span>
 								<% } %>
 							</span>
@@ -111,38 +111,39 @@
 		<script type="text/javascript" src="js/velocity.min.js"></script>
 		<script type="text/javascript" src="js/main.js"></script>
 		<script type="text/javascript">
-			$(document).ready(function(){
-				$(document).on("click", ".user_display", function(e){
+			$(document).ready(function() {
+				$(document).on("click", ".user_display", function(e) {
 					var a = $(e.target);
 					var b = $(this).find(".delete_user");
-					if (a[0] != b[0]){
+					if (a[0] != b[0]) {
 						location="u/"+ $(this).attr("data-userid");
 					}
 				});
-				$(document).on("click", ".delete_user", function(){
+				$(document).on("click", ".delete_user", function() {
 					if (window.confirm("Are you sure?")) {
 						var $this = $(this);
-						$.post("/f/removeUserFromTeam", {user_id: $this.parent().attr("data-userid")}, function(responseText){
-							if(responseText == "success"){
+						var userId = $this.parent().attr("data-userid");
+						sendAjax("DELETE", "/teams/current/users/" + userId, function(response) {
+							if (response == "success") {
 								$this.parent().find("#small_prof_pic").remove();
 								$this.parent().find(".user_link").html("Removed");
 								$this.parent().css("background-color", "#FF6F6F")
 								var delete_btn = $this;
-								setTimeout(function(){
+								setTimeout(function() {
 									delete_btn.remove();
 								}, 10)
-							}else{
-								alert(responseText);
+							} else {
+								alert(response);
 							}
 						})
 					}
 				})
 			});
-			window.onunload = function(){};
+			window.onunload = function() {};
 		</script>
 
 	<script>
-	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(function(i,s,o,g,r,a,m) {i['GoogleAnalyticsObject']=r;i[r]=i[r]||function() {
 	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
 	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
 	})(window,document,'script','//www.google-analytics.com/analytics.js','ga');

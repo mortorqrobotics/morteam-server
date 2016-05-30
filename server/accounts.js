@@ -17,6 +17,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 	let Chat = imports.models.Chat;
 	let Folder = imports.models.Folder;
 	let Event = imports.models.Event;
+	let AttendanceHandler = imports.models.AttendanceHandler;
 
 	let router = express.Router();
 

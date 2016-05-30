@@ -163,15 +163,12 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.delete("/:teamId/user/:userId", requireLogin, requireAdmin, Promise.coroutine(function*(req, res) {
+	router.delete("/current/users/:userId", requireLogin, requireAdmin, Promise.coroutine(function*(req, res) {
 		// remove a user from a team
 		try {
 
 			let user = yield User.findOne({ _id: req.params.userId });
 
-			// TODO: this logic is not quite right for multiple teams
-			// in general this route is not quite right for multiple teams
-			// it does not even use the teamId param
 			if (user.current_team.position == "admin" && (yield User.count({
 				teams: {
 					id: req.user.current_team.id,

@@ -100,8 +100,8 @@ module.exports = function(imports) {
 				event.entireTeam = true;
 
 				users = yield User.find({
-					teams: {$elemMatch: {id: req.user.current_team.id}}
-				}, "-password");
+					teams: { $elemMatch: { id: req.user.current_team.id } }
+				});
 
 			} else {
 
@@ -197,6 +197,24 @@ module.exports = function(imports) {
 		}
 	}));
 
+	router.put("/:eventId/excuseAbsence", requireLogin, requireLeader, Promise.coroutine(function*(req, res) {
+		try {
+
+			yield AttendanceHandler.update({
+				event : req.params.eventId,
+				"attendees.user": req.body.user_id
+			}, {
+				"$set": {"attendees.$.status": "excused"}
+			});
+			
+			res.end("success");
+
+		} catch (err) {
+			console.error(err);
+			res.end("fail");
+		}
+	}));
+
 	function getPresencesAbsences(attendanceHandlers, userId) {
 		let absences = [];
 		let present = 0;
@@ -215,7 +233,7 @@ module.exports = function(imports) {
 		return { present: present, absences: absences };
 	}
 
-	router.get("/absences", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/:userId/absences", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
 			let dateConstraints = {};
@@ -236,24 +254,6 @@ module.exports = function(imports) {
 			let result = getPresencesAbsences(handlers, req.body.user_id);
 
 			res.json(result);
-
-		} catch (err) {
-			console.error(err);
-			res.end("fail");
-		}
-	}));
-
-	router.put("/:eventId/excuseAbsence", requireLogin, requireLeader, Promise.coroutine(function*(req, res) {
-		try {
-
-			yield AttendanceHandler.update({
-				event : req.params.eventId,
-				"attendees.user": req.body.user_id
-			}, {
-				"$set": {"attendees.$.status": "excused"}
-			});
-			
-			res.end("success");
 
 		} catch (err) {
 			console.error(err);

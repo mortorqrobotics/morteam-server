@@ -18,11 +18,11 @@ module.exports = function(imports) {
 
 	let router = express.Router();
 
-	router.get("/:id", Promise.coroutine(function*(req, res) {
+	router.get("/:subdivId", Promise.coroutine(function*(req, res) {
 		try {
 
 			let subdivision = yield Subdivision.findOne({
-				_id: req.params.id,
+				_id: req.params.subdivId,
 				team: req.user.current_team.id
 			});
 
@@ -95,16 +95,16 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.post("/:id/invitations", requireLogin, Promise.coroutine(function*(req, res) {
+	router.post("/:subdivId/invitations/:userId", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
-			let subdivision = yield Subdivision.findById(req.params.id);
+			let subdivision = yield Subdivision.findById(req.params.subdivId);
 
 			if (!subdivision) {
 				return res.end("fail");
 			}
 
-			let invitedUser = yield User.findById(req.body.user_id);
+			let invitedUser = yield User.findById(req.params.userId);
 
 			if (!invitedUser) {
 				return res.end("fail");
@@ -207,17 +207,17 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.put("/:id/invitations/accept", requireLogin, Promise.coroutine(function*(req, res) {
+	router.put("/:subdivId/invitations/accept", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
 			yield User.update({
 				_id: req.user._id,
-				"subdivisions._id": new ObjectId(req.params.id)
+				"subdivisions._id": new ObjectId(req.params.subdivId)
 			}, { "$set": {
 				"subdivisions.$.accepted": true
 			}});
 
-			let events = yield Event.find({ subdivisionAttendees: req.params.id });
+			let events = yield Event.find({ subdivisionAttendees: req.params.subdivId });
 
 			yield Promise.all(events.map(event => AttendanceHandler.update({
 				event: event._id,
@@ -237,10 +237,10 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.put("/public/:id/join", requireLogin, Promise.coroutine(function*(req, res) {
+	router.put("/public/:subdivId/join", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
-			let subdivision = yield Subdivision.findById(req.params.id);
+			let subdivision = yield Subdivision.findById(req.params.subdivId);
 
 			if (subdivision.type != "public") {
 				return res.end("fail");
@@ -291,13 +291,13 @@ module.exports = function(imports) {
 
 	}));
 
-	router.put("/:id/invitations/ignore", requireLogin, Promise.coroutine(function*(req, res) {
+	router.put("/:subdivId/invitations/ignore", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
 			yield User.findByIdAndUpdate(req.user._id, {
 				"$pull": {
 					"subdivisions": {
-						_id: new ObjectId(req.params.id),
+						_id: new ObjectId(req.params.subdivId),
 						team: req.user.current_team.id
 					}
 				}
@@ -311,20 +311,20 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.put("/:id/leave", requireLogin, Promise.coroutine(function*(req, res) {
+	router.put("/:subdivId/leave", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
 			yield User.findByIdAndUpdate(req.user._id, {
 				"$pull": {
 					"subdivisions": {
-						_id: new ObjectId(req.params.id),
+						_id: new ObjectId(req.params.subdivId),
 						team: req.user.current_team.id
 					}
 				}
 			});
 
 			let events = yield Event.find({
-				subdivisionAttendees: req.params.id
+				subdivisionAttendees: req.params.subdivId
 			});
 
 			yield Promise.all(events.map(event => AttendanceHandler.update({
@@ -345,11 +345,11 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.delete("/:id", requireLogin, requireAdmin, Promise.coroutine(function*(req, res) {
+	router.delete("/:subdivId", requireLogin, requireAdmin, Promise.coroutine(function*(req, res) {
 		try {
 
 			yield Subdivision.findOneAndRemove({
-				_id: new ObjectId(req.params.id),
+				_id: new ObjectId(req.params.subdivId),
 				team: req.user.current_team.id
 			});
 
@@ -358,7 +358,7 @@ module.exports = function(imports) {
 			}, {
 				"$pull": {
 					"subdivisions": {
-						_id: new ObjectId(req.params.id),
+						_id: new ObjectId(req.params.subdivId),
 						team: req.user.current_team.id
 					}
 				}
@@ -372,7 +372,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.delete("/:id/user/:userId", requireLogin, requireAdmin, Promise.coroutine(function*(req, res) {
+	router.delete("/:subdivId/users/:userId", requireLogin, requireAdmin, Promise.coroutine(function*(req, res) {
 		try {
 
 			yield User.update({
@@ -381,7 +381,7 @@ module.exports = function(imports) {
 			}, {
 				"$pull": { // TODO: maybe add new objectid
 					"subdivisions" : {
-						_id: new ObjectId(req.params.id),
+						_id: new ObjectId(req.params.subdivId),
 						team: req.user.current_team.id,
 						accepted: true
 					}
@@ -411,11 +411,11 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.get("/:id/users", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/:subdivId/users", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
 			let users = User.find({
-				subdivisions: { $elemMatch: { _id: req.params.id,  accepted: true } }
+				subdivisions: { $elemMatch: { _id: req.params.subdivId,  accepted: true } }
 			});
 
 			res.json(users);
