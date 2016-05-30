@@ -22,7 +22,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 	let router = express.Router();
 
 	// load profile page of any user based on _id
-	router.get("/:userId", Promise.coroutine(function*(req, res) {
+	router.get("/profile/:userId", Promise.coroutine(function*(req, res) {
 		try {
 
 			let user = yield User.findOne({
@@ -121,7 +121,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 	});
 
 	// uses multer middleware to parse uploaded file called "profpic" with a max file size
-	router.post("/", multer({
+	router.post("/users", multer({
 		limits: { fileSize: 10 * 1024 * 1024 }
 	}).single("profpic"), Promise.coroutine(function*(req, res) {
 		try {
@@ -198,7 +198,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 		}
 	}));
 
-	router.get("/:userId", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/users/:userId", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
 			let user = yield User.findOne({
@@ -213,23 +213,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 		}
 	}));
 
-	// TODO: move to teams.js?
-	app.post("/f/getUserTeams", requireLogin, Promise.coroutine(function*(req, res) {
-		try {
-			let user = yield User.findOne({
-				_id: req.body._id
-			}, "-password").exec();
-			res.json({
-				"teams": user.teams,
-				"current_team": user.current_team
-			});
-		} catch (err) {
-			console.error(err);
-			res.end("fail");
-		}
-	}));
-
-	router.put("/:userId/position", requireLogin, Promise.coroutine(function*(req, res) {
+	router.put("/users/:userId/position", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 			// position hierarchy
 			let positionHA = {
@@ -281,7 +265,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 		}
 	}));
 
-	router.get("/search", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/users/search", requireLogin, Promise.coroutine(function*(req, res) {
 
 		// create array of search terms
 		let terms = req.body.search.split(" ");
@@ -388,7 +372,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 	}));
 
 	// get information about the currently logged in user
-	router.get("/self", requireLogin, function(req, res) {
+	router.get("/users/self", requireLogin, function(req, res) {
 		res.json(req.user);
 	});
 

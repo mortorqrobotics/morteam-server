@@ -16,7 +16,7 @@ module.exports = function(imports) {
 
 	let router = express.Router();
 
-	router.post("/", requireLogin, Promise.coroutine(function*(req, res) {
+	router.post("/announcements", requireLogin, Promise.coroutine(function*(req, res) {
 
 		// attempt to convert audience request to JSON in case client does not explicitly send it as a JSON type
 		try {
@@ -95,7 +95,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.get("/", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/announcements", requireLogin, Promise.coroutine(function*(req, res) {
 		// creates an array of the _ids of the subdivisions that the user is a member of
 		let userSubdivisionIds = util.activeSubdivisionIds(req.user.subdivisions);
 
@@ -125,7 +125,7 @@ module.exports = function(imports) {
 				subdivisionAudience: 1,
 				entireTeam: 1
 				// populate author and sort by timestamp, skip and limit are for pagination
-			}).populate("author", "-password")
+			}).populate("author")
 				.populate("userAudience")
 				.populate("subdivisionAudience")
 				.sort("-timestamp")
@@ -141,7 +141,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.delete("/:annId", requireLogin, Promise.coroutine(function*(req, res) {
+	router.delete("/announcements/:annId", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 			let announcement = yield Announcement.findOne({ _id: req.params.annId });
 

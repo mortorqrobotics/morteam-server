@@ -17,7 +17,7 @@ module.exports = function(imports) {
 
 	let router = express.Router();
 
-	router.get("/year/:year/month/:month", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/events/year/:year/month/:month", requireLogin, Promise.coroutine(function*(req, res) {
 		let userSubdivisionIds = util.activeSubdivisionIds(req.user.subdivisions);
 
 		let year = req.params.year;
@@ -47,7 +47,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.get("/upcoming", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/events/upcoming", requireLogin, Promise.coroutine(function*(req, res) {
 		let userSubdivisionIds = util.activeSubdivisionIds(req.user.subdivisions);
 
 		try {
@@ -70,7 +70,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.post("/", requireLogin, requireLeader, Promise.coroutine(function*(req, res) {
+	router.post("/events", requireLogin, requireLeader, Promise.coroutine(function*(req, res) {
 
 		req.body.userAttendees = req.body.userAttendees || [];
 		req.body.subdivisionAttendees = req.body.subdivisionAttendees || [];
@@ -152,7 +152,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.delete("/:eventId", requireLogin, requireLeader, Promise.coroutine(function*(req, res) {
+	router.delete("/events/:eventId", requireLogin, requireLeader, Promise.coroutine(function*(req, res) {
 		try {
 
 			yield Event.findOneAndRemove({_id: req.params.eventId});
@@ -167,7 +167,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.get("/:eventId/attendees", requireLogin, requireLeader, Promise.coroutine(function*(req, res) {
+	router.get("/events/:eventId/attendees", requireLogin, requireLeader, Promise.coroutine(function*(req, res) {
 		try {
 
 			let handler = yield AttendanceHandler.findOne({event: req.params.eventId}).populate("attendees.user").exec();
@@ -180,7 +180,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.put("/:eventId/attendance", requireLogin, requireLeader, Promise.coroutine(function*(req, res) {
+	router.put("/events/:eventId/attendance", requireLogin, requireLeader, Promise.coroutine(function*(req, res) {
 		try {
 
 			yield AttendanceHandler.update({
@@ -197,7 +197,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.put("/:eventId/excuseAbsence", requireLogin, requireLeader, Promise.coroutine(function*(req, res) {
+	router.put("/events/:eventId/excuseAbsence", requireLogin, requireLeader, Promise.coroutine(function*(req, res) {
 		try {
 
 			yield AttendanceHandler.update({
@@ -233,7 +233,7 @@ module.exports = function(imports) {
 		return { present: present, absences: absences };
 	}
 
-	router.get("/:userId/absences", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/users/:userId/absences", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
 			let dateConstraints = {};

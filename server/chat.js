@@ -16,7 +16,7 @@ module.exports = function(imports) {
 
 	let router = express.Router();
 
-	router.post("/", requireLogin, Promise.coroutine(function*(req, res) {
+	router.post("/chats", requireLogin, Promise.coroutine(function*(req, res) {
 
 		let subdivisionMembers = req.body.subdivisionMembers || [];
 		let userMembers = req.body.userMembers || [];
@@ -78,7 +78,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.get("/", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/chats", requireLogin, Promise.coroutine(function*(req, res) {
 		// get an array of _ids of subdivisions of which the user is a member. (dat proper grammar doe)
 		let userSubdivisionIds = util.activeSubdivisionIds(req.user.subdivisions);
 
@@ -198,7 +198,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.put("/group/:chatId/name", requireLogin, Promise.coroutine(function*(req, res) {
+	router.put("/chats/group/:chatId/name", requireLogin, Promise.coroutine(function*(req, res) {
 
 		if (req.body.newName.length >= 20) {
 			return res.end("fail");
@@ -216,7 +216,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.delete("/:chatId", requireAdmin, Promise.coroutine(function*(req, res) {
+	router.delete("/chats/:chatId", requireAdmin, Promise.coroutine(function*(req, res) {
 		try {
 
 			yield Chat.findOneAndRemove({ _id: req.params.chatId });
@@ -229,7 +229,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.post("/:chatId/message", requireLogin, Promise.coroutine(function*(req, res) {
+	router.post("/chats/:chatId/message", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 			
 			yield Chat.update({ _id: req.params.chatId }, {

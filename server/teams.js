@@ -17,7 +17,7 @@ module.exports = function(imports) {
 
 	let router = express.Router();
 
-	router.get("/current", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/teams/current", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
 			let users = yield User.find({
@@ -40,7 +40,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.get("/current/users", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/teams/current/users", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
 			let users = yield User.find({
@@ -55,7 +55,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.post("/", requireLogin, Promise.coroutine(function*(req, res) {
+	router.post("/teams", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
 			if (yield Team.findOne({ id: req.body.id })) {
@@ -84,7 +84,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.put("/:teamId/join", requireLogin, Promise.coroutine(function*(req, res) {
+	router.put("/teams/:teamId/join", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
 			let team = yield Team.findOne({id: req.params.teamId});
@@ -135,7 +135,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.get("/current/number", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/teams/current/number", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
 			let team = yield Team.findOne({id: req.user.current_team.id});
@@ -148,7 +148,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.get("/:teamNum/exists", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/teams/number/:teamNum/exists", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 			
 			if (yield Team.find({number: parseInt(req.params.teamNum)})) {
@@ -163,7 +163,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.delete("/current/users/:userId", requireLogin, requireAdmin, Promise.coroutine(function*(req, res) {
+	router.delete("/teams/current/users/:userId", requireLogin, requireAdmin, Promise.coroutine(function*(req, res) {
 		// remove a user from a team
 		try {
 
@@ -219,6 +219,21 @@ module.exports = function(imports) {
 
 			res.end("success");
 
+		} catch (err) {
+			console.error(err);
+			res.end("fail");
+		}
+	}));
+
+	app.get("/users/:userId/teams", requireLogin, Promise.coroutine(function*(req, res) {
+		try {
+			let user = yield User.findOne({
+				_id: req.body._id
+			});
+			res.json({
+				"teams": user.teams,
+				"current_team": user.current_team
+			});
 		} catch (err) {
 			console.error(err);
 			res.end("fail");

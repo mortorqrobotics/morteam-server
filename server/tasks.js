@@ -14,7 +14,7 @@ module.exports = function(imports) {
 
 	let router = express.Router();
 
-	router.post("/assign", requireLogin, requireLeader, Promise.coroutine(function*(req, res) {
+	router.post("/users/:userId/tasks", requireLogin, requireLeader, Promise.coroutine(function*(req, res) {
 
 		// for iOS and Android
 		if (typeof(req.body.due_date) == "string") {
@@ -24,9 +24,9 @@ module.exports = function(imports) {
 		let task = {
 			name: req.body.task_name,
 			team: req.user.current_team.id,
-			for: req.body.user_id, // why a reserved word :/
+			for: req.params.userId, // why a reserved word :/
 			due_date: req.body.due_date,
-			creator: req.user._id, // req.body.user_id vs req.user._id ...
+			creator: req.user._id,
 			completed: false
 		};
 
@@ -58,7 +58,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.get("/user/:userId/completed", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/users/:userId/tasks/completed", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
 			let tasks = yield Task.find({
@@ -76,7 +76,7 @@ module.exports = function(imports) {
 
 	// TODO: should completed and pending tasks be put into one request?
 
-	router.get("/user/:userId/pending", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/users/:userId/tasks/pending", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
 			let tasks = yield Task.find({
@@ -92,7 +92,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.put("/:taskId/markCompleted", requireLogin, Promise.coroutine(function*(req, res) {
+	router.post("/tasks/:taskId/markCompleted", requireLogin, Promise.coroutine(function*(req, res) {
 
 		if (req.user._id != req.body.target_user // TODO: targetUserId instead?
 				&& req.user.current_team.position != "admin"

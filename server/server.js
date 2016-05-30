@@ -127,18 +127,18 @@ module.exports = function(imports) {
 	router.set("views", require("path").join(__dirname, "/../website"));
 
 	// import all modules that handle specific requests
-	router.use("/users", require("./accounts.js")(imports, publicDir, profpicDir)); // TODO: /users?
-	router.use("/teams", require("./teams.js")(imports));
-	router.use("/subdivisions", require("./subdivisions.js")(imports));
-	router.use("/announcements", require("./announcements.js")(imports));
-	router.use("/chat", require("./chat.js")(imports));
-	router.use("/drive", require("./drive.js")(imports));
-	router.use("/events", require("./events.js")(imports));
-	router.use("/tasks", require("./tasks.js")(imports));
-	require("./sio.js")(imports);
+	router.use(require("./accounts.js")(imports, publicDir, profpicDir));
+	router.use(require("./teams.js")(imports));
+	router.use(require("./subdivisions.js")(imports));
+	router.use(require("./announcements.js")(imports));
+	router.use(require("./chat.js")(imports));
+	router.use(require("./drive.js")(imports));
+	router.use(require("./events.js")(imports));
+	router.use(require("./tasks.js")(imports));
+	require("./sio.js")(imports); // TODO: does something have to be done with this?
 
 	// send 404 message for any page that does not exist (IMPORTANT: The order for this does matter. Keep it at the end.)
-	router.get("*", function(req, res) { // TODO: should this be get or use?
+	router.use("*", function(req, res) { // TODO: should this be get or use?
 		util.send404(res);
 	});
 
