@@ -18,7 +18,7 @@ module.exports = function(imports) {
 
 	let router = express.Router();
 
-	router.get("/subdivisions/:subdivId", Promise.coroutine(function*(req, res) {
+	router.get("/subdivisions/id/:subdivId", Promise.coroutine(function*(req, res) {
 		try {
 
 			let subdivision = yield Subdivision.findOne({
@@ -63,7 +63,6 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.use(req=>console.log(req.path));
 	router.post("/subdivisions", requireLogin, requireLeader, Promise.coroutine(function*(req, res) {
 
 		if (req.body.name.length >= 22) {
@@ -96,7 +95,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.post("/subdivisions/:subdivId/invitations/:userId", requireLogin, Promise.coroutine(function*(req, res) {
+	router.post("/subdivisions/id/:subdivId/invitations/userId/:userId", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
 			let subdivision = yield Subdivision.findById(req.params.subdivId);
@@ -208,7 +207,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.put("/subdivisions/:subdivId/invitations/accept", requireLogin, Promise.coroutine(function*(req, res) {
+	router.put("/subdivisions/id/:subdivId/invitations/accept", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
 			yield User.update({
@@ -238,7 +237,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.post("/subdivisions/public/:subdivId/join", requireLogin, Promise.coroutine(function*(req, res) {
+	router.post("/subdivisions/public/id/:subdivId/join", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
 			let subdivision = yield Subdivision.findById(req.params.subdivId);
@@ -292,7 +291,7 @@ module.exports = function(imports) {
 
 	}));
 
-	router.post("/subdivisions/:subdivId/invitations/ignore", requireLogin, Promise.coroutine(function*(req, res) {
+	router.post("/subdivisions/id/:subdivId/invitations/ignore", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
 			yield User.findByIdAndUpdate(req.user._id, {
@@ -312,7 +311,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.post("/subdivisions/:subdivId/leave", requireLogin, Promise.coroutine(function*(req, res) {
+	router.post("/subdivisions/id/:subdivId/leave", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
 			yield User.findByIdAndUpdate(req.user._id, {
@@ -346,7 +345,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.delete("/subdivisions/:subdivId", requireLogin, requireAdmin, Promise.coroutine(function*(req, res) {
+	router.delete("/subdivisions/id/:subdivId", requireLogin, requireAdmin, Promise.coroutine(function*(req, res) {
 		try {
 
 			yield Subdivision.findOneAndRemove({
@@ -373,7 +372,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.delete("/subdivisions/:subdivId/users/:userId", requireLogin, requireAdmin, Promise.coroutine(function*(req, res) {
+	router.delete("/subdivisions/id/:subdivId/users/:userId", requireLogin, requireAdmin, Promise.coroutine(function*(req, res) {
 		try {
 
 			yield User.update({
@@ -412,7 +411,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.get("/subdivisions/:subdivId/users", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/subdivisions/id/:subdivId/users", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
 			let users = User.find({

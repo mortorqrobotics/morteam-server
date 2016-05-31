@@ -608,7 +608,7 @@
 							$(this).addClass("selected");
 
 				   			var folderId = $this.attr("data-folderid");
-							sendAjax("GET", ["folders", folderId, "subfolders"], function(folders) {
+							sendAjax("GET", ["folders/id", folderId, "subfolders"], function(folders) {
 								if (folders.length == 0) {
 									done++;
 									if (done == 2) {
@@ -627,7 +627,7 @@
 									}
 								}
 							});
-							sendAjax("GET", ["folders", folderId, "files"], function(files) {
+							sendAjax("GET", ["folders/id", folderId, "files"], function(files) {
 								if (files.length == 0) {
 									done++;
 									if (done == 2) {
@@ -689,7 +689,7 @@
 					});
 					$(frame.find(".yes")).click(function() {
 						var fileId = frame.attr("data-fileid");
-						sendAjax("DELETE", getPath(["file", fileId]) + "?isImg=" + frame.hasClass("image"), function(response) {
+						sendAjax("DELETE", getPath(["file/id", fileId]) + "?isImg=" + frame.hasClass("image"), function(response) {
 							if (response == "success") {
 								$grid.isotope('remove', frame).isotope();
 							} else {
@@ -714,7 +714,7 @@
 //						$grid.isotope("remove", $(".doc_frame:not(.add_file)")).isotope()
 //
 //						var folderId = $this.attr("data-folderid");
-//						sendAjax("GET", ["folders", folderId, "subfolders"], function(folders) {
+//						sendAjax("GET", ["folders/id", folderId, "subfolders"], function(folders) {
 //							for (var i = 0; i < folders.length; i++) {
 //								var $folder = $('<div style="z-index:1;" class="doc_frame folder_doc" data-folderid="' + folders[i]._id + '" title="' + folders[i].name +
 //									'"><div class="hidden confirm_del"><p>Are you sure?</p><input type="button" value="yes" class="yes"></input><input type="button" value="no" class="no"></input></div><img src="' +
@@ -730,7 +730,7 @@
 //								});
 //							}
 //						});
-//						sendAjax("GET", ["folders", folderId, "files"], function(files) {
+//						sendAjax("GET", ["folders/id", folderId, "files"], function(files) {
 //							for (var i = 0; i < files.length; i++) {
 //								// append files
 //							}

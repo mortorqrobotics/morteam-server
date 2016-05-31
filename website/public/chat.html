@@ -590,7 +590,7 @@
 							$("#chat_area").empty();
 							//load receivers
 							var chatId = $this.attr("data-chatid");
-							sendAjax("GET", ["chats", chatId, "users"], function(users) {
+							sendAjax("GET", ["chats/id", chatId, "users"], function(users) {
 								for (var i = 0; i < users.length; i++) {
 									if (users[i]._id.toString() != localStorage._id) {
 										receivers.push(users[i]._id.toString());
@@ -598,7 +598,7 @@
 								}
 							});
 							// load messages
-							sendAjax("GET", getPath(["chats", chatId, "messages"]) + "?skip=" + 20*parseInt(sessionStorage.chatPage), function(messages) {
+							sendAjax("GET", getPath(["chats/id", chatId, "messages"]) + "?skip=" + 20*parseInt(sessionStorage.chatPage), function(messages) {
 								if (messages.length == 0) {
 									spinner.stop();
 								}
@@ -627,7 +627,7 @@
 									var pos = $(".chat_area").scrollTop();
 									if (pos == 0) {
 										sessionStorage.chatPage++;
-										sendAjax("GET", getPath(["chats", chatId, "messages"]) + "?skip=" + 20*parseInt(sessionStorage.chatPage), function(messages) {
+										sendAjax("GET", getPath(["chats/id", chatId, "messages"]) + "?skip=" + 20*parseInt(sessionStorage.chatPage), function(messages) {
 											for (var i = 0; i < messages.length; i++) {
 												if (messages[i].author._id.toString() != localStorage._id) {
 													var appendedMsg = $("<div class='bubble_wrapper'><div class='other_bubble'><img title='" + messages[i].author.firstname + " " +  messages[i].author.lastname + ", " + parseDate(messages[i].timestamp) + "' class='show tt' id='small_prof_pic' src='"+ messages[i].author.profpicpath+ "-60" +"'></img>" + "<p data-userid='" + messages[i].author._id + "' class='chat_opponent user-link'>" + messages[i].author.firstname + ": </p class='chat_opponent'>" + messages[i].content + "</div></div>").prependTo($('.chat_area'));
@@ -664,7 +664,7 @@
 							}, 100)
 						}
 					});
-					sendAjax("GET", ["chat", chatId, "allMembers"], function(data) {
+					sendAjax("GET", ["chats/id", chatId, "allMembers"], function(data) {
 						var members = data.members;
 						var isGroup = data.group;
 						if (isGroup) {
@@ -711,7 +711,7 @@
 				});
 				$(document).on("click", ".delete_group", function() {
 					var chatId = $(this).attr("data-chatid");
-					sendAjax("DELETE", ["chats", chatId], function(response) {
+					sendAjax("DELETE", ["chats/id", chatId], function(response) {
 						if (response == "success") {
 							options_modal.close();
 							$(".chat_name[data-chatid='"+ chatId +"']").remove();
@@ -725,7 +725,7 @@
 				$(document).on("click", ".save_options", function() {
 					if (normalizeDisplayedText($(".change_name").val()).length < 20) {
 						var chatId = $(this).attr("data-chatid");
-						sendAjax("PUT", ["chats/group", chatId, "name"], {
+						sendAjax("PUT", ["chats/group/id", chatId, "name"], {
 							newName: normalizeDisplayedText($(".change_name").val()
 						}, function(response) {
 							if (response == "success") {
@@ -761,7 +761,7 @@
 						autosize.update(ta); // resizes reply text box
 						$('.chat_area').css('height', "calc(100vh - 58px - " + $this.height() + "px)"); // resizes div.chat_area according to changes that
 
-						sendAjax("POST", ["chats", chatId, "messages"], {
+						sendAjax("POST", ["chats/id", chatId, "messages"], {
 							content:  content
 						}, function(response) {
 

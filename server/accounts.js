@@ -22,7 +22,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 	let router = express.Router();
 
 	// load profile page of any user based on _id
-	router.get("/profile/:userId", Promise.coroutine(function*(req, res) {
+	router.get("/profile/id/:userId", Promise.coroutine(function*(req, res) {
 		try {
 
 			let user = yield User.findOne({
@@ -199,7 +199,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 		}
 	}));
 
-	router.get("/users/:userId", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/users/id/:userId", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
 			let user = yield User.findOne({
@@ -214,7 +214,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 		}
 	}));
 
-	router.put("/users/:userId/position/:newPosition", requireLogin, Promise.coroutine(function*(req, res) {
+	router.put("/users/id/:userId/position/:newPosition", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 			// position hierarchy
 			let positionHA = {

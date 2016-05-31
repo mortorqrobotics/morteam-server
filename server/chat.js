@@ -117,7 +117,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.get("/chats/:chatId/messages", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/chats/id/:chatId/messages", requireLogin, Promise.coroutine(function*(req, res) {
 		// TODO: maybe in the future combine this with getUsersInChat to improve performance
 
 		let skip = parseInt(req.query.skip);
@@ -138,7 +138,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.get("/chat/:chatId/users", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/chat/id/:chatId/users", requireLogin, Promise.coroutine(function*(req, res) {
 		// user members only, not subdivision members
 
 		try {
@@ -168,7 +168,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.get("/chat/:chatId/allMembers", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/chat/id/:chatId/allMembers", requireLogin, Promise.coroutine(function*(req, res) {
 		// both user members and subdivision members
 
 		try {
@@ -198,7 +198,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.put("/chats/group/:chatId/name", requireLogin, Promise.coroutine(function*(req, res) {
+	router.put("/chats/group/id/:chatId/name", requireLogin, Promise.coroutine(function*(req, res) {
 
 		if (req.body.newName.length >= 20) {
 			return res.end("fail");
@@ -216,7 +216,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.delete("/chats/:chatId", requireAdmin, Promise.coroutine(function*(req, res) {
+	router.delete("/chats/id/:chatId", requireAdmin, Promise.coroutine(function*(req, res) {
 		try {
 
 			yield Chat.findOneAndRemove({ _id: req.params.chatId });
@@ -229,7 +229,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.post("/chats/:chatId/message", requireLogin, Promise.coroutine(function*(req, res) {
+	router.post("/chats/id/:chatId/message", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 			
 			yield Chat.update({ _id: req.params.chatId }, {

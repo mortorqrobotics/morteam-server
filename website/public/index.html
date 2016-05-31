@@ -444,7 +444,7 @@
 				$(document).on("click", ".accept-invite", function() {
 					var subdivId = $(this).parent().attr("data-subdivisionid");
 					var invite = $(this).parent();
-					sendAjax("POST", ["subdivisions", subdivId, "invitations/accept"], function(response) {
+					sendAjax("POST", ["subdivisions/id", subdivId, "invitations/accept"], function(response) {
 						if (response == "success") {
 							invite.remove();
 						}
@@ -466,7 +466,7 @@
 				$(document).on("click", ".accept_invite_btn", function() {
 					var $this = $(this);
 					var subdivId = $(this).parent().attr("data-subdivisionid");
-					sendAjax("POST", ["subdivisions", subdivId, "invitations/accept"], function(response) {
+					sendAjax("POST", ["subdivisions/id", subdivId, "invitations/accept"], function(response) {
 						if (response =="success") {
 							subdivision_invite_modal.close();
 							var acceptedSubdivision = $("#invited_subdivisions p[data-subdivisionid='"+ $this.attr("data-subdivisionid") +"']").clone();
@@ -486,7 +486,7 @@
 				$(document).on("click", ".ignore_invite_btn", function() {
 					var $this = $(this);
 					var subdivId = $(this).attr("data-subdivisionid");
-					sendAjax("POST", ["subdivisions", subdivId, "invitations/ignore"], function(response) {
+					sendAjax("POST", ["subdivisions/id", subdivId, "invitations/ignore"], function(response) {
 						if (response=="success") {
 							subdivision_invite_modal.close();
 							$("#invited_subdivisions p[data-subdivisionid='"+ $this.attr("data-subdivisionid") +"']").remove();
@@ -499,7 +499,7 @@
 					if (window.confirm("Are you sure?")) {
 						var announcement = $(this).parent();
 						var annId = $(this).parent().attr("data-postid");
-						sendAjax("DELETE", ["announcements", annId], function(response) {
+						sendAjax("DELETE", ["announcements/id", annId], function(response) {
 							if (response == "success") {
 								$ann.isotope('remove', announcement).isotope();
 							} else {
@@ -667,7 +667,7 @@
 								if (subdivId != "fail") {
 									for (var i = 0; i < selectedUsers.length; i++) {
 										// TODO: put this into one request for a list of users?
-										sendAjax("POST", ["subdivisions", subdivId, "invitations", selectedUsers[i]], function(response) {
+										sendAjax("POST", ["subdivisions/id", subdivId, "invitations", selectedUsers[i]], function(response) {
 											if (response == "success") {
 												//
 											} else {

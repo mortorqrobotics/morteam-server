@@ -14,7 +14,7 @@ module.exports = function(imports) {
 
 	let router = express.Router();
 
-	router.post("/users/:userId/tasks", requireLogin, requireLeader, Promise.coroutine(function*(req, res) {
+	router.post("/users/id/:userId/tasks", requireLogin, requireLeader, Promise.coroutine(function*(req, res) {
 
 		// for iOS and Android
 		if (typeof(req.body.due_date) == "string") {
@@ -58,7 +58,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.get("/users/:userId/tasks/completed", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/users/id/:userId/tasks/completed", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
 			let tasks = yield Task.find({
@@ -76,7 +76,7 @@ module.exports = function(imports) {
 
 	// TODO: should completed and pending tasks be put into one request?
 
-	router.get("/users/:userId/tasks/pending", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/users/id/:userId/tasks/pending", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
 			let tasks = yield Task.find({
@@ -92,7 +92,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.post("/tasks/:taskId/markCompleted", requireLogin, Promise.coroutine(function*(req, res) {
+	router.post("/tasks/id/:taskId/markCompleted", requireLogin, Promise.coroutine(function*(req, res) {
 
 		// TODO: is it possible for this route to not take in the target user?
 

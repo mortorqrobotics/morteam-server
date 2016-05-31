@@ -84,24 +84,24 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.post("/teams/:teamId/join", requireLogin, Promise.coroutine(function*(req, res) {
+	router.post("/teams/code/:teamCode/join", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
-			let team = yield Team.findOne({id: req.params.teamId});
+			let team = yield Team.findOne({id: req.params.teamCode});
 			
 			if (!team) {
 				return res.end("no such team");
 			}
 
 			if (req.user.bannedFromTeams.length > 0
-					&& req.user.bannedFromTeams.indexOf(req.params.teamId) != -1 ) {
+					&& req.user.bannedFromTeams.indexOf(team.id) != -1 ) {
 				return res.end("banned");
 			}
 
-			let users = yield User.find({ teams: { $elemMatch: { "id": req.params.teamId } } });
+			let users = yield User.find({ teams: { $elemMatch: { "id": team.id } } });
 
 			let newTeam = {
-				id: req.params.teamId,
+				id: team.id,
 				position: users.length == 0 ? "admin" : "member" // make the first member an admin
 			};
 			if (req.user.teams.length == 0) {
@@ -121,7 +121,7 @@ module.exports = function(imports) {
 			
 			yield Folder.create({
 				name: "Personal Files",
-				team: req.params.teamId,
+				team: team.id,
 				userMembers: req.user._id, // TODO: should this be an [req.user._id] instead?
 				creator: req.user._id,
 				defaultFolder: true
@@ -164,7 +164,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.delete("/teams/current/users/:userId", requireLogin, requireAdmin, Promise.coroutine(function*(req, res) {
+	router.delete("/teams/current/users/id/:userId", requireLogin, requireAdmin, Promise.coroutine(function*(req, res) {
 		// remove a user from a team
 		try {
 
@@ -226,7 +226,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.get("/users/:userId/teams", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/users/id/:userId/teams", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 			let user = yield User.findOne({
 				_id: req.body._id

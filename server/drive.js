@@ -19,7 +19,7 @@ module.exports = function(imports) {
 
 	let router = express.Router();
 
-	router.get("/file/:fileId", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/file/id/:fileId", requireLogin, Promise.coroutine(function*(req, res) {
 		let userSubdivisionIds = util.activeSubdivisionIds(req.user.subdivisions);
 		try {
 
@@ -75,7 +75,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.get("/folders/:folderId/subfolders", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/folders/id/:folderId/subfolders", requireLogin, Promise.coroutine(function*(req, res) {
 		let userSubdivisionIds = util.activeSubdivisionIds(req.user.subdivisions);
 		try {
 
@@ -96,7 +96,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.get("/folder/:folderId/files", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/folder/id/:folderId/files", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
 			let files = yield File.find({ folder: req.params.folderId });
@@ -207,7 +207,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.delete("/files/:fileId", requireLogin, Promise.coroutine(function*(req, res) {
+	router.delete("/files/id/:fileId", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
 			let file = yield File.findOne({ _id: req.params.fileId }).populate("folder").exec();

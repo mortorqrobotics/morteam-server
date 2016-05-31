@@ -204,7 +204,7 @@
 					}, 100)
 				}
 			});
-			sendAjax("GET", ["event", event_id, "attendance"], function(attendees) {
+			sendAjax("GET", ["event/id", event_id, "attendance"], function(attendees) {
 				var span = document.createElement("span");
 				var user_search = '<input type="text" placeholder="Search Names..." class="members_search" id="subdivision_members_search">';
 				var select_all_link = '<a class="select_all_link">Select All</a>';
@@ -344,7 +344,7 @@
 				}
 			});
 
-			sendAjax("GET", ["users", localStorage._id, "tasks/pending"], function(tasks) {
+			sendAjax("GET", ["users/id", localStorage._id, "tasks/pending"], function(tasks) {
 				if (tasks != "fail") {
 					if (tasks.length > 0) {
 						for (var i = 0; i < tasks.length; i++) {
@@ -483,7 +483,7 @@
 				var $this = $(this);
 				if (window.confirm("Are you sure?")) {
 					var eventId = $this.parent().attr("data-eventid");
-					sendAjax("DELETE", ["events", eventId], function(response) {
+					sendAjax("DELETE", ["events/id", eventId], function(response) {
 						if (response == "success") {
 							$this.parent().remove();
 						} else {
@@ -524,7 +524,7 @@
 					}
 				}
 				var eventId = $(this).attr("data-eventid");
-				sendAjax("PUT", ["event", eventId, "attendance"], {
+				sendAjax("PUT", ["event/id", eventId, "attendance"], {
 					updatedAttendees: updatedAttendees
 				}, function(response) {
 					if (response == "success") {

@@ -141,7 +141,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.delete("/announcements/:annId", requireLogin, Promise.coroutine(function*(req, res) {
+	router.delete("/announcements/id/:annId", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 			let announcement = yield Announcement.findOne({ _id: req.params.annId });
 

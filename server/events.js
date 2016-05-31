@@ -152,7 +152,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.delete("/events/:eventId", requireLogin, requireLeader, Promise.coroutine(function*(req, res) {
+	router.delete("/events/id/:eventId", requireLogin, requireLeader, Promise.coroutine(function*(req, res) {
 		try {
 
 			yield Event.findOneAndRemove({_id: req.params.eventId});
@@ -167,7 +167,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.get("/events/:eventId/attendees", requireLogin, requireLeader, Promise.coroutine(function*(req, res) {
+	router.get("/events/id/:eventId/attendees", requireLogin, requireLeader, Promise.coroutine(function*(req, res) {
 		try {
 
 			let handler = yield AttendanceHandler.findOne({
@@ -182,7 +182,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.put("/events/:eventId/attendance", requireLogin, requireLeader, Promise.coroutine(function*(req, res) {
+	router.put("/events/id/:eventId/attendance", requireLogin, requireLeader, Promise.coroutine(function*(req, res) {
 		try {
 
 			yield AttendanceHandler.update({
@@ -200,7 +200,7 @@ module.exports = function(imports) {
 	}));
 
 	// TODO: rename this route?
-	router.put("/events/:eventId/users/:userId/excuseAbsence", requireLogin, requireLeader, Promise.coroutine(function*(req, res) {
+	router.put("/events/id/:eventId/users/:userId/excuseAbsence", requireLogin, requireLeader, Promise.coroutine(function*(req, res) {
 		try {
 
 			yield AttendanceHandler.update({
@@ -236,7 +236,7 @@ module.exports = function(imports) {
 		return { present: present, absences: absences };
 	}
 
-	router.get("/users/:userId/absences", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/users/id/:userId/absences", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
 			let dateConstraints = {};
