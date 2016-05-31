@@ -122,7 +122,7 @@ module.exports = function(imports) {
 		try {
 
 			let folder = {
-				name: req.body.name,
+				name: util.normalizeDisplayedText(req.body.name),
 				team: req.user.current_team.id,
 				userMembers: req.body.userMembers,
 				subdivisionMembers: req.body.subdivisionMembers,
@@ -214,7 +214,7 @@ module.exports = function(imports) {
 
 			if (req.user._id.toString() != file.creator.toString()
 					&& !( req.user.current_team.position == "admin"
-						&& (file.folder.team == req.user.current_team.id))) {
+					&& (file.folder.team == req.user.current_team.id))) {
 				return res.end("fail");
 			}
 
@@ -222,7 +222,8 @@ module.exports = function(imports) {
 			
 			yield file.remove();
 			
-			if (req.body.isImg) {
+			// TODO: this should not be passed by the client, it should be found by the server
+			if (req.query.isImg == "true") {
 				yield util.deleteFileFromDriveAsync(req.params.fileId + "-preview");
 			}
 

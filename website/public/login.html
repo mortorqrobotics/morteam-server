@@ -80,9 +80,12 @@
 				$(this).prop("disabled",true);
 				var username = $.trim($("#username_box").val());
 				var password = $("#password_box").val();
-				$.post("/f/login", {"username": username, "password": password, "rememberMe": $('#remember_box').is(':checked')}, function(responseText) {
-					if (responseText != "inc/username" && responseText != "inc/password" && responseText != "fail") {
-						var user = responseText;
+				sendAjax("POST", "/login", {
+					"username": username,
+					"password": password,
+					"rememberMe": $('#remember_box').is(':checked')
+				}, function(user) {
+					if (["inc/username", "inc/password", "fail"].indexOf(user) == -1) {
 						localStorage.username = user.username;
 						localStorage.firstname = user.firstname;
 						localStorage.lastname = user.lastname;
@@ -102,7 +105,7 @@
 							}
 						}
 						if (location.search != "?scout") {
-							location="/";
+							location.assiN("/");
 						} else {
 							var host = location.host;
 							var lastIndex = host.lastIndexOf(".");
@@ -111,14 +114,14 @@
 								secondLastIndex = 0;
 								host = "." + host;
 							}
-							location = "http://scout" + host.slice(secondLastIndex);
+							location.assign("http://scout" + host.slice(secondLastIndex));
 						}
-					} else if (responseText == "inc/password" || responseText == "inc/username") {
+					} else if (user == "inc/password" || user == "inc/username") {
 						alert("incorrect username/password");
 						$this.val("Log in");
 						$this.prop("disabled",false);
 					} else {
-						alert(responseText);
+						alert(user);
 						$this.val("Log in");
 						$this.prop("disabled",false);
 					}

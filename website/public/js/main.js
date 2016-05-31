@@ -23,6 +23,7 @@ function sendAjax() {
 	$.ajax(options);
 }
 
+// TODO: add query string option
 function getPath(arg) {
 	if (Array.isArray(arg)) {
 		var result = "";

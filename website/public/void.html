@@ -71,16 +71,22 @@
 				});
 
 				$(document).on("click", ".team_create_btn", function() {
-					$.post("/f/createTeam", {id: $(".team_id").val(), name: $(".team_name").val(), number: $(".team_num").val()}, function(responseText) {
-						if (responseText=="success") {
-							$.post("/f/joinTeam", {team_id: $(".team_id").val()}, function(responseText) {
-								if (responseText == "success") {
+					sendAjax("POST", "/teams", {
+						id: $(".team_id").val(),
+						name: $(".team_name").val(),
+						number: $(".team_num").val()
+					}, function(response) {
+						if (response == "success") {
+							// TODO: the creator of a team should automatically be added to it
+							var teamId = $(".team_id").val();
+							sendAjax("POST", ["teams", teamId, "join"], function(response) {
+								if (response == "success") {
 									var lsTeams = JSON.parse(localStorage.teams);
 									lsTeams.push({id: $(".team_id").val(), position: "admin"});
 									localStorage.teams = JSON.stringify(lsTeams);
 									localStorage.c_team = $(".team_id").val();
 									localStorage.c_team_position = "admin";
-									location="/";
+									location.assign("/");
 								} else {
 									alert("fail");
 								}
@@ -91,16 +97,18 @@
 					})
 				});
 				$(document).on("click", ".team_join_btn", function() {
-					$.post("/f/joinTeam", {team_id: $(".team_join_id").val(), user_id: localStorage._id}, function(responseText) {
-						if (responseText=="success") {
+					// TODO: very similar to some code right there ^^^
+					var teamId = $(".team_join_id").val();
+					sendAjax("POST", ["teams", teamId, "join"], function(response) {
+						if (response == "success") {
 							var lsTeams = JSON.parse(localStorage.teams);
 							lsTeams.push({id: $(".team_join_id").val(), position: "member"});
 							localStorage.teams = JSON.stringify(lsTeams);
 							localStorage.c_team = $(".team_join_id").val();
 							localStorage.c_team_position = "member";
-							location="/";
+							location.assign("/");
 						} else {
-							alert(responseText);
+							alert(response);
 						}
 					})
 				});

@@ -23,15 +23,18 @@
 	<script>
 		$(document).ready(function() {
 			$("#fp_done").click(function() {
-				$.post("/f/forgotPassword", {username: $("#fp_name").val(), email: $("#fp_email").val()}, function(responseText) {
-					if (responseText == "success") {
-						alert("Your new password has been emailed to you.")
+				sendAjax("POST", "/forgotPassword", {
+					username: $("#fp_name").val(),
+					email: $("#fp_email").val()
+				}, function(response) {
+					if (response == "success") {
+						alert("Your new password has been emailed to you.");
 					} else {
-						alert(responseText)
+						alert(response);
 					}
-				})
-			})
-		})
+				});
+			});
+		});
 	</script>
 
 	<script>

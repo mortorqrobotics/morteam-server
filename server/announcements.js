@@ -129,7 +129,7 @@ module.exports = function(imports) {
 				.populate("userAudience")
 				.populate("subdivisionAudience")
 				.sort("-timestamp")
-				.skip(Number(req.body.skip))
+				.skip(Number(req.query.skip))
 				.limit(20)
 				.exec();
 

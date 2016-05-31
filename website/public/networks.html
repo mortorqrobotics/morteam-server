@@ -119,8 +119,8 @@
 				$(button).velocity({left: "220px"}, { duration: time, queue: false });
 			}
 
-			$.post("/f/getTeamNum", function(responseText) {
-				var currentTeam = data[responseText];
+			sendAjax("GET", "/teams/current/number", function(number) {
+				var currentTeam = data[number];
 
 				if (currentTeam) {
 					var map = new google.maps.Map(document.getElementById("map"), {
@@ -150,11 +150,10 @@
 //						infoWindow.setContent("<a class='teamNumLink' style='cursor: pointer' target='_blank' >Team " + teamNum + "</a>");
 //						infoWindow.open(map, marker);
 
-						$.post("/f/isTeamOnMorTeam", {teamNum: teamNum}, function(responseText) {
+						sendAjax("GET", ["teams/number", teamNum, "exists"], function(teams) {
 							$(".leftbar").empty()
 
-							if (responseText != "false" && responseText != "fail") {
-								var team = responseText
+							if (team != "false" && team != "fail") {
 
 								var teamDisplay = document.createElement("div");
 								$(teamDisplay).addClass("leftbar_item");
@@ -196,11 +195,11 @@
 			$(document).on("click", ".teamNumLink", function() {
 				var $this = $(this);
 				var clickedTeamNum = $.trim($(this).html().substring(5, 9))
-				$.post("/f/isTeamOnMorTeam", {teamNum: clickedTeamNum}, function(responseText) {
+				// TODO: this code looks just like the code above it...
+				sendAjax("GET", ["teams/number", clickedTeamNum, "exists"], function(team) {
 					$(".leftbar").empty()
 
-					if (responseText != "false" && responseText != "fail") {
-						var team = responseText
+					if (team != "false" && team != "fail") {
 
 						var teamDisplay = document.createElement("div");
 						$(teamDisplay).addClass("leftbar_item");

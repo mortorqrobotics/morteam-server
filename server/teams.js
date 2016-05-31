@@ -84,7 +84,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.put("/teams/:teamId/join", requireLogin, Promise.coroutine(function*(req, res) {
+	router.post("/teams/:teamId/join", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
 			let team = yield Team.findOne({id: req.params.teamId});
@@ -153,6 +153,7 @@ module.exports = function(imports) {
 			
 			if (yield Team.find({number: parseInt(req.params.teamNum)})) {
 				res.json(teams[0]); // TODO: should this just be "true" instead?
+				// the team is used by the client, instead of being "true" the route should be renamed, getIfExists or something
 			} else {
 				res.end("false");
 			}

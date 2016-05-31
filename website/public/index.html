@@ -251,7 +251,7 @@
 						}, 100)
 					}
 				});
-				$.post("/f/getUsersInTeam", function(responseText) {
+				sendAjax("GET", "/teams/current/users", function(users) {
 					var span = document.createElement("span");
 					var subdivision_name = '<input type="text" class="name_input" id="subdivision_name" placeholder="Subdivision Name">';
 					var public_option = '<p class="subdivision_type public selected">Public</p>';
@@ -262,7 +262,6 @@
 					$(potential_members).attr("id", "potential_subdivision_members");
 					$(potential_members).addClass("potential_members");
 					var create_btn = '<input type="button" id="make_subdivision_btn" class="button done_button" value="Make Subdivision">'
-					var users = JSON.parse(responseText);
 					for (var i = 0; i < users.length; i++) {
 						var user = document.createElement("p");
 						$(user).addClass("potential_member");
@@ -318,24 +317,17 @@
 				$(potential_members).addClass("potential_members");
 				$(potential_members).addClass("tall");
 				var add_btn = '<input type="button" id="choose_audience_btn" class="button done_button" value="Done">'
-				$.ajax({
-					type: 'POST',
-					url: "/f/getAllSubdivisionsForUserInTeam",
-					async: false,
-					success: function(responseText) {
-						var subdivisions = JSON.parse(responseText);
-						for (var i = 0; i < subdivisions.length; i++) {
-							var subdivision = document.createElement("p");
-							$(subdivision).addClass("potential_subdivision");
-							$(subdivision).attr("data-subdivisionid", subdivisions[i]._id);
-							$(subdivision).html(subdivisions[i].name);
-							$(potential_members).append(subdivision);
-						}
-
+				sendAjax("GET", "/subdivisions/joined", function(subdivisions) {
+					for (var i = 0; i < subdivisions.length; i++) {
+						var subdivision = document.createElement("p");
+						$(subdivision).addClass("potential_subdivision");
+						$(subdivision).attr("data-subdivisionid", subdivisions[i]._id);
+						$(subdivision).html(subdivisions[i].name);
+						$(potential_members).append(subdivision);
 					}
-				});
-				$.post("/f/getUsersInTeam", function(responseText) {
-					var users = JSON.parse(responseText);
+				}, { async: false }); // TODO: does this really need to be synchronous?
+
+				sendAjax("GET", "/teams/current/users", function(users) {
 					for (var i = 0; i < users.length; i++) {
 						var user = document.createElement("p");
 						$(user).addClass("potential_member");
@@ -389,8 +381,7 @@
 					$("#invited_subdivisions").after('<hr><p class="new_subdivision"><span class="glyphicon glyphicon-plus"></span> Make a Subdivision</p>');
 				}
 
-				$.post("/f/getAllSubdivisionsForUserInTeam", function(responseText) {
-					var subdivisions = JSON.parse(responseText);
+				sendAjax("GET", "/subdivisions/joined", function(subdivisions) {
 					if (subdivisions.length != 0) {
 						for (var i = 0; i < subdivisions.length; i++) {
 							var p = document.createElement("p");
@@ -413,8 +404,7 @@
 						$("#your_subdivisions").append("none");
 					}
 				});
-				$.post("/f/getPublicSubdivisions", function(responseText) {
-					var subdivisions = JSON.parse(responseText);
+				sendAjax("GET", "/subdivisions/public", function(subdivisions) {
 					if (subdivisions.length != 0) {
 						for (var i = 0 ; i < subdivisions.length; i++) {
 							var p = document.createElement("p");
@@ -432,8 +422,7 @@
 						$("#public_subdivisions").append("none");
 					}
 				});
-				$.post("/f/loadSubdivisionInvitations", function(responseText) {
-					var invites = JSON.parse(responseText);
+				sendAjax("GET", "/subdivisions/invitations", function(invites) {
 					if (invites.length != 0) {
 						for (var i = 0; i < invites.length; i++) {
 							var p = document.createElement("p");
@@ -453,10 +442,10 @@
 				});
 
 				$(document).on("click", ".accept-invite", function() {
-					var subdivision_id = $(this).parent().attr("data-subdivisionid");
+					var subdivId = $(this).parent().attr("data-subdivisionid");
 					var invite = $(this).parent();
-					$.post("/f/acceptSubdivisionInvitation", {subdivision_id: subdivision_id}, function(responseText) {
-						if (responseText == "success") {
+					sendAjax("POST", ["subdivisions", subdivId, "invitations/accept"], function(response) {
+						if (response == "success") {
 							invite.remove();
 						}
 					})
@@ -476,8 +465,9 @@
 				});
 				$(document).on("click", ".accept_invite_btn", function() {
 					var $this = $(this);
-					$.post("/f/acceptSubdivisionInvitation", {subdivision_id: $(this).attr("data-subdivisionid")}, function(responseText) {
-						if (responseText=="success") {
+					var subdivId = $(this).parent().attr("data-subdivisionid");
+					sendAjax("POST", ["subdivisions", subdivId, "invitations/accept"], function(response) {
+						if (response =="success") {
 							subdivision_invite_modal.close();
 							var acceptedSubdivision = $("#invited_subdivisions p[data-subdivisionid='"+ $this.attr("data-subdivisionid") +"']").clone();
 							acceptedSubdivision.removeClass("subdivision-invite");
@@ -495,8 +485,9 @@
 				});
 				$(document).on("click", ".ignore_invite_btn", function() {
 					var $this = $(this);
-					$.post("/f/ignoreSubdivisionInvite", {subdivision_id: $(this).attr("data-subdivisionid")}, function(responseText) {
-						if (responseText=="success") {
+					var subdivId = $(this).attr("data-subdivisionid");
+					sendAjax("POST", ["subdivisions", subdivId, "invitations/ignore"], function(response) {
+						if (response=="success") {
 							subdivision_invite_modal.close();
 							$("#invited_subdivisions p[data-subdivisionid='"+ $this.attr("data-subdivisionid") +"']").remove();
 						} else {
@@ -507,14 +498,14 @@
 				$(document).on("click", ".delete_icon", function() {
 					if (window.confirm("Are you sure?")) {
 						var announcement = $(this).parent();
-						var postid = $(this).parent().attr("data-postid");
-						$.post("/f/deleteAnnouncement", {_id: postid}, function(responseText) {
-							if (responseText == "success") {
+						var annId = $(this).parent().attr("data-postid");
+						sendAjax("DELETE", ["announcements", annId], function(response) {
+							if (response == "success") {
 								$ann.isotope('remove', announcement).isotope();
 							} else {
-								alert(responseText);
+								alert(response);
 							}
-						})
+						});
 					}
 				});
 
@@ -574,8 +565,11 @@
 							var targetAudience = $(".audience_item.selected").attr("data-subdivisionid");
 						}
 						nicEditors.findEditor('main_textarea').setContent('');
-						$.post("/f/postAnnouncement", {audience: targetAudience, content: filteredMessage}, function(responseText) {
-							if (responseText!="fail") {
+						sendAjax("POST", "/announcements", {
+							audience: targetAudience,
+							content: filteredMessage
+						}, function(response) {
+							if (response != "fail") {
 								var announcementDiv = document.createElement("div");
 								$(announcementDiv).addClass("announcement");
 								$(announcementDiv).attr("data-postid", responseText);
@@ -610,7 +604,7 @@
 								document.getElementById('main_textarea').value = "";
 								$('#main_textarea').css("height", "56px");
 							} else {
-								alert(responseText);
+								alert(response);
 							}
 						});
 					}
@@ -666,11 +660,15 @@
 							for (var i = 0; i < p_selected_users.length; i++) {
 								selectedUsers.push($(p_selected_users[i]).attr("data-userid"));
 							}
-							$.post("/f/createSubdivision", {name: $("#subdivision_name").val(), type: type}, function(responseText) {
-								if (responseText != "fail") {
-									for (var i=0; i<selectedUsers.length; i++) {
-										$.post("/f/inviteToSubdivision", {user_id: selectedUsers[i], subdivision_id: responseText}, function(responseText) {
-											if (responseText == "success") {
+							sendAjax("POST", "/subdivisions", {
+								name: $("#subdivision_name").val(),
+								type: type
+							}, function(subdivId) {
+								if (subdivId != "fail") {
+									for (var i = 0; i < selectedUsers.length; i++) {
+										// TODO: put this into one request for a list of users?
+										sendAjax("POST", ["subdivisions", subdivId, "invitations", selectedUsers[i]], function(response) {
+											if (response == "success") {
 												//
 											} else {
 												alert("fail");
@@ -678,7 +676,7 @@
 										});
 									}
 									new_subdivision_modal.close();
-									location="/"; //TODO: possibly make this better
+									location.assign("/"); // TODO: possibly make this better
 								} else {
 									alert("failed to create");
 								}
@@ -711,9 +709,8 @@
 
 			function loadAnnouncements(callback) {
 				// spinner = new Spinner(spinnerOpts).spin(loadingDiv);
-				$.post("/f/getAnnouncementsForUser", {skip: 20*localStorage.page},function(responseText) {
-					if (responseText != "fail") {
-						var announcements = responseText;
+				sendAjax("GET", "/announcements?skip=" + 20*localStorage.page, function(announcements) {
+					if (announcements != "fail") {
 
 						for (var i = 0; i < announcements.length; i++) {
 							var announcementDiv = document.createElement("div");
