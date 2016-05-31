@@ -39,7 +39,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 			}
 
 			// load user.ejs page with said user's profile info
-			res.render("user", {
+			res.render(__dirname + "/../website/user", {
 				firstname: user.firstname,
 				lastname: user.lastname,
 				_id: user._id,

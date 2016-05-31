@@ -226,7 +226,7 @@
 
 			$(document).on("click", ".subdivision_join_btn", function() {
 				var subdivId = window.location.pathname.substring(window.location.pathname.lastIndexOf("/") + 1);
-				sendAjax("POST", ["subdivisions/public", subdivId, "join"], function(response) {
+				sendAjax("POST", ["subdivisions/public/id", subdivId, "join"], function(response) {
 					if (response == "success") {
 						$(".subdivision_join_btn").remove();
 						$("#join-leave").append('<input type="button" class="button subdivision_leave_btn" value="Leave"></input>');
@@ -240,7 +240,7 @@
 			$(document).on("click", ".subdivision_leave_btn", function() {
 				if (window.confirm("Are you sure?")) {
 					var subdivId = window.location.pathname.substring(window.location.pathname.lastIndexOf("/") + 1);
-					sendAjax("POST", ["subdivisions", subdivId, "leave"], function(response) {
+					sendAjax("POST", ["subdivisions/id", subdivId, "leave"], function(response) {
 						if (response == "success") {
 							$(".subdivision_leave_btn").remove();
 							$("#join-leave").append('<input type="button" class="button subdivision_join_btn" value="Join"></input>');
@@ -255,11 +255,11 @@
 			$(document).on("click", ".subdivision_delete_btn", function() {
 				if (window.confirm("Are you sure?")) {
 					var subdivId = window.location.pathname.substring(window.location.pathname.lastIndexOf("/") + 1);
-					sendAjax("DELETE", ["subdivisions", subdivId], function(response) {
+					sendAjax("DELETE", ["subdivisions/id", subdivId], function(response) {
 						if (response == "success") {
 							location.assign("/");
 						} else {
-							alert(responseText);
+							alert(response);
 						}
 					});
 				}
@@ -269,13 +269,13 @@
 					var $this = $(this);
 					var subdivId = window.location.pathname.substring(window.location.pathname.lastIndexOf("/") + 1);
 					var userId = $this.attr("data-userid");
-					sendAjax("DELETE", ["subdivisions", subdivId, "users", userId], function(response) {
+					sendAjax("DELETE", ["subdivisions/id", subdivId, "users/id", userId], function(response) {
 						if (response == "success") {
 							$("#subdivision_members").find("#" + $this.attr("data-userid")).next().remove();
 							$("#subdivision_members").find("#" + $this.attr("data-userid")).next().remove();
 							$("#subdivision_members").find("#" + $this.attr("data-userid")).remove();
 						} else {
-							alert(responseText);
+							alert(response);
 						}
 					});
 				}
@@ -311,13 +311,13 @@
 				for (var i=0; i<selectedUsers.length; i++) {
 					var userId = selectedUsers[i];
 					var subdivId = window.location.pathname.substring(window.location.pathname.lastIndexOf("/") + 1);
-					sendAjax("POST", ["subdivisions", subdivId, "invitations", userId], function(response) {
+					sendAjax("POST", ["subdivisions/id", subdivId, "invitations/userId", userId], function(response) {
 						if (response == "success") {
 							//
-						} else if (responseText == "already invited") {
-//							console.log(responseText);
+						} else if (response == "already invited") {
+//							console.log(response);
 						} else {
-							alert(responseText)
+							alert(response);
 						}
 					});
 				}

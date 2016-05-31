@@ -15,9 +15,9 @@
 		<link href='http://fonts.googleapis.com/css?family=Titillium+Web' rel='stylesheet' type='text/css'>
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
-		<link rel="stylesheet" href="css/index.css" type="text/css">
-		<link href="jbox/themes/TooltipDark.css" rel="stylesheet">
-		<link href="jbox/jBox.css" rel="stylesheet">
+		<link rel="stylesheet" href="../../css/index.css" type="text/css">
+		<link href="/jbox/themes/TooltipDark.css" rel="stylesheet">
+		<link href="/jbox/jBox.css" rel="stylesheet">
 		<script src="http://js.nicedit.com/nicEdit-latest.js" type="text/javascript"></script>
 		<script type="text/javascript">
 			bkLib.onDomLoaded(function() {
@@ -26,7 +26,7 @@
 				}).panelInstance('main_textarea');
 			});
 		</script>
-		<script src="js/spin.js"></script>
+		<script src="/js/spin.js"></script>
 		<script type="text/javascript">
 				// var loadingDiv = document.createElement("div");
 				// loadingDiv.className = "loading_circle";
@@ -37,16 +37,16 @@
 	<body>
 		<div id="audio-files" style="display: none;">
 			<audio id="click-sound">
-				<source src="jbox/audio/bling2.wav" type="audio/wav" />
+				<source src="/jbox/audio/bling2.wav" type="audio/wav" />
 			</audio>
 		</div>
 		<!-- NAVIGATION BAR -->
 		<div class="nav_dropdown">
-			<p onclick="location='index'" style="background-color: orange">Home</p>
-			<p onclick="location='chat'">Chat</p>
-			<p onclick="location='drive'">Drive</p>
-			<p onclick="location='cal'">Calendar</p>
-			<p onclick="location='networks'">Networks</p>
+			<p onclick="location='/index'" style="background-color: orange">Home</p>
+			<p onclick="location='/chat'">Chat</p>
+			<p onclick="location='/drive'">Drive</p>
+			<p onclick="location='/cal'">Calendar</p>
+			<p onclick="location='/networks'">Networks</p>
 		</div>
 		<div class="navigation_bar">
 			<ul id="navbar_list">
@@ -61,16 +61,16 @@
 						</ul>
 					</div>
 				</li>
-				<li class="navbar_item glyph_link chat_btn menu_btn" onclick="location='chat'">
+				<li class="navbar_item glyph_link chat_btn menu_btn" onclick="location='/chat'">
 					<span class="glyphicon glyphicon-comment"></span>
 				</li>
-				<li class="navbar_item glyph_link drive_btn menu_btn" onclick="location='drive'">
+				<li class="navbar_item glyph_link drive_btn menu_btn" onclick="location='/drive'">
 					<span class="glyphicon glyphicon-hdd"></span>
 				</li>
-				<li class="navbar_item glyph_link cal_btn menu_btn" onclick="location='cal'">
+				<li class="navbar_item glyph_link cal_btn menu_btn" onclick="location='/cal'">
 					<span class="glyphicon glyphicon-calendar"></span>
 				</li>
-				<li class="navbar_item glyph_link networks_btn menu_btn" onclick="location='networks'">
+				<li class="navbar_item glyph_link networks_btn menu_btn" onclick="location='/networks'">
 					<span class="glyphicon glyphicon-globe"></span>
 				</li>
 				<li class="navbar_item glyph_link networks_btn menu_btn" onclick="location='http://www.scout.morteam.com'">
@@ -176,14 +176,14 @@
 
 
 		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
-		<script src="jbox/jBox.min.js"></script>
-		<script type="text/javascript" src="js/socket.io.js"></script>
+		<script src="/jbox/jBox.min.js"></script>
+		<script type="text/javascript" src="/js/socket.io.js"></script>
 		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.isotope/2.2.1/isotope.pkgd.min.js"></script>
-		<script type="text/javascript" src="js/velocity.min.js"></script>
-		<script type="text/javascript" src="js/autosize.js"></script>
-		<script src="js/Autolinker.min.js"></script>
-		<script type="text/javascript" src="js/main.js"></script>
+		<script type="text/javascript" src="/js/velocity.min.js"></script>
+		<script type="text/javascript" src="/js/autosize.js"></script>
+		<script src="/js/Autolinker.min.js"></script>
+		<script type="text/javascript" src="/js/main.js"></script>
 		<script type="text/javascript">
 				autosize(document.querySelectorAll('textarea'));
 		</script>
@@ -510,10 +510,10 @@
 				});
 
 				$(document).on("click", "#team_button", function() {
-					location="team";
+					location.assign("/teams/current");
 				});
 				$(document).on("click", ".announcement_poster", function() {
-					location="/u/" + $(this).attr("data-userid");
+					location.assign("/u/" + $(this).attr("data-userid"));
 				})
 
 				//audience stuff
@@ -568,11 +568,11 @@
 						sendAjax("POST", "/announcements", {
 							audience: targetAudience,
 							content: filteredMessage
-						}, function(response) {
-							if (response != "fail") {
+						}, function(annId) {
+							if (annId != "fail") {
 								var announcementDiv = document.createElement("div");
 								$(announcementDiv).addClass("announcement");
-								$(announcementDiv).attr("data-postid", responseText);
+								$(announcementDiv).attr("data-postid", annId);
 								var announcementTopDiv = document.createElement("div");
 								$(announcementTopDiv).addClass("announcement_top");
 								var img = document.createElement("img");
@@ -604,7 +604,7 @@
 								document.getElementById('main_textarea').value = "";
 								$('#main_textarea').css("height", "56px");
 							} else {
-								alert(response);
+								alert(annId);
 							}
 						});
 					}

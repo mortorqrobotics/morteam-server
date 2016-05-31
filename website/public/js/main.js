@@ -180,7 +180,7 @@ $(document).ready(function() {
 		});
 	});
 	$(document).on("click", "#view_prof_button", function() {
-		location.assign("/profile/" + localStorage._id);
+		location.assign("/profile/id/" + localStorage._id);
 	});
 	$("#view_prof_button_ejs").click(function() {
 		location.assign("/profile/" + localStorage._id);

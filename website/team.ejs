@@ -12,7 +12,7 @@
 		<link href="http://fonts.googleapis.com/css?family=Titillium+Web" rel="stylesheet" type="text/css">
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
-		<link rel="stylesheet" href="css/index.css" type="text/css">
+		<link rel="stylesheet" href="/css/index.css" type="text/css">
 		<link href="/jbox/jBox.css" rel="stylesheet">
 	</head>
 	<body>
@@ -104,19 +104,19 @@
 		<!-- END OF BODY -->
 
 
-		<script src="jbox/jBox.min.js"></script>
-		<script type="text/javascript" src="js/socket.io.js"></script>
+		<script src="/jbox/jBox.min.js"></script>
+		<script type="text/javascript" src="/js/socket.io.js"></script>
 		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
 		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
-		<script type="text/javascript" src="js/velocity.min.js"></script>
-		<script type="text/javascript" src="js/main.js"></script>
+		<script type="text/javascript" src="/js/velocity.min.js"></script>
+		<script type="text/javascript" src="/js/main.js"></script>
 		<script type="text/javascript">
 			$(document).ready(function() {
 				$(document).on("click", ".user_display", function(e) {
 					var a = $(e.target);
 					var b = $(this).find(".delete_user");
 					if (a[0] != b[0]) {
-						location="u/"+ $(this).attr("data-userid");
+						location.assign("/profile/id/" + $(this).attr("data-userid"));
 					}
 				});
 				$(document).on("click", ".delete_user", function() {

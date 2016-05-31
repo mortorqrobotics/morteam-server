@@ -24,9 +24,11 @@ module.exports = function(imports) {
 				teams: { $elemMatch: { id: req.user.current_team.id } }
 			});
 
-			let team = yield Team.findById(req.user.current_team.id);
+			let team = yield Team.findOne({
+				id: req.user.current_team.id
+			});
 
-			res.render("team", {
+			res.render(__dirname + "/../website/team", {
 				teamName: team.name,
 				teamNum: team.number,
 				teamId: team.id,

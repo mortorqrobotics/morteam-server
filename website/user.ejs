@@ -18,7 +18,7 @@
 		<link href="http://fonts.googleapis.com/css?family=Titillium+Web" rel="stylesheet" type="text/css">
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
-		<link rel="stylesheet" href="../css/index.css" type="text/css">
+		<link rel="stylesheet" href="/css/index.css" type="text/css">
 		<link href="/jbox/jBox.css" rel="stylesheet">
 		<link href="/jbox/themes/TooltipDark.css" rel="stylesheet">
 		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
@@ -354,7 +354,7 @@
 
 			$(document).ready(function() {
 				var userId = window.location.pathname.substring(window.location.pathname.lastIndexOf("/") + 1);
-				sendAjax("GET", ["users", userId, "absences"], function(data) {
+				sendAjax("GET", ["users/id", userId, "absences"], function(data) {
 					var absences = data.absences;
 					var present = data.present;
 					for (var i = 0; i < absences.length; i++) {
@@ -373,9 +373,8 @@
 						$("#presence_percent").html("N/A");
 					}
 				});
-				sendAjax("GET", ["users", userId, "tasks/completed"], function(response) {
-					if (response != "fail") {
-						var tasks = JSON.parse(responseText);
+				sendAjax("GET", ["users/id", userId, "tasks/completed"], function(tasks) {
+					if (tasks != "fail") {
 						if (tasks.length > 0) {
 							for (var i = 0; i < tasks.length; i++) {
 								var li = document.createElement("li");
@@ -398,12 +397,11 @@
 								theme: "TooltipDark"
 						});
 					} else {
-						alert(response);
+						alert(tasks);
 					}
 				});
-				sendAjax("GET", ["users", userId, "tasks/pending"], function(response) {
-					if (response != "fail") {
-						var tasks = JSON.parse(responseText);
+				sendAjax("GET", ["users/id", userId, "tasks/pending"], function(tasks) {
+					if (tasks != "fail") {
 						if (tasks.length > 0) {
 							for (var i = 0; i < tasks.length; i++) {
 								var li = document.createElement("li");
@@ -435,7 +433,7 @@
 								theme: "TooltipDark"
 						});
 					} else {
-						alert(response);
+						alert(tasks);
 					}
 				})
 				if (localStorage.profpicpath == "images/user.jpg") {
@@ -508,7 +506,7 @@
 				});
 				$(document).on("click", ".submit_task", function() {
 					var userId = window.location.pathname.substring(window.location.pathname.lastIndexOf("/") + 1);
-					sendAjax("POST", ["users", userId, "tasks"], {
+					sendAjax("POST", ["users/id", userId, "tasks"], {
 						task_name: $(".task_name").val(),
 						task_description: $(".task_description").val(),
 						due_date: new Date($(".task_year option:selected").text(), $(".task_month option:selected").val()-1, $(".task_day option:selected").text())
@@ -524,7 +522,7 @@
 							$(li).append($(div));
 							var mark_as_completed = document.createElement("input");
 							$(mark_as_completed).attr("type", "button");
-							$(mark_as_completed).attr("data-taskid", responseText);
+							$(mark_as_completed).attr("data-taskid", response);
 							$(mark_as_completed).attr("value", "Mark as Completed");
 							$(mark_as_completed).addClass("task_complete");
 							$(mark_as_completed).addClass("button");
@@ -546,7 +544,7 @@
 					if (window.confirm("Are you sure? This action is irreversible. You can, and will be held accountable if you mark this dishonestly.")) {
 						var $this = $(this);
 						var taskId = $this.attr("data-taskid");
-						sendAjax("POST", ["tasks", taskId, "markCompleted"], {
+						sendAjax("POST", ["tasks/id", taskId, "markCompleted"], {
 							target_user: window.location.pathname.substring(window.location.pathname.lastIndexOf("/") + 1)
 							// TODO: does target user really have to be sent to the server?
 						}, function(response) {
@@ -566,7 +564,7 @@
 						var $this = $(this);
 						var userId = $this.parent().parent().attr("data-userid");
 						var newPosition = $this.text().toLowerCase();
-						sendAjax("PUT", ["users", userId, "position", newPosition], function(response) {
+						sendAjax("PUT", ["users/id", userId, "position", newPosition], function(response) {
 							if (response == "success") {
 								$(".position_item").removeClass("selected");
 								$this.addClass("selected");
@@ -582,7 +580,7 @@
 						var $this = $(this);
 						var eventId = $this.attr("data-eventid");
 						var userId = window.location.pathname.substring(window.location.pathname.lastIndexOf("/") + 1);
-						sendAjax("PUT", ["events", eventId, "users", userId, "excuseAbsences"], function(response) {
+						sendAjax("PUT", ["events/id", eventId, "users/id", userId, "excuseAbsences"], function(response) {
 							if (response == "success") {
 								$this.attr("value", "Excused!");
 								$this.addClass("excused-btn");

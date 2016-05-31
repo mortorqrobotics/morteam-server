@@ -245,7 +245,6 @@
 				$(potential_members).addClass("tall");
 				var add_btn = '<input type="button" id="compose_done_btn" class="button done_button" value="Done">'
 				sendAjax("GET", "/subdivisions/joined", function(subdivisions) {
-					var subdivisions = JSON.parse(responseText);
 					for (var i = 0; i < subdivisions.length; i++) {
 						var subdivision = document.createElement("p");
 						$(subdivision).addClass("potential_subdivision");
@@ -726,7 +725,7 @@
 					if (normalizeDisplayedText($(".change_name").val()).length < 20) {
 						var chatId = $(this).attr("data-chatid");
 						sendAjax("PUT", ["chats/group/id", chatId, "name"], {
-							newName: normalizeDisplayedText($(".change_name").val()
+							newName: normalizeDisplayedText($(".change_name").val())
 						}, function(response) {
 							if (response == "success") {
 								options_modal.close();
@@ -771,7 +770,7 @@
 							}
 							pending = $(pending.get(0));
 
-							if (responseText == "success") {
+							if (response == "success") {
 								pending.removeClass("pending");
 
 								if ($(".chat_name.selected").hasClass("group_chat")) {

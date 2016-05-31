@@ -23,7 +23,7 @@ module.exports = function(imports) {
 	let requireLogin = util.requireLogin;
 
 	Promise.promisifyAll(util);
-	Promise.promisifyAll(lwip);
+//	Promise.promisifyAll(lwip);
 	Promise.promisifyAll(fs);
 
 	let config; // contains passwords and other sensitive info
