@@ -326,7 +326,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 		}
 	}));
 
-	router.put("/profile", requireLogin, multer().single("new_prof_pic"), Promise.coroutine(function*(req, res) {
+	router.post("/profile", requireLogin, multer().single("new_prof_pic"), Promise.coroutine(function*(req, res) {
 
 		let updatedUser = {
 			firstname: req.body.firstname,
