@@ -9,7 +9,7 @@
 // wrap everything for the network
 module.exports = function(imports) {
 
-	imports = initImports(imports);
+	imports = require("./initImports")(imports);
 
 	let express = imports.modules.express;
 	let http = require("http");
@@ -52,7 +52,7 @@ module.exports = function(imports) {
 	// add .html to end of filename if it did not have it already
 	router.use(function(req, res, next) {
 		req.filePath = req.path;
-		if (req.path.indexOf(".") === -1) {
+		if (req.method.toUpperCase() == "GET" && req.path.indexOf(".") === -1) {
 			let file = publicDir + req.path + ".html";
 			fs.exists(file, function(exists) {
 				if (exists) {
@@ -123,8 +123,8 @@ module.exports = function(imports) {
 	router.use(express.static(publicDir));
 
 	// use EJS as default view engine and specifies location of EJS files
-	router.set("view engine", "ejs");
-	router.set("views", require("path").join(__dirname, "/../website"));
+//	router.set("view engine", "ejs");
+//	router.set("views", require("path").join(__dirname, "/../website"));
 
 	// import all modules that handle specific requests
 	router.use(require("./accounts.js")(imports, publicDir, profpicDir));
@@ -141,5 +141,7 @@ module.exports = function(imports) {
 	router.use("*", function(req, res) { // TODO: should this be get or use?
 		util.send404(res);
 	});
+
+	return router;
 
 }

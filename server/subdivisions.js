@@ -59,10 +59,11 @@ module.exports = function(imports) {
 			}
 
 		} catch (err) {
-			util.send404();
+			util.send404(res);
 		}
 	}));
 
+	router.use(req=>console.log(req.path));
 	router.post("/subdivisions", requireLogin, requireLeader, Promise.coroutine(function*(req, res) {
 
 		if (req.body.name.length >= 22) {
@@ -110,12 +111,12 @@ module.exports = function(imports) {
 				return res.end("fail");
 			}
 
-			if (invitedUser.subdivisions.some(sub => sub._id == subdivision._id) {
+			if (invitedUser.subdivisions.some(sub => sub._id == subdivision._id)) {
 				return res.end("already invited");
 			}
 
 			invitedUser.subdivisions.push({
-				_id: new ObjectId(subdivision._id)
+				id: new ObjectId(subdivision._id),
 				team: req.user.current_team.id,
 				accepted: false
 			});

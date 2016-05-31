@@ -27,8 +27,8 @@ function sendAjax() {
 function getPath(arg) {
 	if (Array.isArray(arg)) {
 		var result = "";
-		for (var i = 0; i < args.length; i++) {
-			result += "/" + escape(args[i]); // TODO: switch to encodeURIComponent or something?
+		for (var i = 0; i < arg.length; i++) {
+			result += "/" + escape(arg[i]); // TODO: switch to encodeURIComponent or something?
 		}
 		return result;
 	}
@@ -215,7 +215,7 @@ $(document).ready(function() {
 	})
 	function doneTyping() {
 		if ($(".searchbox").val() != "") {
-			sendAjax("GET", "/users/search". {
+			sendAjax("GET", "/users/search", {
 				search: $(".searchbox").val()
 			}, function(response) {
 				if (response != "fail") {

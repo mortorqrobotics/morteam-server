@@ -60,6 +60,7 @@
 		</div>
 
 	<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+	<script type="text/javascript" src="js/main.js"></script>
 	<script>
 		$(document).ready(function() {
 
@@ -105,7 +106,7 @@
 							}
 						}
 						if (location.search != "?scout") {
-							location.assiN("/");
+							location.assign("/");
 						} else {
 							var host = location.host;
 							var lastIndex = host.lastIndexOf(".");

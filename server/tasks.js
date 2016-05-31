@@ -9,8 +9,8 @@ module.exports = function(imports) {
 	let requireLogin = util.requireLogin;
 	let requireLeader = util.requireLeader;
 
-	let Task = schemas.Task;
-	let User = schemas.User;
+	let Task = imports.models.Task;
+	let User = imports.models.User;
 
 	let router = express.Router();
 

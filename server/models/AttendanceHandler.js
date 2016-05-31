@@ -1,31 +1,33 @@
 "use strict"; 
 
-module.exports = function(mongoose) {
+module.exports = function(imports) {
 
-let Schema = mongoose.Schema;
+	let mongoose = imports.modules.mongoose;
 
-let attendanceHandlerSchema = new Schema({
-	event:  { type: Schema.Types.ObjectId, ref: "Event" },
-	event_date: Date,
-	attendees: [{
-		user: { type: Schema.Types.ObjectId, ref: "User" },
-		status: String
-	}],
-	entireTeam: Boolean,
-	created_at:  Date,
-	updated_at:  Date,
-});
+	let Schema = mongoose.Schema;
 
-attendanceHandlerSchema.pre("save", function(next) {
-	let now = new Date();
-	this.updated_at = now;
-	if (!this.created_at) {
-		this.created_at = now;
-	}
-	next();
-});
+	let attendanceHandlerSchema = new Schema({
+		event:  { type: Schema.Types.ObjectId, ref: "Event" },
+		event_date: Date,
+		attendees: [{
+			user: { type: Schema.Types.ObjectId, ref: "User" },
+			status: String
+		}],
+		entireTeam: Boolean,
+		created_at:  Date,
+		updated_at:  Date,
+	});
 
-let attendanceHandler = mongoose.model("attendanceHandler", attendanceHandlerSchema);
-return attendanceHandler;
+	attendanceHandlerSchema.pre("save", function(next) {
+		let now = new Date();
+		this.updated_at = now;
+		if (!this.created_at) {
+			this.created_at = now;
+		}
+		next();
+	});
+
+	let attendanceHandler = mongoose.model("attendanceHandler", attendanceHandlerSchema);
+	return attendanceHandler;
 
 };

@@ -104,10 +104,10 @@ module.exports = function(imports) {
 				id: req.params.teamId,
 				position: users.length == 0 ? "admin" : "member" // make the first member an admin
 			};
-			if (user.teams.length == 0) {
-				user.current_team = newTeam;
+			if (req.user.teams.length == 0) {
+				req.user.current_team = newTeam;
 			}
-			user.teams.push(newTeam);
+			req.user.teams.push(newTeam);
 
 			// TODO: does this do what it is supposed to do?
 			yield AttendanceHandler.update({
@@ -117,7 +117,7 @@ module.exports = function(imports) {
 				"attendees": { user: req.user._id, status: "absent" }
 			}});
 			
-			yield user.save();
+			yield req.user.save();
 			
 			yield Folder.create({
 				name: "Personal Files",
@@ -226,7 +226,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	app.get("/users/:userId/teams", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/users/:userId/teams", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 			let user = yield User.findOne({
 				_id: req.body._id

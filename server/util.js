@@ -355,43 +355,44 @@ module.exports = function(imports) {
 			});
 		};
 
+		String.prototype.contains = function(arg) {
+			return this.indexOf(arg) > -1;
+		};
+
+		String.prototype.capitalize = function() {
+			return this.charAt(0).toUpperCase() + this.slice(1);
+		};
+
+		// checks to see if an array has anything in common with another array
+		Array.prototype.hasAnythingFrom = function(arr) {
+
+			let obj = {};
+
+			for (let elem of arr) {
+				obj[elem] = true;
+			}
+
+			for (let elem of this) {
+				if (elem in obj) {
+					return true;
+				}
+			}
+
+			return false;
+		};
+
+		// checks to see if an array of objects has an object with a specific key value pair
+		Array.prototype.hasObjectThatContains = function(key, value) {
+			for (let i = 0; i < this.length; i++) {
+				if ( this[i][key] == value ) {
+					return true;
+				}
+			}
+			return false;
+		};
 
 	})();
 
-	String.prototype.contains = function(arg) {
-		return this.indexOf(arg) > -1;
-	};
 
-	String.prototype.capitalize = function() {
-		return this.charAt(0).toUpperCase() + this.slice(1);
-	};
-
-	// checks to see if an array has anything in common with another array
-	Array.prototype.hasAnythingFrom = function(arr) {
-
-		let obj = {};
-
-		for (let elem of arr) {
-			obj[elem] = true;
-		}
-
-		for (let elem of this) {
-			if (elem in obj) {
-				return true;
-			}
-		}
-
-		return false;
-	};
-
-	// checks to see if an array of objects has an object with a specific key value pair
-	Array.prototype.hasObjectThatContains = function(key, value) {
-		for (let i = 0; i < this.length; i++) {
-			if ( this[i][key] == value ) {
-				return true;
-			}
-		}
-		return false;
-	};
 
 };

@@ -163,6 +163,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 				lastname: req.body.lastname,
 				email: req.body.email,
 				phone: req.body.phone
+//				teams: []
 			};
 
 			// if user uploaded a profile pic
@@ -313,7 +314,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 				return res.end("fail: incorrect password");
 			}
 
-			// set and save new password (password is automatically encrypted. see /schemas/User.js)
+			// set and save new password (password is automatically encrypted. see /models/User.js)
 			user.password = req.body.newPassword;
 			yield user.save();
 

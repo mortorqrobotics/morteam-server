@@ -18,7 +18,7 @@ module.exports = function(imports) {
 	imports.models.File = require("./models/File.js")(imports);
 	imports.models.Task = require("./models/Task.js")(imports);
 
-	imports.util = require("./util.js");
+	imports.util = require("./util.js")(imports);
 
 	// TODO: add config here
 
