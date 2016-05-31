@@ -170,7 +170,9 @@ module.exports = function(imports) {
 	router.get("/events/:eventId/attendees", requireLogin, requireLeader, Promise.coroutine(function*(req, res) {
 		try {
 
-			let handler = yield AttendanceHandler.findOne({event: req.params.eventId}).populate("attendees.user").exec();
+			let handler = yield AttendanceHandler.findOne({
+				event: req.params.eventId
+			}).populate("attendees.user").exec();
 			
 			res.json(handler.attendees);
 

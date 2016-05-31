@@ -204,7 +204,7 @@
 					}, 100)
 				}
 			});
-			$.post("/f/getEventAttendees", {event_id: event_id}, function(responseText) {
+			sendAjax("GET", ["event", event_id, "attendance"], function(attendees) {
 				var span = document.createElement("span");
 				var user_search = '<input type="text" placeholder="Search Names..." class="members_search" id="subdivision_members_search">';
 				var select_all_link = '<a class="select_all_link">Select All</a>';
@@ -213,7 +213,6 @@
 				$(potential_members).addClass("potential_members");
 				$(potential_members).addClass("tall");
 				var save_btn = '<input type="button" data-eventid="'+event_id+'" id="save_attendance" class="button done_button" value="Save">'
-				var attendees = JSON.parse(responseText);
 				for (var i = 0; i < attendees.length; i++) {
 					var attendee = document.createElement("p");
 					$(attendee).addClass("potential_member");
@@ -284,24 +283,17 @@
 			$(potential_members).attr("id", "potential_attendance_members");
 			$(potential_members).addClass("potential_members");
 			var done_btn = '<input data-date="'+ date +'" type="button" id="event_done_btn" class="button done_button" value="Done">'
-			$.ajax({
-				type: 'POST',
-				url: "/f/getAllSubdivisionsForUserInTeam",
-				async: false,
-				success: function(responseText) {
-					var subdivisions = JSON.parse(responseText);
-					for (var i = 0; i < subdivisions.length; i++) {
-						var subdivision = document.createElement("p");
-						$(subdivision).addClass("potential_subdivision");
-						$(subdivision).attr("data-subdivisionid", subdivisions[i]._id);
-						$(subdivision).html(subdivisions[i].name);
-						$(potential_members).append(subdivision);
-					}
-
+			sendAjax("GET", "/subdivisions/joined", function(subdivisions) {
+				for (var i = 0; i < subdivisions.length; i++) {
+					var subdivision = document.createElement("p");
+					$(subdivision).addClass("potential_subdivision");
+					$(subdivision).attr("data-subdivisionid", subdivisions[i]._id);
+					$(subdivision).html(subdivisions[i].name);
+					$(potential_members).append(subdivision);
 				}
-			});
-			$.post("/f/getUsersInTeam", function(responseText) {
-				var users = JSON.parse(responseText);
+			}, { async: false }); // TODO: should this really be synchronous?
+
+			sendAjax("GET", "/teams/current/users", function(users) {
 				for (var i = 0; i < users.length; i++) {
 					var user = document.createElement("p");
 					$(user).addClass("potential_member");
@@ -329,7 +321,7 @@
 				$(span).append($(done_btn));
 				new_modal.setContent($(span));
 				new_modal.open();
-			})
+			});
 			return new_modal;
 		}
 
@@ -340,8 +332,7 @@
 			var month = now.getMonth() + 1;
 			var today = now.getDate();
 
-			$.post("/f/getUpcomingEventsForUser", function(responseText) {
-				var upcomingEvents = JSON.parse(responseText);
+			sendAjax("GET", "/events/upcoming", function(upcomingEvents) {
 				if (upcomingEvents.length > 0) {
 					for (var i = 0; i < upcomingEvents.length; i++) {
 						var li = document.createElement("li");
@@ -353,9 +344,8 @@
 				}
 			});
 
-			$.post("/f/getPendingUserTasks", {user_id: localStorage._id}, function(responseText) {
-				if (responseText != "fail") {
-					var tasks = JSON.parse(responseText);
+			sendAjax("GET", ["users", localStorage._id, "tasks/pending"], function(tasks) {
+				if (tasks != "fail") {
 					if (tasks.length > 0) {
 						for (var i = 0; i < tasks.length; i++) {
 							var li = document.createElement("li");
@@ -377,7 +367,7 @@
 						$(".task_list").append("<li>none</li>");
 					}
 				} else {
-					alert(responseText);
+					alert(tasks);
 				}
 			})
 
@@ -440,9 +430,8 @@
 					var scrollPix = $(".day[data-day='"+ today +"']").offset().top - $(window).height()*0.5 + $(".day[data-day='"+ today +"']").height()*0.5;
 					$('.timeline').scrollTop(scrollPix);
 				}
-				$.post("/f/getEventsForUserInTeamInMonth", {year: year, month: month}, function(responseText) {
-					if (responseText != "fail") {
-						var events = responseText;
+				sendAjax("GET", ["events", "year", year, "month", month], function(events) {
+					if (events != "fail") {
 						for (var i = 0; i < events.length; i++) {
 							var day = new Date(events[i].date).getDate();
 							var li = document.createElement("li");
@@ -469,7 +458,7 @@
 							$(".day_list[data-day='"+ day +"']").append($(li));
 						}
 					} else {
-						alert(responseText);
+						alert(events);
 					}
 				});
 			});
@@ -493,11 +482,12 @@
 			$(document).on("click", ".delete_event", function() {
 				var $this = $(this);
 				if (window.confirm("Are you sure?")) {
-					$.post("/f/deleteEvent", {event_id: $this.parent().attr("data-eventid")}, function(responseText) {
-						if (responseText == "success") {
+					var eventId = $this.parent().attr("data-eventid");
+					sendAjax("DELETE", ["events", eventId], function(response) {
+						if (response == "success") {
 							$this.parent().remove();
 						} else {
-							alert(responseText)
+							alert(response);
 						}
 					})
 				}
@@ -533,17 +523,17 @@
 						})
 					}
 				}
-				$.post("/f/updateAttendanceForEvent", {
-					event_id: $(this).attr("data-eventid"),
+				var eventId = $(this).attr("data-eventid");
+				sendAjax("PUT", ["event", eventId, "attendance"], {
 					updatedAttendees: updatedAttendees
-				}, function(responseText) {
-					if (responseText == "success") {
+				}, function(response) {
+					if (response == "success") {
 						attendance_modal.close();
 					} else {
-						alert(responseText);
-						}
-					});
+						alert(response);
+					}
 				});
+			});
 
 				$(document).on("click", ".select_all_link", function() {
 					if ($(this).html() == "Select All") {
@@ -574,7 +564,7 @@
 						if (removeDuplicates(userAttendees).length == 1 && subdivisionAttendees.length == 0) {
 							event_modal.close();
 						} else {
-							$.post("/f/createEvent", {
+							sendAjax("POST", "/events", {
 								name: normalizeDisplayedText($("#event_name").val()),
 								description: normalizeDisplayedText($(".event_description").val()),
 								userAttendees: userAttendees,
@@ -583,10 +573,9 @@
 								entireTeam: $('#entireTeam').is(':checked'),
 								hasAttendance: $('#hasAttendance').is(':checked'),
 								sendEmail: $('#sendEmail').is(':checked')
-							}, function(responseText) {
+							}, function(newEvent) {
 								event_modal.close();
-								if (responseText != "fail") {
-									var newEvent = JSON.parse(responseText);
+								if (newEvent != "fail") {
 									var li = document.createElement("li");
 									$(li).attr("data-eventid", newEvent._id);
 									var event_name_display = document.createElement("span");
@@ -610,7 +599,7 @@
 
 									$(".day_list[data-day='"+ new Date($this.attr("data-date")).getDate() +"']").append($(li));
 								} else {
-									alert(responseText);
+									alert(newEvent);
 								}
 							});
 						}

@@ -120,7 +120,7 @@ module.exports = function(imports) {
 	router.get("/chats/:chatId/messages", requireLogin, Promise.coroutine(function*(req, res) {
 		// TODO: maybe in the future combine this with getUsersInChat to improve performance
 
-		let skip = parseInt(req.body.skip);
+		let skip = parseInt(req.query.skip);
 
 		try {
 

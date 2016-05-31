@@ -25,7 +25,11 @@ function sendAjax() {
 
 function getPath(arg) {
 	if (Array.isArray(arg)) {
-		return "/" + arg.join("/");
+		var result = "";
+		for (var i = 0; i < args.length; i++) {
+			result += "/" + escape(args[i]); // TODO: switch to encodeURIComponent or something?
+		}
+		return result;
 	}
 	return arg;
 }

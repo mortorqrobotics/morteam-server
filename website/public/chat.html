@@ -244,24 +244,18 @@
 				$(potential_members).addClass("potential_members");
 				$(potential_members).addClass("tall");
 				var add_btn = '<input type="button" id="compose_done_btn" class="button done_button" value="Done">'
-				$.ajax({
-					type: 'POST',
-					url: "/f/getAllSubdivisionsForUserInTeam",
-					async: false,
-					success: function(responseText) {
-						var subdivisions = JSON.parse(responseText);
-						for (var i = 0; i < subdivisions.length; i++) {
-							var subdivision = document.createElement("p");
-							$(subdivision).addClass("potential_subdivision");
-							$(subdivision).attr("data-subdivisionid", subdivisions[i]._id);
-							$(subdivision).html(subdivisions[i].name);
-							$(potential_members).append(subdivision);
-						}
-
+				sendAjax("GET", "/subdivisions/joined", function(subdivisions) {
+					var subdivisions = JSON.parse(responseText);
+					for (var i = 0; i < subdivisions.length; i++) {
+						var subdivision = document.createElement("p");
+						$(subdivision).addClass("potential_subdivision");
+						$(subdivision).attr("data-subdivisionid", subdivisions[i]._id);
+						$(subdivision).html(subdivisions[i].name);
+						$(potential_members).append(subdivision);
 					}
-				});
-				$.post("/f/getUsersInTeam", function(responseText) {
-					var users = JSON.parse(responseText);
+				}, { async: false }); // TODO: should this really be synchronous...
+
+				sendAjax("GET", "/teams/current/users", function(users) {
 					for (var i = 0; i < users.length; i++) {
 						var user = document.createElement("p");
 						$(user).addClass("potential_member");
@@ -336,11 +330,14 @@
 					if (removeDuplicates(userMembers).length == 1 && subdivisionMembers.length == 0) {
 						new_convo_modal.close();
 					} else if (removeDuplicates(userMembers).length == 2 && subdivisionMembers.length == 0) {
-						//private
-						$.post("/f/createChat", {userMembers: userMembers, type: "private", user2: getUserOtherThanSelf(userMembers)}, function(responseText) {
-							if (responseText != "fail" && responseText != "exists") {
-								//append new chat to leftbar
-								var user2 = JSON.parse(responseText);
+						// private
+						sendAjax("POST", "/chats", {
+							userMembers: userMembers,
+							type: "private",
+							user2: getUserOtherThanSelf(userMembers)
+						}, function(user2) {
+							if (user2 != "fail" && user2 != "exists") {
+								// append new chat to leftbar
 								var li = document.createElement("li");
 								$(li).addClass("chat_name");
 								var img = document.createElement("img");
@@ -359,7 +356,7 @@
 								$(li).trigger("click");
 								socket.emit('new chat', {type: "private", receiver: user2._id, chat_id: user2.chat_id});
 							} else {
-								alert(responseText);
+								alert(user2);
 							}
 						})
 						new_convo_modal.close();
@@ -394,14 +391,13 @@
 				$(document).on("click", "#make_chat_btn", function() {
 					if (normalizeDisplayedText($(this).prev().val()).length < 20) {
 						var $this = $(this);
-						$.post("/f/createChat", {
+						sendAjax("POST", "/chats", {
 							userMembers: sessionStorage.userMembers,
 							subdivisionMembers: sessionStorage.subdivisionMembers,
 							type: "group",
 							name: normalizeDisplayedText($this.prev().val())
-						}, function(responseText) {
-							if (responseText != "fail") {
-								var chat = JSON.parse(responseText);
+						}, function(chat) {
+							if (chat != "fail") {
 								var li = document.createElement("li");
 								$(li).addClass("chat_name");
 								var img = document.createElement("img");
@@ -418,7 +414,7 @@
 								$(li).trigger("click");
 								socket.emit('new chat', {type: "group", userMembers: chat.userMembers, subdivisionMembers: chat.subdivisionMembers, name: chat.name, chat_id: chat._id});
 							} else {
-								alert(responseText);
+								alert(chat);
 							}
 						})
 						sessionStorage.removeItem("userMembers");
@@ -524,10 +520,9 @@
 
 				socket.emit("get clients");
 				socket.on('get clients', function(online_clients) {
-					$.post("/f/getChatsForUser", function(responseText) {
-						if (responseText != "fail") {
-							chat_users = []
-							var chats = JSON.parse(responseText);
+					sendAjax("GET", "/chats", function(chats) {
+						if (chats != "fail") {
+							chat_users = [];
 							if (chats.length == 0) {
 								//TODO: Do something to notify them that they dont have any chats
 							} else {
@@ -594,17 +589,16 @@
 							$this.addClass("selected");
 							$("#chat_area").empty();
 							//load receivers
-							$.post("/f/getUsersInChat", {chat_id: $this.attr("data-chatid")}, function(responseText) {
-								var users = JSON.parse(responseText);
+							var chatId = $this.attr("data-chatid");
+							sendAjax("GET", ["chats", chatId, "users"], function(users) {
 								for (var i = 0; i < users.length; i++) {
 									if (users[i]._id.toString() != localStorage._id) {
 										receivers.push(users[i]._id.toString());
 									}
 								}
 							});
-							//load messages
-							$.post("/f/loadMessagesForChat", {chat_id: $this.attr("data-chatid"), skip: 20*parseInt(sessionStorage.chatPage)}, function(responseText) {
-								var messages = JSON.parse(responseText);
+							// load messages
+							sendAjax("GET", getPath(["chats", chatId, "messages"]) + "?skip=" + 20*parseInt(sessionStorage.chatPage), function(messages) {
 								if (messages.length == 0) {
 									spinner.stop();
 								}
@@ -617,26 +611,23 @@
 
 									}
 									$(".chat_area").animate({
-										scrollTop: $('.chat_area')[0].scrollHeight
+										scrollTop: $(".chat_area")[0].scrollHeight
 									}, 0);
 									if (i == messages.length-1) {
 										spinner.stop();
 									}
 								}
-								$('.tt').jBox('Tooltip', {
+								$(".tt").jBox("Tooltip", {
 									delayOpen: 100,
 									delayClose: 0,
 									theme: "TooltipDark"
 								});
-								$('.chat_area').scroll(function() {
-									var pos = $('.chat_area').scrollTop();
+								// TODO: get rid of this duplicated code!!!
+								$(".chat_area").scroll(function() {
+									var pos = $(".chat_area").scrollTop();
 									if (pos == 0) {
 										sessionStorage.chatPage++;
-										$.post("/f/loadMessagesForChat", {
-											chat_id: $this.attr("data-chatid"),
-											skip: 20*parseInt(sessionStorage.chatPage)
-										}, function(responseText) {
-											var messages = JSON.parse(responseText);
+										sendAjax("GET", getPath(["chats", chatId, "messages"]) + "?skip=" + 20*parseInt(sessionStorage.chatPage), function(messages) {
 											for (var i = 0; i < messages.length; i++) {
 												if (messages[i].author._id.toString() != localStorage._id) {
 													var appendedMsg = $("<div class='bubble_wrapper'><div class='other_bubble'><img title='" + messages[i].author.firstname + " " +  messages[i].author.lastname + ", " + parseDate(messages[i].timestamp) + "' class='show tt' id='small_prof_pic' src='"+ messages[i].author.profpicpath+ "-60" +"'></img>" + "<p data-userid='" + messages[i].author._id + "' class='chat_opponent user-link'>" + messages[i].author.firstname + ": </p class='chat_opponent'>" + messages[i].content + "</div></div>").prependTo($('.chat_area'));
@@ -650,7 +641,7 @@
 													}, 0);
 												}
 											}
-											$('.tt').jBox('Tooltip', {
+											$(".tt").jBox("Tooltip", {
 												delayOpen: 100,
 												delayClose: 0,
 												theme: "TooltipDark"
@@ -662,10 +653,10 @@
 						}
 					}
 				});
-				function optionsModal(title, currentName, chat_id) {
-					var new_modal = new jBox('Modal', {
+				function optionsModal(title, currentName, chatId) {
+					var new_modal = new jBox("Modal", {
 						width: 350,
-						height: 'auto',
+						height: "auto",
 						title: title,
 						onClose: function() {
 							setTimeout(function() {
@@ -673,13 +664,12 @@
 							}, 100)
 						}
 					});
-					$.post("/f/getMembersOfChat", {chat_id: chat_id}, function(responseText) {
-						var data = JSON.parse(responseText);
+					sendAjax("GET", ["chat", chatId, "allMembers"], function(data) {
 						var members = data.members;
 						var isGroup = data.group;
 						if (isGroup) {
 							var container = document.createElement("span");
-							var change_name = '<input type="text" class="change_name" value="'+ currentName +'"></input><br/>'
+							var change_name = '<input type="text" class="change_name" value="'+ currentName +'"></input><br/>';
 							var div = document.createElement("div");
 							$(div).addClass("group_members");
 							var ul = document.createElement("ul");
@@ -697,16 +687,16 @@
 								$(ul).append('<li class="group_member_li"><span class="glyphicon glyphicon-screenshot group_member_icon"></span><span data-subdivisionid="'+members.subdivisionMembers[i]._id+'" class="group_member_name subdivision">' + members.subdivisionMembers[i].name + '</span></li>')
 							}
 							// if (localStorage.c_team_position == "admin") {
-							//   $(container).append('<input data-chatid="'+chat_id+'" type="button" class="button leave_group" value="Leave Group"></input>')
-							//   $(container).append('<input data-chatid="'+chat_id+'" type="button" class="button delete_group" value="Delete Group"></input>')
+							//   $(container).append('<input data-chatid="'+chatId+'" type="button" class="button leave_group" value="Leave Group"></input>')
+							//   $(container).append('<input data-chatid="'+chatId+'" type="button" class="button delete_group" value="Delete Group"></input>')
 							// } else {
-							//   $(container).append('<input data-chatid="'+chat_id+'" type="button" class="button leave_group nonadmin" value="Leave Group"></input>')
+							//   $(container).append('<input data-chatid="'+chatId+'" type="button" class="button leave_group nonadmin" value="Leave Group"></input>')
 							// }
-							$(container).append('<input data-chatid="'+chat_id+'" type="button" class="button save_options" value="Done"></input>')
+							$(container).append('<input data-chatid="'+chatId+'" type="button" class="button save_options" value="Done"></input>')
 							new_modal.setContent($(container));
 						} else {
-							alert("You can't do that.")
-							return
+							alert("You can't do that.");
+							return;
 						}
 					});
 					new_modal.open();
@@ -720,39 +710,41 @@
 					//leave group
 				});
 				$(document).on("click", ".delete_group", function() {
-					var chat_id = $(this).attr("data-chatid");
-					$.post("/f/deleteChat", {chat_id: $(this).attr("data-chatid")}, function(responseText) {
-						if (responseText == "success") {
+					var chatId = $(this).attr("data-chatid");
+					sendAjax("DELETE", ["chats", chatId], function(response) {
+						if (response == "success") {
 							options_modal.close();
-							$(".chat_name[data-chatid='"+ chat_id +"']").remove();
+							$(".chat_name[data-chatid='"+ chatId +"']").remove();
 							$(".chat_name").first().next().next().trigger("click");
 						} else {
-							alert(responseText);
+							alert(response);
 						}
 					});
 
 				})
 				$(document).on("click", ".save_options", function() {
 					if (normalizeDisplayedText($(".change_name").val()).length < 20) {
-						var chat_id = $(this).attr("data-chatid");
-						$.post("/f/changeGroupName", {chat_id: chat_id, newName: normalizeDisplayedText($(".change_name").val())}, function(responseText) {
-							if (responseText == "success") {
+						var chatId = $(this).attr("data-chatid");
+						sendAjax("PUT", ["chats/group", chatId, "name"], {
+							newName: normalizeDisplayedText($(".change_name").val()
+						}, function(response) {
+							if (response == "success") {
 								options_modal.close();
-								$(".chat_name[data-chatid='"+ chat_id +"'] > span").first().html($(".change_name").val())
+								$(".chat_name[data-chatid='"+ chatId +"'] > span").first().html($(".change_name").val())
 							} else {
-								alert(responseText);
+								alert(response);
 							}
 						});
 					} else {
 						alert("Name has to be 19 characters or fewer.")
 					}
-				})
+				});
 				$(document).on("click", ".send_button", function() {
 					var content = $(".reply_textarea").val(); 
 					if (content != "") {
 						var $this = $(this);
 
-						var chat_id = $(".chat_name.selected").attr("data-chatid");
+						var chatId = $(".chat_name.selected").attr("data-chatid");
 
 						var messageHtml = "<div class='bubble_wrapper'><div class='self_bubble pending'>" + normalizeDisplayedText(content) + "</div></div>";
 						if ($(".bubble_wrapper.istyping").length != 0) {
@@ -769,10 +761,9 @@
 						autosize.update(ta); // resizes reply text box
 						$('.chat_area').css('height', "calc(100vh - 58px - " + $this.height() + "px)"); // resizes div.chat_area according to changes that
 
-						$.post("/f/sendMessage", {
-							chat_id: $(".chat_name.selected").attr("data-chatid"),
+						sendAjax("POST", ["chats", chatId, "messages"], {
 							content:  content
-						}, function(responseText) {
+						}, function(response) {
 
 							var pending = $(".pending");
 							if (pending.length == 0) {
@@ -785,19 +776,19 @@
 
 								if ($(".chat_name.selected").hasClass("group_chat")) {
 									socket.emit("message", {
-										chat_id: chat_id,
+										chat_id: chatId,
 										content: content,
 										chat_name: $(".chat_name.selected > span").html(),
 										type: "group"
 									});
 								} else {
 									socket.emit("message", {
-										chat_id: chat_id,
+										chat_id: chatId,
 										content: content,
 										type: "private"
 									})
 								}
-								socket.emit('stop typing', {chat_id: chat_id });
+								socket.emit('stop typing', { chat_id: chatId });
 
 								if ($(".chat_name:not(.compose)").get(0) != $(".chat_name.selected")) {
 									$(".chat_search_li").after($(".chat_name.selected"));
