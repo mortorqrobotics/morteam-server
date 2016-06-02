@@ -15,7 +15,7 @@
 		<link href='http://fonts.googleapis.com/css?family=Titillium+Web' rel='stylesheet' type='text/css'>
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
-		<link rel="stylesheet" href="../../css/index.css" type="text/css">
+		<link rel="stylesheet" href="/css/index.css" type="text/css">
 		<link href="/jbox/themes/TooltipDark.css" rel="stylesheet">
 		<link href="/jbox/jBox.css" rel="stylesheet">
 		<script src="http://js.nicedit.com/nicEdit-latest.js" type="text/javascript"></script>
@@ -84,7 +84,7 @@
 						<span class="glyphicon glyphicon-inbox"></span>
 						<span class="unseen_count bold">3</span>
 					</li>
-					<img class="profile_id" id="small_prof_pic" src="./images/user.jpg"></img>
+					<img class="profile_id" id="small_prof_pic" src="/images/user.jpg"></img>
 					<span class="profile_name" id="name_link"></span>
 				</div>
 			</ul>
@@ -150,7 +150,7 @@
 					<!--
 					<div class="announcement" data-postNum="1">
 						<div class="announcement_top">
-							<img id="medium_prof_pic" src="./images/user.jpg"></img>
+							<img id="medium_prof_pic" src="/images/user.jpg"></img>
 							<span class="announcement_poster">Farbod Rafezy</span>
 						</div>
 						<span class="glyphicon glyphicon-remove delete_icon"></span><br>
@@ -457,7 +457,7 @@
 				});
 
 				$(document).on("click", ".subdivision-link", function() {
-					location = "/s/" + $(this).attr("data-subdivisionid");
+					location = "/subdivisions/id/" + $(this).attr("data-subdivisionid");
 				});
 				$(document).on("click", ".subdivision-invite", function() {
 					subdivision_invite_modal.setContent('<span><span class="inviter"></span> You have been invited to the subdivision: <span class="invited_scope_name">'+$(this).find(".nameSpan").html()+'</span></span><br/><div style="text-align: center"><input type="button" class="button invite_btn accept_invite_btn" data-subdivisionid="'+$(this).attr("data-subdivisionid")+'" value="Accept"></input><input type="button" class="button invite_btn ignore_invite_btn" data-subdivisionid="'+$(this).attr("data-subdivisionid")+'" value="Hide"></input></div>')

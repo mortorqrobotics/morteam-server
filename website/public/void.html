@@ -78,8 +78,8 @@
 					}, function(response) {
 						if (response == "success") {
 							// TODO: the creator of a team should automatically be added to it
-							var teamId = $(".team_id").val();
-							sendAjax("POST", ["teams/id", teamId, "join"], function(response) {
+							var teamCode = $(".team_id").val();
+							sendAjax("POST", ["teams/code", teamCode, "join"], function(response) {
 								if (response == "success") {
 									var lsTeams = JSON.parse(localStorage.teams);
 									lsTeams.push({id: $(".team_id").val(), position: "admin"});
@@ -98,8 +98,8 @@
 				});
 				$(document).on("click", ".team_join_btn", function() {
 					// TODO: very similar to some code right there ^^^
-					var teamId = $(".team_join_id").val();
-					sendAjax("POST", ["teams/id", teamId, "join"], function(response) {
+					var teamCode = $(".team_join_id").val();
+					sendAjax("POST", ["teams/code", teamCode, "join"], function(response) {
 						if (response == "success") {
 							var lsTeams = JSON.parse(localStorage.teams);
 							lsTeams.push({id: $(".team_join_id").val(), position: "member"});

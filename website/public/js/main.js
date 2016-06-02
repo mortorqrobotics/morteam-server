@@ -183,7 +183,7 @@ $(document).ready(function() {
 		location.assign("/profile/id/" + localStorage._id);
 	});
 	$("#view_prof_button_ejs").click(function() {
-		location.assign("/profile/" + localStorage._id);
+		location.assign("/profile/id/" + localStorage._id);
 	});
 
 	$("#aboutus_link").click(function() {
@@ -201,7 +201,7 @@ $(document).ready(function() {
 		}
 	});
 	$(document).on("click", ".user-link", function() {
-		location.assign("/profile/" + $(this).attr("data-userid"));
+		location.assign("/profile/id/" + $(this).attr("data-userid"));
 	})
 
 	var typingTimer;

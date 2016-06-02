@@ -32,15 +32,15 @@
 		</div>
 		<!-- NAVIGATION BAR -->
 		<div class="nav_dropdown">
-			<p onclick="location='index'">Home</p>
-			<p onclick="location='chat'">Chat</p>
-			<p onclick="location='drive'">Drive</p>
-			<p onclick="location='cal'" style="background-color: orange">Calendar</p>
-			<p onclick="location='networks'">Networks</p>
+			<p onclick="location.assign('/index');">Home</p>
+			<p onclick="location.assign('/chat');">Chat</p>
+			<p onclick="location.assign('/drive');">Drive</p>
+			<p onclick="location.assign('/cal');" style="background-color: orange">Calendar</p>
+			<p onclick="location.assign('/networks');">Networks</p>
 		</div>
 		<div class="navigation_bar">
 			<ul id="navbar_list">
-				<li class="navbar_item navbar_title" onclick="location='/'">
+				<li class="navbar_item navbar_title" onclick="location.assign('/')">
 					MorTeam
 				</li>
 				<li class="navbar_item searchbox_list_item">
@@ -51,19 +51,19 @@
 						</ul>
 					</div>
 				</li>
-				<li class="navbar_item glyph_link chat_btn menu_btn" onclick="location='chat'">
+				<li class="navbar_item glyph_link chat_btn menu_btn" onclick="location.assign('/chat');">
 					<span class="glyphicon glyphicon-comment"></span>
 				</li>
-				<li class="navbar_item glyph_link drive_btn menu_btn" onclick="location='drive'">
+				<li class="navbar_item glyph_link drive_btn menu_btn" onclick="location.assign('/drive');">
 					<span class="glyphicon glyphicon-hdd"></span>
 				</li>
-				<li class="navbar_item glyph_link cal_btn menu_btn active" onclick="location='cal'">
+				<li class="navbar_item glyph_link cal_btn menu_btn active" onclick="location.assign('/cal');">
 					<span class="glyphicon glyphicon-calendar"></span>
 				</li>
-				<li class="navbar_item glyph_link networks_btn menu_btn" onclick="location='networks'">
+				<li class="navbar_item glyph_link networks_btn menu_btn" onclick="location.assign('/networks');">
 					<span class="glyphicon glyphicon-globe"></span>
 				</li>
-				<li class="navbar_item glyph_link networks_btn menu_btn" onclick="location='http://www.scout.morteam.com'">
+				<li class="navbar_item glyph_link networks_btn menu_btn" onclick="location.assign('http://www.scout.morteam.com);'">
 					<span class="glyphicon glyphicon-pencil"></span>
 				</li>
 				<div class="navbar_item right_links">
@@ -73,7 +73,7 @@
 					<li class="navbar_item glyph_link" id="notif_button">
 						<span class="glyphicon glyphicon-inbox"></span>
 					</li>
-					<img class="profile_id" id="small_prof_pic" src="./images/user.jpg"></img>
+					<img class="profile_id" id="small_prof_pic" src="/images/user.jpg"></img>
 					<span class="profile_name" id="name_link"></span>
 				</div>
 			</ul>
@@ -159,29 +159,29 @@
 		<!-- END OF LEFTBAR -->
 
 
-		<script type="text/javascript" src="js/socket.io.js"></script>
+		<script type="text/javascript" src="/js/socket.io.js"></script>
 		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
 		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
-		<script src="jbox/jBox.min.js"></script>
-		<script type="text/javascript" src="js/velocity.min.js"></script>
-		<script src="js/Autolinker.min.js"></script>
-		<script type="text/javascript" src="js/main.js"></script>
+		<script src="/jbox/jBox.min.js"></script>
+		<script type="text/javascript" src="/js/velocity.min.js"></script>
+		<script src="/js/Autolinker.min.js"></script>
+		<script type="text/javascript" src="/js/main.js"></script>
 		<script type="text/javascript">
 
 		var socket = io();
 		var daysInWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 		var months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 		function messageNotification(title, content, chatid) {
-			var newMessageNotice = new jBox('Notice', {
+			var newMessageNotice = new jBox("Notice", {
 				attributes: {
-					x: 'right',
-					y: 'bottom'
+					x: "right",
+					y: "bottom"
 				},
-				theme: 'NoticeBorder',
+				theme: "NoticeBorder",
 				volume: 100,
 				animation: {
-					open: 'slide:bottom',
-					close: 'slide:right'
+					open: "slide:bottom",
+					close: "slide:right"
 				},
 				content: content,
 				maxWidth: 300,
@@ -194,7 +194,7 @@
 			});
 		};
 		function showAttendance(title, event_id) {
-			var new_modal = new jBox('Modal', {
+			var new_modal = new jBox("Modal", {
 				width: 350,
 				height: 373,
 				title: title,
@@ -262,13 +262,13 @@
 			return out;
 		}
 		function eventModal(title, date) {
-			var new_modal = new jBox('Modal', {
+			var new_modal = new jBox("Modal", {
 				width: 350,
 				height: 495,
 				title: title,
 				onClose: function() {
 					setTimeout(function() {
-						event_modal.destroy();  //keyword "this" does not work. make sure to name the modal "event_modal".
+						event_modal.destroy();  // keyword "this" does not work. make sure to name the modal "event_modal".
 					}, 100)
 				}
 			});

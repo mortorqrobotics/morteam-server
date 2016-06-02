@@ -326,6 +326,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 		}
 	}));
 
+	// TODO: get rid of the form in the client so that this can be PUT
 	router.post("/profile", requireLogin, multer().single("new_prof_pic"), Promise.coroutine(function*(req, res) {
 
 		let updatedUser = {

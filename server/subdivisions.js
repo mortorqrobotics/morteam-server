@@ -44,7 +44,7 @@ module.exports = function(imports) {
 			if (subdivision.type == "public"
 					|| (subdivision.type == "private" && isMember)) {
 
-				return res.render("subdivision", {
+				return res.render(__dirname + "/../website/subdivision", {
 					name: subdivision.name,
 					type: subdivision.type,
 					team: subdivision.team, // TODO: POSSIBLY CHANGE TO subdivision.team._id
@@ -55,7 +55,7 @@ module.exports = function(imports) {
 				});
 
 			} else {
-				res.end("nothing to see here.");
+				res.status(404).end("nothing to see here.");
 			}
 
 		} catch (err) {
