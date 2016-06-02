@@ -123,17 +123,15 @@ function daysInMonth(month,year) {
 }
 function removeDuplicates(arr) {
 	var seen = {};
-	var out = [];
-	var len = arr.length;
-	var j = 0;
-	for (var i = 0; i < len; i++) {
+	var result = [];
+	for (var i = 0; i < arr.length; i++) {
 		var item = arr[i];
-		if (seen[item] !== 1) {
-			seen[item] = 1;
-			out[j++] = item;
+		if (!seen[item]) {
+			seen[item] = true;
+			result.push(item);
 		}
 	 }
-	return out;
+	return result;
 }
 function eventModal(title, date) {
 	var new_modal = new jBox("Modal", {
