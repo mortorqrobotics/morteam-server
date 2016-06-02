@@ -23,7 +23,7 @@ function messageNotification(title, content, chatid) {
 		}
 	});
 };
-function showAttendance(title, event_id) {
+function showAttendance(title, eventId) {
 	var new_modal = new jBox("Modal", {
 		width: 350,
 		height: 373,
@@ -34,40 +34,84 @@ function showAttendance(title, event_id) {
 			}, 100)
 		}
 	});
-	sendAjax("GET", ["event/id", event_id, "attendance"], function(attendees) {
-		var span = document.createElement("span");
-		var user_search = '<input type="text" placeholder="Search Names..." class="members_search" id="subdivision_members_search">';
-		var select_all_link = '<a class="select_all_link">Select All</a>';
-		var potential_members = document.createElement("div");
-		$(potential_members).attr("id", "attendance_list");
-		$(potential_members).addClass("potential_members");
-		$(potential_members).addClass("tall");
-		var save_btn = '<input type="button" data-eventid="'+event_id+'" id="save_attendance" class="button done_button" value="Save">'
+	sendAjax("GET", ["event/id", eventId, "attendance"], function(attendees) {
+		var span = $(document.createElement("span"));
+		var userSearch = $(document.createElement("input"), {
+			"type": "text",
+			"placeholder": "Search Names...",
+			"class": "members_search",
+			"id": "subdivision_members_search"
+		});
+		var selectAllLink = $(document.createElement("a"), {
+			"class": "select_all_link",
+			"text": "Select All"
+		});
+		var potentialMembers = $(document.createElement("div"), {
+			"id": "attendance_list",
+			"class": "potential_members tall"
+		});
+		var saveButton = $(document.createElement("input"), {
+			"type": "button",
+			"data-eventid": eventId,
+			"id": "save_attendance",
+			"class": "button done_button",
+			"value": "Save"
+		});
 		for (var i = 0; i < attendees.length; i++) {
-			var attendee = document.createElement("p");
-			$(attendee).addClass("potential_member");
-			$(attendee).addClass("attendee");
-			$(attendee).attr("data-userid", attendees[i].user._id);
-			$(attendee).html(attendees[i].user.firstname + " " + attendees[i].user.lastname);
-			if (attendees[i].status == "present") {
-				$(attendee).addClass("clicked");
-			} else if (attendees[i].status == "excused") {
-				$(attendee).addClass("excused");
-			} else if (attendees[i].status == "tardy") {
-				$(attendee).addClass("tardy");
+			var attendee = attendees[i];
+			var attendeeElem = $(document.createElement("p"), {
+				"class": "potential_member attendee",
+				"data-userid", attendee.user._id,
+				"text": attendee.user.firstname
+			});
+			if (attendee.status == "present") {
+				attendeeElem.addClass("clicked");
+			} else if (attendee.status == "excused") {
+				attendeeElem.addClass("excused");
+			} else if (attendee.status == "tardy") {
+				attendeeElem.addClass("tardy");
 			}
-			$(potential_members).append(attendee);
+			potentialMembers.append(attendeeElem);
 		}
-		$(span).append($(user_search));
-		$(span).append("<br/>");
-		$(span).append($(select_all_link));
-		$(span).append("<br/>");
-		$(span).append($(potential_members));
-		$(span).append("<br/>");
-		$(span).append($(save_btn));
+		span.append(userSearch);
+		span.append("<br />");
+		span.append(selectAllLink);
+		span.append("<br />");
+		span.append(potentialMembers);
+		span.append("<br />");
+		span.append(saveButton);
+//		var user_search = '<input type="text" placeholder="Search Names..." class="members_search" id="subdivision_members_search">';
+//		var select_all_link = '<a class="select_all_link">Select All</a>';
+//		var potential_members = document.createElement("div");
+//		$(potential_members).attr("id", "attendance_list");
+//		$(potential_members).addClass("potential_members");
+//		$(potential_members).addClass("tall");
+//		var save_btn = '<input type="button" data-eventid="' + eventId + '" id="save_attendance" class="button done_button" value="Save">'
+//		for (var i = 0; i < attendees.length; i++) {
+//			var attendee = document.createElement("p");
+//			$(attendee).addClass("potential_member");
+//			$(attendee).addClass("attendee");
+//			$(attendee).attr("data-userid", attendees[i].user._id);
+//			$(attendee).html(attendees[i].user.firstname + " " + attendees[i].user.lastname);
+//			if (attendees[i].status == "present") {
+//				$(attendee).addClass("clicked");
+//			} else if (attendees[i].status == "excused") {
+//				$(attendee).addClass("excused");
+//			} else if (attendees[i].status == "tardy") {
+//				$(attendee).addClass("tardy");
+//			}
+//			$(potential_members).append(attendee);
+//		}
+//		$(span).append($(user_search));
+//		$(span).append("<br/>");
+//		$(span).append($(select_all_link));
+//		$(span).append("<br/>");
+//		$(span).append($(potential_members));
+//		$(span).append("<br/>");
+//		$(span).append($(save_btn));
 		new_modal.setContent($(span));
 		new_modal.open();
-	})
+	});
 	return new_modal;
 }
 function readableDate(datestr) {
