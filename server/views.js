@@ -27,6 +27,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 		"login",
 		"networks",
 		"signup",
+		"terms",
 		"void"
 	];
 	for (let fileName of staticFiles) {
