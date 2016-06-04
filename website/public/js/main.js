@@ -115,7 +115,9 @@ function normalizeDisplayedText(text) {
 }
 $(document).ready(function() {
 	$('#name_link').html(localStorage.firstname);
-	$(".profile_id").not(".ejs").attr("src", localStorage.profpicpath + "-60");
+
+	// show profile picture in top right
+	$(".profile_id").attr("src", localStorage.profpicpath + "-60");
 
 	var fade_speed = 200;
 	$('#notif_button').click(function() {

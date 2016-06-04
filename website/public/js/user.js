@@ -218,11 +218,7 @@ $(document).ready(function() {
 			alert(tasks);
 		}
 	})
-	if (localStorage.profpicpath == "images/user.jpg") {
-		$(".profile_id.ejs").attr("src", localStorage.profpicpath + "-60");
-	} else {
-		$(".profile_id.ejs").attr("src", localStorage.profpicpath + "-60");
-	}
+
 	$(document).on("click", "#change_password", function() {
 		change_password_modal = changePasswordModal("Change Password");
 	})

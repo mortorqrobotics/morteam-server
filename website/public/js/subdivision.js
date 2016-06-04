@@ -61,11 +61,6 @@ function addMembersToSubdivisionModal(title) {
 }
 
 $(document).ready(function() {
-	if (localStorage.profpicpath == "images/user.jpg") {
-		$(".profile_id.ejs").attr("src", localStorage.profpicpath + "-60");
-	} else {
-		$(".profile_id.ejs").attr("src", localStorage.profpicpath + "-60");
-	}
 
 	$(document).on("click", ".subdivision_join_btn", function() {
 		var subdivId = window.location.pathname.substring(window.location.pathname.lastIndexOf("/") + 1);
