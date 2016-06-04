@@ -35,40 +35,19 @@ module.exports = function(imports) {
 	// define the main router passed to mornetwork
 	let router = express.Router();
 
-	// add .html to end of filename if it did not have it already
-	router.use(function(req, res, next) {
-		req.filePath = req.path;
-		if (req.method.toUpperCase() == "GET" && req.path.indexOf(".") === -1) {
-			let file = publicDir + req.path + ".html";
-			fs.exists(file, function(exists) {
-				if (exists) {
-					req.filePath += ".html";
-					if (req.url.contains("?")) {
-						let index = req.url.indexOf("?");
-						req.url = req.url.slice(0, index) + ".html" + req.url.slice(index);
-					} else {
-						req.url += ".html";
-					}
-				}
-				next();
-			});
-		} else {
-			next();
-		}
-	});
 
 	// check to see if user is logged in before continuing any further
 	// allow browser to receive images, css, and js files without being logged in
 	// allow browser to receive some pages such as login.html, signup.html, etc. without being logged in
 	router.use(function(req, res, next) {
-		let path = req.filePath;
-		let exceptions = ["/login.html", "/signup.html", "/fp.html", "/favicon.ico"];
+		let path = req.path;
+		let exceptions = ["/login", "/signup", "/fp", "/favicon.ico"];
 		if (req.method == "GET") {
-			if (path.contains("/css/") || path.contains("/js/") || path.contains("/img/")) {
+			if (path.startsWith("/css/") || path.startsWith("/js/") || path.startsWith("/img/")) {
 				next();
 			} else if ( exceptions.indexOf(path) > -1 ) {
 				next();
-			} else if (req.url == "/void.html") {
+			} else if (req.url == "/void") {
 				if (req.user) {
 					if (req.user.teams.length > 0) {
 						if (!req.user.current_team) {
@@ -98,11 +77,6 @@ module.exports = function(imports) {
 		} else {
 			next();
 		}
-	});
-
-	// load homepage
-	router.get("/", function(req, res, next) {
-		fs.createReadStream(publicDir + "/index.html").pipe(res);
 	});
 
 	// load any file in /website/public (aka publicDir)

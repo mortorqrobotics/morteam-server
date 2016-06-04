@@ -4,6 +4,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 
 	let express = imports.modules.express;
 	let Promise = imports.modules.Promise;
+	let fs = require("fs");
 	let util = imports.util;
 
 	let requireLogin = util.requireLogin;
@@ -18,23 +19,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 		return require("path").join(__dirname, "../website/views", name + ".ejs");
 	}
 
-	let staticFiles = [
-		"cal",
-		"chat",
-		"drive",
-		"fp", // forgot password
-		"index",
-		"login",
-		"networks",
-		"signup",
-		"terms",
-		"void"
-	];
-	for (let fileName of staticFiles) {
-		router.get("/" + fileName, function(req, res) {
-			res.render(ejsFile(fileName));
-		});
-	}
+	// load homepage
 	router.get("/", function(req, res) {
 		res.render(ejsFile("index"));
 	});
@@ -144,6 +129,32 @@ module.exports = function(imports, publicDir, profpicDir) {
 			res.end("fail");
 		}
 	}));
+
+	// TODO: cache static ejs files
+	// automatically serve ejs files that require no parameters
+	router.get("*", function(req, res, next) {
+		let file = req.path.substring(1); // remove leading forward slash
+		let index = file.indexOf("?");
+		if (index != -1) { // in case of url parameters like /a?b=c&d=e
+			file = file.substring(0, index);
+		}
+		if (file.indexOf("/") != -1 || file.indexOf(".") != -1) {
+			// prevent any funny business like /shared/navbar.ejs or /..
+			return next();
+		}
+		if (["subdivision", "team", "user"].indexOf(file) != -1) {
+			// do not load ejs file that require parameters
+			return next();
+		}
+		file = ejsFile(file);
+		fs.exists(file, function(exists) {
+			if (exists) {
+				res.render(file, {});
+			} else {
+				next();
+			}
+		});
+	});
 
 	return router;
 };
