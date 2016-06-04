@@ -96,7 +96,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.get("/folder/id/:folderId/files", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/folders/id/:folderId/files", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
 			let files = yield File.find({ folder: req.params.folderId });

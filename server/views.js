@@ -15,8 +15,28 @@ module.exports = function(imports, publicDir, profpicDir) {
 	let router = express.Router();
 
 	function ejsFile(name) {
-		return require("path").join(__dirname, "../website/views", name);
+		return require("path").join(__dirname, "../website/views", name + ".ejs");
 	}
+
+	let staticFiles = [
+		"cal",
+		"chat",
+		"drive",
+		"fp", // forgot password
+		"index",
+		"login",
+		"networks",
+		"signup",
+		"void"
+	];
+	for (let fileName of staticFiles) {
+		router.get("/" + fileName, function(req, res) {
+			res.render(ejsFile(fileName));
+		});
+	}
+	router.get("/", function(req, res) {
+		res.render(ejsFile("index"));
+	});
 
 	// load profile page of any user based on _id
 	router.get("/profile/id/:userId", Promise.coroutine(function*(req, res) {
@@ -115,7 +135,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 				teamNum: team.number,
 				teamId: team.id,
 				members: users,
-				viewerIsAdmin: req.user.current_team.position == "admin",
+				viewerIsAdmin: req.user.current_team.position == "admin"
 			});
 
 		} catch (err) {
