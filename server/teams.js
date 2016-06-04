@@ -17,31 +17,6 @@ module.exports = function(imports) {
 
 	let router = express.Router();
 
-	router.get("/teams/current", requireLogin, Promise.coroutine(function*(req, res) {
-		try {
-
-			let users = yield User.find({
-				teams: { $elemMatch: { id: req.user.current_team.id } }
-			});
-
-			let team = yield Team.findOne({
-				id: req.user.current_team.id
-			});
-
-			res.render(__dirname + "/../website/team", {
-				teamName: team.name,
-				teamNum: team.number,
-				teamId: team.id,
-				members: users,
-				viewerIsAdmin: req.user.current_team.position == "admin",
-			});
-
-		} catch (err) {
-			console.error(err);
-			res.end("fail");
-		}
-	}));
-
 	router.get("/teams/current/users", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 

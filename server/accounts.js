@@ -21,42 +21,6 @@ module.exports = function(imports, publicDir, profpicDir) {
 
 	let router = express.Router();
 
-	// load profile page of any user based on _id
-	router.get("/profile/id/:userId", Promise.coroutine(function*(req, res) {
-		try {
-
-			let user = yield User.findOne({
-				_id: req.params.userId,
-				teams: {
-					$elemMatch: {
-						"id": req.user.current_team.id
-					}
-				} // said user has to be a member of the current team of whoever is loading the page
-			});
-
-			if (!user) {
-				return util.userNotFound(res);
-			}
-
-			// load user.ejs page with said user's profile info
-			res.render(__dirname + "/../website/user", {
-				firstname: user.firstname,
-				lastname: user.lastname,
-				_id: user._id,
-				email: user.email,
-				phone: user.phone,
-				profpicpath: user.profpicpath,
-				viewedUserPosition: util.findTeamInUser(user, req.user.current_team.id).position,
-				viewerUserPosition: req.user.current_team.position,
-				viewerUserId: req.user._id
-			});
-
-		} catch (err) {
-			console.error(err);
-			send404(res);
-		}
-	}));
-
 	// load default profile picture
 	router.get("/images/user.jpg-60", function(req, res) {
 		res.sendFile(publicDir + "/images/user.jpg");

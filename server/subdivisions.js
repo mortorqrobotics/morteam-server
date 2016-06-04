@@ -18,51 +18,6 @@ module.exports = function(imports) {
 
 	let router = express.Router();
 
-	router.get("/subdivisions/id/:subdivId", Promise.coroutine(function*(req, res) {
-		try {
-
-			let subdivision = yield Subdivision.findOne({
-				_id: req.params.subdivId,
-				team: req.user.current_team.id
-			});
-
-			if (!subdivision) {
-				return util.subdivisionNotFound(res);
-			}
-
-			let users = yield User.find({
-				subdivisions: {
-					$elemMatch: {
-						_id: subdivision._id, // TODO: maybe add toString
-						accepted: true
-					}
-				}
-			});
-
-			let isMember = users.some(user => user._id.toString() == req.user._id.toString());
-
-			if (subdivision.type == "public"
-					|| (subdivision.type == "private" && isMember)) {
-
-				return res.render(__dirname + "/../website/subdivision", {
-					name: subdivision.name,
-					type: subdivision.type,
-					team: subdivision.team, // TODO: POSSIBLY CHANGE TO subdivision.team._id
-					admin: req.user.current_team.position == "admin",
-					joined: isMember,
-					members: users,
-					current_user_id: req.user._id
-				});
-
-			} else {
-				res.status(404).end("nothing to see here.");
-			}
-
-		} catch (err) {
-			util.send404(res);
-		}
-	}));
-
 	router.post("/subdivisions", requireLogin, requireLeader, Promise.coroutine(function*(req, res) {
 
 		if (req.body.name.length >= 22) {
