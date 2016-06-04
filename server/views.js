@@ -14,6 +14,10 @@ module.exports = function(imports, publicDir, profpicDir) {
 
 	let router = express.Router();
 
+	function ejsFile(name) {
+		return require("path").join(__dirname, "../website/views", name);
+	}
+
 	// load profile page of any user based on _id
 	router.get("/profile/id/:userId", Promise.coroutine(function*(req, res) {
 		try {
@@ -32,7 +36,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 			}
 
 			// load user.ejs page with said user's profile info
-			res.render(__dirname + "/../website/user", {
+			res.render(ejsFile("user"), {
 				firstname: user.firstname,
 				lastname: user.lastname,
 				_id: user._id,
@@ -76,7 +80,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 			if (subdivision.type == "public"
 					|| (subdivision.type == "private" && isMember)) {
 
-				return res.render(__dirname + "/../website/subdivision", {
+				return res.render(ejsFile("subdivision"), {
 					name: subdivision.name,
 					type: subdivision.type,
 					team: subdivision.team, // TODO: POSSIBLY CHANGE TO subdivision.team._id
@@ -106,7 +110,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 				id: req.user.current_team.id
 			});
 
-			res.render(__dirname + "/../website/team", {
+			res.render(ejsFile("team"), {
 				teamName: team.name,
 				teamNum: team.number,
 				teamId: team.id,
