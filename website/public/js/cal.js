@@ -61,7 +61,7 @@ function showAttendance(title, eventId) {
 			var attendee = attendees[i];
 			var attendeeElem = $(document.createElement("p"), {
 				"class": "potential_member attendee",
-				"data-userid", attendee.user._id,
+				"data-userid": attendee.user._id,
 				"text": attendee.user.firstname
 			});
 			if (attendee.status == "present") {

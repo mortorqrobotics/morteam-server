@@ -66,7 +66,7 @@ module.exports = function(imports) {
 				completed: true
 			}).populate("creator").exec();
 
-			res.end(JSON.stringify(tasks));
+			res.json(tasks);
 
 		} catch (err) {
 			console.error(err);

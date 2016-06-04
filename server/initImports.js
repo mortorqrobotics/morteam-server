@@ -1,9 +1,25 @@
 module.exports = function(imports) {
 
+	// initialize default config file if it does not exist
+	let fs = require("fs");
+	// config contains password and sensitive information
+	let configPath = require("path").join(__dirname, "config.json");
+	if (fs.existsSync(configPath)) {
+		imports.config = require(configPath);
+	} else {
+		imports.config = {
+			"mailgunUser": "user@morteam.com",
+			"malgunPass": "password",
+			"dbName": "morteam"
+		};
+		fs.writeFileSync(configPath, JSON.stringify(imports.config, null, "\t"));
+		console.log("Generated default config.json");
+	}
+
 	// mongoose comes from mornetwork
 	imports.modules.express = require("express");
 	imports.modules.multer = require("multer");
-//	imports.modules.lwip = require("lwip");
+	imports.modules.lwip = require("lwip");
 	imports.modules.Promise = require("bluebird");
 	imports.modules.autolinker = require("autolinker");
 	imports.modules.nodemailer = require("nodemailer");

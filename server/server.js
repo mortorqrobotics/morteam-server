@@ -12,8 +12,8 @@ module.exports = function(imports) {
 	imports = require("./initImports")(imports);
 
 	let express = imports.modules.express;
-	let http = require("http");
 	let fs = require("fs");
+	let http = require("http");
 	let mongoose = imports.modules.mongoose;
 	let ObjectId = mongoose.Types.ObjectId; // this is used to cast strings to MongoDB ObjectIds
 	let multer = imports.modules.multer; // for file uploads
@@ -23,22 +23,8 @@ module.exports = function(imports) {
 	let requireLogin = util.requireLogin;
 
 	Promise.promisifyAll(util);
-//	Promise.promisifyAll(lwip);
+	Promise.promisifyAll(lwip);
 	Promise.promisifyAll(fs);
-
-	let config; // contains passwords and other sensitive info
-	let configPath = require("path").join(__dirname, "config.json")
-	if (fs.existsSync(configPath)) {
-		config = require("./config.json");
-	} else {
-		config = {
-			"mailgunUser": "user@morteam.com",
-			"malgunPass": "password",
-			"dbName": "morteam"
-		};
-		fs.writeFileSync(configPath, JSON.stringify(config, null, "\t"));
-		console.log("Generated default config.json");
-	}
 
 
 	const publicDir = require("path").join(__dirname, "../website/public");

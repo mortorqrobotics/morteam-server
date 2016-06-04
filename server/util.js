@@ -7,7 +7,7 @@ module.exports = function(imports) {
 
 	// import necessary modules
 	let fs = require("fs");
-	let config = require("./config.json");
+	let config = imports.config;
 	let Autolinker = imports.modules.autolinker;
 	let nodemailer = imports.modules.nodemailer;
 	let lwip = imports.modules.lwip;

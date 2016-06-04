@@ -372,7 +372,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.delete("/subdivisions/id/:subdivId/users/:userId", requireLogin, requireAdmin, Promise.coroutine(function*(req, res) {
+	router.delete("/subdivisions/id/:subdivId/users/id/:userId", requireLogin, requireAdmin, Promise.coroutine(function*(req, res) {
 		try {
 
 			yield User.update({
