@@ -32,14 +32,14 @@ module.exports = function(imports) {
 
 	console.log("MorTeam started");
 
-	// define the main router passed to mornetwork
-	let router = express.Router();
+	// define the main object passed to mornetwork
+	let app = express();
 
 
 	// check to see if user is logged in before continuing any further
 	// allow browser to receive images, css, and js files without being logged in
 	// allow browser to receive some pages such as login.html, signup.html, etc. without being logged in
-	router.use(function(req, res, next) {
+	app.use(function(req, res, next) {
 		let path = req.path;
 		let exceptions = ["/login", "/signup", "/fp", "/favicon.ico"];
 		if (req.method == "GET") {
@@ -80,29 +80,29 @@ module.exports = function(imports) {
 	});
 
 	// load any file in /website/public (aka publicDir)
-	router.use(express.static(publicDir));
+	app.use(express.static(publicDir));
 
 	// use EJS as default view engine and specifies location of EJS files
 //	router.set("view engine", "ejs");
 //	router.set("views", require("path").join(__dirname, "/../website"));
 
 	// import all modules that handle specific requests
-	router.use(require("./views.js")(imports));
-	router.use(require("./accounts.js")(imports, publicDir, profpicDir));
-	router.use(require("./teams.js")(imports));
-	router.use(require("./subdivisions.js")(imports));
-	router.use(require("./announcements.js")(imports));
-	router.use(require("./chat.js")(imports));
-	router.use(require("./drive.js")(imports));
-	router.use(require("./events.js")(imports));
-	router.use(require("./tasks.js")(imports));
+	app.use(require("./views.js")(imports));
+	app.use(require("./accounts.js")(imports, publicDir, profpicDir));
+	app.use(require("./teams.js")(imports));
+	app.use(require("./subdivisions.js")(imports));
+	app.use(require("./announcements.js")(imports));
+	app.use(require("./chat.js")(imports));
+	app.use(require("./drive.js")(imports));
+	app.use(require("./events.js")(imports));
+	app.use(require("./tasks.js")(imports));
 	require("./sio.js")(imports); // TODO: does something have to be done with this?
 
 	// send 404 message for any page that does not exist (IMPORTANT: The order for this does matter. Keep it at the end.)
-	router.use("*", function(req, res) { // TODO: should this be get or use?
+	app.use("*", function(req, res) { // TODO: should this be get or use?
 		util.send404(res);
 	});
 
-	return router;
+	return app;
 
-}
+};
