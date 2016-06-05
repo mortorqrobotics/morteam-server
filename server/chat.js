@@ -16,6 +16,7 @@ module.exports = function(imports) {
 
 	let router = express.Router();
 
+	// TODO: separate this into separate requests for group and private chats
 	router.post("/chats", requireLogin, Promise.coroutine(function*(req, res) {
 
 		let subdivisionMembers = req.body.subdivisionMembers || [];
@@ -47,13 +48,13 @@ module.exports = function(imports) {
 				let user2_id = util.getUserOtherThanSelf(chat.userMembers, req.user._id.toString());
 				let user = yield User.findOne({_id: user2_id});
 
-				res.end(JSON.stringify({
+				res.json({
 					_id: user._id,
 					fn: user.firstname,
 					ln: user.lastname,
 					profpicpath: user.profpicpath,
 					chat_id: chat._id
-				}));
+				});
 
 			} else {
 				// group chat
@@ -70,7 +71,7 @@ module.exports = function(imports) {
 					group: true
 				});
 
-				res.end(JSON.stringify(chat));
+				res.json(chat);
 			}
 		} catch (err) {
 			console.error(err);
@@ -120,9 +121,9 @@ module.exports = function(imports) {
 	router.get("/chats/id/:chatId/messages", requireLogin, Promise.coroutine(function*(req, res) {
 		// TODO: maybe in the future combine this with getUsersInChat to improve performance
 
-		let skip = parseInt(req.query.skip);
-
 		try {
+
+			let skip = parseInt(req.query.skip);
 
 			// loads 20 messages after skip many messages. example: if skip is 0, it loads messages 0-19, if it"s 20, loads 20-39, etc.
 			let chat = yield Chat.findOne({ _id: req.params.chatId })
