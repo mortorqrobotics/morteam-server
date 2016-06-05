@@ -83,7 +83,7 @@ module.exports = function(imports) {
 	app.use(express.static(publicDir));
 
 	// use EJS as default view engine and specifies location of EJS files
-//	router.set("view engine", "ejs");
+	router.set("view engine", "ejs");
 //	router.set("views", require("path").join(__dirname, "/../website"));
 
 	// import all modules that handle specific requests
