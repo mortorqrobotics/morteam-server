@@ -230,7 +230,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.post("/chats/id/:chatId/message", requireLogin, Promise.coroutine(function*(req, res) {
+	router.post("/chats/id/:chatId/messages", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 			
 			yield Chat.update({ _id: req.params.chatId }, {
