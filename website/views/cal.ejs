@@ -2,96 +2,22 @@
 <html lang="en">
 
 	<head>
-		<meta charset="utf-8" />
-		<meta http-equiv="X-UA-Compatible" content="IE=edge">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+		<% include shared/metatags.ejs %>
+
 		<title>MorTeam - Calendar</title>
-		<link href='http://fonts.googleapis.com/css?family=Open+Sans:700,300,400' rel='stylesheet' type='text/css'>
-		<link href='http://fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'>
-		<link href='http://fonts.googleapis.com/css?family=Exo+2:400,300,200' rel='stylesheet' type='text/css'>
-		<link href='http://fonts.googleapis.com/css?family=Titillium+Web' rel='stylesheet' type='text/css'>
-		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
-		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
-		<link rel="stylesheet" href="/css/index.css" type="text/css">
-		<link href="/js/lib/jbox/jBox.css" rel="stylesheet">
+
+		<% include shared/cssimports.ejs %>
 		<link href="/js/lib/jbox/themes/TooltipDark.css" rel="stylesheet">
-		<script src="/js/lib/spin.js"></script>
-		<script type="text/javascript">
-				var loadingDiv = document.createElement("div");
-				loadingDiv.className = "loading_circle";
-				loadingDiv.id = "loading_circle";
-		</script>
+
+		<% include shared/jsimports.ejs %>
+		<script type="text/javascript" src="/js/cal.js"></script>
+
+		<% include shared/loadingCircle.ejs %>
 
 	</head>
 	<body class="cal_body">
-		<div id="audio-files" style="display: none;">
-			<audio id="click-sound">
-				<source src="/js/lib/jbox/audio/bling2.wav" type="audio/wav" />
-			</audio>
-		</div>
-		<!-- NAVIGATION BAR -->
-		<div class="nav_dropdown">
-			<p onclick="location.assign('/index');">Home</p>
-			<p onclick="location.assign('/chat');">Chat</p>
-			<p onclick="location.assign('/drive');">Drive</p>
-			<p onclick="location.assign('/cal');" style="background-color: orange">Calendar</p>
-			<p onclick="location.assign('/networks');">Networks</p>
-		</div>
-		<div class="navigation_bar">
-			<ul id="navbar_list">
-				<li class="navbar_item navbar_title" onclick="location.assign('/')">
-					MorTeam
-				</li>
-				<li class="navbar_item searchbox_list_item">
-					<input type="text" placeholder="search" class="searchbox"></input>
-					<div class="search_drop">
-						<ul class="search_drop_items">
 
-						</ul>
-					</div>
-				</li>
-				<li class="navbar_item glyph_link chat_btn menu_btn" onclick="location.assign('/chat');">
-					<span class="glyphicon glyphicon-comment"></span>
-				</li>
-				<li class="navbar_item glyph_link drive_btn menu_btn" onclick="location.assign('/drive');">
-					<span class="glyphicon glyphicon-hdd"></span>
-				</li>
-				<li class="navbar_item glyph_link cal_btn menu_btn active" onclick="location.assign('/cal');">
-					<span class="glyphicon glyphicon-calendar"></span>
-				</li>
-				<li class="navbar_item glyph_link networks_btn menu_btn" onclick="location.assign('/networks');">
-					<span class="glyphicon glyphicon-globe"></span>
-				</li>
-				<li class="navbar_item glyph_link networks_btn menu_btn" onclick="location.assign('http://www.scout.morteam.com);'">
-					<span class="glyphicon glyphicon-pencil"></span>
-				</li>
-				<div class="navbar_item right_links">
-					<li class="navbar_item glyph_link menu">
-						<span class="glyphicon glyphicon-menu-hamburger"></span>
-					</li>
-					<li class="navbar_item glyph_link" id="notif_button">
-						<span class="glyphicon glyphicon-inbox"></span>
-					</li>
-					<img class="profile_id" id="small_prof_pic" src="/images/user.jpg"></img>
-					<span class="profile_name" id="name_link"></span>
-				</div>
-			</ul>
-		</div>
-		<div id="notif_drop" class="hidden">
-			<ul>
-				<li class="notif_list_item">hey</li>
-				<li class="notif_list_item">hi</li>
-				<li class="notif_list_item">ho</li>
-			</ul>
-		</div>
-		<div id="prof_drop" class="hidden">
-			<ul>
-				<li class="notif_list_item" id="view_prof_button">View Profile and Settings</li>
-				<li class="notif_list_item" id="logout_button">Log Out</li>
-			</ul>
-		</div>
-		<div id="darken" class="hidden"></div>
-		<!-- END OF NAVIGATION BAR -->
+		<% include shared/navbar.ejs %>
 
 		<!-- BODY -->
 		<div class="wrapper cal_wrapper">
@@ -140,43 +66,20 @@
 						<!-- <span class="glyphicon glyphicon-th grid_layout"></span>
 						<span class="glyphicon glyphicon-th-list list_layout"></span>  UN-COMMENT WHEN LIST LAYOUT IS READY   -->
 				</li>
-				<li class="month_name m1" data-month="1"><span id="make_group" class="glyphicon glyphicon-calendar"></span> January</li>
-				<li class="month_name m2" data-month="2"><span id="make_group" class="glyphicon glyphicon-calendar"></span> February</li>
-				<li class="month_name m3" data-month="3"><span id="make_group" class="glyphicon glyphicon-calendar"></span> March</li>
-				<li class="month_name m4" data-month="4"><span id="make_group" class="glyphicon glyphicon-calendar"></span> April</li>
-				<li class="month_name m5" data-month="5"><span id="make_group" class="glyphicon glyphicon-calendar"></span> May</li>
-				<li class="month_name m6" data-month="6"><span id="make_group" class="glyphicon glyphicon-calendar"></span> June</li>
-				<li class="month_name m7" data-month="7"><span id="make_group" class="glyphicon glyphicon-calendar"></span> July</li>
-				<li class="month_name m8" data-month="8"><span id="make_group" class="glyphicon glyphicon-calendar"></span> August</li>
-				<li class="month_name m9" data-month="9"><span id="make_group" class="glyphicon glyphicon-calendar"></span> September</li>
-				<li class="month_name m10" data-month="10"><span id="make_group" class="glyphicon glyphicon-calendar"></span> October</li>
-				<li class="month_name m11" data-month="11"><span id="make_group" class="glyphicon glyphicon-calendar"></span> November</li>
-				<li class="month_name m12" data-month="12"><span id="make_group" class="glyphicon glyphicon-calendar"></span> December</li>
+
+				<% var months = "January February March April May June July August September October November December".split(" "); %>
+				<% for (var num = 0; num <= 12; num++) { %>
+					<li class="month_name m<%= num %>" data-month="<%= num %>">
+						<span id="make_group" class="glyphicon glyphicon-calendar"></span> <%= months[num - 1] %>
+					</li>
+				<% } %>
+
 			</ul>
 		</div>
 		<span class="glyphicon glyphicon-chevron-left hide_leftbar"></span>
 		<!-- END OF LEFTBAR -->
 
-
-		<script type="text/javascript" src="/js/lib/socket.io.js"></script>
-		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
-		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
-		<script src="/js/lib/jbox/jBox.min.js"></script>
-		<script type="text/javascript" src="/js/lib/velocity.min.js"></script>
-		<script src="/js/lib/Autolinker.min.js"></script>
-		<script type="text/javascript" src="/js/main.js"></script>
-		<script type="text/javascript" src="/js/cal.js"></script>
-
-	<script>
-	(function(i,s,o,g,r,a,m) {i['GoogleAnalyticsObject']=r;i[r]=i[r]||function() {
-	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-	})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-
-	ga('create', 'UA-67504156-1', 'auto');
-	ga('send', 'pageview');
-
-	</script>
+		<% include shared/googleads.ejs %>
 
 	</body>
 </html>
