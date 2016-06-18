@@ -51,7 +51,7 @@ $(document).ready(function() {
 					host = "." + host;
 				}
 				// suffix will be something like ".morteam.com"
-				var suffix = host.slice(secondLastIndex));
+				var suffix = host.slice(secondLastIndex);
 
 				if (location.search == "?scout") {
 					location.assign("http://scout" + suffix);
