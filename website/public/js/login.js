@@ -41,18 +41,26 @@ $(document).ready(function() {
 						localStorage.teamName = user.current_team.name;
 					}
 				}
-				if (location.search != "?scout") {
-					location.assign("/");
-				} else {
-					var host = location.host;
-					var lastIndex = host.lastIndexOf(".");
-					var secondLastIndex = host.slice(0, lastIndex).lastIndexOf(".");
-					if (secondLastIndex == -1) {
-						secondLastIndex = 0;
-						host = "." + host;
-					}
-					location.assign("http://scout" + host.slice(secondLastIndex));
+
+				// TODO: does this always work right?
+				var host = location.host;
+				var lastIndex = host.lastIndexOf(".");
+				var secondLastIndex = host.slice(0, lastIndex).lastIndexOf(".");
+				if (secondLastIndex == -1) {
+					secondLastIndex = 0;
+					host = "." + host;
 				}
+				// suffix will be something like ".morteam.com"
+				var suffix = host.slice(secondLastIndex));
+
+				if (location.search == "?scout") {
+					location.assign("http://scout" + suffix);
+				} else if (location.seach == "?map") {
+					location.assign("http://map" + suffix);
+				} else {
+					location.assign("/");
+				}
+
 			} else if (user == "inc/password" || user == "inc/username") {
 				alert("incorrect username/password");
 				$this.val("Log in");
