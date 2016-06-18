@@ -1,3 +1,5 @@
+"use strict";
+
 module.exports = function(imports) {
 
 	// initialize default config file if it does not exist

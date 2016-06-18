@@ -12,7 +12,7 @@ module.exports = function(imports) {
 	let nodemailer = imports.modules.nodemailer;
 	let lwip = imports.modules.lwip;
 	let AWS = imports.modules.AWS;
-	let AWSConfigPath = require("path").join(__dirname, "/aws-config.json");
+	let AWSConfigPath = require("path").join(__dirname, "aws-config.json");
 	AWS.config.loadFromPath(AWSConfigPath);
 	let Promise = imports.modules.Promise;
 
