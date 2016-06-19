@@ -118,8 +118,9 @@ module.exports = function(imports) {
 
 		// can be used as middleware to check if user is an admin
 		this.requireAdmin = function(req, res, next) {
-			let allowedPositions = ["leader", "mentor"];
-			if (allowedPositions.indexOf(req.user.current_team.position)  != -1) {
+			if (this.isAdmin(req.user)) {
+				next();
+			} else {
 				notfiy.sendMail({
 					from: "MorTeam Notification <notify@morteam.com>",
 					to: "rafezyfarbod@gmail.com",
@@ -127,10 +128,16 @@ module.exports = function(imports) {
 					text: "The user " + req.user.firstname + " " + req.user.lastname + " tried to perform administrator tasks. User ID: " + req.user._id
 				});
 				res.end("fail");
-			} else {
-				next();
 			}
 		};
+
+		// leaders and mentors are considered admins
+		// if an alumnus is active enough to need admin rights, that makes them a mentor
+		this.isAdmin = function(user) {
+			let allowedPositions = ["leader", "mentor"];
+			return allowedPositions.indexOf(user.current_team.position) != -1;
+		};
+
 
 		this.userNotFound = function(response) {
 			response.writeHead(200, {
