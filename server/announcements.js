@@ -75,7 +75,7 @@ module.exports = function(imports) {
 			res.end(announcement._id.toString());
 	
 		   	// send emails
-			if (req.user.current_team.position != "member") {
+			if (util.isAdminUser(req.user)) {
 	
 				// creates a string which is a list of recipients with the following format: "a@a.com, b@b.com, c@c.com"
 				let recipients = util.createRecipientList(users);
@@ -146,7 +146,7 @@ module.exports = function(imports) {
 			let announcement = yield Announcement.findOne({ _id: req.params.annId });
 
 			// check if user is eligible to delete said announcement
-			if (req.user._id == announcement.author.toString() || req.user.current_team.position == "admin") {
+			if (req.user._id == announcement.author.toString() || util.isAdminUser(req.user)) {
 				yield announcement.remove();
 				res.end("success");
 			} else {

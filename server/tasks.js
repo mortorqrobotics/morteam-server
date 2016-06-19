@@ -97,8 +97,7 @@ module.exports = function(imports) {
 		// TODO: is it possible for this route to not take in the target user?
 
 		if (req.user._id != req.body.target_user // TODO: targetUserId instead?
-				&& req.user.current_team.position != "admin"
-				&& req.user.current_team.position != "leader" ) {
+				&& !util.isAdminUser(req.user)) {
 
 			return res.end("fail");
 

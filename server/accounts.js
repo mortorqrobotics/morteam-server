@@ -180,12 +180,6 @@ module.exports = function(imports, publicDir, profpicDir) {
 
 	router.put("/users/id/:userId/position/:newPosition", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
-			// position hierarchy
-			let positionHA = {
-				"member": 0,
-				"leader": 1,
-				"admin": 2
-			};
 
 			// find target user
 			let user = yield User.findOne({
@@ -200,18 +194,16 @@ module.exports = function(imports, publicDir, profpicDir) {
 
 			let current_position = util.findTeamInUser(user, req.user.current_team.id).position;
 
-			if (current_position == "admin" && (yield User.count({
+			if (util.isAdminPosition(current_position) && (yield User.count({
 				teams: {
 					id: req.user.current_team.id,
-					position: "admin"
+					position: util.adminPositionsQuery
 				}
 			})) <= 1) {
-				return res.end("You are the only Admin on your team, so you cannot demote yourself.");
+				return res.end("You are the only leader or mentor on your team, so you cannot demote yourself.");
 			}
 
-			// check position hierarchy to see if it is allowed for user to change the position of target user
-			if (!(positionHA[req.user.current_team.position] >= positionHA[req.params.newPosition]
-					&& positionHA[req.user.current_team.position] >= positionHA[current_position])) {
+			if (!util.isAdmin(req.user)) {
 				return res.end("fail");
 			}
 

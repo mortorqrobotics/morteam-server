@@ -31,13 +31,6 @@ module.exports = function(imports) {
 				.map(subdivision => subdivision._id);
 		};
 
-		this.includesRank = function(position, target) {
-			let order = ["member", "leader", "admin"];
-			let positionIndex = order.indexOf(position.toLowerCase());
-			let targetIndex = order.indexOf(position.toLowerCase());
-			return positionIndex >= targetIndex;
-		};
-
 		// email transport
 		this.notify = nodemailer.createTransport({
 			service: "Mailgun",
@@ -140,6 +133,7 @@ module.exports = function(imports) {
 		this.isUserAdmin = function(user) {
 			return isPositionAdmin(user.current_team.position);
 		};
+		this.adminPositionsQuery = { $or: adminPositions };
 
 
 		this.userNotFound = function(response) {
