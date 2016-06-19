@@ -239,3 +239,8 @@ $(document).ready(function() {
 		location.assign("chat");
 	})
 });
+
+var sound = $('#audio-files').find('audio#click-sound')[0];
+if (sound) {
+	sound.volume = 0.3;
+}
