@@ -7,14 +7,14 @@ module.exports = function(imports) {
 	let util = imports.util;
 
 	let requireLogin = util.requireLogin;
-	let requireLeader = util.requireLeader;
+	let requireAdmin = util.requireAdmin;
 
 	let Task = imports.models.Task;
 	let User = imports.models.User;
 
 	let router = express.Router();
 
-	router.post("/users/id/:userId/tasks", requireLogin, requireLeader, Promise.coroutine(function*(req, res) {
+	router.post("/users/id/:userId/tasks", requireLogin, requireAdmin, Promise.coroutine(function*(req, res) {
 
 		// for iOS and Android
 		if (typeof(req.body.due_date) == "string") {
@@ -97,8 +97,7 @@ module.exports = function(imports) {
 		// TODO: is it possible for this route to not take in the target user?
 
 		if (req.user._id != req.body.target_user // TODO: targetUserId instead?
-				&& req.user.current_team.position != "admin"
-				&& req.user.current_team.position != "leader" ) {
+				&& !util.isAdminUser(req.user)) {
 
 			return res.end("fail");
 

@@ -141,7 +141,7 @@ $(document).ready(function() {
 		var present = data.present;
 		for (var i = 0; i < absences.length; i++) {
 			$(".absences_list").append('<li class="absence_date">'+ absences[i].name + ' (' + readableDate(absences[i].date) + ')' + '</li>')
-			if (localStorage.c_team_position == "leader" || localStorage.c_team_position == "admin") {
+			if (isCurrentUserAdmin()) {
 				$(".absences_list").append('<input type="button" data-eventid="'+absences[i]._id+'" class="button excuse_btn" value="Excuse" style="float: right;" /><br/>');
 			} else {
 				$(".absences_list").append("<br/>");
@@ -195,7 +195,7 @@ $(document).ready(function() {
 					$(div).html(tasks[i].description);
 					$(li).append("<br/>");
 					$(li).append($(div));
-					if (localStorage._id == tasks[i].for || localStorage.c_team_position == "admin" || localStorage.c_team_position == "leader") {
+					if (localStorage._id == tasks[i].for || isCurrentUserAdmin()) {
 						var mark_as_completed = document.createElement("input");
 						$(mark_as_completed).attr("type", "button");
 						$(mark_as_completed).attr("data-taskid", tasks[i]._id);

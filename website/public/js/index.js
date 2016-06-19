@@ -185,7 +185,7 @@ var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'A
 $(document).ready(function() {
 	// document.body.appendChild(loadingDiv);
 
-	if (localStorage.c_team_position == "leader" || localStorage.c_team_position == "admin") {
+	if (isCurrentUserAdmin()) {
 		$("#invited_subdivisions").after('<hr><p class="new_subdivision"><span class="glyphicon glyphicon-plus"></span> Make a Subdivision</p>');
 	}
 
@@ -549,7 +549,7 @@ function loadAnnouncements(callback) {
 				$(announcementTopDiv).append(audienceGlobe);
 
 				$(announcementDiv).append(announcementTopDiv);
-				if (localStorage._id == announcements[i].author._id || localStorage.c_team_position == "admin") {
+				if (localStorage._id == announcements[i].author._id || isCurrentUserAdmin()) {
 					var deleteButton = document.createElement("span")
 					$(deleteButton).addClass("glyphicon");
 					$(deleteButton).addClass("glyphicon-remove");

@@ -98,21 +98,12 @@
 						<span class="caret"></span>
 					</button>
 					<ul class="dropdown-menu position_drop">
-						<% if (viewerUserPosition == "admin") { %>
+						<% if (viewerUserPosition == "leader" || viewerUserPosition == "mentor") { %>
 							<li id="position_member" class="position_item">Member</li>
 							<li id="position_leader" class="position_item">Leader</li>
-							<li id="position_admin" class="position_item">Admin</li>
-						<% } else if (viewerUserPosition == "leader") { %>
-							<% if (viewedUserPosition == "admin") { %>
-								<script type="text/javascript">
-									$(".caret").hide();
-									$(".change_position").addClass("disabled");
-								</script>
-							<% } else { %>
-								<li id="position_member" class="position_item">Member</li>
-								<li id="position_leader" class="position_item">Leader</li>
-							<% } %>
-						<% } else if (viewerUserPosition == "member") { %>
+							<li id="position_admin" class="position_item">Mentor</li>
+							<li id="position_admin" class="position_item">Alumnus</li>
+						<% } else { %>
 							<script type="text/javascript">
 								$(".caret").hide();
 								$(".change_position").addClass("disabled");
@@ -126,9 +117,13 @@
 							<script type="text/javascript">
 								$(".position_item:contains('Leader')").addClass("selected");
 							</script>
-						<% } else if (viewedUserPosition == "admin") { %>
+						<% } else if (viewedUserPosition == "mentor") { %>
 							<script type="text/javascript">
-								$(".position_item:contains('Admin')").addClass("selected");
+								$(".position_item:contains('Mentor')").addClass("selected");
+							</script>
+						<% } else if (viewedUserPosition == "alumnus") { %>
+							<script type="text/javascript">
+								$(".position_item:contains('Alumnus')").addClass("selected");
 							</script>
 						<% } %>
 						<!-- TODO: REFACTOR ALL OF THE ABOVE CODE!!! -->

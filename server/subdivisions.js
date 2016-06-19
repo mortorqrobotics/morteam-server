@@ -8,7 +8,6 @@ module.exports = function(imports) {
 	let ObjectId = imports.modules.mongoose.Types.ObjectId;
 
 	let requireLogin = util.requireLogin;
-	let requireLeader = util.requireLeader;
 	let requireAdmin = util.requireAdmin;
 
 	let Subdivision = imports.models.Subdivision;
@@ -18,7 +17,7 @@ module.exports = function(imports) {
 
 	let router = express.Router();
 
-	router.post("/subdivisions", requireLogin, requireLeader, Promise.coroutine(function*(req, res) {
+	router.post("/subdivisions", requireLogin, requireAdmin, Promise.coroutine(function*(req, res) {
 
 		if (req.body.name.length >= 22) {
 			return res.end("fail");

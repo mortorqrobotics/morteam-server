@@ -7,7 +7,6 @@ module.exports = function(imports) {
 	let util = imports.util;
 
 	let requireLogin = util.requireLogin;
-	let requireLeader = util.requireLeader;
 	let requireAdmin = util.requireAdmin;
 
 	let User = imports.models.User;
@@ -79,7 +78,7 @@ module.exports = function(imports) {
 
 			let newTeam = {
 				id: team.id,
-				position: users.length == 0 ? "admin" : "member" // make the first member an admin
+				position: users.length == 0 ? "leader" : "member" // make the first member an admin
 			};
 			if (req.user.teams.length == 0) {
 				req.user.current_team = newTeam;
@@ -147,10 +146,10 @@ module.exports = function(imports) {
 
 			let user = yield User.findOne({ _id: req.params.userId });
 
-			if (user.current_team.position == "admin" && (yield User.count({
+			if (util.isAdminUser(user) && (yield User.count({
 				teams: {
 					id: req.user.current_team.id,
-					position: "admin"
+					position: util.adminPositionsQuery
 				}
 			})) <= 1) {
 				return res.end("You cannot remove the only Admin on your team.");

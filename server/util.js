@@ -31,13 +31,6 @@ module.exports = function(imports) {
 				.map(subdivision => subdivision._id);
 		};
 
-		this.includesRank = function(position, target) {
-			let order = ["member", "leader", "admin"];
-			let positionIndex = order.indexOf(position.toLowerCase());
-			let targetIndex = order.indexOf(position.toLowerCase());
-			return positionIndex >= targetIndex;
-		};
-
 		// email transport
 		this.notify = nodemailer.createTransport({
 			service: "Mailgun",
@@ -118,7 +111,9 @@ module.exports = function(imports) {
 
 		// can be used as middleware to check if user is an admin
 		this.requireAdmin = function(req, res, next) {
-			if (req.user.current_team.position != "admin") {
+			if (self.isUserAdmin(req.user)) {
+				next();
+			} else {
 				notfiy.sendMail({
 					from: "MorTeam Notification <notify@morteam.com>",
 					to: "rafezyfarbod@gmail.com",
@@ -126,25 +121,20 @@ module.exports = function(imports) {
 					text: "The user " + req.user.firstname + " " + req.user.lastname + " tried to perform administrator tasks. User ID: " + req.user._id
 				});
 				res.end("fail");
-			} else {
-				next();
 			}
 		};
 
-		// can be used as middleware to check if user is a leader or admin
-		this.requireLeader = function(req, res, next) {
-			if (req.user.current_team.position == "admin" || req.user.current_team.position == "leader") {
-				next();
-			} else {
-				notify.sendMail({
-						from: "MorTeam Notification <notify@morteam.com>",
-						to: "rafezyfarbod@gmail.com",
-						subject: "MorTeam Security Alert!",
-						text: "The user " + req.user.firstname + " " + req.user.lastname + " tried to perform leader/administrator tasks. User ID: " + req.user._id
-				});
-				res.end("fail");
-			}
+		// leaders and mentors are considered admins
+		// if an alumnus is active enough to need admin rights, that makes them a mentor
+		let adminPositions = ["leader", "mentor"];
+		this.isPositionAdmin = function(position) {
+			return adminPositions.indexOf(position) != -1;
 		};
+		this.isUserAdmin = function(user) {
+			return self.isPositionAdmin(user.current_team.position);
+		};
+		this.adminPositionsQuery = { $or: adminPositions };
+
 
 		this.userNotFound = function(response) {
 			response.writeHead(200, {

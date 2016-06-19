@@ -482,7 +482,7 @@ $(window).load(function() {
 							fileType = "images/"+files[i].type+'.png';
 						}
 						var deleteButton = '';
-						if (files[i].creator == localStorage._id || localStorage.c_team_position == "admin") {
+						if (files[i].creator == localStorage._id || isCurrentUserAdmin()) {
 							deleteButton = '<span class="glyphicon glyphicon-trash doc_delete"></span>'
 						}
 						var $file = $('<div style="z-index:1;" class="doc_frame '+files[i].type+'" data-fileid="' + files[i]._id + '" title="' + files[i].name +

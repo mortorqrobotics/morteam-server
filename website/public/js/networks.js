@@ -67,14 +67,14 @@ sendAjax("GET", "/teams/current/number", function(number) {
 					$("#leftbar").append($(teamDisplay))
 				}
 
-				var TBALinkDiv = document.createElement("div");
-				$(TBALinkDiv).addClass("leftbar_item");
-				var TBALink = document.createElement("a");
-				$(TBALink).attr("target", "_blank");
-				$(TBALink).attr("href", "http://www.thebluealliance.com/team/" + teamNum);
-				$(TBALink).html("Team " + teamNum + " on TheBlueAlliance");
-				$(TBALinkDiv).append($(TBALink));
-				$(".leftbar").append($(TBALinkDiv));
+				var tbaLinkDiv = document.createElement("div");
+				$(tbaLinkDiv).addClass("leftbar_item");
+				var tbaLink = document.createElement("a");
+				$(tbaLink).attr("target", "_blank");
+				$(tbaLink).attr("href", "http://www.thebluealliance.com/team/" + teamNum);
+				$(tbaLink).html("Team " + teamNum + " on TheBlueAlliance");
+				$(tbaLinkDiv).append($(tbaLink));
+				$(".leftbar").append($(tbaLinkDiv));
 
 			})
 
