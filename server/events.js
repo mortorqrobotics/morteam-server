@@ -8,7 +8,6 @@ module.exports = function(imports) {
 	let util = imports.util;
 
 	let requireLogin = util.requireLogin;
-	let requireLeader = util.requireLeader;
 	let requireAdmin = util.requireAdmin;
 
 	let User = imports.models.User;
@@ -70,7 +69,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.post("/events", requireLogin, requireLeader, Promise.coroutine(function*(req, res) {
+	router.post("/events", requireLogin, requireAdmin, Promise.coroutine(function*(req, res) {
 
 		req.body.userAttendees = req.body.userAttendees || [];
 		req.body.subdivisionAttendees = req.body.subdivisionAttendees || [];
@@ -152,7 +151,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.delete("/events/id/:eventId", requireLogin, requireLeader, Promise.coroutine(function*(req, res) {
+	router.delete("/events/id/:eventId", requireLogin, requireAdmin, Promise.coroutine(function*(req, res) {
 		try {
 
 			yield Event.findOneAndRemove({_id: req.params.eventId});
@@ -167,7 +166,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.get("/events/id/:eventId/attendees", requireLogin, requireLeader, Promise.coroutine(function*(req, res) {
+	router.get("/events/id/:eventId/attendees", requireLogin, requireAdmin, Promise.coroutine(function*(req, res) {
 		try {
 
 			let handler = yield AttendanceHandler.findOne({
@@ -182,7 +181,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.put("/events/id/:eventId/attendance", requireLogin, requireLeader, Promise.coroutine(function*(req, res) {
+	router.put("/events/id/:eventId/attendance", requireLogin, requireAdmin, Promise.coroutine(function*(req, res) {
 		try {
 
 			yield AttendanceHandler.update({
@@ -200,7 +199,7 @@ module.exports = function(imports) {
 	}));
 
 	// TODO: rename this route?
-	router.put("/events/id/:eventId/users/:userId/excuseAbsence", requireLogin, requireLeader, Promise.coroutine(function*(req, res) {
+	router.put("/events/id/:eventId/users/:userId/excuseAbsence", requireLogin, requireAdmin, Promise.coroutine(function*(req, res) {
 		try {
 
 			yield AttendanceHandler.update({

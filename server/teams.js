@@ -7,7 +7,6 @@ module.exports = function(imports) {
 	let util = imports.util;
 
 	let requireLogin = util.requireLogin;
-	let requireLeader = util.requireLeader;
 	let requireAdmin = util.requireAdmin;
 
 	let User = imports.models.User;
