@@ -278,7 +278,7 @@ $(document).ready(function() {
 			var day_content = document.createElement("div");
 			$(day_content).addClass("day_content");
 			$(day_div).append($(day_of_month));
-			if (localStorage.c_team_position == "leader" || localStorage.c_team_position == "admin") {
+			if (isCurrentUserAdmin()) {
 			var add_event = document.createElement("input");
 				$(add_event).attr("type", "button");
 				$(add_event).addClass("add_event");
@@ -316,7 +316,7 @@ $(document).ready(function() {
 					$(event_description_display).addClass("indented");
 					$(event_description_display).html(events[i].description);
 					$(li).append($(event_name_display));
-					if (localStorage.c_team_position == "leader" || localStorage.c_team_position == "admin") {
+					if (isCurrentUserAdmin()) {
 						var attendance_btn = '<span title="Record Attendance" class="glyphicon glyphicon-list-alt leaders_only attendance"></span>';
 						var delete_event_btn = '<span class="glyphicon glyphicon-trash list_right delete_event"></span>';
 						$(li).append(" ");

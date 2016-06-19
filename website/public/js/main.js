@@ -35,6 +35,10 @@ function getPath(arg) {
 	return arg;
 }
 
+function isCurrentUserAdmin() {
+	return ["leader", "mentor"].indexOf(localStorage.c_team_position) != -1;
+}
+
 Array.prototype.last = function() {
 	return this[this.length - 1];
 };

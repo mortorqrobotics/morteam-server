@@ -534,7 +534,7 @@ $(window).load(function() {
 				for (var i = 0; i < members.subdivisionMembers.length; i++) {
 					$(ul).append('<li class="group_member_li"><span class="glyphicon glyphicon-screenshot group_member_icon"></span><span data-subdivisionid="'+members.subdivisionMembers[i]._id+'" class="group_member_name subdivision">' + members.subdivisionMembers[i].name + '</span></li>')
 				}
-				// if (localStorage.c_team_position == "admin") {
+				// if (isCurrentUserAdmin()) {
 				//   $(container).append('<input data-chatid="'+chatId+'" type="button" class="button leave_group" value="Leave Group"></input>')
 				//   $(container).append('<input data-chatid="'+chatId+'" type="button" class="button delete_group" value="Delete Group"></input>')
 				// } else {

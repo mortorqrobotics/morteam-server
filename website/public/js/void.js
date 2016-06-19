@@ -28,10 +28,10 @@ $(document).ready(function() {
 				sendAjax("POST", ["teams/code", teamCode, "join"], function(response) {
 					if (response == "success") {
 						var lsTeams = JSON.parse(localStorage.teams);
-						lsTeams.push({id: $(".team_id").val(), position: "admin"});
+						lsTeams.push({id: $(".team_id").val(), position: "leader"});
 						localStorage.teams = JSON.stringify(lsTeams);
 						localStorage.c_team = $(".team_id").val();
-						localStorage.c_team_position = "admin";
+						localStorage.c_team_position = "leader";
 						location.assign("/");
 					} else {
 						alert("fail");
