@@ -5,17 +5,18 @@ module.exports = function(imports) {
 	let mongoose = imports.modules.mongoose;
 
 	let Schema = mongoose.Schema;
+	let ObjectId = Schema.Types.ObjectId;
 
 	let folderSchema = new Schema({
 		name:        { type: String, required: true },
-		team:        { type: String, required: true },
+		team:        { type: ObjectId, ref: "Team", required: true },
 		defaultFolder: Boolean,
 		entireTeam:  { type: Boolean, required: false },
-		userMembers: [{ type: Schema.Types.ObjectId, ref: "User" }],
-		subdivisionMembers: [{ type: Schema.Types.ObjectId, ref: "Subdivision" }],
-		ancestors: [{ type: Schema.Types.ObjectId, ref: "Folder", required: false }],
-		parentFolder: { type: Schema.Types.ObjectId, ref: "Folder", required: false },
-		creator: { type: Schema.Types.ObjectId, ref: "User" },
+		userMembers: [{ type: ObjectId, ref: "User" }],
+		subdivisionMembers: [{ type: ObjectId, ref: "Subdivision" }],
+		ancestors: [{ type: ObjectId, ref: "Folder", required: false }],
+		parentFolder: { type: ObjectId, ref: "Folder", required: false },
+		creator: { type: ObjectId, ref: "User" },
 		created_at:  Date,
 		updated_at:  Date,
 	});
@@ -30,6 +31,7 @@ module.exports = function(imports) {
 	});
 
 	let Folder = mongoose.model("Folder", folderSchema);
+
 	return Folder;
 
 };

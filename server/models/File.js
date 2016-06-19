@@ -5,15 +5,16 @@ module.exports = function(imports) {
 	let mongoose = imports.modules.mongoose;
 
 	let Schema = mongoose.Schema;
+	let ObjectId = Schema.Types.ObjectId;
 
 	let fileSchema = new Schema({
 		name:         { type: String, required: true },
 		originalName: { type: String, required: false },
-		folder: { type: Schema.Types.ObjectId, ref: "Folder", required: false },
+		folder: { type: ObjectId, ref: "Folder", required: false }, // TODO: why is folder not required?
 		size: Number,
 		type: String,
 		mimetype: String,
-		creator: { type: Schema.Types.ObjectId, ref: "User" },
+		creator: { type: ObjectId, ref: "User" },
 		created_at: Date,
 		updated_at: Date,
 	});
@@ -28,6 +29,7 @@ module.exports = function(imports) {
 	});
 
 	let File = mongoose.model("File", fileSchema);
+
 	return File;
 
 };

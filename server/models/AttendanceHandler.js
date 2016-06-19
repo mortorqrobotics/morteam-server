@@ -5,12 +5,13 @@ module.exports = function(imports) {
 	let mongoose = imports.modules.mongoose;
 
 	let Schema = mongoose.Schema;
+	let ObjectId = Schema.Types.ObjectId;
 
 	let attendanceHandlerSchema = new Schema({
-		event:  { type: Schema.Types.ObjectId, ref: "Event" },
+		event:  { type: ObjectId, ref: "Event" },
 		event_date: Date,
 		attendees: [{
-			user: { type: Schema.Types.ObjectId, ref: "User" },
+			user: { type: ObjectId, ref: "User" },
 			status: String
 		}],
 		entireTeam: Boolean,
@@ -27,7 +28,9 @@ module.exports = function(imports) {
 		next();
 	});
 
-	let attendanceHandler = mongoose.model("attendanceHandler", attendanceHandlerSchema);
-	return attendanceHandler;
+	// TODO: why is the string lower case? will it break if it is capitalized?
+	let AttendanceHandler = mongoose.model("attendanceHandler", attendanceHandlerSchema);
+
+	return AttendanceHandler;
 
 };

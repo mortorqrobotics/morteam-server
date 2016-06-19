@@ -5,14 +5,15 @@ module.exports = function(imports){
 	let mongoose = imports.modules.mongoose;
 
 	let Schema = mongoose.Schema;
+	let ObjectId = Schema.Types.ObjectId;
 
 	let taskSchema = new Schema({
 		name:        { type: String, required: true },
 		description: { type: String, required: false },
-		team:        { type: String, required: true },
-		for:         { type: Schema.Types.ObjectId, ref: "User" },
+		team:        { type: ObjectId, ref: "Team", required: true },
+		for:         { type: ObjectId, ref: "User" },
 		due_date:    { type: Date, required: true },
-		creator:     { type: Schema.Types.ObjectId, ref: "User" },
+		creator:     { type: ObjectId, ref: "User" },
 		completed:   Boolean,
 		created_at:  Date,
 		updated_at:  Date,
@@ -28,6 +29,7 @@ module.exports = function(imports){
 	});
 
 	let Task = mongoose.model("Task", taskSchema);
+
 	return Task;
 
 };

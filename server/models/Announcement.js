@@ -5,13 +5,14 @@ module.exports = function(imports) {
 	let mongoose = imports.modules.mongoose;
 
 	let Schema = mongoose.Schema;
+	let ObjectId = Schema.Types.ObjectId;
 
 	let announcementSchema = new Schema({
-		author:      { type: Schema.Types.ObjectId, required: true, ref: "User" },
+		author:      { type: ObjectId, ref: "User", required: true },
 		content:     { type: String, required: true },
-		team:        { type: String, required: true },
-		userAudience: [{ type: Schema.Types.ObjectId, ref: "User" }],
-		subdivisionAudience: [{ type: Schema.Types.ObjectId, ref: "Subdivision" }],
+		team:        { type: ObjectId, ref: "Team", required: true },
+		userAudience: [{ type: ObjectId, ref: "User" }],
+		subdivisionAudience: [{ type: ObjectId, ref: "Subdivision" }],
 		timestamp:   { type: Date, required: true },
 		entireTeam: Boolean,
 		created_at:  Date,
@@ -28,6 +29,7 @@ module.exports = function(imports) {
 	});
 
 	let Announcement = mongoose.model("Announcement", announcementSchema);
+
 	return Announcement;
 
 };
