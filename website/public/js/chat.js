@@ -9,6 +9,8 @@ $(window).focus(function() {
 	window_is_focused = false;
 });
 
+$(".chat_btn").addClass("active");
+
 function messageNotification(title, content, chatid) {
 	var newMessageNotice = new jBox('Notice', {
 		attributes: {
@@ -590,7 +592,7 @@ $(window).load(function() {
 	var ta = $(".reply_textarea")[0]; // this is good code
 	autosize(ta);
 	$(document).on("click", ".send_button", function() {
-		var content = $(".reply_textarea").val(); 
+		var content = $(".reply_textarea").val();
 		if (content != "") {
 			var $this = $(this);
 

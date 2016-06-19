@@ -1,4 +1,5 @@
 var socket = io();
+$(".drive_btn").addClass("active");
 
 function removeDuplicates(arr) {
 	var seen = {};

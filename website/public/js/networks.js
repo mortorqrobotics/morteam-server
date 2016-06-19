@@ -1,3 +1,4 @@
+$(".networks_btn").addClass("active");
 function hideLeftbar(time, button) {
 	$(".leftbar").velocity({left: "-260px"}, { duration: time, queue: false });
 	$(button).removeClass("glyphicon-chevron-left").addClass("glyphicon-chevron-right");
