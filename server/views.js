@@ -25,7 +25,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 	});
 
 	// load profile page of any user based on _id
-	router.get("/profile/id/:userId", Promise.coroutine(function*(req, res) {
+	router.get("/profiles/id/:userId", Promise.coroutine(function*(req, res) {
 		try {
 
 			let user = yield User.findOne({

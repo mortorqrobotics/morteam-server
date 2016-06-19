@@ -186,10 +186,10 @@ $(document).ready(function() {
 		});
 	});
 	$(document).on("click", "#view_prof_button", function() {
-		location.assign("/profile/id/" + localStorage._id);
+		location.assign("/profiles/id/" + localStorage._id);
 	});
 	$("#view_prof_button_ejs").click(function() {
-		location.assign("/profile/id/" + localStorage._id);
+		location.assign("/profiles/id/" + localStorage._id);
 	});
 
 	$("#aboutus_link").click(function() {
@@ -207,7 +207,7 @@ $(document).ready(function() {
 		}
 	});
 	$(document).on("click", ".user-link", function() {
-		location.assign("/profile/id/" + $(this).attr("data-userid"));
+		location.assign("/profiles/id/" + $(this).attr("data-userid"));
 	})
 
 	var typingTimer;
