@@ -5,6 +5,8 @@ module.exports = function(imports) {
 	let ObjectId = imports.modules.mongoose.Types.ObjectId;
 	let Promise = imports.modules.Promise;
 
+	let util = imports.util;
+
 	let Chat = imports.models.Chat;
 	let User = imports.models.User;
 
