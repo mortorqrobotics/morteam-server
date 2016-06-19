@@ -235,7 +235,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 	router.get("/users/search", requireLogin, Promise.coroutine(function*(req, res) {
 
 		// create array of search terms
-		let terms = String(req.body.search).trim().split(" ");
+		let terms = String(req.query.search).trim().split(" ");
 		let regexString = "";
 		// create regular expression
 		for (let i = 0; i < terms.length; i++) {
