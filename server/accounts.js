@@ -367,7 +367,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 			let info = yield util.sendEmail({
 				to: req.body.email,
 				subject: "New MorTeam Password Request",
-				text: "It seems like you requested to reset your password. Your new password is " + netPassword + ". Feel free to reset it after you log in."
+				text: "It seems like you requested to reset your password. Your new password is " + newPassword + ". Feel free to reset it after you log in."
 			});
 			console.log(info);
 
