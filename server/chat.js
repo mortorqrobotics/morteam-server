@@ -139,7 +139,7 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.get("/chat/id/:chatId/users", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/chats/id/:chatId/users", requireLogin, Promise.coroutine(function*(req, res) {
 		// user members only, not subdivision members
 
 		try {
