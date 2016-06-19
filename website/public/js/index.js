@@ -321,7 +321,7 @@ $(document).ready(function() {
 		location.assign("/teams/current");
 	});
 	$(document).on("click", ".announcement_poster", function() {
-		location.assign("/u/" + $(this).attr("data-userid"));
+		location.assign("/profiles/id/" + $(this).attr("data-userid"));
 	})
 
 	//audience stuff
