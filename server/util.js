@@ -133,9 +133,12 @@ module.exports = function(imports) {
 
 		// leaders and mentors are considered admins
 		// if an alumnus is active enough to need admin rights, that makes them a mentor
-		this.isAdmin = function(user) {
-			let allowedPositions = ["leader", "mentor"];
-			return allowedPositions.indexOf(user.current_team.position) != -1;
+		let adminPositions = ["leader", "mentor"];
+		this.isPositionAdmin = function(position) {
+			return adminPositions.indexOf(position) != -1;
+		};
+		this.isUserAdmin = function(user) {
+			return isPositionAdmin(user.current_team.position);
 		};
 
 
