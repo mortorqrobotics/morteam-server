@@ -15,9 +15,9 @@ module.exports = function(imports) {
 	let online_clients = {};
 
 	io.on("connection", Promise.coroutine(function*(socket) {
-		let sess = socket.request.session.userId && yield User.findOne({
+		let sess = socket.request.session.userId && (yield User.findOne({
 			_id: socket.request.session.userId
-		});
+		}));
 		if (sess) {
 			let userSubdivisionIds = util.activeSubdivisionIds(sess.subdivisions);
 
