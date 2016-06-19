@@ -3,7 +3,7 @@ $(document).ready(function() {
 		var a = $(e.target);
 		var b = $(this).find(".delete_user");
 		if (a[0] != b[0]) {
-			location.assign("/profile/id/" + $(this).attr("data-userid"));
+			location.assign("/profiles/id/" + $(this).attr("data-userid"));
 		}
 	});
 	$(document).on("click", ".delete_user", function() {

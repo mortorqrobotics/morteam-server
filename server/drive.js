@@ -213,7 +213,7 @@ module.exports = function(imports) {
 			let file = yield File.findOne({ _id: req.params.fileId }).populate("folder").exec();
 
 			if (req.user._id.toString() != file.creator.toString()
-					&& !util.isAdminUser(req.user)) {
+					&& !util.isUserAdmin(req.user)) {
 				return res.end("fail");
 			}
 
