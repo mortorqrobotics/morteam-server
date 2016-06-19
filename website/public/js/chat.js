@@ -587,6 +587,8 @@ $(window).load(function() {
 			alert("Name has to be 19 characters or fewer.")
 		}
 	});
+	var ta = $(".reply_textarea")[0]; // this is good code
+	autosize(ta);
 	$(document).on("click", ".send_button", function() {
 		var content = $(".reply_textarea").val(); 
 		if (content != "") {
