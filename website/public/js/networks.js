@@ -84,7 +84,6 @@ sendAjax("GET", "/teams/current/number", function(number) {
 
 $(document).on("click", ".teamNumLink", function() {
 
-    $(".networks_btn").addClass("active");
 	var $this = $(this);
 	var clickedTeamNum = $.trim($(this).html().substring(5, 9))
 	// TODO: this code looks just like the code above it...
@@ -133,5 +132,9 @@ $(".hide_leftbar").click(function() {
 	} else {
 		showLeftbar(300, this);
 	}
+});
+
+$(document).on("ready", function(){
+    $(".networks_btn").addClass("active");
 });
 
