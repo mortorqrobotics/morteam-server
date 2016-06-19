@@ -111,7 +111,7 @@ module.exports = function(imports) {
 
 		// can be used as middleware to check if user is an admin
 		this.requireAdmin = function(req, res, next) {
-			if (this.isAdmin(req.user)) {
+			if (self.isUserAdmin(req.user)) {
 				next();
 			} else {
 				notfiy.sendMail({
@@ -131,7 +131,7 @@ module.exports = function(imports) {
 			return adminPositions.indexOf(position) != -1;
 		};
 		this.isUserAdmin = function(user) {
-			return isPositionAdmin(user.current_team.position);
+			return self.isPositionAdmin(user.current_team.position);
 		};
 		this.adminPositionsQuery = { $or: adminPositions };
 

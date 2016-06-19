@@ -178,7 +178,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 		}
 	}));
 
-	router.put("/users/id/:userId/position/:newPosition", requireLogin, Promise.coroutine(function*(req, res) {
+	router.put("/users/id/:userId/position/:newPosition", requireLogin, requireAdmin, Promise.coroutine(function*(req, res) {
 		try {
 
 			// find target user
@@ -190,21 +190,21 @@ module.exports = function(imports, publicDir, profpicDir) {
 				return res.end("fail");
 			}
 
-			req.params.newPosition = req.params.newPosition.toLowerCase();
+			let newPosition = req.params.newPosition.toLowerCase();
 
-			let current_position = util.findTeamInUser(user, req.user.current_team.id).position;
+			let currentPosition = util.findTeamInUser(user, req.user.current_team.id).position;
 
-			if (util.isAdminPosition(current_position) && (yield User.count({
-				teams: {
-					id: req.user.current_team.id,
-					position: util.adminPositionsQuery
-				}
-			})) <= 1) {
+			if (req.params.userId == req.user._id
+					&& !util.isPositionAdmin(newPosition)
+					&& (yield User.count({
+						teams: {
+							id: req.user.current_team.id,
+							position: util.adminPositionsQuery
+						}
+					})) <= 1) {
+
 				return res.end("You are the only leader or mentor on your team, so you cannot demote yourself.");
-			}
 
-			if (!util.isAdmin(req.user)) {
-				return res.end("fail");
 			}
 
 			// update position of target user
@@ -212,8 +212,9 @@ module.exports = function(imports, publicDir, profpicDir) {
 				_id: req.params.userId,
 				"teams.id": req.user.current_team.id
 			}, { "$set": {
-				"teams.$.position": req.params.newPosition, // find out what .$. means and if it means selected "teams" element
-				"current_team.position": req.params.newPosition // make sure in the future current_team.position is checked with "teams" array of the document when user is logging in as opposed to doing this
+				"teams.$.position": newPosition, // find out what .$. means and if it means selected "teams" element
+				"current_team.position": newPosition
+				// make sure in the future current_team.position is checked with "teams" array of the document when user is logging in as opposed to doing this
 			}});
 
 			res.end("success");
