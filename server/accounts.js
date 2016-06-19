@@ -311,7 +311,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 		try {
 			if (req.file) { // if user chose to update their profile picture too
 
-				updatedUser.profpicpath = "/pp/" +  req.user.username
+				updatedUser.profpicpath = "/pp/" + req.user.username
 
 				// get extension and corresponding mime type
 				let ext = req.file.originalname.substring(req.file.originalname.lastIndexOf(".")+1).toLowerCase() || "unknown";
@@ -324,7 +324,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 
 				let buffer = yield util.resizeImageAsync(req.file.buffer, 300, ext);
 				yield util.uploadToProfPicsAsync(buffer, req.user.username + "-300", mime);
-				buffer = util.resizeImageAsync(req.file.buffer, 60, ext);
+				buffer = yield util.resizeImageAsync(req.file.buffer, 60, ext);
 				yield util.uploadToProfPicsAsync(buffer, req.user.username + "-60", mime);
 			}
 
