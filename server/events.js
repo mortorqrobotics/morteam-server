@@ -29,7 +29,7 @@ module.exports = function(imports) {
 		try {
 
 			let events = yield Event.find({
-				team: req.user.current_team.id,
+				team: req.user.current_team._id,
 				$or: [
 					{ entireTeam: true },
 					{ userAttendees: req.user._id },
@@ -52,7 +52,7 @@ module.exports = function(imports) {
 		try {
 
 			let events = yield Event.find({
-				team: req.user.current_team.id,
+				team: req.user.current_team._id,
 				$or: [
 					{ entireTeam: true },
 					{ userAttendees: req.user._id },
@@ -81,7 +81,7 @@ module.exports = function(imports) {
 		let event = {
 			name: req.body.name,
 			date: new Date(req.body.date),
-			team: req.user.current_team.id,
+			team: req.user.current_team._id,
 			creator: req.user._id,
 			hasAttendance: req.body.hasAttendance
 		};
@@ -99,7 +99,7 @@ module.exports = function(imports) {
 				event.entireTeam = true;
 
 				users = yield User.find({
-					teams: { $elemMatch: { id: req.user.current_team.id } }
+					teams: { $elemMatch: { _id: req.user.current_team._id } }
 				});
 
 			} else {
@@ -154,7 +154,8 @@ module.exports = function(imports) {
 	router.delete("/events/id/:eventId", requireLogin, requireAdmin, Promise.coroutine(function*(req, res) {
 		try {
 
-			yield Event.findOneAndRemove({_id: req.params.eventId});
+			// TODO: check for correct team
+			yield Event.findOneAndRemove({ _id: req.params.eventId });
 			
 			yield AttendanceHandler.findOneAndRemove({event: req.params.eventId});
 			

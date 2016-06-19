@@ -23,7 +23,7 @@ module.exports = function(imports) {
 
 		let task = {
 			name: req.body.task_name,
-			team: req.user.current_team.id,
+			team: req.user.current_team._id,
 			for: req.params.userId, // why a reserved word :/
 			due_date: req.body.due_date,
 			creator: req.user._id,

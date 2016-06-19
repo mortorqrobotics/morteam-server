@@ -174,7 +174,7 @@ module.exports = function(imports) {
 		// returns the team object with an id of teamId of a user
 		this.findTeamInUser = function(user, teamId) {
 			for (let i = 0; i < user.teams.length; i++) {
-				if (user.teams[i].id == teamId) {
+				if (user.teams[i]._id.toString() == teamId.toString()) {
 					return user.teams[i];
 				}
 			}

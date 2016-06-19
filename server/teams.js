@@ -20,7 +20,7 @@ module.exports = function(imports) {
 		try {
 
 			let users = yield User.find({
-				teams: {$elemMatch: {id: req.user.current_team.id }}
+				teams: { $elemMatch: { _id: req.user.current_team._id } }
 			});
 
 			res.json(users);
@@ -46,7 +46,7 @@ module.exports = function(imports) {
 
 			let folder = yield Folder.create({
 				name: "Team Files",
-				team: team.id,
+				team: team._id,
 				entireTeam: true,
 				creator: req.user._id,
 				defaultFolder: true
@@ -63,21 +63,21 @@ module.exports = function(imports) {
 	router.post("/teams/code/:teamCode/join", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
-			let team = yield Team.findOne({id: req.params.teamCode});
+			let team = yield Team.findOne({ id: req.params.teamCode });
 			
 			if (!team) {
 				return res.end("no such team");
 			}
 
 			if (req.user.bannedFromTeams.length > 0
-					&& req.user.bannedFromTeams.indexOf(team.id) != -1 ) {
+					&& req.user.bannedFromTeams.indexOf(team._id) != -1 ) {
 				return res.end("banned");
 			}
 
-			let users = yield User.find({ teams: { $elemMatch: { "id": team.id } } });
+			let users = yield User.find({ teams: { $elemMatch: { _id: team._id } } });
 
 			let newTeam = {
-				id: team.id,
+				_id: team._id,
 				position: users.length == 0 ? "leader" : "member" // make the first member an admin
 			};
 			if (req.user.teams.length == 0) {
@@ -97,7 +97,7 @@ module.exports = function(imports) {
 			
 			yield Folder.create({
 				name: "Personal Files",
-				team: team.id,
+				team: team._id,
 				userMembers: req.user._id, // TODO: should this be an [req.user._id] instead?
 				creator: req.user._id,
 				defaultFolder: true
@@ -114,7 +114,7 @@ module.exports = function(imports) {
 	router.get("/teams/current/number", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
-			let team = yield Team.findOne({id: req.user.current_team.id});
+			let team = yield Team.findOne({ _id: req.user.current_team._id});
 
 			res.end(String(team.number));
 
@@ -148,14 +148,14 @@ module.exports = function(imports) {
 
 			if (util.isUserAdmin(user) && (yield User.count({
 				teams: {
-					id: req.user.current_team.id,
+					_id: req.user.current_team._id,
 					position: util.adminPositionsQuery
 				}
 			})) <= 1) {
 				return res.end("You cannot remove the only Admin on your team.");
 			}
 
-			if (user.current_team.id == req.user.current_team.id) {
+			if (user.current_team._id.toString() == req.user.current_team._id.toString()) {
 				user.current_team = undefined; // TODO: make it so that if current_team is undefined when logging in, it allows you to set current_team
 				yield user.save();
 			}
@@ -163,12 +163,12 @@ module.exports = function(imports) {
 			user = yield User.update({
 				_id: req.params.userId
 			}, { "$pull": {
-				"teams": { id: req.user.current_team.id },
-				"subdivisions": { team: req.user.current_team.id }
+				"teams": { _id: req.user.current_team._id },
+				"subdivisions": { team: req.user.current_team._id }
 			}});
 
 			yield Chat.update({
-				team: req.user.current_team.id,
+				team: req.user.current_team._id,
 				userMembers: new ObjectId(req.params.userId)
 			}, {
 				"$pull": {
@@ -177,7 +177,7 @@ module.exports = function(imports) {
 			});
 
 			yield Folder.update({
-				team: req.user.current_team.id,
+				team: req.user.current_team._id,
 				userMembers: new ObjectId(req.params.userId)
 			}, {
 				"$pull": {
@@ -186,7 +186,7 @@ module.exports = function(imports) {
 			});
 
 			yield Event.update({
-				team: req.user.current_team.id,
+				team: req.user.current_team._id,
 				userAttendees: new ObjectId(req.body.user_id)
 			}, {
 				"$pull": {
@@ -204,13 +204,16 @@ module.exports = function(imports) {
 
 	router.get("/users/id/:userId/teams", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
+
 			let user = yield User.findOne({
-				_id: req.body._id
+				_id: req.params.userId
 			});
+
 			res.json({
 				"teams": user.teams,
 				"current_team": user.current_team
 			});
+
 		} catch (err) {
 			console.error(err);
 			res.end("fail");

@@ -25,13 +25,15 @@ module.exports = function(imports) {
 
 			if (req.params.fileId.indexOf("-preview") == -1) {
 				
-				let file = yield File.findOne({_id: req.params.fileId}).populate("folder").exec();
+				let file = yield File.findOne({
+					_id: req.params.fileId
+				}).populate("folder").exec();
 				
 				if (!file) {
 					return res.end("fail");
 				}
 
-				if (!( (file.folder.team == req.user.current_team.id && file.folder.entireTeam)
+				if (!( (file.folder.team.toString() == req.user.current_team._id.toString() && file.folder.entireTeam)
 					|| file.folder.userMembers.indexOf(req.user._id) > -1
 					|| file.folder.subdivisionMembers.hasAnythingFrom(userSubdivisionIds) )) {
 				
@@ -58,12 +60,12 @@ module.exports = function(imports) {
 		try {
 
 			let folders = yield Folder.find({
-				team: req.user.current_team.id,
+				team: req.user.current_team._id,
 				parentFolder: { "$exists": false },
 				$or: [
-					{entireTeam: true},
-					{userMembers: req.user._id},
-					{subdivisionMembers: {"$in": userSubdivisionIds} }
+					{ entireTeam: true },
+					{ userMembers: req.user._id },
+					{ subdivisionMembers: { "$in": userSubdivisionIds } }
 				]
 			});
 
@@ -80,7 +82,7 @@ module.exports = function(imports) {
 		try {
 
 			let folders = yield Folder.find({
-				team: req.user.current_team.id,
+				team: req.user.current_team._id,
 				parentFolder: req.params.folderId, $or: [
 					{entireTeam: true},
 					{userMembers: req.user._id},
@@ -123,7 +125,7 @@ module.exports = function(imports) {
 
 			let folder = {
 				name: util.normalizeDisplayedText(req.body.name),
-				team: req.user.current_team.id,
+				team: req.user.current_team._id,
 				userMembers: req.body.userMembers,
 				subdivisionMembers: req.body.subdivisionMembers,
 				creator: req.user._id,
@@ -210,7 +212,9 @@ module.exports = function(imports) {
 	router.delete("/files/id/:fileId", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
-			let file = yield File.findOne({ _id: req.params.fileId }).populate("folder").exec();
+			let file = yield File.findOne({
+				_id: req.params.fileId
+			}).populate("folder").exec();
 
 			if (req.user._id.toString() != file.creator.toString()
 					&& !util.isUserAdmin(req.user)) {

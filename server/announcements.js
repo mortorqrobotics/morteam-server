@@ -28,7 +28,7 @@ module.exports = function(imports) {
 		let announcement = {
 			author: req.user._id,
 			content: req.body.content,
-			team: req.user.current_team.id,
+			team: req.user.current_team._id,
 			timestamp: new Date()
 		};
 
@@ -57,7 +57,7 @@ module.exports = function(imports) {
 	
 				// find all users in the current team
 				users = yield User.find({ teams: {
-					$elemMatch: { id: req.user.current_team.id } }
+					$elemMatch: { _id: req.user.current_team._id } }
 				}).exec();
 			
 			} else { // this means that the user selected a specific subdivision to send the announcement to
@@ -103,7 +103,7 @@ module.exports = function(imports) {
 
 			// find announcements that the user should be able to see
 			let announcements = yield Announcement.find({
-				team: req.user.current_team.id,
+				team: req.user.current_team._id,
 				$or: [
 					{
 						entireTeam: true

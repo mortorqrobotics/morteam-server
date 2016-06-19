@@ -28,7 +28,7 @@ module.exports = function(imports) {
 			let subdivision = yield Subdivision.create({
 				name: req.body.name,
 				type: req.body.type,
-				team: req.user.current_team.id
+				team: req.user.current_team._id
 			});
 
 			yield User.findOneAndUpdate({
@@ -37,7 +37,7 @@ module.exports = function(imports) {
 				"$push": {
 					"subdivisions": {
 						_id: subdivision._id,
-						team: req.user.current_team.id,
+						team: req.user.current_team._id,
 						accepted: true
 					}
 				}
@@ -75,8 +75,8 @@ module.exports = function(imports) {
 			}
 
 			invitedUser.subdivisions.push({
-				id: new ObjectId(subdivision._id),
-				team: req.user.current_team.id,
+				_id: new ObjectId(subdivision._id),
+				team: req.user.current_team._id,
 				accepted: false
 			});
 
@@ -94,7 +94,7 @@ module.exports = function(imports) {
 		try {
 
 			let subdivisions = yield Subdivision.find({
-				team: req.user.current_team.id,
+				team: req.user.current_team._id,
 				type: "public"
 			});
 
@@ -119,7 +119,7 @@ module.exports = function(imports) {
 
 			let subdivisions = yield Subdivision.find({ // TODO: is the team check necessary here?
 				_id: { "$in": userSubdivisionIds },
-				team: req.user.current_team.id
+				team: req.user.current_team._id
 			});
 
 			if (!subdivisions) {
@@ -152,7 +152,7 @@ module.exports = function(imports) {
 
 			let subdivisions = yield Subdivision.find({
 				_id: { "$in": invitedSubdivisions },
-				team: req.user.current_team.id
+				team: req.user.current_team._id
 			});
 
 			if (subdivisions) { // TODO: is the check necessary here?
@@ -214,7 +214,7 @@ module.exports = function(imports) {
 				"$pull": {
 					"subdivisions": {
 						_id: new ObjectId(subdivision._id),
-						team: req.user.current_team.id,
+						team: req.user.current_team._id,
 						accepted: false
 					}
 				}
@@ -226,7 +226,7 @@ module.exports = function(imports) {
 				"$push": {
 					"subdivisions": {
 						_id: new ObjectId(subdivision._id),
-						team: req.user.current_team.id,
+						team: req.user.current_team._id,
 						accepted: true
 					}
 				}
@@ -266,7 +266,7 @@ module.exports = function(imports) {
 				"$pull": {
 					"subdivisions": {
 						_id: new ObjectId(req.params.subdivId),
-						team: req.user.current_team.id
+						team: req.user.current_team._id
 					}
 				}
 			});
@@ -288,7 +288,7 @@ module.exports = function(imports) {
 				"$pull": {
 					"subdivisions": {
 						_id: new ObjectId(req.params.subdivId),
-						team: req.user.current_team.id
+						team: req.user.current_team._id
 					}
 				}
 			});
@@ -320,16 +320,16 @@ module.exports = function(imports) {
 
 			yield Subdivision.findOneAndRemove({
 				_id: new ObjectId(req.params.subdivId),
-				team: req.user.current_team.id
+				team: req.user.current_team._id
 			});
 
 			yield User.update({
-				teams: { $elemMatch: { id: req.user.current_team.id } }
+				teams: { $elemMatch: { _id: req.user.current_team._id } }
 			}, {
 				"$pull": {
 					"subdivisions": {
 						_id: new ObjectId(req.params.subdivId),
-						team: req.user.current_team.id
+						team: req.user.current_team._id
 					}
 				}
 			});
@@ -347,12 +347,12 @@ module.exports = function(imports) {
 
 			yield User.update({
 				_id: req.params.userId,
-				teams: { $elemMatch: { "id": req.user.current_team.id } }
+				teams: { $elemMatch: { _id: req.user.current_team._id } }
 			}, {
 				"$pull": { // TODO: maybe add new objectid
 					"subdivisions" : {
 						_id: new ObjectId(req.params.subdivId),
-						team: req.user.current_team.id,
+						team: req.user.current_team._id,
 						accepted: true
 					}
 				}
