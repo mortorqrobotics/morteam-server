@@ -118,7 +118,8 @@ module.exports = function(imports) {
 
 		// can be used as middleware to check if user is an admin
 		this.requireAdmin = function(req, res, next) {
-			if (req.user.current_team.position != "admin") {
+			let allowedPositions = ["leader", "mentor"];
+			if (allowedPositions.indexOf(req.user.current_team.position)  != -1) {
 				notfiy.sendMail({
 					from: "MorTeam Notification <notify@morteam.com>",
 					to: "rafezyfarbod@gmail.com",
@@ -128,21 +129,6 @@ module.exports = function(imports) {
 				res.end("fail");
 			} else {
 				next();
-			}
-		};
-
-		// can be used as middleware to check if user is a leader or admin
-		this.requireLeader = function(req, res, next) {
-			if (req.user.current_team.position == "admin" || req.user.current_team.position == "leader") {
-				next();
-			} else {
-				notify.sendMail({
-						from: "MorTeam Notification <notify@morteam.com>",
-						to: "rafezyfarbod@gmail.com",
-						subject: "MorTeam Security Alert!",
-						text: "The user " + req.user.firstname + " " + req.user.lastname + " tried to perform leader/administrator tasks. User ID: " + req.user._id
-				});
-				res.end("fail");
 			}
 		};
 
