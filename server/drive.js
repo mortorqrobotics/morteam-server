@@ -19,7 +19,7 @@ module.exports = function(imports) {
 
 	let router = express.Router();
 
-	router.get("/file/id/:fileId", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/files/id/:fileId", requireLogin, Promise.coroutine(function*(req, res) {
 		let userSubdivisionIds = util.activeSubdivisionIds(req.user.subdivisions);
 		try {
 

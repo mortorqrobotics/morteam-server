@@ -477,7 +477,7 @@ $(window).load(function() {
 					for (var i = 0; i < files.length; i++) {
 						var fileType = files[i].type;
 						if (files[i].type == "image") {
-							fileType = "/file/" + files[i]._id + "-preview";
+							fileType = "/files/id/" + files[i]._id + "-preview";
 						} else {
 							fileType = "images/"+files[i].type+'.png';
 						}
