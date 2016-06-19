@@ -1,4 +1,3 @@
-$(".networks_btn").addClass("active");
 function hideLeftbar(time, button) {
 	$(".leftbar").velocity({left: "-260px"}, { duration: time, queue: false });
 	$(button).removeClass("glyphicon-chevron-left").addClass("glyphicon-chevron-right");
@@ -84,6 +83,8 @@ sendAjax("GET", "/teams/current/number", function(number) {
 });
 
 $(document).on("click", ".teamNumLink", function() {
+
+    $(".networks_btn").addClass("active");
 	var $this = $(this);
 	var clickedTeamNum = $.trim($(this).html().substring(5, 9))
 	// TODO: this code looks just like the code above it...

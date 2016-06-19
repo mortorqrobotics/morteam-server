@@ -1,5 +1,4 @@
 var socket = io();
-$(".drive_btn").addClass("active");
 
 function removeDuplicates(arr) {
 	var seen = {};
@@ -217,6 +216,8 @@ function messageNotification(title, content, chatid) {
 };
 
 $(document).ready(function() {
+
+    $(".drive_btn").addClass("active");
 	document.body.appendChild(loadingDiv);
 	loadTeamFolders();
 

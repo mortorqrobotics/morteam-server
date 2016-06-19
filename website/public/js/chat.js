@@ -9,7 +9,6 @@ $(window).focus(function() {
 	window_is_focused = false;
 });
 
-$(".chat_btn").addClass("active");
 
 function messageNotification(title, content, chatid) {
 	var newMessageNotice = new jBox('Notice', {
@@ -128,6 +127,8 @@ function composeModal(title) {
 	return new_modal;
 }
 $(document).ready(function() {
+
+    $(".chat_btn").addClass("active");
 	document.body.appendChild(loadingDiv);
 
 	if (navigator.platform.indexOf("Mac") == -1) {
