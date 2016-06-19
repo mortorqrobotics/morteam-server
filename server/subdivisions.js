@@ -31,7 +31,9 @@ module.exports = function(imports) {
 				team: req.user.current_team.id
 			});
 
-			yield User.findByIdAndUpdate(req.user._id, {
+			yield User.findOneAndUpdate({
+				_id: req.user._id
+			}, {
 				"$push": {
 					"subdivisions": {
 						_id: subdivision._id,
@@ -52,13 +54,17 @@ module.exports = function(imports) {
 	router.post("/subdivisions/id/:subdivId/invitations/userId/:userId", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
-			let subdivision = yield Subdivision.findById(req.params.subdivId);
+			let subdivision = yield Subdivision.findOne({
+				_id: req.params.subdivId
+			});
 
 			if (!subdivision) {
 				return res.end("fail");
 			}
 
-			let invitedUser = yield User.findById(req.params.userId);
+			let invitedUser = yield User.findOne({
+				_id: req.params.userId
+			});
 
 			if (!invitedUser) {
 				return res.end("fail");
@@ -194,13 +200,17 @@ module.exports = function(imports) {
 	router.post("/subdivisions/public/id/:subdivId/join", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
-			let subdivision = yield Subdivision.findById(req.params.subdivId);
+			let subdivision = yield Subdivision.findOne({
+				_id: req.params.subdivId
+			});
 
 			if (subdivision.type != "public") {
 				return res.end("fail");
 			}
 
-			yield User.findByIdAndUpdate(req.user._id, {
+			yield User.findOneAndUpdate({
+				_id: req.user._id
+			}, {
 				"$pull": {
 					"subdivisions": {
 						_id: new ObjectId(subdivision._id),
@@ -210,7 +220,9 @@ module.exports = function(imports) {
 				}
 			});
 
-			yield User.findByIdAndUpdate(req.user._id, {
+			yield User.findOneAndUpdate({
+				_id: req.user._id
+			}, {
 				"$push": {
 					"subdivisions": {
 						_id: new ObjectId(subdivision._id),
@@ -248,7 +260,9 @@ module.exports = function(imports) {
 	router.post("/subdivisions/id/:subdivId/invitations/ignore", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
-			yield User.findByIdAndUpdate(req.user._id, {
+			yield User.findOneAndUpdate({
+				_id: req.user._id
+			}, {
 				"$pull": {
 					"subdivisions": {
 						_id: new ObjectId(req.params.subdivId),
@@ -268,7 +282,9 @@ module.exports = function(imports) {
 	router.post("/subdivisions/id/:subdivId/leave", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
-			yield User.findByIdAndUpdate(req.user._id, {
+			yield User.findOneAndUpdate({
+				_id: req.user._id
+			}, {
 				"$pull": {
 					"subdivisions": {
 						_id: new ObjectId(req.params.subdivId),

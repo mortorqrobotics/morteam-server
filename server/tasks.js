@@ -38,7 +38,9 @@ module.exports = function(imports) {
 
 			task = yield Task.create(task);
 
-			let recipient = yield User.findById(task.for);
+			let recipient = yield User.findOne({
+				_id: task.for
+			});
 
 			if (!user) {
 				return res.end("fail");
@@ -105,7 +107,9 @@ module.exports = function(imports) {
 
 		try {
 
-			yield Task.findByIdAndUpdate(req.params.taskId, {
+			yield Task.findOneAndUpdate({
+				_id: req.params.taskId
+			}, {
 				"$set": { completed: true }
 			});
 
