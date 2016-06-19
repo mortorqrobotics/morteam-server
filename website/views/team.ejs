@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+
+	<head>
+		<% include shared/metatags.ejs %>
+
+		<title>MorTeam</title>
+
+		<% include shared/cssimports.ejs %>
+
+		<% include shared/jsimports.ejs %>
+		<script type="text/javascript" src="/js/team.js"></script>
+
+	</head>
+	<body>
+
+		<% include shared/navbar.ejs %>
+
+		<!-- BODY -->
+		<div class="wide_body">
+			<div class="general_info">
+				<span class="team_head"><h1><%= teamName %><br/><h2>Team <%= teamNum %></h2></h1></span>
+			</div>
+			<div class="container-fluid">
+				<div class=" members_list row">
+					<% members.forEach(function(member) { %>
+						<div class="col-sm-6 col-md-4 col-lg-3">
+							<span data-userid="<%= member._id %>" class="user_display">
+								<img src="<%= member.profpicpath %>-60" onerror="this.src='/images/user.jpg'" id="small_prof_pic"></img>
+								<span class="user_link_display"><%= member.firstname %> <%= member.lastname %></span>
+								<% if (viewerIsAdmin) { %>
+									<span class="glyphicon glyphicon-trash delete_user "></span>
+								<% } %>
+							</span>
+						</div>
+					<% }); %>
+				</div>
+			</div>
+		</div>
+		<!-- END OF BODY -->
+
+		<% include shared/googleads.ejs %>
+
+	</body>
+</html>

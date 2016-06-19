@@ -1,23 +1,27 @@
 "use strict";
 
-module.exports = function(app, util, schemas) {
+module.exports = function(imports) {
 
-	let Autolinker = require( "autolinker" );
-	let ObjectId = require("mongoose").Types.ObjectId;
-	let Promise = require("bluebird");
+	let express = imports.modules.express;
+	let Autolinker = imports.modules.autolinker;
+	let ObjectId = imports.modules.mongoose.Types.ObjectId;
+	let Promise = imports.modules.Promise;
+	let util = imports.util;
 
 	let requireLogin = util.requireLogin;
 	let requireAdmin = util.requireAdmin;
 
-	let Announcement = schemas.Announcement;
-	let User = schemas.User;
+	let Announcement = imports.models.Announcement;
+	let User = imports.models.User;
 
-	app.post("/f/postAnnouncement", requireLogin, Promise.coroutine(function*(req, res) {
+	let router = express.Router();
+
+	router.post("/announcements", requireLogin, Promise.coroutine(function*(req, res) {
 
 		// attempt to convert audience request to JSON in case client does not explicitly send it as a JSON type
 		try {
 			req.body.audience = JSON.parse(req.body.audience);
-		}  catch(e) {}
+		}  catch (ex) {}
 
 		// add <a> tags to detected links
 		req.body.content = Autolinker.link(req.body.content);
@@ -33,6 +37,8 @@ module.exports = function(app, util, schemas) {
 			let users;
 
 			if (typeof(req.body.audience) == "object") { // this means user has selected "custom" audience
+				// TODO: seems like this should be reworked
+				// multiple parameters of different types instead of changing the type of one parameter
 	
 				announcement.subdivisionAudience = req.body.audience.subdivisionMembers;
 				announcement.userAudience = req.body.audience.userMembers;
@@ -42,7 +48,7 @@ module.exports = function(app, util, schemas) {
 					{ _id: { $in: req.body.audience.userMembers } },
 					// users that have a subdivision which has an _id that is in the audience.subdivisionMembers array
 					{ subdivisions: { $elemMatch: { "_id": { $in: req.body.audience.subdivisionMembers } } } }
-				] }, "-password").exec();
+				] }).exec();
 	
 			} else if (req.body.audience == "everyone") {
 	
@@ -51,8 +57,8 @@ module.exports = function(app, util, schemas) {
 	
 				// find all users in the current team
 				users = yield User.find({ teams: {
-					$elemMatch: {id: req.user.current_team.id }}
-				}, "-password").exec();
+					$elemMatch: { id: req.user.current_team.id } }
+				}).exec();
 			
 			} else { // this means that the user selected a specific subdivision to send the announcement to
 	
@@ -62,7 +68,7 @@ module.exports = function(app, util, schemas) {
 				// find users that have a subdivision which has an _id that is equal to req.body.audience(the subdivision _id)
 				users = yield User.find({
 						subdivisions: { $elemMatch: { _id: req.body.audience } }
-				}, "-password").exec();
+				}).exec();
 	
 			}
 	
@@ -71,8 +77,8 @@ module.exports = function(app, util, schemas) {
 		   	// send emails
 			if (req.user.current_team.position != "member") {
 	
-				// creates a string which is a list of recepients with the following format: "a@a.com, b@b.com, c@c.com"
-				let recipients = util.createRecepientList(users);
+				// creates a string which is a list of recipients with the following format: "a@a.com, b@b.com, c@c.com"
+				let recipients = util.createRecipientList(users);
 	
 				let info = yield util.sendEmail({
 					to: recipients,
@@ -89,7 +95,7 @@ module.exports = function(app, util, schemas) {
 		}
 	}));
 
-	app.post("/f/getAnnouncementsForUser", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/announcements", requireLogin, Promise.coroutine(function*(req, res) {
 		// creates an array of the _ids of the subdivisions that the user is a member of
 		let userSubdivisionIds = util.activeSubdivisionIds(req.user.subdivisions);
 
@@ -119,11 +125,11 @@ module.exports = function(app, util, schemas) {
 				subdivisionAudience: 1,
 				entireTeam: 1
 				// populate author and sort by timestamp, skip and limit are for pagination
-			}).populate("author", "-password")
+			}).populate("author")
 				.populate("userAudience")
 				.populate("subdivisionAudience")
 				.sort("-timestamp")
-				.skip(Number(req.body.skip))
+				.skip(Number(req.query.skip))
 				.limit(20)
 				.exec();
 
@@ -135,9 +141,9 @@ module.exports = function(app, util, schemas) {
 		}
 	}));
 
-	app.post("/f/deleteAnnouncement", requireLogin, Promise.coroutine(function*(req, res) {
+	router.delete("/announcements/id/:annId", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
-			let announcement = yield Announcement.findOne({_id: req.body._id}).exec();
+			let announcement = yield Announcement.findOne({ _id: req.params.annId });
 
 			// check if user is eligible to delete said announcement
 			if (req.user._id == announcement.author.toString() || req.user.current_team.position == "admin") {
@@ -157,5 +163,7 @@ module.exports = function(app, util, schemas) {
 			res.end("fail");
 		}
 	}));
+
+	return router;
 
 };

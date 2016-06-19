@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+
+<%
+	String.prototype.capitalize = function() { 
+		return this.charAt(0).toUpperCase() + this.slice(1); 
+	 }
+%>
+
+<html lang="en">
+
+	<head>
+		<% include shared/metatags.ejs %>
+
+		<title>MorTeam</title>
+
+		<% include shared/cssimports.ejs %>
+		<link href="/js/lib/jbox/themes/TooltipDark.css" rel="stylesheet">
+
+		<% include shared/jsimports.ejs %>
+		<script src="/js/lib/jquery.form.js"></script>
+		<script type="text/javascript" src="/js/user.js"></script>
+
+	</head>
+	<body>
+
+		<% include shared/navbar.ejs %>
+
+		<!-- BODY -->
+		<div class="wrapper container-fluid"> <!-- class="profother_wrapper" also -->
+			<!-- <div class="user_actions">
+				<div class="user_action_btns">
+					<input type="button" value="Message" class="message_user user_action button"></input>
+					<input type="button" value="Assign Task" class="assign_task_user user_action button"></input>
+					<input type="button" value="Change Position" class="change_position_user user_action button"></input>
+					<input type="button" value="View Attendance" class="view_attendance_user user_action button"></input>
+				</div>
+			</div> -->
+			<div class="row">
+				<div class="col-md-6">
+					<div class="attendance_data">
+						<span class="data_title bold">Attendance</span><br/>
+						<span class="data_point">Unexcused absences:</span><span id="absences_num" class="data_answer"></span><br/>
+						<span class="data_point">Presence percentage:</span><span id="presence_percent" class="data_answer"></span><br/>
+						<hr class="hr_small_margin">
+						<span class="data_point">Dates of unexcused absences:</span><br/>
+						<div class="absences_list_scroll">
+							<ul class="data_list absences_list">
+
+							</ul>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<div class="tasks_data">
+						<span class="data_title bold">Pending Tasks</span>
+						<ul class="task_list pending">
+
+						</ul>
+						<hr class="hr_small_margin">
+						<span class="data_title bold">Completed Tasks</span>
+						<ul class="task_list completed">
+
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- END OF BODY -->
+
+		<!-- LEFTBAR -->
+		<div class="leftbar">
+			<% if (profpicpath != "images/user.jpg") { %>
+				<img class="profile_pic" src="<%= profpicpath %>-300"></img>
+			<% } else { %>
+				<img class="profile_pic" src="/images/user.jpg"></img>
+			<% } %>
+			<div class="leftbar_item bold" id="leftbar_name"><%= firstname %> <%= lastname %></div>
+			<!-- <div class="leftbar_item" id="leftbar_title">Vice President of Programming</div> -->
+			<div class="leftbar_item"><span id="leftbar_email"><%= email %></span></div>
+			<div class="leftbar_item"><span id="leftbar_phone"><%= phone %></span></div>
+			<div class="leftbar_item"><input id="show_morscout_profile" type="button" class="button leftbar_btn" value="View MorScout Profile"></input></div>
+			<div class="others_only">
+			<% if (viewerUserId.toString() == _id.toString()) { %>
+				<div class="leftbar_item"><input id="edit_profile" type="button" class="button leftbar_btn" value="Edit Profile"></input></div>
+				<div class="leftbar_item"><input id="change_password" type="button" class="button leftbar_btn" value="Change Password"></input></div>
+				<!-- <div class="leftbar_item"><input id="message_user" type="button" class="button leader_action" value="Message"></input></div> -->
+			<% } else if (viewerUserPosition == "admin" || viewerUserPosition == "leader") { %>
+				<div class="leftbar_item"><input id="assign_task" type="button" class="button leader_action" value="Assign Task"></input></div>
+			<% } %>
+			</div>
+			<!-- <div class="leftbar_item"><input id="change_position" type="button" class="button leader_action" value="Change Position"></input></div> -->
+			<div class="change_position_div">
+				<div data-userid="<%= _id %>" class=" change_position_dropdown_btn btn-group">
+					<button class="button dropdown-toggle change_position" data-toggle="dropdown">
+						<span class="position_selection">
+							<%= viewedUserPosition.capitalize() %>
+						</span>
+						<span class="caret"></span>
+					</button>
+					<ul class="dropdown-menu position_drop">
+						<% if (viewerUserPosition == "admin") { %>
+							<li id="position_member" class="position_item">Member</li>
+							<li id="position_leader" class="position_item">Leader</li>
+							<li id="position_admin" class="position_item">Admin</li>
+						<% } else if (viewerUserPosition == "leader") { %>
+							<% if (viewedUserPosition == "admin") { %>
+								<script type="text/javascript">
+									$(".caret").hide();
+									$(".change_position").addClass("disabled");
+								</script>
+							<% } else { %>
+								<li id="position_member" class="position_item">Member</li>
+								<li id="position_leader" class="position_item">Leader</li>
+							<% } %>
+						<% } else if (viewerUserPosition == "member") { %>
+							<script type="text/javascript">
+								$(".caret").hide();
+								$(".change_position").addClass("disabled");
+							</script>
+						<% } %>
+						<% if (viewedUserPosition == "member") { %>
+							<script type="text/javascript">
+								$(".position_item:contains('Member')").addClass("selected");
+							</script>
+						<% } else if (viewedUserPosition == "leader") { %>
+							<script type="text/javascript">
+								$(".position_item:contains('Leader')").addClass("selected");
+							</script>
+						<% } else if (viewedUserPosition == "admin") { %>
+							<script type="text/javascript">
+								$(".position_item:contains('Admin')").addClass("selected");
+							</script>
+						<% } %>
+						<!-- TODO: REFACTOR ALL OF THE ABOVE CODE!!! -->
+
+					</ul>
+				</div>
+			</div>
+		</div>
+		<!-- END OF LEFTBAR -->
+
+		<% include shared/googleads.ejs %>
+
+	</body>
+</html>

@@ -1,65 +1,24 @@
 "use strict";
 
-module.exports = function(app, util, schemas) {
+module.exports = function(imports) {
 
-	let ObjectId = require("mongoose").Types.ObjectId;
-	let Promise = require("bluebird");
+	let express = imports.modules.express;
+	let Promise = imports.modules.Promise;
+	let util = imports.util;
+	let ObjectId = imports.modules.mongoose.Types.ObjectId;
 
 	let requireLogin = util.requireLogin;
 	let requireLeader = util.requireLeader;
 	let requireAdmin = util.requireAdmin;
 
-	let Subdivision = schemas.Subdivision;
-	let User = schemas.User;
-	let Event = schemas.Event;
-	let AttendanceHandler = schemas.AttendanceHandler;
+	let Subdivision = imports.models.Subdivision;
+	let User = imports.models.User;
+	let Event = imports.models.Event;
+	let AttendanceHandler = imports.models.AttendanceHandler;
 
-	app.get("/s/:id", Promise.coroutine(function*(req, res) {
-		try {
+	let router = express.Router();
 
-			let subdivision = yield Subdivision.findOne({
-				_id: req.params.id,
-				team: req.user.current_team.id
-			});
-
-			if (!subdivision) {
-				return util.subdivisionNotFound(res);
-			}
-
-			let users = yield User.find({
-				subdivisions: {
-					$elemMatch: {
-						_id: subdivision._id, // TODO: maybe add toString
-						accepted: true
-					}
-				}
-			});
-
-			let isMember = users.some(user => user._id.toString() == req.user._id.toString());
-
-			if (subdivision.type == "public"
-					|| (subdivision.type == "private" && isMember)) {
-
-				return res.render("subdivision", {
-					name: subdivision.name,
-					type: subdivision.type,
-					team: subdivision.team, // TODO: POSSIBLY CHANGE TO subdivision.team._id
-					admin: req.user.current_team.position == "admin",
-					joined: isMember,
-					members: users,
-					current_user_id: req.user._id
-				});
-
-			} else {
-				res.end("nothing to see here.");
-			}
-
-		} catch (err) {
-			util.send404();
-		}
-	}));
-
-	app.post("/f/createSubdivision", requireLogin, requireLeader, Promise.coroutine(function*(req, res) {
+	router.post("/subdivisions", requireLogin, requireLeader, Promise.coroutine(function*(req, res) {
 
 		if (req.body.name.length >= 22) {
 			return res.end("fail");
@@ -73,14 +32,14 @@ module.exports = function(app, util, schemas) {
 				team: req.user.current_team.id
 			});
 
-			yield User.update({
-				_id: req.user._id
-			}, {
-				"$push": {"subdivisions": {
+			yield User.findByIdAndUpdate(req.user._id, {
+				"$push": {
+					"subdivisions": {
 						_id: subdivision._id,
 						team: req.user.current_team.id,
 						accepted: true
-				}}
+					}
+				}
 			});
 
 			res.end(subdivision._id.toString());
@@ -91,36 +50,32 @@ module.exports = function(app, util, schemas) {
 		}
 	}));
 
-	app.post("/f/inviteToSubdivision", requireLogin, Promise.coroutine(function*(req, res) {
+	router.post("/subdivisions/id/:subdivId/invitations/userId/:userId", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
-			let subdivision = yield Subdivision.findOne({
-				_id: req.body.subdivision_id
-			});
+			let subdivision = yield Subdivision.findById(req.params.subdivId);
 
 			if (!subdivision) {
 				return res.end("fail");
 			}
 
-			let user = yield User.findOne({
-				_id: req.body.user_id
-			});
+			let invitedUser = yield User.findById(req.params.userId);
 
-			if (!user) {
+			if (!invitedUser) {
 				return res.end("fail");
 			}
 
-			if (user.subdivisions.some(sub => sub._id ==  req.body.subdivision_id)) {
+			if (invitedUser.subdivisions.some(sub => sub._id == subdivision._id)) {
 				return res.end("already invited");
 			}
 
-			user.subdivisions.push({
-				_id: new ObjectId(req.body.subdivision_id),
+			invitedUser.subdivisions.push({
+				id: new ObjectId(subdivision._id),
 				team: req.user.current_team.id,
 				accepted: false
 			});
 
-			yield user.save();
+			yield invitedUser.save();
 
 			res.end("success");
 
@@ -130,7 +85,7 @@ module.exports = function(app, util, schemas) {
 		}
 	}));
 
-	app.post("/f/getPublicSubdivisions", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/subdivisions/public", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
 			let subdivisions = yield Subdivision.find({
@@ -138,10 +93,10 @@ module.exports = function(app, util, schemas) {
 				type: "public"
 			});
 
-			if (subdivisions) {
-				res.end(JSON.stringify(subdivisions));
+			if (subdivisions) { // TODO: is this check necessary?
+				res.json(subdivisions);
 			} else {
-				res.end("[]");
+				res.json([]);
 			}
 
 		} catch (err) {
@@ -150,15 +105,14 @@ module.exports = function(app, util, schemas) {
 		}
 	}));
 
-	app.post("/f/getAllSubdivisionsForUserInTeam", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/subdivisions/joined", requireLogin, Promise.coroutine(function*(req, res) {
+		// get all subdivisions that user making the request is a member of
 
-		let userSubdivisionIds = req.user.subdivisions
-			.filter(subdivision => subdivision.accepted && subdivision.team == req.user.current_team.id)
-			.map(subdivision => subdivision._id);
+		let userSubdivisionIds = util.activeSubdivisionIds(req.user.subdivisions);
 
 		try {
 
-			let subdivisions = yield Subdivision.find({
+			let subdivisions = yield Subdivision.find({ // TODO: is the team check necessary here?
 				_id: { "$in": userSubdivisionIds },
 				team: req.user.current_team.id
 			});
@@ -167,10 +121,10 @@ module.exports = function(app, util, schemas) {
 				return res.end("fail");
 			}
 
-			res.end(JSON.stringify(subdivisions.map(subdivision => ({
+			res.json(subdivisions.map(subdivision => ({
 				name: subdivision.name,
 				_id: subdivision._id
-			}))));
+			})));
 
 		} catch (err) {
 			console.error(err);
@@ -179,14 +133,14 @@ module.exports = function(app, util, schemas) {
 
 	}));
 
-	app.post("/f/loadSubdivisionInvitations", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/subdivisions/invitations", requireLogin, Promise.coroutine(function*(req, res) {
 
 		if (req.user.subdivisions.length == 0) {
-			return res.end("[]");
+			return res.json([]);
 		}
 
 		let invitedSubdivisions = req.user.subdivisions
-			.filter(subdivision => !subdivision.accepted && subdivision.team == req.user.current_team.id)
+			.filter(subdivision => !subdivision.accepted)
 			.map(subdivision => subdivision._id);
 
 		try {
@@ -196,8 +150,8 @@ module.exports = function(app, util, schemas) {
 				team: req.user.current_team.id
 			});
 
-			if (subdivisions) {
-				res.end(JSON.stringify(subdivisions));
+			if (subdivisions) { // TODO: is the check necessary here?
+				res.json(subdivisions);
 			} else {
 				res.end("fail");
 			}
@@ -208,22 +162,22 @@ module.exports = function(app, util, schemas) {
 		}
 	}));
 
-	app.post("/f/acceptSubdivisionInvitation", requireLogin, Promise.coroutine(function*(req, res) {
+	router.put("/subdivisions/id/:subdivId/invitations/accept", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
 			yield User.update({
 				_id: req.user._id,
-				"subdivisions._id": new ObjectId(req.body.subdivision_id)
-			}, {"$set": {
+				"subdivisions._id": new ObjectId(req.params.subdivId)
+			}, { "$set": {
 				"subdivisions.$.accepted": true
 			}});
 
-			let events = yield Event.find({ subdivisionAttendees: req.body.subdivision_id });
+			let events = yield Event.find({ subdivisionAttendees: req.params.subdivId });
 
 			yield Promise.all(events.map(event => AttendanceHandler.update({
 				event: event._id,
-				event_date: {"$gt": new Date()}
-			}, {"$push": {
+				event_date: { "$gt": new Date() }
+			}, { "$push": {
 				attendees: {
 					user: req.user._id,
 					status: "absent"
@@ -238,42 +192,50 @@ module.exports = function(app, util, schemas) {
 		}
 	}));
 
-	app.post("/f/joinPublicSubdivision", requireLogin, Promise.coroutine(function*(req, res) {
+	router.post("/subdivisions/public/id/:subdivId/join", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
-			let subdivision = yield Subdivision.findOne({_id: req.body.subdivision_id});
+			let subdivision = yield Subdivision.findById(req.params.subdivId);
 
 			if (subdivision.type != "public") {
 				return res.end("fail");
 			}
 
-			yield User.update({_id: req.user._id}, {"$pull": {
-				"subdivisions": {
-					_id: new ObjectId(req.body.subdivision_id),
-					team: req.user.current_team.id,
-					accepted: false
+			yield User.findByIdAndUpdate(req.user._id, {
+				"$pull": {
+					"subdivisions": {
+						_id: new ObjectId(subdivision._id),
+						team: req.user.current_team.id,
+						accepted: false
+					}
 				}
-			}});
+			});
 
-			yield User.update({_id: req.user._id}, {"$push": {
-				"subdivisions": {
-					_id: new ObjectId(req.body.subdivision_id),
-					team: req.user.current_team.id,
-					accepted: true
+			yield User.findByIdAndUpdate(req.user._id, {
+				"$push": {
+					"subdivisions": {
+						_id: new ObjectId(subdivision._id),
+						team: req.user.current_team.id,
+						accepted: true
+					}
 				}
-			}});
+			});
 
-			let events = yield Event.find({subdivisionAttendees: req.body.subdivision_id});
+			let events = yield Event.find({
+				subdivisionAttendees: subdivision._id
+			});
 
 			yield Promise.all(events.map(event => AttendanceHandler.update({
 				event: event._id,
-				event_date: {"$gt": new Date()}
-			}, {"$push": {
-				attendees: {
-					user: req.user._id,
-					status: "absent"
+				event_date: { "$gt": new Date() }
+			}, {
+				"$push": {
+					attendees: {
+						user: req.user._id,
+						status: "absent"
+					}
 				}
-			}})));
+			})));
 
 			res.end("success");
 
@@ -284,15 +246,17 @@ module.exports = function(app, util, schemas) {
 
 	}));
 
-	app.post("/f/ignoreSubdivisionInvite", requireLogin, Promise.coroutine(function*(req, res) {
+	router.post("/subdivisions/id/:subdivId/invitations/ignore", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
-			yield User.update({_id: req.user._id}, {"$pull": {
-				"subdivisions": {
-					_id: new ObjectId(req.body.subdivision_id),
-					team: req.user.current_team.id
+			yield User.findByIdAndUpdate(req.user._id, {
+				"$pull": {
+					"subdivisions": {
+						_id: new ObjectId(req.params.subdivId),
+						team: req.user.current_team.id
+					}
 				}
-			}});
+			});
 
 			res.end("success");
 
@@ -302,25 +266,31 @@ module.exports = function(app, util, schemas) {
 		}
 	}));
 
-	app.post("/f/leaveSubdivision", requireLogin, Promise.coroutine(function*(req, res) {
+	router.post("/subdivisions/id/:subdivId/leave", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
-			yield User.update({_id: req.user._id}, {"$pull": {
-				"subdivisions": {
-					_id: new ObjectId(req.body.subdivision_id),
-				 	team: req.user.current_team.id
+			yield User.findByIdAndUpdate(req.user._id, {
+				"$pull": {
+					"subdivisions": {
+						_id: new ObjectId(req.params.subdivId),
+						team: req.user.current_team.id
+					}
 				}
-			}});
+			});
 
-			let events = yield Event.find({ subdivisionAttendees: req.body.subdivision_id });
+			let events = yield Event.find({
+				subdivisionAttendees: req.params.subdivId
+			});
 
 			yield Promise.all(events.map(event => AttendanceHandler.update({
 				event: event
-			}, {"$pull": {
-				attendees: {
-					user: req.user._id
+			}, {
+				"$pull": {
+					attendees: {
+						user: req.user._id
+					}
 				}
-			}})));
+			})));
 
 			res.end("success");
 
@@ -330,28 +300,24 @@ module.exports = function(app, util, schemas) {
 		}
 	}));
 
-	app.post("/f/deleteSubdivision", requireLogin, requireAdmin, Promise.coroutine(function*(req, res) {
+	router.delete("/subdivisions/id/:subdivId", requireLogin, requireAdmin, Promise.coroutine(function*(req, res) {
 		try {
 
-			let user = User.findOne({_id: req.user._id});
-
-			if (!user) {
-				return res.end("fail");
-			}
-
 			yield Subdivision.findOneAndRemove({
-				_id: new ObjectId(req.body.subdivision_id),
+				_id: new ObjectId(req.params.subdivId),
 				team: req.user.current_team.id
 			});
 
 			yield User.update({
-				teams: {$elemMatch: {id: req.user.current_team.id}}
-			}, {"$pull": {
-				"subdivisions": {
-					_id: new ObjectId(req.body.subdivision_id),
-					team: req.user.current_team.id
+				teams: { $elemMatch: { id: req.user.current_team.id } }
+			}, {
+				"$pull": {
+					"subdivisions": {
+						_id: new ObjectId(req.params.subdivId),
+						team: req.user.current_team.id
+					}
 				}
-			}});
+			});
 
 			res.end("success");
 
@@ -361,29 +327,36 @@ module.exports = function(app, util, schemas) {
 		}
 	}));
 
-	app.post("/f/removeUserFromSubdivision", requireLogin, requireAdmin, Promise.coroutine(function*(req, res) {
+	router.delete("/subdivisions/id/:subdivId/users/id/:userId", requireLogin, requireAdmin, Promise.coroutine(function*(req, res) {
 		try {
 
 			yield User.update({
-				_id: req.body.user_id,
+				_id: req.params.userId,
 				teams: { $elemMatch: { "id": req.user.current_team.id } }
-			}, { "$pull": { // TODO: maybe add new objectid
-				"subdivisions" : {
-					_id: new ObjectId(req.body.subdivision_id),
-					team: req.user.current_team.id,
-					accepted: true
+			}, {
+				"$pull": { // TODO: maybe add new objectid
+					"subdivisions" : {
+						_id: new ObjectId(req.params.subdivId),
+						team: req.user.current_team.id,
+						accepted: true
+					}
 				}
-			}});
+			});
 
-			let events = yield Event.find({ subdivisionAttendees: req.body.subdivision_id });
+			let events = yield Event.find({
+				subdivisionAttendees: req.body.subdivision_id
+			});
 
+			// TODO: this seems to be repeated a lot
 			yield Promise.all(events.map(event => AttendanceHandler.update({
 				event: event._id
-			}, {"$pull": {
-				"attendees":  {
-					user: req.body.use_id
+			}, {
+				"$pull": {
+					"attendees":  {
+						user: req.body.use_id
+					}
 				}
-			}})));
+			})));
 
 			res.end("success");
 
@@ -393,19 +366,21 @@ module.exports = function(app, util, schemas) {
 		}
 	}));
 
-	app.post("/f/getUsersInSubdivision", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/subdivisions/id/:subdivId/users", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
 			let users = User.find({
-				subdivisions: { $elemMatch: { _id: req.body.subdivision_id, accepted: true } }
+				subdivisions: { $elemMatch: { _id: req.params.subdivId,  accepted: true } }
 			});
 
-			res.end(JSON.stringify(users));
+			res.json(users);
 
 		} catch (err) {
 			console.error(err);
 			res.end("fail");
 		}
 	}));
+
+	return router;
 
 };

@@ -1,24 +1,31 @@
 "use strict";
 
-module.exports = function(app, util, schemas) {
+module.exports = function(imports) {
 
-	let ObjectId = require("mongoose").Types.ObjectId;
-	let Promise = require("bluebird");
+	let express = imports.modules.express;
+	let ObjectId = imports.modules.mongoose.Types.ObjectId;
+	let Promise = imports.modules.Promise;
+	let util = imports.util;
 
 	let requireLogin = util.requireLogin;
 	let requireLeader = util.requireLeader;
 	let requireAdmin = util.requireAdmin;
 
-	let User = schemas.User;
-	let Event = schemas.Event;
-	let AttendanceHandler = schemas.AttendanceHandler;
+	let User = imports.models.User;
+	let Event = imports.models.Event;
+	let AttendanceHandler = imports.models.AttendanceHandler;
 
-	app.post("/f/getEventsForUserInTeamInMonth", requireLogin, Promise.coroutine(function*(req, res) {
+	let router = express.Router();
+
+	router.get("/events/year/:year/month/:month", requireLogin, Promise.coroutine(function*(req, res) {
 		let userSubdivisionIds = util.activeSubdivisionIds(req.user.subdivisions);
 
-		let numberOfDays = new Date(req.body.year, req.body.month, 0).getDate(); // month is 1 based
-		let start = new Date(req.body.year, req.body.month - 1, 1, 0, 0, 0); // month is 0 based
-		let end = new Date(req.body.year, req.body.month - 1, numberOfDays, 23, 59, 59); // month is 0 based
+		let year = req.params.year;
+		let month = req.params.month;
+
+		let numberOfDays = new Date(year, month, 0).getDate(); // month is 1 based
+		let start = new Date(year, month - 1, 1, 0, 0, 0); // month is 0 based
+		let end = new Date(year, month - 1, numberOfDays, 23, 59, 59); // month is 0 based
 
 		try {
 
@@ -40,7 +47,7 @@ module.exports = function(app, util, schemas) {
 		}
 	}));
 
-	app.post("/f/getUpcomingEventsForUser", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/events/upcoming", requireLogin, Promise.coroutine(function*(req, res) {
 		let userSubdivisionIds = util.activeSubdivisionIds(req.user.subdivisions);
 
 		try {
@@ -54,8 +61,8 @@ module.exports = function(app, util, schemas) {
 				],
 				date: {$gte: new Date()}
 			}).sort("date").exec();
-
-			res.end( JSON.stringify(events) );
+			
+			res.json(events);
 
 		} catch (err) {
 			console.error(err);
@@ -63,7 +70,7 @@ module.exports = function(app, util, schemas) {
 		}
 	}));
 
-	app.post("/f/createEvent", requireLogin, requireLeader, Promise.coroutine(function*(req, res) {
+	router.post("/events", requireLogin, requireLeader, Promise.coroutine(function*(req, res) {
 
 		req.body.userAttendees = req.body.userAttendees || [];
 		req.body.subdivisionAttendees = req.body.subdivisionAttendees || [];
@@ -93,8 +100,8 @@ module.exports = function(app, util, schemas) {
 				event.entireTeam = true;
 
 				users = yield User.find({
-					teams: {$elemMatch: {id: req.user.current_team.id}}
-				}, "-password");
+					teams: { $elemMatch: { id: req.user.current_team.id } }
+				});
 
 			} else {
 
@@ -136,8 +143,8 @@ module.exports = function(app, util, schemas) {
 					entireTeam: req.body.entireTeam
 				});
 			}
-
-			res.end(JSON.stringify(event));
+		
+			res.json(event);
 
 		} catch (err) {
 			console.error(err);
@@ -145,12 +152,44 @@ module.exports = function(app, util, schemas) {
 		}
 	}));
 
-	app.post("/f/deleteEvent", requireLogin, requireLeader, Promise.coroutine(function*(req, res) {
+	router.delete("/events/id/:eventId", requireLogin, requireLeader, Promise.coroutine(function*(req, res) {
 		try {
 
-			yield Event.findOneAndRemove({_id: req.body.event_id});
+			yield Event.findOneAndRemove({_id: req.params.eventId});
+			
+			yield AttendanceHandler.findOneAndRemove({event: req.params.eventId});
+			
+			res.end("success");
 
-			yield AttendanceHandler.findOneAndRemove({event: req.body.event_id});
+		} catch (err) {
+			console.error(err);
+			res.end("fail");
+		}
+	}));
+
+	router.get("/events/id/:eventId/attendees", requireLogin, requireLeader, Promise.coroutine(function*(req, res) {
+		try {
+
+			let handler = yield AttendanceHandler.findOne({
+				event: req.params.eventId
+			}).populate("attendees.user").exec();
+			
+			res.json(handler.attendees);
+
+		} catch (err) {
+			console.error(err);
+			res.end("fail");
+		}
+	}));
+
+	router.put("/events/id/:eventId/attendance", requireLogin, requireLeader, Promise.coroutine(function*(req, res) {
+		try {
+
+			yield AttendanceHandler.update({
+				event: req.params.eventId
+			}, {
+				"$set": { attendees: req.body.updatedAttendees }
+			});
 
 			res.end("success");
 
@@ -160,28 +199,17 @@ module.exports = function(app, util, schemas) {
 		}
 	}));
 
-	app.post("/f/getEventAttendees", requireLogin, requireLeader, Promise.coroutine(function*(req, res) {
-		try {
-
-			let handler = yield AttendanceHandler.findOne({event: req.body.event_id}).populate("attendees.user").exec();
-
-			res.end(JSON.stringify(handler.attendees));
-
-		} catch (err) {
-			console.error(err);
-			res.end("fail");
-		}
-	}));
-
-	app.post("/f/updateAttendanceForEvent", requireLogin, requireLeader, Promise.coroutine(function*(req, res) {
+	// TODO: rename this route?
+	router.put("/events/id/:eventId/users/:userId/excuseAbsence", requireLogin, requireLeader, Promise.coroutine(function*(req, res) {
 		try {
 
 			yield AttendanceHandler.update({
-				event: req.body.event_id
+				event : req.params.eventId,
+				"attendees.user": req.body.user_id
 			}, {
-				"$set": {attendees: req.body.updatedAttendees}
+				"$set": {"attendees.$.status": "excused"}
 			});
-
+			
 			res.end("success");
 
 		} catch (err) {
@@ -205,20 +233,30 @@ module.exports = function(app, util, schemas) {
 				}
 			}
 		}
-		return {present: present, absences: absences};
+		return { present: present, absences: absences };
 	}
 
-	app.post("/f/getUserAbsences", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/users/id/:userId/absences", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
+			let dateConstraints = {};
+			if (req.query.startDate) {
+				dateConstraints.$gte = new Date(req.query.startDate);
+			}
+			if (req.query.endDate) {
+				dateConstraints.$lte = new Date(req.query.endDate);
+			} else {
+				dateConstraints.$lte = new Date();
+			}
+
 			let handlers = yield AttendanceHandler.find({
-				event_date: { "$lte": new Date() },
+				event_date: dateConstraints,
 				"attendees.user": req.body.user_id
 			}).populate("event").exec();
 
 			let result = getPresencesAbsences(handlers, req.body.user_id);
 
-			res.end(JSON.stringify(result));
+			res.json(result);
 
 		} catch (err) {
 			console.error(err);
@@ -226,53 +264,6 @@ module.exports = function(app, util, schemas) {
 		}
 	}));
 
-	app.post("/f/getUserAbsencesBetweenDates", requireLogin, Promise.coroutine(function*(req, res) {
-
-		let startDate = new Date(req.body.startDate);
-		let endDate = new Date(req.body.endDate);
-		let userId = req.body.userId;
-
-		let currentDate = Date.now();
-		if (currentDate < endDate.getTime()) {
-			endDate = new Date(currentDate);
-		}
-
-		try {
-
-			let handlers = yield AttendanceHandler.find({
-				event_date: {
-					"$gte": startDate,
-					"$lte": endDate
-				},
-				"attendees.user": userId
-			}).populate("event").exec();
-
-			let result = getPresencesAbsences(handlers, userId);
-
-			res.end(JSON.stringify(result));
-
-		} catch (err) {
-			console.error(err);
-			res.end("fail");
-		}
-	}));
-
-	app.post("/f/excuseAbsence", requireLogin, requireLeader, Promise.coroutine(function*(req, res) {
-		try {
-
-			yield AttendanceHandler.update({
-				event : req.body.event_id,
-				"attendees.user": req.body.user_id
-			}, {
-				"$set": {"attendees.$.status": "excused"}
-			});
-
-			res.end("success");
-
-		} catch (err) {
-			console.error(err);
-			res.end("fail");
-		}
-	}));
+	return router;
 
 };

@@ -1,18 +1,23 @@
 "use strict";
 
-module.exports = function(app, util, schemas) {
+module.exports = function(imports) {
 
-	let ObjectId = require("mongoose").Types.ObjectId;
-	let Promise = require("bluebird");
+	let express = imports.modules.express;
+	let ObjectId = imports.modules.mongoose.Types.ObjectId;
+	let Promise = imports.modules.Promise;
+	let util = imports.util;
 
 	let requireLogin = util.requireLogin;
 	let requireAdmin = util.requireAdmin;
 
-	let Chat = schemas.Chat;
-	let User = schemas.User;
-	let Subdivision = schemas.Subdivision;
+	let Chat = imports.models.Chat;
+	let User = imports.models.User;
+	let Subdivision = imports.models.Subdivision;
 
-	app.post("/f/createChat", requireLogin, Promise.coroutine(function*(req, res) {
+	let router = express.Router();
+
+	// TODO: separate this into separate requests for group and private chats
+	router.post("/chats", requireLogin, Promise.coroutine(function*(req, res) {
 
 		let subdivisionMembers = req.body.subdivisionMembers || [];
 		let userMembers = req.body.userMembers || [];
@@ -43,13 +48,13 @@ module.exports = function(app, util, schemas) {
 				let user2_id = util.getUserOtherThanSelf(chat.userMembers, req.user._id.toString());
 				let user = yield User.findOne({_id: user2_id});
 
-				res.end(JSON.stringify({
+				res.json({
 					_id: user._id,
 					fn: user.firstname,
 					ln: user.lastname,
 					profpicpath: user.profpicpath,
 					chat_id: chat._id
-				}));
+				});
 
 			} else {
 				// group chat
@@ -66,7 +71,7 @@ module.exports = function(app, util, schemas) {
 					group: true
 				});
 
-				res.end(JSON.stringify(chat));
+				res.json(chat);
 			}
 		} catch (err) {
 			console.error(err);
@@ -74,7 +79,7 @@ module.exports = function(app, util, schemas) {
 		}
 	}));
 
-	app.post("/f/getChatsForUser", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/chats", requireLogin, Promise.coroutine(function*(req, res) {
 		// get an array of _ids of subdivisions of which the user is a member. (dat proper grammar doe)
 		let userSubdivisionIds = util.activeSubdivisionIds(req.user.subdivisions);
 
@@ -100,32 +105,33 @@ module.exports = function(app, util, schemas) {
 				subdivisionMembers: 1,
 				updated_at: 1
 			}).slice("messages", [0, 1])
-				.populate("userMembers subdivisionMembers", "-password")
+				.populate("userMembers subdivisionMembers")
 				.sort("-updated_at")
 				.exec();
 			// ^ the code above gets the latest message from the chat (for previews in iOS and Android) and orders the list by most recent.
 
-			res.end(JSON.stringify(chats));
+			res.json(chats);
+
 		} catch (err) {
 			console.error(err);
 			res.end("fail");
 		}
 	}));
 
-	app.post("/f/loadMessagesForChat", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/chats/id/:chatId/messages", requireLogin, Promise.coroutine(function*(req, res) {
 		// TODO: maybe in the future combine this with getUsersInChat to improve performance
-
-		let skip = parseInt(req.body.skip);
 
 		try {
 
+			let skip = parseInt(req.query.skip);
+
 			// loads 20 messages after skip many messages. example: if skip is 0, it loads messages 0-19, if it"s 20, loads 20-39, etc.
-			let chat = yield Chat.findOne({_id: req.body.chat_id})
+			let chat = yield Chat.findOne({ _id: req.params.chatId })
 				.slice("messages", [skip, 20])
 				.populate("messages.author")
 				.exec();
 
-			res.end(JSON.stringify(chat.messages));
+			res.json(chat.messages);
 
 		} catch (err) {
 			console.error(err);
@@ -133,11 +139,13 @@ module.exports = function(app, util, schemas) {
 		}
 	}));
 
-	app.post("/f/getUsersInChat", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/chat/id/:chatId/users", requireLogin, Promise.coroutine(function*(req, res) {
+		// user members only, not subdivision members
+
 		try {
 
 			let chat = yield Chat.findOne({
-				_id: req.body.chat_id
+				_id: req.params.chatId
 			}, {
 				userMembers: 1,
 				subdivisionMembers: 1
@@ -153,7 +161,7 @@ module.exports = function(app, util, schemas) {
 				]
 			});
 
-			res.end(JSON.stringify(users));
+			res.json(users);
 
 		} catch (err) {
 			console.error(err);
@@ -161,27 +169,29 @@ module.exports = function(app, util, schemas) {
 		}
 	}));
 
-	app.post("/f/getMembersOfChat", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/chat/id/:chatId/allMembers", requireLogin, Promise.coroutine(function*(req, res) {
+		// both user members and subdivision members
+
 		try {
 
 			let chat = yield Chat.findOne({
-				_id: req.body.chat_id
+				_id: req.params.chatId
 			}, {
 				userMembers: 1,
 				subdivisionMembers: 1,
 				group: 1
 			});
 
-			let userMembers = yield User.find({_id: { "$in": chat.userMembers }}, "-password");
-			let subdivisionMembers = yield Subdivision.find({_id: { "$in": chat.subdivisionMembers }});
+			let userMembers = yield User.find({ _id: { "$in": chat.userMembers } });
+			let subdivisionMembers = yield Subdivision.find({_id: { "$in": chat.subdivisionMembers } });
 
-			res.end(JSON.stringify({
+			res.json({
 				members: {
 					userMembers: userMembers,
 					subdivisionMembers: subdivisionMembers
 				},
 				group: chat.group
-			}));
+			});
 
 		} catch (err) {
 			console.error(err);
@@ -189,7 +199,7 @@ module.exports = function(app, util, schemas) {
 		}
 	}));
 
-	app.post("/f/changeGroupName", requireLogin, Promise.coroutine(function*(req, res) {
+	router.put("/chats/group/id/:chatId/name", requireLogin, Promise.coroutine(function*(req, res) {
 
 		if (req.body.newName.length >= 20) {
 			return res.end("Name has to be 19 characters or fewer.");
@@ -211,10 +221,10 @@ module.exports = function(app, util, schemas) {
 		}
 	}));
 
-	app.post("/f/deleteChat", requireAdmin, Promise.coroutine(function*(req, res) {
+	router.delete("/chats/id/:chatId", requireAdmin, Promise.coroutine(function*(req, res) {
 		try {
 
-			yield Chat.findOneAndRemove({_id: req.body.chat_id});
+			yield Chat.findOneAndRemove({ _id: req.params.chatId });
 
 			return res.end("success");
 
@@ -224,10 +234,10 @@ module.exports = function(app, util, schemas) {
 		}
 	}));
 
-	app.post("/f/sendMessage", requireLogin, Promise.coroutine(function*(req, res) {
+	router.post("/chats/id/:chatId/messages", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 			
-			yield Chat.update({_id: req.body.chat_id}, {
+			yield Chat.update({ _id: req.params.chatId }, {
 				"$push": {
 					"messages": {
 						"$each": [ {
@@ -248,5 +258,7 @@ module.exports = function(app, util, schemas) {
 			res.end("fail");
 		}
 	}));
+
+	return router;
 
 };

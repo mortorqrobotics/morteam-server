@@ -1,21 +1,25 @@
 "use strict";
 
-module.exports = function(app, util, schemas) {
+module.exports = function(imports) {
 
-	let ObjectId = require("mongoose").Types.ObjectId;
-	let multer = require("multer");
+	let express = imports.modules.express;
+	let ObjectId = imports.modules.mongoose.Types.ObjectId;
+	let multer = imports.modules.multer;
 	let extToMime = require("./extToMime.json");
-	let lwip = require("lwip");
-	let Promise = require("bluebird");
+	let lwip = imports.modules.lwip;
+	let Promise = imports.modules.Promise;
 	let https = require("https");
+	let util = imports.util;
 
 	let requireLogin = util.requireLogin;
 	let requireAdmin = util.requireAdmin;
 
-	let Folder = schemas.Folder;
-	let File = schemas.File;
+	let Folder = imports.models.Folder;
+	let File = imports.models.File;
 
-	app.get("/file/:fileId", requireLogin, Promise.coroutine(function*(req, res) {
+	let router = express.Router();
+
+	router.get("/file/id/:fileId", requireLogin, Promise.coroutine(function*(req, res) {
 		let userSubdivisionIds = util.activeSubdivisionIds(req.user.subdivisions);
 		try {
 
@@ -36,7 +40,7 @@ module.exports = function(app, util, schemas) {
 			}
 
 			let url = yield util.driveBucket.getSignedUrlAsync("getObject", { Key: req.params.fileId, Expires: 60 });
-			// res.redirect(url);
+			// res.redirect(url); do not use this
 			// this caused a security flaw
 			// the S3 key was included in the url and sent to the user
 			https.get(url, function(response) {
@@ -49,7 +53,7 @@ module.exports = function(app, util, schemas) {
 		}
 	}));
 
-	app.post("/f/getTeamFolders", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/folders/team", requireLogin, Promise.coroutine(function*(req, res) {
 		let userSubdivisionIds = util.activeSubdivisionIds(req.user.subdivisions);
 		try {
 
@@ -63,7 +67,7 @@ module.exports = function(app, util, schemas) {
 				]
 			});
 
-			res.end(JSON.stringify(folders));
+			res.json(folders);
 
 		} catch (err) {
 			console.error(err);
@@ -71,20 +75,20 @@ module.exports = function(app, util, schemas) {
 		}
 	}));
 
-	app.post("/f/getSubFolders", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/folders/id/:folderId/subfolders", requireLogin, Promise.coroutine(function*(req, res) {
 		let userSubdivisionIds = util.activeSubdivisionIds(req.user.subdivisions);
 		try {
 
 			let folders = yield Folder.find({
 				team: req.user.current_team.id,
-				parentFolder: req.body.folder_id, $or: [
+				parentFolder: req.params.folderId, $or: [
 					{entireTeam: true},
 					{userMembers: req.user._id},
 					{subdivisionMembers: {"$in": userSubdivisionIds} }
 				]
 			});
 
-			res.end(JSON.stringify(folders));
+			res.json(folders);
 
 		} catch (err) {
 			console.error(err);
@@ -92,12 +96,12 @@ module.exports = function(app, util, schemas) {
 		}
 	}));
 
-	app.post("/f/getFilesInFolder", requireLogin, Promise.coroutine(function*(req, res) {
+	router.get("/folders/id/:folderId/files", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
-			let files = yield File.find({folder: req.body.folder_id});
+			let files = yield File.find({ folder: req.params.folderId });
 
-			res.end(JSON.stringify(files));
+			res.json(files);
 
 		} catch (err) {
 			console.error(err);
@@ -105,7 +109,7 @@ module.exports = function(app, util, schemas) {
 		}
 	}));
 
-	app.post("/f/createFolder", requireLogin, Promise.coroutine(function*(req, res) {
+	router.post("/folders", requireLogin, Promise.coroutine(function*(req, res) {
 
 		if (req.body.name.length >= 22) {
 			return res.end("fail");
@@ -118,7 +122,7 @@ module.exports = function(app, util, schemas) {
 		try {
 
 			let folder = {
-				name: req.body.name,
+				name: util.normalizeDisplayedText(req.body.name),
 				team: req.user.current_team.id,
 				userMembers: req.body.userMembers,
 				subdivisionMembers: req.body.subdivisionMembers,
@@ -136,7 +140,7 @@ module.exports = function(app, util, schemas) {
 
 			folder = yield Folder.create(folder);
 
-			res.end(JSON.stringify(folder));
+			res.json(folder);
 
 		} catch (err) {
 			console.error(err);
@@ -144,7 +148,7 @@ module.exports = function(app, util, schemas) {
 		}
 	}));
 
-	app.post("/f/uploadFile", requireLogin, multer({
+	router.post("/files/upload", requireLogin, multer({
 		limits: 50 * 1000000 // 50 megabytes
 	}).single("uploadedFile"), Promise.coroutine(function*(req, res) {
 
@@ -203,23 +207,24 @@ module.exports = function(app, util, schemas) {
 		}
 	}));
 
-	app.post("/f/deleteFile", requireLogin, Promise.coroutine(function*(req, res) {
+	router.delete("/files/id/:fileId", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
-			let file = yield File.findOne({_id: req.body.file_id}).populate("folder").exec();
+			let file = yield File.findOne({ _id: req.params.fileId }).populate("folder").exec();
 
 			if (req.user._id.toString() != file.creator.toString()
 					&& !( req.user.current_team.position == "admin"
-						&& (file.folder.team == req.user.current_team.id))) {
+					&& (file.folder.team == req.user.current_team.id))) {
 				return res.end("fail");
 			}
 
-			yield util.deleteFileFromDriveAsync(req.body.file_id);
+			yield util.deleteFileFromDriveAsync(req.params.fileId);
 			
 			yield file.remove();
 			
-			if (req.body.isImg) {
-				yield util.deleteFileFromDriveAsync(req.body.file_id + "-preview");
+			// TODO: this should not be passed by the client, it should be found by the server
+			if (req.query.isImg == "true") {
+				yield util.deleteFileFromDriveAsync(req.params.fileId + "-preview");
 			}
 
 			res.end("success");
@@ -229,5 +234,7 @@ module.exports = function(app, util, schemas) {
 			res.end("fail");
 		}
 	}));
+
+	return router;
 
 };

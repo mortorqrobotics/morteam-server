@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<% include shared/metatags.ejs %>
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="google-site-verification" content="iZPx5YPDKe6xaZTCKdgkb9u9r2DDKHVPkgFDkCgPqJg" />
+
+		<title>MorTeam</title>
+
+		<% include shared/cssimports.ejs %>
+		<link href="/js/lib/jbox/themes/TooltipDark.css" rel="stylesheet">
+
+		<% include shared/jsimports.ejs %>
+		<script type="text/javascript" src="/js/index.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.isotope/2.2.1/isotope.pkgd.min.js"></script>
+		<script type="text/javascript" src="/js/lib/autosize.js"></script>
+		<script src="/js/lib/Autolinker.min.js"></script>
+		<script type="text/javascript">
+				autosize(document.querySelectorAll('textarea'));
+		</script>
+		<script src="http://js.nicedit.com/nicEdit-latest.js" type="text/javascript"></script>
+		<script type="text/javascript">
+			bkLib.onDomLoaded(function() {
+				new nicEditor({
+					buttonList: ['bold', 'italic', 'underline', 'left', 'center', 'right', 'justify', 'removeformat', 'hr', 'upload']
+				}).panelInstance('main_textarea');
+			});
+		</script>
+
+	</head>
+
+	<body>
+		
+		<% include shared/navbar.ejs %>
+
+		<!-- BODY -->
+		<div class="announcements_container" style="margin-top: 60px;">
+
+			<div class="announcements_left">
+				<p id="view_prof_button">View Profile</p>
+				<p id="logout_button">Log Out</p>
+				<p id="team_button">Team</p>
+				<hr>
+				<div id="your_subdivisions">
+					<h5 style="margin-bottom: 15px;">Your Subdivisions</h5>
+				</div>
+				<hr>
+				<div id="public_subdivisions">
+					<h5 style="margin-bottom: 15px;">Public Subdivisions</h5>
+				</div>
+				<hr>
+				<div id="invited_subdivisions">
+					<h5 style="margin-bottom: 15px;">Subdivision Invites</h5>
+				</div>
+				<!-- <hr>
+				<p class="new_subdivision"><span class="glyphicon glyphicon-plus"></span> Make a Subdivision</p> -->
+				<hr>
+				<span style="color: gray; display: inline-block; margin-bottom: 6px;">© 2015 MorTeam</span><br/>
+				<span><a style="color: gray;" href="terms">Privacy and Terms</a></span>
+			</div>
+			<div class="announcements_center">
+				<div class="post_announcement cf">
+					<textarea class="announcement_textarea" id="main_textarea" placeholder="Make an announcement..."></textarea>
+					<input type="button" class="announcement_post_button" value="Post"></input>
+					<div class=" announcement_audience_button btn-group">
+						<button class="button dropdown-toggle" data-toggle="dropdown">
+							<span class="audience_selection">Everyone</span>
+							<span class="caret"></span>
+						</button>
+						<ul class="dropdown-menu audience_drop">
+							<li class="audience_item selected first_audience">Everyone</li>
+							<li class="audience_item custom_audience"><span class="glyphicon glyphicon-cog"></span>&nbsp;Custom</li>
+						</ul>
+					</div>
+				</div>
+				<div class="announcements_list">
+					<!--
+					<div class="announcement" data-postNum="1">
+						<div class="announcement_top">
+							<img id="medium_prof_pic" src="/images/user.jpg"></img>
+							<span class="announcement_poster">Farbod Rafezy</span>
+						</div>
+						<span class="glyphicon glyphicon-remove delete_icon"></span><br>
+						the words go here
+					</div>
+					-->
+				</div>
+			</div>
+			<div class="announcements_right">
+				<div class="ad" style="margin-top: 0px; position: fixed;"><script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+					<!-- Home -->
+					<ins class="adsbygoogle"
+							 style="display:inline-block;width:160px;height:600px"
+							 data-ad-client="ca-pub-6908015693715549"
+							 data-ad-slot="7361971513"></ins>
+					<script>
+					(adsbygoogle = window.adsbygoogle || []).push({});
+					</script>
+				</div>
+			</div>
+
+		</div>
+
+		<% include shared/googleads.ejs %>
+
+	</body> 
+</html>

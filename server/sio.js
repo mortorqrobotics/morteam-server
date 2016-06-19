@@ -1,14 +1,17 @@
 "use strict";
 
-module.exports = function(io, util, schemas) {
+module.exports = function(imports) {
 
-	let ObjectId = require("mongoose").Types.ObjectId;
-	let Promise = require("bluebird");
+	let ObjectId = imports.modules.mongoose.Types.ObjectId;
+	let Promise = imports.modules.Promise;
 
-	let Chat = schemas.Chat;
-	let User = schemas.User;
+	let Chat = imports.models.Chat;
+	let User = imports.models.User;
+
+	let io = imports.socketio;
 
 	let online_clients = {};
+
 	io.on("connection", Promise.coroutine(function*(socket) {
 		let sess = socket.request.session.user;
 		if (sess) {

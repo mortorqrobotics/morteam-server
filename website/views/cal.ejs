@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+	<head>
+		<% include shared/metatags.ejs %>
+
+		<title>MorTeam - Calendar</title>
+
+		<% include shared/cssimports.ejs %>
+		<link href="/js/lib/jbox/themes/TooltipDark.css" rel="stylesheet">
+
+		<% include shared/jsimports.ejs %>
+		<script type="text/javascript" src="/js/cal.js"></script>
+
+		<% include shared/loadingCircle.ejs %>
+
+	</head>
+	<body class="cal_body">
+
+		<% include shared/navbar.ejs %>
+
+		<!-- BODY -->
+		<div class="wrapper cal_wrapper">
+			<div class="container-fluid cal_container">
+				<div class="row cal_row">
+					<div class="timeline col-xl-6 col-lg-6 col-md-6 col-sm-12 col-xs-12" id="timeline">
+						<div class="current_month_display">
+							<!-- MONTH -->
+						</div>
+					</div>
+					<div class="cal_right col-xl-6 col-lg-6 col-md-6 col-sm-12 col-xs-12">
+						<div class="events_overview">
+							<h3 class="u_events_title">Upcoming Events</h3>
+							<div class="events_container">
+								<ul class="events_list upcoming_events">
+
+								</ul>
+							</div>
+						</div>
+						<div class="jobs_overview">
+							<h3 class="u_events_title">&nbsp;Pending Tasks</h3>
+							<div class="events_container">
+								<ul class="events_list task_list">
+
+								</ul>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- END OF BODY -->
+
+		<!-- LEFTBAR -->
+		<div class="leftbar">
+			<ul>
+				<li class="month_name year_select">
+					<div class="btn-group year_dropdown">
+						<button class="button dropdown-toggle" data-toggle="dropdown"><span class="selected_year"></span>
+							<span class="caret"></span>
+						</button>
+						<ul class="years dropdown-menu">
+
+						</ul>
+					</div>
+						<!-- <span class="glyphicon glyphicon-th grid_layout"></span>
+						<span class="glyphicon glyphicon-th-list list_layout"></span>  UN-COMMENT WHEN LIST LAYOUT IS READY   -->
+				</li>
+
+				<% var months = "January February March April May June July August September October November December".split(" "); %>
+				<% for (var num = 0; num <= 12; num++) { %>
+					<li class="month_name m<%= num %>" data-month="<%= num %>">
+						<span id="make_group" class="glyphicon glyphicon-calendar"></span> <%= months[num - 1] %>
+					</li>
+				<% } %>
+
+			</ul>
+		</div>
+		<span class="glyphicon glyphicon-chevron-left hide_leftbar"></span>
+		<!-- END OF LEFTBAR -->
+
+		<% include shared/googleads.ejs %>
+
+	</body>
+</html>

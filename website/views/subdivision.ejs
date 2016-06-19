@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<% include shared/metatags.ejs %>
+
+		<title>MorTeam</title>
+
+		<% include shared/cssimports.ejs %>
+
+		<% include shared/jsimports.ejs %>
+		<script type="text/javascript" src="/js/subdivision.js"></script>
+
+	</head>
+
+	<body>
+
+		<% include shared/navbar.ejs %>
+
+		<!-- BODY -->
+
+		<div class="wrapper scope_wrapper">
+			<div class="general_info">
+				<h1>
+					<%= name %>
+				</h1>
+				<!-- <h3>Date Created: Month Day, Year</h3> -->
+				<h4>
+					<%= type %> subdivision</h4>
+				<div id="join-leave">
+					<% if (!joined) { %>
+						<input type="button" class="button subdivision_join_btn" value="Join"></input>
+					<% } else { %>
+						<input type="button" class="button subdivision_leave_btn" value="Leave"></input>
+					<% } %>
+				</div>
+				<div id="subdivision-admin-options">
+					<% if (admin) { %>
+						<input type="button" class="button subdivision_delete_btn" value="Delete"></input>
+					<% } %>
+				</div>
+			</div>
+			<div class="scope_members">
+				<ul id="subdivision_members">
+					<% if (admin) { %>
+						<% if (joined) { %>
+							<li class="subdivision_member_add"><span class="glyphicon glyphicon-plus"></span> Invite member(s)</li><br/>
+						<% } %>
+						<% members.forEach(function(member) { %>
+							<% if (member._id != current_user_id) { %>
+								<li class="user-link subdivision_member" data-userid="<%= member._id %>" id="<%= member._id %>">
+									<img src="<%= member.profpicpath %>-60" onerror="this.src='/images/user.jpg'" class="small_prof_pic show" id="small_prof_pic"><%= member.firstname %> <%= member.lastname %>
+								</li>
+								<li class="user_remove_btn" data-userid="<%= member._id %>">
+									<span class="glyphicon glyphicon-trash"></span>
+								</li><br>
+							<% } else { %>
+								<li class="user-link subdivision_member full-width" data-userid="<%= member._id %>" id="<%= member._id %>">
+									<img src="<%= member.profpicpath %>-60" onerror="this.src='/images/user.jpg'" class="small_prof_pic show" id="small_prof_pic"><%= member.firstname %> <%= member.lastname %>
+								</li>
+								<br>
+							<% } %>
+						<% }); %>
+					<% } else { %>
+						<% if (joined) { %>
+							<li class="subdivision_member_add"><span class="glyphicon glyphicon-plus"></span> Invite member(s)</li><br/>
+						<% } %>
+						<% members.forEach(function(member) { %>
+							<li class="user-link subdivision_member full-width" data-userid="<%= member._id %>" id="<%= member._id %>">
+								<img src="<%= member.profpicpath %>-60" onerror="this.src='/images/user.jpg'" class="small_prof_pic show" id="small_prof_pic"><%= member.firstname %> <%= member.lastname %>
+							</li>
+							<br>
+						<% }); %>
+					<% } %>
+				</ul>
+			</div>
+		</div>
+		<!-- END OF BODY -->
+
+		<% include shared/googleads.ejs %>
+
+	</body>
+
+</html>
