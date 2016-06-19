@@ -90,7 +90,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 					name: subdivision.name,
 					type: subdivision.type,
 					team: subdivision.team, // TODO: POSSIBLY CHANGE TO subdivision.team._id
-					admin: util.isAdminUser(req.user),
+					admin: util.isUserAdmin(req.user),
 					joined: isMember,
 					members: users,
 					current_user_id: req.user._id
@@ -121,7 +121,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 				teamNum: team.number,
 				teamId: team.id,
 				members: users,
-				viewerIsAdmin: util.isAdminUser(req.user)
+				viewerIsAdmin: util.isUserAdmin(req.user)
 			});
 
 		} catch (err) {

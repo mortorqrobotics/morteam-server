@@ -146,7 +146,7 @@ module.exports = function(imports) {
 
 			let user = yield User.findOne({ _id: req.params.userId });
 
-			if (util.isAdminUser(user) && (yield User.count({
+			if (util.isUserAdmin(user) && (yield User.count({
 				teams: {
 					id: req.user.current_team.id,
 					position: util.adminPositionsQuery
