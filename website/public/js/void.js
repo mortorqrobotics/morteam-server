@@ -28,9 +28,9 @@ $(document).ready(function() {
 				sendAjax("POST", ["teams/code", teamCode, "join"], function(response) {
 					if (response == "success") {
 						var lsTeams = JSON.parse(localStorage.teams);
-						lsTeams.push({id: $(".team_id").val(), position: "leader"});
+						lsTeams.push({ id: response, position: "leader" });
 						localStorage.teams = JSON.stringify(lsTeams);
-						localStorage.c_team = $(".team_id").val();
+						localStorage.c_team = response;
 						localStorage.c_team_position = "leader";
 						location.assign("/");
 					} else {
@@ -48,7 +48,7 @@ $(document).ready(function() {
 		sendAjax("POST", ["teams/code", teamCode, "join"], function(response) {
 			if (response == "success") {
 				var lsTeams = JSON.parse(localStorage.teams);
-				lsTeams.push({id: $(".team_join_id").val(), position: "member"});
+				lsTeams.push({ id: response, position: "member"});
 				localStorage.teams = JSON.stringify(lsTeams);
 				localStorage.c_team = $(".team_join_id").val();
 				localStorage.c_team_position = "member";

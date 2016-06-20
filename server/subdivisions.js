@@ -28,14 +28,16 @@ module.exports = function(imports) {
 			let subdivision = yield Subdivision.create({
 				name: req.body.name,
 				type: req.body.type,
-				team: req.user.current_team.id
+				team: req.user.current_team._id
 			});
 
-			yield User.findByIdAndUpdate(req.user._id, {
+			yield User.findOneAndUpdate({
+				_id: req.user._id
+			}, {
 				"$push": {
 					"subdivisions": {
 						_id: subdivision._id,
-						team: req.user.current_team.id,
+						team: req.user.current_team._id,
 						accepted: true
 					}
 				}
@@ -52,13 +54,17 @@ module.exports = function(imports) {
 	router.post("/subdivisions/id/:subdivId/invitations/userId/:userId", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
-			let subdivision = yield Subdivision.findById(req.params.subdivId);
+			let subdivision = yield Subdivision.findOne({
+				_id: req.params.subdivId
+			});
 
 			if (!subdivision) {
 				return res.end("fail");
 			}
 
-			let invitedUser = yield User.findById(req.params.userId);
+			let invitedUser = yield User.findOne({
+				_id: req.params.userId
+			});
 
 			if (!invitedUser) {
 				return res.end("fail");
@@ -69,8 +75,8 @@ module.exports = function(imports) {
 			}
 
 			invitedUser.subdivisions.push({
-				id: new ObjectId(subdivision._id),
-				team: req.user.current_team.id,
+				_id: new ObjectId(subdivision._id),
+				team: req.user.current_team._id,
 				accepted: false
 			});
 
@@ -88,7 +94,7 @@ module.exports = function(imports) {
 		try {
 
 			let subdivisions = yield Subdivision.find({
-				team: req.user.current_team.id,
+				team: req.user.current_team._id,
 				type: "public"
 			});
 
@@ -113,7 +119,7 @@ module.exports = function(imports) {
 
 			let subdivisions = yield Subdivision.find({ // TODO: is the team check necessary here?
 				_id: { "$in": userSubdivisionIds },
-				team: req.user.current_team.id
+				team: req.user.current_team._id
 			});
 
 			if (!subdivisions) {
@@ -146,7 +152,7 @@ module.exports = function(imports) {
 
 			let subdivisions = yield Subdivision.find({
 				_id: { "$in": invitedSubdivisions },
-				team: req.user.current_team.id
+				team: req.user.current_team._id
 			});
 
 			if (subdivisions) { // TODO: is the check necessary here?
@@ -194,27 +200,33 @@ module.exports = function(imports) {
 	router.post("/subdivisions/public/id/:subdivId/join", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
-			let subdivision = yield Subdivision.findById(req.params.subdivId);
+			let subdivision = yield Subdivision.findOne({
+				_id: req.params.subdivId
+			});
 
 			if (subdivision.type != "public") {
 				return res.end("fail");
 			}
 
-			yield User.findByIdAndUpdate(req.user._id, {
+			yield User.findOneAndUpdate({
+				_id: req.user._id
+			}, {
 				"$pull": {
 					"subdivisions": {
 						_id: new ObjectId(subdivision._id),
-						team: req.user.current_team.id,
+						team: req.user.current_team._id,
 						accepted: false
 					}
 				}
 			});
 
-			yield User.findByIdAndUpdate(req.user._id, {
+			yield User.findOneAndUpdate({
+				_id: req.user._id
+			}, {
 				"$push": {
 					"subdivisions": {
 						_id: new ObjectId(subdivision._id),
-						team: req.user.current_team.id,
+						team: req.user.current_team._id,
 						accepted: true
 					}
 				}
@@ -248,11 +260,13 @@ module.exports = function(imports) {
 	router.post("/subdivisions/id/:subdivId/invitations/ignore", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
-			yield User.findByIdAndUpdate(req.user._id, {
+			yield User.findOneAndUpdate({
+				_id: req.user._id
+			}, {
 				"$pull": {
 					"subdivisions": {
 						_id: new ObjectId(req.params.subdivId),
-						team: req.user.current_team.id
+						team: req.user.current_team._id
 					}
 				}
 			});
@@ -268,11 +282,13 @@ module.exports = function(imports) {
 	router.post("/subdivisions/id/:subdivId/leave", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
-			yield User.findByIdAndUpdate(req.user._id, {
+			yield User.findOneAndUpdate({
+				_id: req.user._id
+			}, {
 				"$pull": {
 					"subdivisions": {
 						_id: new ObjectId(req.params.subdivId),
-						team: req.user.current_team.id
+						team: req.user.current_team._id
 					}
 				}
 			});
@@ -304,16 +320,16 @@ module.exports = function(imports) {
 
 			yield Subdivision.findOneAndRemove({
 				_id: new ObjectId(req.params.subdivId),
-				team: req.user.current_team.id
+				team: req.user.current_team._id
 			});
 
 			yield User.update({
-				teams: { $elemMatch: { id: req.user.current_team.id } }
+				teams: { $elemMatch: { _id: req.user.current_team._id } }
 			}, {
 				"$pull": {
 					"subdivisions": {
 						_id: new ObjectId(req.params.subdivId),
-						team: req.user.current_team.id
+						team: req.user.current_team._id
 					}
 				}
 			});
@@ -331,12 +347,12 @@ module.exports = function(imports) {
 
 			yield User.update({
 				_id: req.params.userId,
-				teams: { $elemMatch: { "id": req.user.current_team.id } }
+				teams: { $elemMatch: { _id: req.user.current_team._id } }
 			}, {
 				"$pull": { // TODO: maybe add new objectid
 					"subdivisions" : {
 						_id: new ObjectId(req.params.subdivId),
-						team: req.user.current_team.id,
+						team: req.user.current_team._id,
 						accepted: true
 					}
 				}

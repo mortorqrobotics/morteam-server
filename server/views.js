@@ -32,7 +32,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 				_id: req.params.userId,
 				teams: {
 					$elemMatch: {
-						"id": req.user.current_team.id
+						_id: req.user.current_team._id
 					}
 				} // said user has to be a member of the current team of whoever is loading the page
 			});
@@ -49,7 +49,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 				email: user.email,
 				phone: user.phone,
 				profpicpath: user.profpicpath,
-				viewedUserPosition: util.findTeamInUser(user, req.user.current_team.id).position,
+				viewedUserPosition: util.findTeamInUser(user, req.user.current_team._id).position,
 				viewerUserPosition: req.user.current_team.position,
 				viewerUserId: req.user._id
 			});
@@ -65,7 +65,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 
 			let subdivision = yield Subdivision.findOne({
 				_id: req.params.subdivId,
-				team: req.user.current_team.id
+				team: req.user.current_team._id
 			});
 
 			if (!subdivision) {
@@ -109,17 +109,17 @@ module.exports = function(imports, publicDir, profpicDir) {
 		try {
 
 			let users = yield User.find({
-				teams: { $elemMatch: { id: req.user.current_team.id } }
+				teams: { $elemMatch: { _id: req.user.current_team._id } }
 			});
 
 			let team = yield Team.findOne({
-				id: req.user.current_team.id
+				_id: req.user.current_team._id
 			});
 
 			res.render(ejsFile("team"), {
 				teamName: team.name,
 				teamNum: team.number,
-				teamId: team.id,
+				teamId: team._id,
 				members: users,
 				viewerIsAdmin: util.isUserAdmin(req.user)
 			});

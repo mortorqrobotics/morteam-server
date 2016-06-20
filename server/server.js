@@ -52,7 +52,7 @@ module.exports = function(imports) {
 				if (req.user) {
 					if (req.user.teams.length > 0) {
 						if (!req.user.current_team) {
-							req.user.current_team.id = req.user.teams[0].id;
+							req.user.current_team._id = req.user.teams[0]._id;
 							req.user.current_team.position = req.user.teams[0].position;
 							req.user.save(); // is this necessary? I think so
 						}

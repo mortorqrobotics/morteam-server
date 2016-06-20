@@ -29,7 +29,7 @@ module.exports = function(imports) {
 
 				if((yield Chat.count({
 					group: false,
-					team: req.user.current_team.id,
+					team: req.user.current_team._id,
 					$or: [
 						{ userMembers: [req.user._id, req.body.user2] },
 						{ userMembers: [req.body.user2, req.user._id] }
@@ -40,13 +40,13 @@ module.exports = function(imports) {
 
 				let chat = yield Chat.create({
 					userMembers: userMembers,
-					team: req.user.current_team.id,
+					team: req.user.current_team._id,
 					group: false
 				});
 
 				// get the user that is not the person making this request
-				let user2_id = util.getUserOtherThanSelf(chat.userMembers, req.user._id.toString());
-				let user = yield User.findOne({_id: user2_id});
+				let user2Id = util.getUserOtherThanSelf(chat.userMembers, req.user._id.toString());
+				let user = yield User.findOne({ _id: user2Id });
 
 				res.json({
 					_id: user._id,
@@ -64,7 +64,7 @@ module.exports = function(imports) {
 				}
 
 				let chat = yield Chat.create({
-					team: req.user.current_team.id,
+					team: req.user.current_team._id,
 					name: req.body.name,
 					userMembers: JSON.parse(userMembers),
 					subdivisionMembers: JSON.parse(subdivisionMembers),
@@ -87,7 +87,7 @@ module.exports = function(imports) {
 
 			// find a chat in the current team that also has said user as a member or has a subdivision of which said user is a member.
 			let chats = yield Chat.find({
-				team: req.user.current_team.id,
+				team: req.user.current_team._id,
 				$or: [
 					{
 						userMembers: req.user._id
@@ -183,7 +183,7 @@ module.exports = function(imports) {
 			});
 
 			let userMembers = yield User.find({ _id: { "$in": chat.userMembers } });
-			let subdivisionMembers = yield Subdivision.find({_id: { "$in": chat.subdivisionMembers } });
+			let subdivisionMembers = yield Subdivision.find({ _id: { "$in": chat.subdivisionMembers } });
 
 			res.json({
 				members: {

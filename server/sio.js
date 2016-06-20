@@ -26,19 +26,19 @@ module.exports = function(imports) {
 				if (!(sess._id in online_clients)) {
 
 					let chats = yield Chat.find({
-						team: sess.current_team.id,
+						team: sess.current_team._id,
 						$or: [
 							{ userMembers: new ObjectId(sess._id) },
 							{ subdivisionMembers: { "$in": userSubdivisionIds } }
 						]
-					}, { _id: 1 }).exec();
+					}, { _id: 1 });
 
 					let chatIds = chats.map(chat => chat._id.toString());
 
 					for ( let user_id in online_clients ) {
 						if ( online_clients[user_id].chats.hasAnythingFrom( chatIds ) ) {
 							for (let sock of online_clients[user_id].sockets) {
-								io.to(sock ).emit("joined", {_id: sess._id});
+								io.to(sock).emit("joined", { _id: sess._id });
 							}
 						}
 					}
@@ -180,7 +180,7 @@ module.exports = function(imports) {
 
 		socket.on("stop typing", function(data) {
 			for ( let user_id in online_clients ) {
-				if ( ~online_clients[user_id].chats.indexOf( data.chat_id ) && user_id != sess._id ) {
+				if ( online_clients[user_id].chats.indexOf( data.chat_id ) != -1 && user_id != sess._id ) {
 					for (let sock of online_clients[user_id].sockets) {
 						io.to(sock).emit("stop typing", data);
 					}

@@ -5,16 +5,16 @@ module.exports = function(imports) {
 	let mongoose = imports.modules.mongoose;
 
 	let Schema = mongoose.Schema;
+	let ObjectId = Schema.Types.ObjectId;
 
 	let chatSchema = new Schema({
 		name:        { type: String, required: false },
-		team:        { type: String, required: true },
+		team:        { type: ObjectId, ref: "Team", required: true },
 		group:       Boolean,
-		userMembers: [{ type: Schema.Types.ObjectId, ref: "User" }],
-		// userMembers: [{ $type: Schema.Types.DBRef, $ref: "users", $db: "MorNetwork" }],
-		subdivisionMembers: [{ type: Schema.Types.ObjectId, ref: "Subdivision" }],
+		userMembers: [{ type: ObjectId, ref: "User" }],
+		subdivisionMembers: [{ type: ObjectId, ref: "Subdivision" }],
 		messages : [{
-			author: { type: Schema.Types.ObjectId, ref: "User" },
+			author: { type: ObjectId, ref: "User" },
 			content: String,
 			timestamp: Date
 		}],
@@ -32,6 +32,7 @@ module.exports = function(imports) {
 	});
 
 	let Chat = mongoose.model("Chat", chatSchema);
+
 	return Chat;
 
 };

@@ -192,13 +192,13 @@ module.exports = function(imports, publicDir, profpicDir) {
 
 			let newPosition = req.params.newPosition.toLowerCase();
 
-			let currentPosition = util.findTeamInUser(user, req.user.current_team.id).position;
+			let currentPosition = util.findTeamInUser(user, req.user.current_team._id).position;
 
 			if (req.params.userId == req.user._id
 					&& !util.isPositionAdmin(newPosition)
 					&& (yield User.count({
 						teams: {
-							id: req.user.current_team.id,
+							_id: req.user.current_team._id,
 							position: util.adminPositionsQuery
 						}
 					})) <= 1) {
@@ -210,7 +210,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 			// update position of target user
 			yield User.update({
 				_id: req.params.userId,
-				"teams.id": req.user.current_team.id
+				"teams._id": req.user.current_team._id
 			}, { "$set": {
 				"teams.$.position": newPosition, // find out what .$. means and if it means selected "teams" element
 				"current_team.position": newPosition
@@ -241,7 +241,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 
 			// find maximum of 10 users that match the search criteria
 			let users = yield User.find({
-				teams: { $elemMatch: { id: req.user.current_team.id } },
+				teams: { $elemMatch: { _id: req.user.current_team._id } },
 				$or: [
 					{ firstname: re }, { lastname: re }
 				]

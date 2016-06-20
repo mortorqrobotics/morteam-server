@@ -265,7 +265,7 @@ $(document).ready(function() {
 	});
 
 	$(document).on("click", ".subdivision-link", function() {
-		location = "/subdivisions/id/" + $(this).attr("data-subdivisionid");
+		location.assign("/subdivisions/id/" + $(this).attr("data-subdivisionid"));
 	});
 	$(document).on("click", ".subdivision-invite", function() {
 		subdivision_invite_modal.setContent('<span><span class="inviter"></span> You have been invited to the subdivision: <span class="invited_scope_name">'+$(this).find(".nameSpan").html()+'</span></span><br/><div style="text-align: center"><input type="button" class="button invite_btn accept_invite_btn" data-subdivisionid="'+$(this).attr("data-subdivisionid")+'" value="Accept"></input><input type="button" class="button invite_btn ignore_invite_btn" data-subdivisionid="'+$(this).attr("data-subdivisionid")+'" value="Hide"></input></div>')
