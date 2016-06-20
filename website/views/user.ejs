@@ -20,6 +20,10 @@
 		<script src="/js/lib/jquery.form.js"></script>
 		<script type="text/javascript" src="/js/user.js"></script>
 
+		<script>
+			var userCreatedDate = new Date("<%= created_at %>");
+		</script>
+
 	</head>
 	<body>
 
@@ -35,10 +39,35 @@
 					<input type="button" value="View Attendance" class="view_attendance_user user_action button"></input>
 				</div>
 			</div> -->
+			<%
+				var months = ["January", "February", "March", "April", "May", "June",
+						"July", "August", "September", "October", "November", "December"];
+			%>
 			<div class="row">
 				<div class="col-md-6">
 					<div class="attendance_data">
 						<span class="data_title bold">Attendance</span><br/>
+						<span class="data_point">From:</span>
+						<span id="absences_from" class="data_answer">
+							<select id="absences_from_month">
+								<% for (var i = 1; i <= 12; i++) { %>
+									<option value="<%= i %>"><%= months[i - 1] %></option>
+								<% } %>
+							</select>
+							<select id="absences_from_day"></select>
+							<select id="absences_from_year"></select>
+						</span><br>
+						<span class="data_point">To:</span>
+						<span id="absences_to" class="data_answer">
+							<select id="absences_to_month">
+								<% for (var i = 1; i <= 12; i++) { %>
+									<option value="<%= i %>"><%= months[i - 1] %></option>
+								<% } %>
+							</select>
+							<select id="absences_to_day"></select>
+							<select id="absences_to_year"></select>
+						</span>
+						<input id="refresh_attendance" type="button" class="button" value="Refresh Attendance" /><br>
 						<span class="data_point">Unexcused absences:</span><span id="absences_num" class="data_answer"></span><br/>
 						<span class="data_point">Presence percentage:</span><span id="presence_percent" class="data_answer"></span><br/>
 						<hr class="hr_small_margin">

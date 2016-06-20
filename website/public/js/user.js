@@ -110,14 +110,14 @@ function changePasswordModal(title) {
 }
 function editProfileModal(title) {
 	var new_modal = new jBox("Modal", {
-			width: 350,
-			height: "auto",
-			title: title,
-			onClose: function() {
-				setTimeout(function() {
-					edit_profile_modal.destroy();
-				}, 100)
-			}
+		width: 350,
+		height: "auto",
+		title: title,
+		onClose: function() {
+			setTimeout(function() {
+				edit_profile_modal.destroy();
+			}, 100)
+		}
 	});
 	new_modal.setContent('<form action="/profile" enctype="multipart/form-data" method="post" id="edit_profile_form"><input type="text" name="firstname" class="edit_firstname modal_textbox"></input><br/><input type="text" name="lastname" class="edit_lastname modal_textbox"></input><br/><input type="text" name="email" class="edit_email modal_textbox"></input><br/><input type="text" name="phone" class="edit_phone modal_textbox"></input><br/><input type="text" name="parentEmail" placeholder="Parent Email" class="edit_parent_email modal_textbox"></input><br/><input name="new_prof_pic" type="file" id="new_prof_pic" class="hidden" accept="image/*" /><input type="button" class="button edit_prof_pic modal_button" value="Change Profile Picture"></input><br/><input type="submit" class="button modal_button save_prof" value="Save"></input></form>')
 
@@ -134,29 +134,100 @@ function editProfileModal(title) {
 
 }
 
+function displayAbsences(data) {
+	var absences = data.absences;
+	var present = data.present;
+	if (absences.length > 0) {
+		$("#dates_unexcused").show();
+	} else {
+		$("dates_unexcused").hide();
+	}
+	for (var i = 0; i < absences.length; i++) {
+		$(".absences_list").append('<li class="absence_date">'+ absences[i].name + ' (' + readableDate(absences[i].date) + ')' + '</li>');
+		if (isCurrentUserAdmin()) {
+			$(".absences_list").append('<input type="button" data-eventid="' + absences[i]._id + '" class="button excuse_btn" value="Excuse" style="float: right;" /><br/>');
+		} else {
+			$(".absences_list").append("<br/>");
+		}
+	}
+	$("#absences_num").html(absences.length);
+	if( !isNaN(100*present/(absences.length+present)) ){
+		$("#presence_percent").html( Math.round(100*present/(absences.length+present)) + "%" );
+	}else{
+		$("#presence_percent").html( "N/A" );
+	}
+}
+
+function clearAbsencesDisplay() {
+	$(".absences_list").empty();
+	$("#absences_num").html("");
+	$("#presence_percent").html("");
+}
+
 $(document).ready(function() {
+
+	var thisYear = new Date().getFullYear();
+	var thisMonth = new Date().getMonth()+1;
+	var thisDay = new Date().getDate();
+
+	var createdYear = userCreatedDate.getFullYear();
+	var createdMonth = userCreatedDate.getMonth() + 1;
+	var createdDay = userCreatedDate.getDate();
+
+	$('#absences_from_month option[value="' + createdMonth + '"]').prop("selected", true);
+	$('#absences_to_month option[value="' + thisMonth + '"]').prop("selected", true);
+
+	for (var i = userCreatedDate.getFullYear() ; i <= thisYear; i++) {
+		$("#absences_from_year").append("<option value='" + i + "'>" + i + "</option>");
+		$("#absences_to_year").append("<option value='" + i + "'>" + i + "</option>");
+	}
+
+	$('#absences_to_year option[value="' + thisYear + '"]').prop("selected", true);
+
+	for (var i = 1; i <= new Date($("#absences_from_year").find(":selected").text(), createdMonth, 0).getDate(); i++) {
+		$("#absences_from_day").append("<option value='" + i + "'>" + i + "</option>");
+		if (i == new Date($("#absences_from_year").find(":selected").text(), createdMonth, 0).getDate()) {
+			$("#absences_from_day option[value='" + createdDay + "']").prop("selected", true);
+		}
+	}
+
+	for (var i = 1; i <= new Date($("#absences_to_year").find(":selected").text(), thisMonth, 0).getDate(); i++) {
+		$("#absences_to_day").append("<option value='" + i + "'>" + i + "</option>");
+		if (i == new Date($("#absences_to_year").find(":selected").text(), thisMonth, 0).getDate()) {
+			$("#absences_to_day option[value='" + thisDay + "']").prop("selected", true);
+		}
+	}
+
+	$("#absences_from_month").change(function() {
+		$("#absences_from_day").empty();
+		for (var i = 1; i <= new Date($("#absences_from_year").find(":selected").text(), $("#absences_from_month").find(":selected").val(), 0).getDate(); i++) {
+			$("#absences_from_day").append("<option value='" + i + "'>" + i + "</option>");
+		}
+	});
+	$("#absences_from_year").change(function() {
+		$("#absences_from_day").empty();
+		for(var i = 1; i <= new Date($(this).find(":selected").text(), $("#absences_from_month").find(":selected").val(), 0).getDate(); i++) {
+			$("#absences_from_day").append("<option value='" + i + "'>" + i + "</option>");
+		}
+	});
+
+	$("#absences_to_month").change(function() {
+		$("#absences_to_day").empty();
+		for(var i = 1; i <= new Date($("#absences_to_year").find(":selected").text(), $("#absences_to_month").find(":selected").val(), 0).getDate(); i++) {
+			$("#absences_to_day").append("<option value='" + i + "'>" + i + "</option>");
+		}
+	});
+	$("#absences_to_year").change(function() {
+		$("#absences_to_day").empty();
+		for(var i = 1; i <= new Date($(this).find(":selected").text(), $("#absences_to_month").find(":selected").val(), 0).getDate(); i++) {
+			$("#absences_to_day").append("<option value='" + i + "'>" + i + "</option>");
+		}
+	});
+
 	var userId = window.location.pathname.substring(window.location.pathname.lastIndexOf("/") + 1);
 	sendAjax("GET", ["users/id", userId, "absences"], function(data) {
-		var absences = data.absences;
-		var present = data.present;
-		if (absences.length > 0) {
-			$("#dates_unexcused").show();
-		}
-		for (var i = 0; i < absences.length; i++) {
-			$(".absences_list").append('<li class="absence_date">'+ absences[i].name + ' (' + readableDate(absences[i].date) + ')' + '</li>')
-			if (isCurrentUserAdmin()) {
-				$(".absences_list").append('<input type="button" data-eventid="'+absences[i]._id+'" class="button excuse_btn" value="Excuse" style="float: right;" /><br/>');
-			} else {
-				$(".absences_list").append("<br/>");
-			}
-		}
-
-		$("#absences_num").html(absences.length);
-		if (!isNaN(100*present/(absences.length+present))) {
-			$("#presence_percent").html(Math.round(100*present/(absences.length+present)) + "%");
-		} else {
-			$("#presence_percent").html("N/A");
-		}
+		clearAbsencesDisplay();
+		displayAbsences(data);
 	});
 	sendAjax("GET", ["users/id", userId, "tasks/completed"], function(tasks) {
 		if (tasks != "fail") {
@@ -220,7 +291,18 @@ $(document).ready(function() {
 		} else {
 			alert(tasks);
 		}
-	})
+	});
+
+	$(document).on("click", "#refresh_attendance", function() {
+		var userId = window.location.pathname.substring(window.location.pathname.lastIndexOf("/") + 1);
+		sendAjax("GET", ["users/id", userId, "absences"], {
+			startDate: new Date($("#absences_from_year option:selected" ).text(), $("#absences_from_month option:selected").val() - 1, $("#absences_from_day option:selected").text()),
+			endDate: new Date($("#absences_to_year option:selected").text(), $("#absences_to_month option:selected").val() - 1, $("#absences_to_day option:selected").text())
+		}, function(data) {
+			clearAbsencesDisplay()
+			displayAbsences(data);
+		});
+	});
 
 	$(document).on("click", "#change_password", function() {
 		change_password_modal = changePasswordModal("Change Password");

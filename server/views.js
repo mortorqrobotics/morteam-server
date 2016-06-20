@@ -51,7 +51,8 @@ module.exports = function(imports, publicDir, profpicDir) {
 				profpicpath: user.profpicpath,
 				viewedUserPosition: util.findTeamInUser(user, req.user.current_team._id).position,
 				viewerUserPosition: req.user.current_team.position,
-				viewerUserId: req.user._id
+				viewerUserId: req.user._id,
+				created_at: user.created_at
 			});
 
 		} catch (err) {
