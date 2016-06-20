@@ -177,7 +177,7 @@ function addFileModal(title) {
 			}, 100)
 		}
 	});
-	new_modal.setContent("<form enctype='multipart/form-data' action='/files' method='post' id='upload_form'><input type='file' id='file' class='hidden' name='uploadedFile'></input><input type='button' class='button file_choose' value='Choose File'></input><p id='chosen_file'>No File Selected</p><input type='text' class='file_name' name='fileName' placeholder='File Name'></input><input type='submit' class='button upload_button' value='Upload'></input></form>");
+	new_modal.setContent("<form enctype='multipart/form-data' action='/files/upload' method='post' id='upload_form'><input type='file' id='file' class='hidden' name='uploadedFile'></input><input type='button' class='button file_choose' value='Choose File'></input><p id='chosen_file'>No File Selected</p><input type='text' class='file_name' name='fileName' placeholder='File Name'></input><input type='submit' class='button upload_button' value='Upload'></input></form>");
 	new_modal.open();
 	return new_modal;
 }
