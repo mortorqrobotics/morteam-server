@@ -39,9 +39,9 @@ function readableDate(datestr) {
 	var date = new Date(datestr);
 	return months[date.getMonth()] + " " + date.getDate() + ", " + date.getFullYear();
 }
-function findTeamInTeamArray(teams, teamId) {
+function findTeamInTeamArray(teams, teamId) { // unused
 	for (var i = 0; i < teams.length; i++) {
-		if (teams[i].id == teamId) {
+		if (teams[i]._id == teamId) {
 			return team;
 		}
 	}

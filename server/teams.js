@@ -52,7 +52,7 @@ module.exports = function(imports) {
 				defaultFolder: true
 			});
 
-			res.end("success");
+			res.end(team._id);
 
 		} catch (err) {
 			console.error(err);
@@ -103,7 +103,7 @@ module.exports = function(imports) {
 				defaultFolder: true
 			});
 
-			res.end("success");
+			res.end(team._id);
 
 		} catch (err) {
 			console.log(err);

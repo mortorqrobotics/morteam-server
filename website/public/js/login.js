@@ -33,7 +33,7 @@ $(document).ready(function() {
 				localStorage.profpicpath = user.profpicpath;
 				if (user.teams && user.teams.length > 0) {
 					if (user.current_team) {
-						localStorage.c_team = user.current_team.id;
+						localStorage.c_team = user.current_team._id;
 						localStorage.c_team_position = user.current_team.position;
 
 						// for morscout
