@@ -198,31 +198,32 @@ $(document).ready(function() {
 		}
 	}
 
-	$("#absences_from_month").change(function() {
-		$("#absences_from_day").empty();
-		for (var i = 1; i <= new Date($("#absences_from_year").find(":selected").text(), $("#absences_from_month").find(":selected").val(), 0).getDate(); i++) {
-			$("#absences_from_day").append("<option value='" + i + "'>" + i + "</option>");
-		}
-	});
-	$("#absences_from_year").change(function() {
-		$("#absences_from_day").empty();
-		for(var i = 1; i <= new Date($(this).find(":selected").text(), $("#absences_from_month").find(":selected").val(), 0).getDate(); i++) {
-			$("#absences_from_day").append("<option value='" + i + "'>" + i + "</option>");
-		}
-	});
+	function daysInMonth(year, month) {
+		return new Date(year, month, 0).getDate();
+	}
 
-	$("#absences_to_month").change(function() {
-		$("#absences_to_day").empty();
-		for(var i = 1; i <= new Date($("#absences_to_year").find(":selected").text(), $("#absences_to_month").find(":selected").val(), 0).getDate(); i++) {
-			$("#absences_to_day").append("<option value='" + i + "'>" + i + "</option>");
-		}
-	});
-	$("#absences_to_year").change(function() {
-		$("#absences_to_day").empty();
-		for(var i = 1; i <= new Date($(this).find(":selected").text(), $("#absences_to_month").find(":selected").val(), 0).getDate(); i++) {
-			$("#absences_to_day").append("<option value='" + i + "'>" + i + "</option>");
-		}
-	});
+	function makeChangeHandler($elem, $year, $month, $day) {
+		$elem.change(function() {
+			$day.empty();
+			for (var i = 1; i <= daysInMonth($year.find(":selected").val(), $month.find(":selected").val()); i++) {
+				$day.append("<option value='" + i + "'>" + i + "</option>");
+			}
+		});
+	}
+
+	var $fromYear = $("#absences_from_year");
+	var $fromMonth = $("#absences_from_month");
+	var $fromDay = $("#absences_from_day");
+
+	var $toYear = $("#absences_to_year");
+	var $toMonth = $("#absences_to_month");
+	var $toDay = $("#absences_to_day");
+
+	makeChangeHandler($fromMonth, $fromYear, $fromMonth, $fromDay);
+	makeChangeHandler($fromYear, $fromYear, $fromMonth, $fromDay);
+
+	makeChangeHandler($toMonth, $toYear, $toMonth, $toDay);
+	makeChangeHandler($toYear, $toYear, $toMonth, $toDay);
 
 	var userId = window.location.pathname.substring(window.location.pathname.lastIndexOf("/") + 1);
 	sendAjax("GET", ["users/id", userId, "absences"], function(data) {
