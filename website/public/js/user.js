@@ -139,6 +139,9 @@ $(document).ready(function() {
 	sendAjax("GET", ["users/id", userId, "absences"], function(data) {
 		var absences = data.absences;
 		var present = data.present;
+		if (absences.length > 0) {
+			$("#dates_unexcused").show();
+		}
 		for (var i = 0; i < absences.length; i++) {
 			$(".absences_list").append('<li class="absence_date">'+ absences[i].name + ' (' + readableDate(absences[i].date) + ')' + '</li>')
 			if (isCurrentUserAdmin()) {

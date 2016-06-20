@@ -173,7 +173,7 @@ module.exports = function(imports) {
 			let handler = yield AttendanceHandler.findOne({
 				event: req.params.eventId
 			}).populate("attendees.user").exec();
-			
+
 			res.json(handler.attendees);
 
 		} catch (err) {
@@ -251,10 +251,10 @@ module.exports = function(imports) {
 
 			let handlers = yield AttendanceHandler.find({
 				event_date: dateConstraints,
-				"attendees.user": req.body.user_id
+				"attendees.user": req.params.userId
 			}).populate("event").exec();
 
-			let result = getPresencesAbsences(handlers, req.body.user_id);
+			let result = getPresencesAbsences(handlers, req.params.userId);
 
 			res.json(result);
 
