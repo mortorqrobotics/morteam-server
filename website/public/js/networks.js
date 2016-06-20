@@ -40,7 +40,7 @@ sendAjax("GET", "/teams/current/number", function(number) {
 //						infoWindow.setContent("<a class='teamNumLink' style='cursor: pointer' target='_blank' >Team " + teamNum + "</a>");
 //						infoWindow.open(map, marker);
 
-			sendAjax("GET", ["teams/number", teamNum, "exists"], function(teams) {
+			sendAjax("GET", ["teams/number", teamNum, "exists"], function(team) {
 				$(".leftbar").empty()
 
 				if (team != "false" && team != "fail") {
