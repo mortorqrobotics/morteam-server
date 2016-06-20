@@ -34,7 +34,7 @@ function showAttendance(title, eventId) {
 			}, 100)
 		}
 	});
-	sendAjax("GET", ["event/id", eventId, "attendance"], function(attendees) {
+	sendAjax("GET", ["event/id", eventId, "attendees"], function(attendees) {
 		var span = $(document.createElement("span"));
 		var userSearch = $(document.createElement("input"), {
 			"type": "text",
