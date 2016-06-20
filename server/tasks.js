@@ -31,7 +31,7 @@ module.exports = function(imports) {
 		};
 
 		if (req.body.task_description) {
-			task.description = req.body.task_description; // TODO: rename to just description?
+			task.description = req.body.task_description;
 		}
 
 		try {
@@ -40,14 +40,14 @@ module.exports = function(imports) {
 
 			let recipient = yield User.findById(task.for);
 
-			if (!user) {
+			if (!recipient) {
 				return res.end("fail");
 			}
 
 			yield util.sendEmail({
-				to: user.email,
+				to: recipient.email,
 				subject: "New Task Assigned By " + req.user.firstname + " " + req.user.lastname,
-				text: "View your new task at http://www.morteam.com/u/" + task.for
+				text: "View your new task at http://www.morteam.com/profiles/id/" + task.for
 			});
 
 			res.end(task._id.toString());
