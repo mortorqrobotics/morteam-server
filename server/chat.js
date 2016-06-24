@@ -29,7 +29,7 @@ module.exports = function(imports) {
 
 				if((yield Chat.count({
 					group: false,
-					team: req.user.current_team._id,
+					team: req.user.team,
 					$or: [
 						{ userMembers: [req.user._id, req.body.user2] },
 						{ userMembers: [req.body.user2, req.user._id] }
@@ -40,13 +40,17 @@ module.exports = function(imports) {
 
 				let chat = yield Chat.create({
 					userMembers: userMembers,
-					team: req.user.current_team._id,
+					team: req.user.team,
 					group: false
 				});
 
 				// get the user that is not the person making this request
 				let user2Id = util.getUserOtherThanSelf(chat.userMembers, req.user._id.toString());
-				let user = yield User.findOne({ _id: user2Id });
+				let user = yield User.findOne({ _id: user2Id }); // check for team here?
+
+				if (!user) {
+					return res.end("fail");
+				}
 
 				res.json({
 					_id: user._id,
@@ -64,7 +68,7 @@ module.exports = function(imports) {
 				}
 
 				let chat = yield Chat.create({
-					team: req.user.current_team._id,
+					team: req.user.team,
 					name: normalizeDisplayedText(req.body.name),
 					userMembers: JSON.parse(userMembers),
 					subdivisionMembers: JSON.parse(subdivisionMembers),
@@ -87,15 +91,10 @@ module.exports = function(imports) {
 
 			// find a chat in the current team that also has said user as a member or has a subdivision of which said user is a member.
 			let chats = yield Chat.find({
-				team: req.user.current_team._id,
+				team: req.user.team,
 				$or: [
-					{
-						userMembers: req.user._id
-					}, {
-						subdivisionMembers: {
-							"$in": userSubdivisionIds
-						}
-					}
+					{ userMembers: req.user._id },
+					{ subdivisionMembers: { "$in": userSubdivisionIds } }
 				]
 			}, {
 				_id: 1,
@@ -145,7 +144,8 @@ module.exports = function(imports) {
 		try {
 
 			let chat = yield Chat.findOne({
-				_id: req.params.chatId
+				_id: req.params.chatId,
+				team: req.user.team
 			}, {
 				userMembers: 1,
 				subdivisionMembers: 1
@@ -153,11 +153,8 @@ module.exports = function(imports) {
 
 			let users = yield User.find({
 				$or: [
-					{
-						_id: { "$in": chat.userMembers }
-					}, {
-						subdivisions: { $elemMatch: { _id: {"$in": chat.subdivisionMembers} } }
-					}
+					{ _id: { "$in": chat.userMembers } },
+					{ subdivisions: { $elemMatch: { _id: { "$in": chat.subdivisionMembers } } } }
 				]
 			});
 
@@ -175,7 +172,8 @@ module.exports = function(imports) {
 		try {
 
 			let chat = yield Chat.findOne({
-				_id: req.params.chatId
+				_id: req.params.chatId,
+				team: req.user.team
 			}, {
 				userMembers: 1,
 				subdivisionMembers: 1,
@@ -208,7 +206,8 @@ module.exports = function(imports) {
 		try {
 
 			yield Chat.update({
-				_id: req.params.chatId
+				_id: req.params.chatId,
+				team: req.user.team
 			}, {
 				name: util.normalizeDisplayedText(req.body.newName)
 			});
@@ -224,7 +223,10 @@ module.exports = function(imports) {
 	router.delete("/chats/id/:chatId", requireAdmin, Promise.coroutine(function*(req, res) {
 		try {
 
-			yield Chat.findOneAndRemove({ _id: req.params.chatId });
+			yield Chat.findOneAndRemove({
+				_id: req.params.chatId,
+		   		team: req.user.team
+			});
 
 			return res.end("success");
 
@@ -237,7 +239,10 @@ module.exports = function(imports) {
 	router.post("/chats/id/:chatId/messages", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 			
-			yield Chat.update({ _id: req.params.chatId }, {
+			yield Chat.update({
+				_id: req.params.chatId,
+		   		team: req.user.team
+			}, {
 				"$push": {
 					"messages": {
 						"$each": [ {

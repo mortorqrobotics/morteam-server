@@ -131,7 +131,7 @@ module.exports = function(imports) {
 			return adminPositions.indexOf(position) != -1;
 		};
 		this.isUserAdmin = function(user) {
-			return self.isPositionAdmin(user.current_team.position);
+			return self.isPositionAdmin(user.position);
 		};
 		this.adminPositionsQuery = { $or: adminPositions };
 

@@ -23,7 +23,7 @@ module.exports = function(imports) {
 
 		let task = {
 			name: req.body.task_name,
-			team: req.user.current_team._id,
+			team: req.user.team,
 			for: req.params.userId, // why a reserved word :/
 			due_date: req.body.due_date,
 			creator: req.user._id,
@@ -66,7 +66,7 @@ module.exports = function(imports) {
 			let tasks = yield Task.find({
 				for: req.params.userId,
 				completed: true
-			}).populate("creator").exec();
+			}).populate("creator");
 
 			res.json(tasks);
 
@@ -84,7 +84,7 @@ module.exports = function(imports) {
 			let tasks = yield Task.find({
 				for: req.params.userId,
 				completed: false
-			}).populate("creator").exec();
+			}).populate("creator");
 
 			res.json(tasks);
 

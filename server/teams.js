@@ -20,7 +20,7 @@ module.exports = function(imports) {
 		try {
 
 			let users = yield User.find({
-				teams: { $elemMatch: { _id: req.user.current_team._id } }
+				team: req.user.team
 			});
 
 			res.json(users);
@@ -33,6 +33,10 @@ module.exports = function(imports) {
 
 	router.post("/teams", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
+
+			if (req.user.team) {
+				return res.end("already have a team");
+			}
 
 			if (yield Team.findOne({ id: req.body.id })) {
 				return res.end("fail");
@@ -63,32 +67,29 @@ module.exports = function(imports) {
 	router.post("/teams/code/:teamCode/join", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
-			let team = yield Team.findOne({ id: req.params.teamCode });
+			if (req.user.team) {
+				return res.end("already have a team");
+			}
+
+			let team = yield Team.findOne({
+				id: req.params.teamCode
+			});
 			
 			if (!team) {
 				return res.end("no such team");
 			}
 
-			if (req.user.bannedFromTeams.length > 0
-					&& req.user.bannedFromTeams.indexOf(team._id) != -1 ) {
+			if (req.user.bannedFromTeams.indexOf(team._id) != -1) {
 				return res.end("banned");
 			}
 
-			let users = yield User.find({ teams: { $elemMatch: { _id: team._id } } });
+			req.user.team = team._id;
+			req.user.position = (yield User.find({ team: team._id })) ? "member" : "leader";
 
-			let newTeam = {
-				_id: team._id,
-				position: users.length == 0 ? "leader" : "member" // make the first member an admin
-			};
-			if (req.user.teams.length == 0) {
-				req.user.current_team = newTeam;
-			}
-			req.user.teams.push(newTeam);
-
-			// TODO: does this do what it is supposed to do?
 			yield AttendanceHandler.update({
 				entireTeam: true,
-				event_date: { $gte: new Date() }
+				event_date: { $gte: new Date() },
+				"event.team": team._id
 			}, {"$push": {
 				"attendees": { user: req.user._id, status: "absent" }
 			}});
@@ -114,7 +115,9 @@ module.exports = function(imports) {
 	router.get("/teams/current/number", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
-			let team = yield Team.findOne({ _id: req.user.current_team._id});
+			let team = yield Team.findOne({
+				_id: req.user.team
+			});
 
 			res.end(String(team.number));
 
@@ -127,7 +130,7 @@ module.exports = function(imports) {
 	router.get("/teams/number/:teamNum/exists", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 			
-			if (yield Team.find({number: parseInt(req.params.teamNum)})) {
+			if (yield Team.find({ number: parseInt(req.params.teamNum) })) {
 				res.json(teams[0]); // TODO: should this just be "true" instead?
 				// the team is used by the client, instead of being "true" the route should be renamed, getIfExists or something
 			} else {
@@ -144,31 +147,30 @@ module.exports = function(imports) {
 		// remove a user from a team
 		try {
 
-			let user = yield User.findOne({ _id: req.params.userId });
+			let user = yield User.findOne({
+				_id: req.params.userId,
+				team: req.user.team
+			});
+
+			if (!user) {
+				return res.end("fail");
+			}
 
 			if (util.isUserAdmin(user) && (yield User.count({
-				teams: {
-					_id: req.user.current_team._id,
-					position: util.adminPositionsQuery
-				}
+				team: req.user.team,
+				position: util.adminPositionsQuery
 			})) <= 1) {
 				return res.end("You cannot remove the only Admin on your team.");
 			}
 
-			if (user.current_team._id.toString() == req.user.current_team._id.toString()) {
-				user.current_team = undefined; // TODO: make it so that if current_team is undefined when logging in, it allows you to set current_team
-				yield user.save();
-			}
-
-			user = yield User.update({
-				_id: req.params.userId
-			}, { "$pull": {
-				"teams": { _id: req.user.current_team._id },
-				"subdivisions": { team: req.user.current_team._id }
-			}});
+			delete user.team;
+			delete user.position;
+			delete user.scoutCaptain;
+			user.subdivisions = [];
+			yield user.save(); // TODO: does deleting then saving actually delete stuff?
 
 			yield Chat.update({
-				team: req.user.current_team._id,
+				team: req.user.team,
 				userMembers: new ObjectId(req.params.userId)
 			}, {
 				"$pull": {
@@ -177,17 +179,17 @@ module.exports = function(imports) {
 			});
 
 			yield Folder.update({
-				team: req.user.current_team._id,
+				team: req.user.team,
 				userMembers: new ObjectId(req.params.userId)
 			}, {
 				"$pull": {
-					"userMembers": req.body.user_id
+					"userMembers": req.params.userId
 				}
 			});
 
 			yield Event.update({
-				team: req.user.current_team._id,
-				userAttendees: new ObjectId(req.body.user_id)
+				team: req.user.team,
+				userAttendees: new ObjectId(req.params.userId)
 			}, {
 				"$pull": {
 					"userAttendees": req.params.userId
@@ -202,16 +204,19 @@ module.exports = function(imports) {
 		}
 	}));
 
-	router.get("/users/id/:userId/teams", requireLogin, Promise.coroutine(function*(req, res) {
+	// TODO: does this need to exist?
+	router.get("/users/id/:userId/teamInfo", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
 			let user = yield User.findOne({
-				_id: req.params.userId
+				_id: req.params.userId,
+				team: req.user.team
 			});
 
 			res.json({
-				"teams": user.teams,
-				"current_team": user.current_team
+				team: user.team,
+				position: user.position,
+				scoutCaptain: user.scoutCaptain
 			});
 
 		} catch (err) {

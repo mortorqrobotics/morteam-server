@@ -28,7 +28,7 @@ module.exports = function(imports) {
 			let subdivision = yield Subdivision.create({
 				name: req.body.name,
 				type: req.body.type,
-				team: req.user.current_team._id
+				team: req.user.team
 			});
 
 			yield User.findOneAndUpdate({
@@ -37,7 +37,7 @@ module.exports = function(imports) {
 				"$push": {
 					"subdivisions": {
 						_id: subdivision._id,
-						team: req.user.current_team._id,
+						team: req.user.team,
 						accepted: true
 					}
 				}
@@ -76,7 +76,7 @@ module.exports = function(imports) {
 
 			invitedUser.subdivisions.push({
 				_id: new ObjectId(subdivision._id),
-				team: req.user.current_team._id,
+				team: req.user.team,
 				accepted: false
 			});
 
@@ -94,7 +94,7 @@ module.exports = function(imports) {
 		try {
 
 			let subdivisions = yield Subdivision.find({
-				team: req.user.current_team._id,
+				team: req.user.team,
 				type: "public"
 			});
 
@@ -119,7 +119,7 @@ module.exports = function(imports) {
 
 			let subdivisions = yield Subdivision.find({ // TODO: is the team check necessary here?
 				_id: { "$in": userSubdivisionIds },
-				team: req.user.current_team._id
+				team: req.user.team
 			});
 
 			if (!subdivisions) {
@@ -152,7 +152,7 @@ module.exports = function(imports) {
 
 			let subdivisions = yield Subdivision.find({
 				_id: { "$in": invitedSubdivisions },
-				team: req.user.current_team._id
+				team: req.user.team
 			});
 
 			if (subdivisions) { // TODO: is the check necessary here?
@@ -214,7 +214,7 @@ module.exports = function(imports) {
 				"$pull": {
 					"subdivisions": {
 						_id: new ObjectId(subdivision._id),
-						team: req.user.current_team._id,
+						team: req.user.team,
 						accepted: false
 					}
 				}
@@ -226,7 +226,7 @@ module.exports = function(imports) {
 				"$push": {
 					"subdivisions": {
 						_id: new ObjectId(subdivision._id),
-						team: req.user.current_team._id,
+						team: req.user.team,
 						accepted: true
 					}
 				}
@@ -266,7 +266,7 @@ module.exports = function(imports) {
 				"$pull": {
 					"subdivisions": {
 						_id: new ObjectId(req.params.subdivId),
-						team: req.user.current_team._id
+						team: req.user.team
 					}
 				}
 			});
@@ -288,7 +288,7 @@ module.exports = function(imports) {
 				"$pull": {
 					"subdivisions": {
 						_id: new ObjectId(req.params.subdivId),
-						team: req.user.current_team._id
+						team: req.user.team
 					}
 				}
 			});
@@ -320,16 +320,16 @@ module.exports = function(imports) {
 
 			yield Subdivision.findOneAndRemove({
 				_id: new ObjectId(req.params.subdivId),
-				team: req.user.current_team._id
+				team: req.user.team
 			});
 
 			yield User.update({
-				teams: { $elemMatch: { _id: req.user.current_team._id } }
+				team: req.user.team
 			}, {
 				"$pull": {
 					"subdivisions": {
 						_id: new ObjectId(req.params.subdivId),
-						team: req.user.current_team._id
+						team: req.user.team
 					}
 				}
 			});
@@ -345,21 +345,23 @@ module.exports = function(imports) {
 	router.delete("/subdivisions/id/:subdivId/users/id/:userId", requireLogin, requireAdmin, Promise.coroutine(function*(req, res) {
 		try {
 
+			// TODO: check permissions...
+
 			yield User.update({
 				_id: req.params.userId,
-				teams: { $elemMatch: { _id: req.user.current_team._id } }
+				team: req.user.team
 			}, {
 				"$pull": { // TODO: maybe add new objectid
 					"subdivisions" : {
 						_id: new ObjectId(req.params.subdivId),
-						team: req.user.current_team._id,
+						team: req.user.team
 						accepted: true
 					}
 				}
 			});
 
 			let events = yield Event.find({
-				subdivisionAttendees: req.body.subdivision_id
+				subdivisionAttendees: req.params.subdivId
 			});
 
 			// TODO: this seems to be repeated a lot
@@ -368,7 +370,7 @@ module.exports = function(imports) {
 			}, {
 				"$pull": {
 					"attendees":  {
-						user: req.body.use_id
+						user: req.params.userId
 					}
 				}
 			})));

@@ -29,13 +29,13 @@ module.exports = function(imports) {
 		try {
 
 			let events = yield Event.find({
-				team: req.user.current_team._id,
+				team: req.user.team,
 				$or: [
 					{ entireTeam: true },
 					{ userAttendees: req.user._id },
 					{ subdivisionAttendees: { "$in": userSubdivisionIds } }
 				],
-				date: {$gte: start, $lte: end}
+				date: { $gte: start, $lte: end }
 			});
 
 			res.json(events);
@@ -52,14 +52,14 @@ module.exports = function(imports) {
 		try {
 
 			let events = yield Event.find({
-				team: req.user.current_team._id,
+				team: req.user.team,
 				$or: [
 					{ entireTeam: true },
 					{ userAttendees: req.user._id },
 					{ subdivisionAttendees: { "$in": userSubdivisionIds } }
 				],
 				date: {$gte: new Date()}
-			}).sort("date").exec();
+			}).sort("date");
 			
 			res.json(events);
 
@@ -81,7 +81,7 @@ module.exports = function(imports) {
 		let event = {
 			name: req.body.name,
 			date: new Date(req.body.date),
-			team: req.user.current_team._id,
+			team: req.user.team,
 			creator: req.user._id,
 			hasAttendance: req.body.hasAttendance
 		};
@@ -99,7 +99,7 @@ module.exports = function(imports) {
 				event.entireTeam = true;
 
 				users = yield User.find({
-					teams: { $elemMatch: { _id: req.user.current_team._id } }
+					team: req.user.team
 				});
 
 			} else {
@@ -155,9 +155,14 @@ module.exports = function(imports) {
 		try {
 
 			// TODO: check for correct team
-			yield Event.findOneAndRemove({ _id: req.params.eventId });
+			yield Event.findOneAndRemove({
+				_id: req.params.eventId,
+				team: req.user.team
+			});
 			
-			yield AttendanceHandler.findOneAndRemove({event: req.params.eventId});
+			yield AttendanceHandler.findOneAndRemove({
+				event: req.params.eventId
+			});
 			
 			res.end("success");
 
@@ -172,7 +177,7 @@ module.exports = function(imports) {
 
 			let handler = yield AttendanceHandler.findOne({
 				event: req.params.eventId
-			}).populate("attendees.user").exec();
+			}).populate("attendees.user");
 
 			res.json(handler.attendees);
 

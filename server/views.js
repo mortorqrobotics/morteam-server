@@ -30,11 +30,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 
 			let user = yield User.findOne({
 				_id: req.params.userId,
-				teams: {
-					$elemMatch: {
-						_id: req.user.current_team._id
-					}
-				} // said user has to be a member of the current team of whoever is loading the page
+				team: req.user.team
 			});
 
 			if (!user) {
@@ -49,8 +45,8 @@ module.exports = function(imports, publicDir, profpicDir) {
 				email: user.email,
 				phone: user.phone,
 				profpicpath: user.profpicpath,
-				viewedUserPosition: util.findTeamInUser(user, req.user.current_team._id).position,
-				viewerUserPosition: req.user.current_team.position,
+				viewedUserPosition: user.position
+				viewerUserPosition: req.user.position,
 				viewerUserId: req.user._id,
 				created_at: user.created_at
 			});
@@ -66,7 +62,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 
 			let subdivision = yield Subdivision.findOne({
 				_id: req.params.subdivId,
-				team: req.user.current_team._id
+				team: req.user.team
 			});
 
 			if (!subdivision) {
@@ -110,11 +106,11 @@ module.exports = function(imports, publicDir, profpicDir) {
 		try {
 
 			let users = yield User.find({
-				teams: { $elemMatch: { _id: req.user.current_team._id } }
+				team: req.user.team
 			});
 
 			let team = yield Team.findOne({
-				_id: req.user.current_team._id
+				_id: req.user.team
 			});
 
 			res.render(ejsFile("team"), {

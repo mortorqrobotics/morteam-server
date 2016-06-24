@@ -26,14 +26,15 @@ module.exports = function(imports) {
 			if (req.params.fileId.indexOf("-preview") == -1) {
 				
 				let file = yield File.findOne({
-					_id: req.params.fileId
-				}).populate("folder").exec();
+					_id: req.params.fileId,
+					"folder.team": req.user.team
+				}).populate("folder");
 				
 				if (!file) {
 					return res.end("fail");
 				}
 
-				if (!( (file.folder.team.toString() == req.user.current_team._id.toString() && file.folder.entireTeam)
+				if (!( (file.folder.team.toString() == req.user.team.toString() && file.folder.entireTeam)
 					|| file.folder.userMembers.indexOf(req.user._id) > -1
 					|| file.folder.subdivisionMembers.hasAnythingFrom(userSubdivisionIds) )) {
 				
@@ -60,7 +61,7 @@ module.exports = function(imports) {
 		try {
 
 			let folders = yield Folder.find({
-				team: req.user.current_team._id,
+				team: req.user.team,
 				parentFolder: { "$exists": false },
 				$or: [
 					{ entireTeam: true },
@@ -82,11 +83,12 @@ module.exports = function(imports) {
 		try {
 
 			let folders = yield Folder.find({
-				team: req.user.current_team._id,
-				parentFolder: req.params.folderId, $or: [
-					{entireTeam: true},
-					{userMembers: req.user._id},
-					{subdivisionMembers: {"$in": userSubdivisionIds} }
+				team: req.user.team,
+				parentFolder: req.params.folderId,
+				$or: [
+					{ entireTeam: true },
+					{ userMembers: req.user._id },
+					{ subdivisionMembers: { "$in": userSubdivisionIds } }
 				]
 			});
 
@@ -101,7 +103,9 @@ module.exports = function(imports) {
 	router.get("/folders/id/:folderId/files", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
-			let files = yield File.find({ folder: req.params.folderId });
+			let files = yield File.find({ // TODO: check for correct team
+				folder: req.params.folderId
+			});
 
 			res.json(files);
 
@@ -125,7 +129,7 @@ module.exports = function(imports) {
 
 			let folder = {
 				name: util.normalizeDisplayedText(req.body.name),
-				team: req.user.current_team._id,
+				team: req.user.team,
 				userMembers: req.body.userMembers,
 				subdivisionMembers: req.body.subdivisionMembers,
 				creator: req.user._id,
@@ -160,10 +164,10 @@ module.exports = function(imports) {
 		let disposition;
 
 		if (mime == undefined) {
-			disposition = "attachment; filename="+req.file.originalname;
+			disposition = "attachment; filename=" + req.file.originalname;
 			mime = "application/octet-stream";
 		} else {
-			disposition = "attachment; filename="+req.body.fileName+"."+ext;
+			disposition = "attachment; filename=" + req.body.fileName + "." + ext;
 		}
 
 		req.body.fileName = util.normalizeDisplayedText(req.body.fileName);
@@ -201,7 +205,7 @@ module.exports = function(imports) {
 				util.uploadToDriveAsync(buffer, file._id + "-preview", mime, disposition);
 			}
 
-			res.end(JSON.stringify(file));
+			res.json(file);
 
 		} catch (err) {
 			console.error(err);
@@ -214,7 +218,7 @@ module.exports = function(imports) {
 
 			let file = yield File.findOne({
 				_id: req.params.fileId
-			}).populate("folder").exec();
+			}).populate("folder");
 
 			if (req.user._id.toString() != file.creator.toString()
 					&& !util.isUserAdmin(req.user)) {

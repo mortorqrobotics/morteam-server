@@ -41,42 +41,37 @@ module.exports = function(imports) {
 	// allow browser to receive images, css, and js files without being logged in
 	// allow browser to receive some pages such as login.html, signup.html, etc. without being logged in
 	app.use(function(req, res, next) {
-		let path = req.path;
-		let exceptions = ["/login", "/signup", "/fp", "/favicon.ico"];
-		if (req.method == "GET") {
-			if (path.startsWith("/css/") || path.startsWith("/js/") || path.startsWith("/img/")) {
-				next();
-			} else if ( exceptions.indexOf(path) > -1 ) {
-				next();
-			} else if (req.url == "/void") {
-				if (req.user) {
-					if (req.user.teams.length > 0) {
-						if (!req.user.current_team) {
-							req.user.current_team._id = req.user.teams[0]._id;
-							req.user.current_team.position = req.user.teams[0].position;
-							req.user.save(); // is this necessary? I think so
-						}
-						res.redirect("/");
-					} else {
-						next();
-					}
-				} else {
-					res.redirect("/");
-				}
-			} else {
-				if (req.user) {
-					if (req.user.teams.length > 0) {
-						next();
-					} else {
-						res.redirect("/void");
-					}
-				} else {
-					res.redirect("/login");
-				}
-			}
-		} else {
-			next();
+		if (req.method != "GET") { // TODO: can this just be app.get then?
+			return next();
 		}
+
+		let path = req.path;
+		if (path.startsWith("/css/") || path.startsWith("/js/") || path.startsWith("/img/")) {
+			return next();
+		}
+
+		let exceptions = ["/login", "/signup", "/fp", "/favicon.ico"];
+
+		if ( exceptions.indexOf(path) > -1 ) {
+			return next();
+		}
+
+		if (req.url == "/void") {
+			if (!req.user || req.user.team) {
+				return res.redirect("/");
+			}
+			return next();
+		}
+
+		if (!req.user) {
+			return res.redirect("/login");
+		}
+
+		if (!req.user.team) {
+			return res.redirect("/void");
+		}
+
+		next();
 	});
 
 	// load any file in /website/public (aka publicDir)

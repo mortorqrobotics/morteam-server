@@ -26,7 +26,7 @@ module.exports = function(imports) {
 				if (!(sess._id in online_clients)) {
 
 					let chats = yield Chat.find({
-						team: sess.current_team._id,
+						team: sess.team,
 						$or: [
 							{ userMembers: new ObjectId(sess._id) },
 							{ subdivisionMembers: { "$in": userSubdivisionIds } }

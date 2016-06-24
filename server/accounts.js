@@ -40,6 +40,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 		try {
 			// IMPORTANT: req.body.username can either be a username or an email
 
+			// v this if statement though
 			// because you can"t send booleans via HTTP
 			if (req.body.rememberMe == "true") {
 				req.body.rememberMe = true;
@@ -48,24 +49,29 @@ module.exports = function(imports, publicDir, profpicDir) {
 			}
 
 			let user = yield User.findOne({
-				$or: [{ username: req.body.username }, { email: req.body.username }]
+				$or: [
+					{ username: req.body.username },
+					{ email: req.body.username }
+				]
 			}).select("+password");
 
-			if (user) {
-				let isMatch = yield user.comparePassword(req.body.password);
-				if (isMatch) {
-					// store user info in cookies
-					req.session.userId = user._id;
-					if (req.body.rememberMe) {
-						req.session.cookie.maxAge = 365 * 24 * 60 * 60 * 1000; // change cookie expiration date to one year
-					}
-					res.json(user);
-				} else {
-					res.end("inc/password"); // incorrect password
-				}
-			} else {
-				res.end("inc/username") // incorrect username
+			if (!user) {
+				return res.end("inc/username"); // incorrect username
 			}
+
+			let isMatch = yield user.comparePassword(req.body.password);
+			if (!isMatch) {
+				res.end("inc/password"); // incorrect password
+			}
+
+			// store user info in cookies
+			req.session.userId = user._id;
+			if (req.body.rememberMe) {
+				req.session.cookie.maxAge = 365 * 24 * 60 * 60 * 1000; // change cookie expiration date to one year
+			}
+
+			res.json(user);
+
 		} catch (err) {
 			console.error(err);
 			res.end("fail");
@@ -103,13 +109,11 @@ module.exports = function(imports, publicDir, profpicDir) {
 
 			// check if a user with either same username, email, or phone already exists
 			if((yield User.count({
-				$or: [{
-					username: req.body.username
-				}, {
-					email: req.body.email
-				}, {
-					phone: req.body.phone
-				}]
+				$or: [
+					{ username: req.body.username },
+					{ email: req.body.email },
+					{ phone: req.body.phone }
+				]
 			})) > 0) {
 				// user exists
 				return res.end("exists");
@@ -127,7 +131,6 @@ module.exports = function(imports, publicDir, profpicDir) {
 				lastname: req.body.lastname,
 				email: req.body.email,
 				phone: req.body.phone
-//				teams: []
 			};
 
 			// if user uploaded a profile pic
@@ -183,7 +186,8 @@ module.exports = function(imports, publicDir, profpicDir) {
 
 			// find target user
 			let user = yield User.findOne({
-				_id: req.params.userId
+				_id: req.params.userId,
+				team: req.user.team
 			});
 
 			if (!user) {
@@ -191,31 +195,25 @@ module.exports = function(imports, publicDir, profpicDir) {
 			}
 
 			let newPosition = req.params.newPosition.toLowerCase();
+			if (["member", "leader", "mentor", "alumnus"].indexOf(newPosition) != -1) {
+				return res.end("fail");
+			}
 
-			let currentPosition = util.findTeamInUser(user, req.user.current_team._id).position;
+			let currentPosition = user.position;
 
 			if (req.params.userId == req.user._id
 					&& !util.isPositionAdmin(newPosition)
 					&& (yield User.count({
-						teams: {
-							_id: req.user.current_team._id,
-							position: util.adminPositionsQuery
-						}
+						team: req.user.team,
+						position: util.adminPositionsQuery
 					})) <= 1) {
 
 				return res.end("You are the only leader or mentor on your team, so you cannot demote yourself.");
 
 			}
 
-			// update position of target user
-			yield User.update({
-				_id: req.params.userId,
-				"teams._id": req.user.current_team._id
-			}, { "$set": {
-				"teams.$.position": newPosition, // find out what .$. means and if it means selected "teams" element
-				"current_team.position": newPosition
-				// make sure in the future current_team.position is checked with "teams" array of the document when user is logging in as opposed to doing this
-			}});
+			user.position = newPosition;
+			yield user.save();
 
 			res.end("success");
 
@@ -241,11 +239,12 @@ module.exports = function(imports, publicDir, profpicDir) {
 
 			// find maximum of 10 users that match the search criteria
 			let users = yield User.find({
-				teams: { $elemMatch: { _id: req.user.current_team._id } },
+				team: req.user.team
 				$or: [
-					{ firstname: re }, { lastname: re }
+					{ firstname: re },
+					{ lastname: re }
 				]
-			}).limit(10).exec();
+			}).limit(10);
 
 			res.json(users);
 
@@ -264,7 +263,9 @@ module.exports = function(imports, publicDir, profpicDir) {
 
 		try {
 
-			let user = yield User.findOne({ _id: req.user._id }, "+password");
+			let user = yield User.findOne({
+				_id: req.user._id
+			}, "+password");
 
 			// check if old password is correct
 			if(!(yield user.comparePassword(req.body.oldPassword))) {
@@ -274,6 +275,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 			// set and save new password (password is automatically encrypted. see /models/User.js)
 			user.password = req.body.newPassword;
 			yield user.save();
+			// TODO: there should be a method on user to create a new encrypted password instead of doing it like this
 
 			res.end("success");
 
@@ -286,25 +288,23 @@ module.exports = function(imports, publicDir, profpicDir) {
 	// TODO: get rid of the form in the client so that this can be PUT
 	router.post("/profile", requireLogin, multer().single("new_prof_pic"), Promise.coroutine(function*(req, res) {
 
-		let updatedUser = {
-			firstname: req.body.firstname,
-			lastname: req.body.lastname,
-			email: req.body.email,
-			phone: req.body.phone
-		};
-
-		if (req.body.parentEmail != "") {
-			updatedUser.parentEmail = req.body.parentEmail;
-		}
-
 		if (!util.validateEmail(req.body.email) || !util.validatePhone(req.body.phone)) {
 			return res.end("fail");
+		}
+
+		req.user.firstname = req.body.firstname;
+		req.user.lastname = req.body.lastname;
+		req.user.email = req.body.email;
+		req.user.phone = req.body.phone;
+
+		if (req.body.parentEmail != "") {
+			req.user..parentEmail = req.body.parentEmail;
 		}
 
 		try {
 			if (req.file) { // if user chose to update their profile picture too
 
-				updatedUser.profpicpath = "/pp/" + req.user.username
+				req.user.profpicpath = "/pp/" + req.user.username
 
 				// get extension and corresponding mime type
 				let ext = req.file.originalname.substring(req.file.originalname.lastIndexOf(".")+1).toLowerCase() || "unknown";
@@ -322,7 +322,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 			}
 
 			// update user info in database
-			yield User.findOneAndUpdate({ _id: req.user._id }, updatedUser);
+			yield req.user.save();
 
 			res.end("success");
 
@@ -343,7 +343,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 			let user = yield User.findOne({
 				email: req.body.email,
 				username: req.body.username
-			}).exec();
+			});
 
 			if (!user) {
 				return res.end("does not exist");
