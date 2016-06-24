@@ -208,7 +208,7 @@ module.exports = function(imports) {
 		try {
 
 			yield Chat.update({
-				_id: req.body.chat_id
+				_id: req.params.chatId
 			}, {
 				name: util.normalizeDisplayedText(req.body.newName)
 			});
