@@ -65,7 +65,7 @@ module.exports = function(imports) {
 
 				let chat = yield Chat.create({
 					team: req.user.current_team._id,
-					name: req.body.name,
+					name: normalizeDisplayedText(req.body.name),
 					userMembers: JSON.parse(userMembers),
 					subdivisionMembers: JSON.parse(subdivisionMembers),
 					group: true

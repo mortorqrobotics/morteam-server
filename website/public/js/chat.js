@@ -240,13 +240,13 @@ $(document).ready(function() {
 
 
 	$(document).on("click", "#make_chat_btn", function() {
-		if (normalizeDisplayedText($(this).prev().val()).length < 20) {
+		if ($(this).prev().val().length < 20) {
 			var $this = $(this);
 			sendAjax("POST", "/chats", {
 				userMembers: sessionStorage.userMembers,
 				subdivisionMembers: sessionStorage.subdivisionMembers,
 				type: "group",
-				name: normalizeDisplayedText($this.prev().val())
+				name: $this.prev().val()
 			}, function(chat) {
 				if (chat != "fail") {
 					var li = document.createElement("li");
@@ -574,14 +574,14 @@ $(window).load(function() {
 
 	})
 	$(document).on("click", ".save_options", function() {
-		if (normalizeDisplayedText($(".change_name").val()).length < 20) {
+		if ($(".change_name").val().length < 20) {
 			var chatId = $(this).attr("data-chatid");
 			sendAjax("PUT", ["chats/group/id", chatId, "name"], {
-				newName: normalizeDisplayedText($(".change_name").val())
+				newName: $(".change_name").val()
 			}, function(response) {
 				if (response == "success") {
 					options_modal.close();
-					$(".chat_name[data-chatid='"+ chatId +"'] > span").first().html($(".change_name").val())
+					$(".chat_name[data-chatid='"+ chatId +"'] > span").first().html(normalizeDisplayedText($(".change_name").val()));
 				} else {
 					alert(response);
 				}
