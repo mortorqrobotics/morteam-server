@@ -118,6 +118,12 @@ function normalizeDisplayedText(text) {
 	return Autolinker.link(removeHTML(text));
 }
 $(document).ready(function() {
+
+	var sound = $('#audio-files').find('audio#click-sound')[0];
+	if (sound) {
+		sound.volume = 0.2;
+	}
+
 	$('#name_link').html(localStorage.firstname);
 
 	// show profile picture in top right
