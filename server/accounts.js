@@ -196,7 +196,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 			}
 
 			let newPosition = req.params.newPosition.toLowerCase();
-			if (["member", "leader", "mentor", "alumnus"].indexOf(newPosition) != -1) {
+			if (["member", "leader", "mentor", "alumnus"].indexOf(newPosition) == -1) {
 				return res.end("fail");
 			}
 
