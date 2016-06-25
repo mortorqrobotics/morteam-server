@@ -131,7 +131,6 @@ module.exports = function(imports) {
 			return adminPositions.indexOf(position) != -1;
 		};
 		this.isUserAdmin = function(user) {
-			console.log(user)
 			return self.isPositionAdmin(user.position);
 		};
 		this.adminPositionsQuery = { $or: adminPositions };

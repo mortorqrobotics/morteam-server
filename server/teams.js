@@ -83,7 +83,7 @@ module.exports = function(imports) {
 				return res.end("fail");
 			}
 
-			req.user.position = (yield User.find({ team: team._id })) ? "member" : "leader";
+			req.user.position = (yield User.findOne({ team: team._id })) ? "member" : "leader";
 			req.user.team = team._id;
 
 			yield AttendanceHandler.update({
