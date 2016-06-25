@@ -53,7 +53,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 					{ username: req.body.username },
 					{ email: req.body.username }
 				]
-			}).select("+password");
+			}).select("+password").populate("team");
 
 			if (!user) {
 				return res.end("inc/username"); // incorrect username
@@ -63,6 +63,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 			if (!isMatch) {
 				res.end("inc/password"); // incorrect password
 			}
+			delete user.password;
 
 			// store user info in cookies
 			req.session.userId = user._id;
@@ -239,7 +240,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 
 			// find maximum of 10 users that match the search criteria
 			let users = yield User.find({
-				team: req.user.team
+				team: req.user.team,
 				$or: [
 					{ firstname: re },
 					{ lastname: re }
@@ -298,7 +299,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 		req.user.phone = req.body.phone;
 
 		if (req.body.parentEmail != "") {
-			req.user..parentEmail = req.body.parentEmail;
+			req.user.parentEmail = req.body.parentEmail;
 		}
 
 		try {

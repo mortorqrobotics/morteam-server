@@ -354,7 +354,7 @@ module.exports = function(imports) {
 				"$pull": { // TODO: maybe add new objectid
 					"subdivisions" : {
 						_id: new ObjectId(req.params.subdivId),
-						team: req.user.team
+						team: req.user.team,
 						accepted: true
 					}
 				}

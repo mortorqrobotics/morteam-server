@@ -45,7 +45,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 				email: user.email,
 				phone: user.phone,
 				profpicpath: user.profpicpath,
-				viewedUserPosition: user.position
+				viewedUserPosition: user.position,
 				viewerUserPosition: req.user.position,
 				viewerUserId: req.user._id,
 				created_at: user.created_at

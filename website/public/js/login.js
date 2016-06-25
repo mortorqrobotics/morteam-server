@@ -29,17 +29,14 @@ $(document).ready(function() {
 				localStorage._id = user._id;
 				localStorage.phone = user.phone;
 				localStorage.email = user.email;
-				localStorage.teams = JSON.stringify(user.teams);
 				localStorage.profpicpath = user.profpicpath;
-				if (user.teams && user.teams.length > 0) {
-					if (user.current_team) {
-						localStorage.c_team = user.current_team._id;
-						localStorage.c_team_position = user.current_team.position;
+				if (user.team) {
+					localStorage.c_team = user.team._id;
+					localStorage.c_team_position = user.position;
 
-						// for morscout
-						localStorage.teamNumber = user.current_team.number;
-						localStorage.teamName = user.current_team.name;
-					}
+					// for morscout
+					localStorage.teamNumber = user.team.number;
+					localStorage.teamName = user.team.name;
 				}
 
 				// TODO: does this always work right?
