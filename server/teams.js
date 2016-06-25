@@ -68,7 +68,7 @@ module.exports = function(imports) {
 		try {
 
 			if (req.user.team) {
-				return res.end("already have a team");
+				return res.end("fail");
 			}
 
 			let team = yield Team.findOne({
@@ -76,11 +76,11 @@ module.exports = function(imports) {
 			});
 			
 			if (!team) {
-				return res.end("no such team");
+				return res.end("fail");
 			}
 
 			if (req.user.bannedFromTeams.indexOf(team._id) != -1) {
-				return res.end("banned");
+				return res.end("fail");
 			}
 
 			req.user.team = team._id;
@@ -104,7 +104,7 @@ module.exports = function(imports) {
 				defaultFolder: true
 			});
 
-			res.end(team._id);
+			res.end(team._id.toString());
 
 		} catch (err) {
 			console.log(err);
