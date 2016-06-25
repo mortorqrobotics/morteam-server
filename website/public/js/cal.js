@@ -354,7 +354,7 @@ $(document).ready(function() {
 			}
 		}
 		var eventId = $(this).attr("data-eventid");
-		sendAjax("PUT", ["event/id", eventId, "attendance"], {
+		sendAjax("PUT", ["events/id", eventId, "attendance"], {
 			updatedAttendees: updatedAttendees
 		}, function(response) {
 			if (response == "success") {
