@@ -73,6 +73,7 @@ module.exports = function(imports) {
 			}
 	
 			res.end(announcement._id.toString());
+			// TODO: should res.end be before or after the email? if the email fails the client will not know
 	
 		   	// send emails
 			if (util.isUserAdmin(req.user)) {
