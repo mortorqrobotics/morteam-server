@@ -678,12 +678,12 @@ $(window).load(function() {
 	})
 
 
-	var $quicksearch = $('.searchbox').keyup(debounce(function() {
-		qsRegex = new RegExp($quicksearch.val(), 'gi');
-		$grid.isotope();
-		if (currentFolderID == "") {
-			$(".add_file").hide();
-			$grid.isotope();
-		}
-	}, 200));
+//	var $quicksearch = $('.searchbox').keyup(debounce(function() {
+//		qsRegex = new RegExp($quicksearch.val(), 'gi');
+//		$grid.isotope();
+//		if (currentFolderID == "") {
+//			$(".add_file").hide();
+//			$grid.isotope();
+//		}
+//	}, 200));
 });
