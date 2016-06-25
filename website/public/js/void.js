@@ -22,7 +22,7 @@ $(document).ready(function() {
 			name: $(".team_name").val(),
 			number: $(".team_num").val()
 		}, function(response) {
-			if (response == "success") {
+			if (response != "fail") {
 				// TODO: the creator of a team should automatically be added to it
 				var teamCode = $(".team_id").val();
 				sendAjax("POST", ["teams/code", teamCode, "join"], function(teamId) {

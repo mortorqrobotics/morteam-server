@@ -56,7 +56,7 @@ module.exports = function(imports) {
 				defaultFolder: true
 			});
 
-			res.end(team._id);
+			res.end(team._id.toString());
 
 		} catch (err) {
 			console.error(err);
@@ -83,8 +83,8 @@ module.exports = function(imports) {
 				return res.end("fail");
 			}
 
-			req.user.team = team._id;
 			req.user.position = (yield User.find({ team: team._id })) ? "member" : "leader";
+			req.user.team = team._id;
 
 			yield AttendanceHandler.update({
 				entireTeam: true,
