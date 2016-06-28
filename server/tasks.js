@@ -2,125 +2,128 @@
 
 module.exports = function(imports) {
 
-	let express = imports.modules.express;
-	let Promise = imports.modules.Promise;
-	let util = imports.util;
+    let express = imports.modules.express;
+    let Promise = imports.modules.Promise;
+    let util = imports.util;
 
-	let requireLogin = util.requireLogin;
-	let requireAdmin = util.requireAdmin;
+    let requireLogin = util.requireLogin;
+    let requireAdmin = util.requireAdmin;
 
-	let Task = imports.models.Task;
-	let User = imports.models.User;
+    let Task = imports.models.Task;
+    let User = imports.models.User;
 
-	let router = express.Router();
+    let router = express.Router();
 
-	router.post("/users/id/:userId/tasks", requireLogin, requireAdmin, Promise.coroutine(function*(req, res) {
+    router.post("/users/id/:userId/tasks", requireLogin, requireAdmin, Promise.coroutine(function*(req, res) {
 
-		// for iOS and Android
-		if (typeof(req.body.due_date) == "string") {
-			req.body.due_date = new Date(req.body.due_date);
-		}
+        // for iOS and Android
+        if (typeof(req.body.due_date) == "string") {
+            req.body.due_date = new Date(req.body.due_date);
+        }
 
-		let task = {
-			name: req.body.task_name,
-			team: req.user.team,
-			for: req.params.userId, // why a reserved word :/
-			due_date: req.body.due_date,
-			creator: req.user._id,
-			completed: false
-		};
+        let task = {
+            name: req.body.task_name,
+            team: req.user.team,
+            for: req.params.userId, // why a reserved word :/
+            due_date: req.body.due_date,
+            creator: req.user._id,
+            completed: false
+        };
 
-		if (req.body.task_description) {
-			task.description = req.body.task_description;
-		}
+        if (req.body.task_description) {
+            task.description = req.body.task_description;
+        }
 
-		try {
+        try {
 
-			task = yield Task.create(task);
+            task = yield Task.create(task);
 
-			let recipient = yield User.findOne({
-				_id: task.for
-			});
+            let recipient = yield User.findOne({
+                _id: task.for
+            });
 
-			if (!recipient) {
-				return res.end("fail");
-			}
+            if (!recipient) {
+                return res.end("fail");
+            }
 
-			yield util.sendEmail({
-				to: recipient.email,
-				subject: "New Task Assigned By " + req.user.firstname + " " + req.user.lastname,
-				text: "View your new task at http://www.morteam.com/profiles/id/" + task.for
-			});
+            yield util.sendEmail({
+                to: recipient.email,
+                subject: "New Task Assigned By " + req.user.firstname + " " + req.user.lastname,
+                text: "View your new task at http://www.morteam.com/profiles/id/" + task.for
+            });
 
-			res.end(task._id.toString());
+            res.end(task._id.toString());
 
-		} catch (err) {
-			console.error(err);
-			res.end("fail");
-		}
-	}));
+        } catch (err) {
+            console.error(err);
+            res.end("fail");
+        }
+    }));
 
-	router.get("/users/id/:userId/tasks/completed", requireLogin, Promise.coroutine(function*(req, res) {
-		try {
+    router.get("/users/id/:userId/tasks/completed", requireLogin, Promise.coroutine(function*(req, res) {
+        try {
 
-			let tasks = yield Task.find({
-				for: req.params.userId,
-				completed: true
-			}).populate("creator");
+            let tasks = yield Task.find({
+                for: req.params.userId,
+                completed: true
+            }).populate("creator");
 
-			res.json(tasks);
+            res.json(tasks);
 
-		} catch (err) {
-			console.error(err);
-			res.end("fail");
-		}
-	}));
+        } catch (err) {
+            console.error(err);
+            res.end("fail");
+        }
+    }));
 
-	// TODO: should completed and pending tasks be put into one request?
+    // TODO: should completed and pending tasks be put into one request?
 
-	router.get("/users/id/:userId/tasks/pending", requireLogin, Promise.coroutine(function*(req, res) {
-		try {
+    router.get("/users/id/:userId/tasks/pending", requireLogin, Promise.coroutine(function*(req, res) {
+        try {
 
-			let tasks = yield Task.find({
-				for: req.params.userId,
-				completed: false
-			}).populate("creator");
+            let tasks = yield Task.find({
+                for: req.params.userId,
+                completed: false
+            }).populate("creator");
 
-			res.json(tasks);
+            res.json(tasks);
 
-		} catch (err) {
-			console.error(err);
-			res.end("fail");
-		}
-	}));
+        } catch (err) {
+            console.error(err);
+            res.end("fail");
+        }
+    }));
 
-	router.post("/tasks/id/:taskId/markCompleted", requireLogin, Promise.coroutine(function*(req, res) {
+    router.post("/tasks/id/:taskId/markCompleted", requireLogin, Promise.coroutine(function*(req, res) {
 
-		// TODO: is it possible for this route to not take in the target user?
+        // TODO: is it possible for this route to not take in the target user?
 
-		if (req.user._id != req.body.target_user // TODO: targetUserId instead?
-				&& !util.isUserAdmin(req.user)) {
+        if (req.user._id != req.body.target_user // TODO: targetUserId instead?
+            &&
+            !util.isUserAdmin(req.user)) {
 
-			return res.end("fail");
+            return res.end("fail");
 
-		}
+        }
 
-		try {
+        try {
 
-			yield Task.findOneAndUpdate({
-				_id: req.params.taskId
-			}, {
-				"$set": { completed: true }
-			});
+            yield Task.findOneAndUpdate({
+                _id: req.params.taskId
+            }, {
+                "$set": {
+                    completed: true
+                }
+            });
 
-			res.end("success");
+            res.end("success");
 
-		} catch (err) {
-			console.error(err);
-			res.end("fail");
-		}
-	}));
+        } catch (err) {
+            console.error(err);
+            res.end("fail");
+        }
+    }));
 
-	return router;
+    return router;
 
 };

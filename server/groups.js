@@ -2,14 +2,14 @@
 
 module.exports = function(imports) {
 
-	let express = imports.modules.express;
-	let Promise = imports.modules.Promise;
-	let util = imports.util;
+    let express = imports.modules.express;
+    let Promise = imports.modules.Promise;
+    let util = imports.util;
 
-	let requireLogin = util.requireLogin;
+    let requireLogin = util.requireLogin;
 
-	let router = express.Router();
+    let router = express.Router();
 
-	return router;
+    return router;
 
 };

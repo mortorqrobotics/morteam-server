@@ -2,246 +2,259 @@
 
 module.exports = function(imports) {
 
-	let express = imports.modules.express;
-	let ObjectId = imports.modules.mongoose.Types.ObjectId;
-	let multer = imports.modules.multer;
-	let extToMime = require("./extToMime.json");
-	let lwip = imports.modules.lwip;
-	let Promise = imports.modules.Promise;
-	let https = require("https");
-	let util = imports.util;
+    let express = imports.modules.express;
+    let ObjectId = imports.modules.mongoose.Types.ObjectId;
+    let multer = imports.modules.multer;
+    let extToMime = require("./extToMime.json");
+    let lwip = imports.modules.lwip;
+    let Promise = imports.modules.Promise;
+    let https = require("https");
+    let util = imports.util;
 
-	let requireLogin = util.requireLogin;
-	let requireAdmin = util.requireAdmin;
+    let requireLogin = util.requireLogin;
+    let requireAdmin = util.requireAdmin;
 
-	let Folder = imports.models.Folder;
-	let File = imports.models.File;
+    let Folder = imports.models.Folder;
+    let File = imports.models.File;
 
-	let router = express.Router();
+    let router = express.Router();
 
-	router.get("/files/id/:fileId", requireLogin, Promise.coroutine(function*(req, res) {
-		let userSubdivisionIds = util.activeSubdivisionIds(req.user.subdivisions);
-		try {
+    router.get("/files/id/:fileId", requireLogin, Promise.coroutine(function*(req, res) {
+        let userSubdivisionIds = util.activeSubdivisionIds(req.user.subdivisions);
+        try {
 
-			if (req.params.fileId.indexOf("-preview") == -1) {
-				
-				let file = yield File.findOne({
-					_id: req.params.fileId,
-					"folder.team": req.user.team
-				}).populate("folder");
-				
-				if (!file) {
-					return res.end("fail");
-				}
+            if (req.params.fileId.indexOf("-preview") == -1) {
 
-				if (!( (file.folder.team.toString() == req.user.team.toString() && file.folder.entireTeam)
-					|| file.folder.userMembers.indexOf(req.user._id) > -1
-					|| file.folder.subdivisionMembers.hasAnythingFrom(userSubdivisionIds) )) {
-				
-					return res.end("restricted");
-				}
-			}
+                let file = yield File.findOne({
+                    _id: req.params.fileId,
+                    "folder.team": req.user.team
+                }).populate("folder");
 
-			let url = yield util.driveBucket.getSignedUrlAsync("getObject", { Key: req.params.fileId, Expires: 60 });
-			// res.redirect(url); do not use this
-			// this caused a security flaw
-			// the S3 key was included in the url and sent to the user
-			https.get(url, function(response) {
-				response.pipe(res);
-			});
-		
-		} catch (err) {
-			console.error(err);
-			res.end("fail");
-		}
-	}));
+                if (!file) {
+                    return res.end("fail");
+                }
 
-	router.get("/folders/team", requireLogin, Promise.coroutine(function*(req, res) {
-		let userSubdivisionIds = util.activeSubdivisionIds(req.user.subdivisions);
-		try {
+                if (!((file.folder.team.toString() == req.user.team.toString() && file.folder.entireTeam) ||
+                        file.folder.userMembers.indexOf(req.user._id) > -1 ||
+                        file.folder.subdivisionMembers.hasAnythingFrom(userSubdivisionIds))) {
 
-			let folders = yield Folder.find({
-				team: req.user.team,
-				parentFolder: { "$exists": false },
-				$or: [
-					{ entireTeam: true },
-					{ userMembers: req.user._id },
-					{ subdivisionMembers: { "$in": userSubdivisionIds } }
-				]
-			});
+                    return res.end("restricted");
+                }
+            }
 
-			res.json(folders);
+            let url = yield util.driveBucket.getSignedUrlAsync("getObject", {
+                Key: req.params.fileId,
+                Expires: 60
+            });
+            // res.redirect(url); do not use this
+            // this caused a security flaw
+            // the S3 key was included in the url and sent to the user
+            https.get(url, function(response) {
+                response.pipe(res);
+            });
 
-		} catch (err) {
-			console.error(err);
-			res.end("fail");
-		}
-	}));
+        } catch (err) {
+            console.error(err);
+            res.end("fail");
+        }
+    }));
 
-	router.get("/folders/id/:folderId/subfolders", requireLogin, Promise.coroutine(function*(req, res) {
-		let userSubdivisionIds = util.activeSubdivisionIds(req.user.subdivisions);
-		try {
+    router.get("/folders/team", requireLogin, Promise.coroutine(function*(req, res) {
+        let userSubdivisionIds = util.activeSubdivisionIds(req.user.subdivisions);
+        try {
 
-			let folders = yield Folder.find({
-				team: req.user.team,
-				parentFolder: req.params.folderId,
-				$or: [
-					{ entireTeam: true },
-					{ userMembers: req.user._id },
-					{ subdivisionMembers: { "$in": userSubdivisionIds } }
-				]
-			});
+            let folders = yield Folder.find({
+                team: req.user.team,
+                parentFolder: {
+                    "$exists": false
+                },
+                $or: [{
+                    entireTeam: true
+                }, {
+                    userMembers: req.user._id
+                }, {
+                    subdivisionMembers: {
+                        "$in": userSubdivisionIds
+                    }
+                }]
+            });
 
-			res.json(folders);
+            res.json(folders);
 
-		} catch (err) {
-			console.error(err);
-			res.end("fail");
-		}
-	}));
+        } catch (err) {
+            console.error(err);
+            res.end("fail");
+        }
+    }));
 
-	router.get("/folders/id/:folderId/files", requireLogin, Promise.coroutine(function*(req, res) {
-		try {
+    router.get("/folders/id/:folderId/subfolders", requireLogin, Promise.coroutine(function*(req, res) {
+        let userSubdivisionIds = util.activeSubdivisionIds(req.user.subdivisions);
+        try {
 
-			let files = yield File.find({ // TODO: check for correct team
-				folder: req.params.folderId
-			});
+            let folders = yield Folder.find({
+                team: req.user.team,
+                parentFolder: req.params.folderId,
+                $or: [{
+                    entireTeam: true
+                }, {
+                    userMembers: req.user._id
+                }, {
+                    subdivisionMembers: {
+                        "$in": userSubdivisionIds
+                    }
+                }]
+            });
 
-			res.json(files);
+            res.json(folders);
 
-		} catch (err) {
-			console.error(err);
-			res.end("fail");
-		}
-	}));
+        } catch (err) {
+            console.error(err);
+            res.end("fail");
+        }
+    }));
 
-	router.post("/folders", requireLogin, Promise.coroutine(function*(req, res) {
+    router.get("/folders/id/:folderId/files", requireLogin, Promise.coroutine(function*(req, res) {
+        try {
 
-		if (req.body.name.length >= 22) {
-			return res.end("fail");
-		}
+            let files = yield File.find({ // TODO: check for correct team
+                folder: req.params.folderId
+            });
 
-		if (req.body.type != "teamFolder" && req.body.type != "subFolder") {
-			return res.end("fail");
-		}
+            res.json(files);
 
-		try {
+        } catch (err) {
+            console.error(err);
+            res.end("fail");
+        }
+    }));
 
-			let folder = {
-				name: util.normalizeDisplayedText(req.body.name),
-				team: req.user.team,
-				userMembers: req.body.userMembers,
-				subdivisionMembers: req.body.subdivisionMembers,
-				creator: req.user._id,
-				defaultFolder: false
-			};
+    router.post("/folders", requireLogin, Promise.coroutine(function*(req, res) {
 
-			if (req.body.type == "teamFolder") {
-				folder.parentFolder = undefined;
-				folder.ancestors = [];
-			} else if (req.body.type == "subFolder") {
-				folder.parentFolder = req.body.parentFolder;
-				folder.ancestors = req.body.ancestors.concat([req.body.parentFolder]);
-			}
+        if (req.body.name.length >= 22) {
+            return res.end("fail");
+        }
 
-			folder = yield Folder.create(folder);
+        if (req.body.type != "teamFolder" && req.body.type != "subFolder") {
+            return res.end("fail");
+        }
 
-			res.json(folder);
+        try {
 
-		} catch (err) {
-			console.error(err);
-			res.end("fail");
-		}
-	}));
+            let folder = {
+                name: util.normalizeDisplayedText(req.body.name),
+                team: req.user.team,
+                userMembers: req.body.userMembers,
+                subdivisionMembers: req.body.subdivisionMembers,
+                creator: req.user._id,
+                defaultFolder: false
+            };
 
-	router.post("/files/upload", requireLogin, multer({
-		limits: 50 * 1000000 // 50 megabytes
-	}).single("uploadedFile"), Promise.coroutine(function*(req, res) {
+            if (req.body.type == "teamFolder") {
+                folder.parentFolder = undefined;
+                folder.ancestors = [];
+            } else if (req.body.type == "subFolder") {
+                folder.parentFolder = req.body.parentFolder;
+                folder.ancestors = req.body.ancestors.concat([req.body.parentFolder]);
+            }
 
-		let ext = req.file.originalname.substring(req.file.originalname.lastIndexOf(".") + 1).toLowerCase() || "unknown";
+            folder = yield Folder.create(folder);
 
-		let mime = extToMime[ext];
-		let disposition;
+            res.json(folder);
 
-		if (mime == undefined) {
-			disposition = "attachment; filename=" + req.file.originalname;
-			mime = "application/octet-stream";
-		} else {
-			disposition = "attachment; filename=" + req.body.fileName + "." + ext;
-		}
+        } catch (err) {
+            console.error(err);
+            res.end("fail");
+        }
+    }));
 
-		req.body.fileName = util.normalizeDisplayedText(req.body.fileName);
+    router.post("/files/upload", requireLogin, multer({
+        limits: 50 * 1000000 // 50 megabytes
+    }).single("uploadedFile"), Promise.coroutine(function*(req, res) {
 
-		try {
+        let ext = req.file.originalname.substring(req.file.originalname.lastIndexOf(".") + 1).toLowerCase() || "unknown";
 
-			let file = yield File.create({
-				name: req.body.fileName,
-				originalName: req.file.originalname,
-				folder: req.body.currentFolderId,
-				size: req.file.size,
-				type: util.extToType(ext),
-				mimetype: mime,
-				creator: req.user._id
-			});
+        let mime = extToMime[ext];
+        let disposition;
 
-			yield util.uploadToDriveAsync(req.file.buffer, file._id, mime, disposition);
-			
-			if (file.type == "image") {
-			
-				let image = yield lwip.openAsync(req.file.buffer, ext);
+        if (mime == undefined) {
+            disposition = "attachment; filename=" + req.file.originalname;
+            mime = "application/octet-stream";
+        } else {
+            disposition = "attachment; filename=" + req.body.fileName + "." + ext;
+        }
 
-				Promise.promisifyAll(image);
+        req.body.fileName = util.normalizeDisplayedText(req.body.fileName);
 
-				let hToWRatio = image.height() / image.width();
-				if (hToWRatio >= 1) {
-					image = yield image.resizeAsync(280, 280 * hToWRatio);
-				} else {
-					image = yield image.resizeAsync(280 / hToWRatio, 280);
-				}
+        try {
 
-				Promise.promisifyAll(image);
-				let buffer = yield image.toBufferAsync(ext);
+            let file = yield File.create({
+                name: req.body.fileName,
+                originalName: req.file.originalname,
+                folder: req.body.currentFolderId,
+                size: req.file.size,
+                type: util.extToType(ext),
+                mimetype: mime,
+                creator: req.user._id
+            });
 
-				util.uploadToDriveAsync(buffer, file._id + "-preview", mime, disposition);
-			}
+            yield util.uploadToDriveAsync(req.file.buffer, file._id, mime, disposition);
 
-			res.json(file);
+            if (file.type == "image") {
 
-		} catch (err) {
-			console.error(err);
-			res.end("fail");
-		}
-	}));
+                let image = yield lwip.openAsync(req.file.buffer, ext);
 
-	router.delete("/files/id/:fileId", requireLogin, Promise.coroutine(function*(req, res) {
-		try {
+                Promise.promisifyAll(image);
 
-			let file = yield File.findOne({
-				_id: req.params.fileId
-			}).populate("folder");
+                let hToWRatio = image.height() / image.width();
+                if (hToWRatio >= 1) {
+                    image = yield image.resizeAsync(280, 280 * hToWRatio);
+                } else {
+                    image = yield image.resizeAsync(280 / hToWRatio, 280);
+                }
 
-			if (req.user._id.toString() != file.creator.toString()
-					&& !util.isUserAdmin(req.user)) {
-				return res.end("fail");
-			}
+                Promise.promisifyAll(image);
+                let buffer = yield image.toBufferAsync(ext);
 
-			yield util.deleteFileFromDriveAsync(req.params.fileId);
-			
-			yield file.remove();
-			
-			// TODO: this should not be passed by the client, it should be found by the server
-			if (req.query.isImg == "true") {
-				yield util.deleteFileFromDriveAsync(req.params.fileId + "-preview");
-			}
+                util.uploadToDriveAsync(buffer, file._id + "-preview", mime, disposition);
+            }
 
-			res.end("success");
+            res.json(file);
 
-		} catch (err) {
-			console.error(err);
-			res.end("fail");
-		}
-	}));
+        } catch (err) {
+            console.error(err);
+            res.end("fail");
+        }
+    }));
 
-	return router;
+    router.delete("/files/id/:fileId", requireLogin, Promise.coroutine(function*(req, res) {
+        try {
+
+            let file = yield File.findOne({
+                _id: req.params.fileId
+            }).populate("folder");
+
+            if (req.user._id.toString() != file.creator.toString() &&
+                !util.isUserAdmin(req.user)) {
+                return res.end("fail");
+            }
+
+            yield util.deleteFileFromDriveAsync(req.params.fileId);
+
+            yield file.remove();
+
+            // TODO: this should not be passed by the client, it should be found by the server
+            if (req.query.isImg == "true") {
+                yield util.deleteFileFromDriveAsync(req.params.fileId + "-preview");
+            }
+
+            res.end("success");
+
+        } catch (err) {
+            console.error(err);
+            res.end("fail");
+        }
+    }));
+
+    return router;
 
 };
