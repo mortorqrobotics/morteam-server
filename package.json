@@ -3,11 +3,14 @@
   "version": "1.0.0-beta.4",
   "description": "Organization utility for robotics teams",
   "main": "server/server.js",
+  "scripts": {
+	  "fmt": "for f in `find server -name '*.js'`; do ./node_modules/js-beautify/js/bin/js-beautify.js --type js -r -t -n -e \"\\n\" $f; done"
+  },
   "dependencies": {
     "autolinker": "^0.22.0",
     "aws-sdk": "^2.2.10",
     "bcrypt": "^0.8.5",
-	"bluebird": "^3.3.5",
+    "bluebird": "^3.3.5",
     "body-parser": "^1.14.0",
     "connect-mongo": "^0.8.2",
     "ejs": "^2.3.4",
@@ -30,5 +33,8 @@
   "bugs": {
     "url": "https://github.com/Farbod909/MorTeam-server-website/issues"
   },
-  "homepage": "https://github.com/Farbod909/MorTeam-server-website"
+  "homepage": "https://github.com/Farbod909/MorTeam-server-website",
+  "devDependencies": {
+    "js-beautify": "^1.6.3"
+  }
 }
