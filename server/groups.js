@@ -25,7 +25,7 @@ module.exports = function(imports) {
         }
     }));
 
-    router.get("/groups", requireLogin, Promise.coroutine(function(req, res) {
+    router.get("/groups", requireLogin, Promise.coroutine(function*(req, res) {
         try {
             let groups = yield Group.find({
                 members: req.user._id;
