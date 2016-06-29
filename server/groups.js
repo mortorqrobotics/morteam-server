@@ -25,6 +25,35 @@ module.exports = function(imports) {
         }
     }));
 
-    return router;
+    router.get("groups", Promise.coroutine(function*(req, res) {
 
+        try {
+            let groups = yield Group.find({
+                users: req.body.user._id
+            });
+            res.json(groups);
+        } catch (err) {
+            console.log(err);
+            res.end("fail");
+        }
+    }));
+
+    router.put("/groups/:id", Promise.coroutine(function*(req, res) {
+
+        try {
+            let group = yield Group.update({
+                _id: req.params._id
+            }, {
+                users: req.body.users,
+                groups: req.body.groups
+            });
+            res.json(group);
+        } catch (err) {
+            console.log(err);
+            res.end("fail");
+        }
+    }));
+
+
+    return router;
 };
