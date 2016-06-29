@@ -10,7 +10,7 @@ module.exports = function(imports) {
 
     let router = express.Router();
 
-    router.post("groups", Promise.coroutine(function*(req, res) {
+    router.post("/groups", Promise.coroutine(function*(req, res) {
         let group = {
             users: req.body.users,
             groups: req.body.groups
@@ -22,6 +22,18 @@ module.exports = function(imports) {
         } catch (err) {
             console.log(err);
             res.end("fail");
+        }
+    }));
+
+    router.get("/groups", requireLogin, Promise.coroutine(function(req, res) {
+        try {
+            let groups = yield Group.find({
+                members: req.user._id;
+            });
+            res.json(group);
+        } catch (err) {
+            console.log(err);
+            res.end("fail")
         }
     }));
 
