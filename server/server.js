@@ -27,7 +27,6 @@ module.exports = function(imports) {
     Promise.promisifyAll(lwip);
     Promise.promisifyAll(fs);
 
-
     const publicDir = require("path").join(__dirname, "../website/public");
     const profpicDir = "http://profilepics.morteam.com.s3.amazonaws.com/"
 

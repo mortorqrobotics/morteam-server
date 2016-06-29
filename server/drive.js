@@ -11,6 +11,7 @@ module.exports = function(imports) {
     let https = require("https");
     let util = imports.util;
 
+    let handler = util.handler;
     let requireLogin = util.requireLogin;
     let requireAdmin = util.requireAdmin;
 
@@ -19,116 +20,96 @@ module.exports = function(imports) {
 
     let router = express.Router();
 
-    router.get("/files/id/:fileId", requireLogin, Promise.coroutine(function*(req, res) {
+    router.get("/files/id/:fileId", requireLogin, handler(function*(req, res) {
         let userSubdivisionIds = util.activeSubdivisionIds(req.user.subdivisions);
-        try {
 
-            if (req.params.fileId.indexOf("-preview") == -1) {
+        if (req.params.fileId.indexOf("-preview") == -1) {
 
-                let file = yield File.findOne({
-                    _id: req.params.fileId,
-                    "folder.team": req.user.team
-                }).populate("folder");
+            let file = yield File.findOne({
+                _id: req.params.fileId,
+                "folder.team": req.user.team
+            }).populate("folder");
 
-                if (!file) {
-                    return res.end("fail");
-                }
-
-                if (!((file.folder.team.toString() == req.user.team.toString() && file.folder.entireTeam) ||
-                        file.folder.userMembers.indexOf(req.user._id) > -1 ||
-                        file.folder.subdivisionMembers.hasAnythingFrom(userSubdivisionIds))) {
-
-                    return res.end("restricted");
-                }
+            if (!file) {
+                return res.end("fail");
             }
 
-            let url = yield util.driveBucket.getSignedUrlAsync("getObject", {
-                Key: req.params.fileId,
-                Expires: 60
-            });
-            // res.redirect(url); do not use this
-            // this caused a security flaw
-            // the S3 key was included in the url and sent to the user
-            https.get(url, function(response) {
-                response.pipe(res);
-            });
+            if (!((file.folder.team.toString() == req.user.team.toString() && file.folder.entireTeam) ||
+                    file.folder.userMembers.indexOf(req.user._id) > -1 ||
+                    file.folder.subdivisionMembers.hasAnythingFrom(userSubdivisionIds))) {
 
-        } catch (err) {
-            console.error(err);
-            res.end("fail");
+                return res.end("restricted");
+            }
         }
+
+        let url = yield util.driveBucket.getSignedUrlAsync("getObject", {
+            Key: req.params.fileId,
+            Expires: 60
+        });
+        // res.redirect(url); do not use this
+        // this caused a security flaw
+        // the S3 key was included in the url and sent to the user
+        https.get(url, function(response) {
+            response.pipe(res);
+        });
+
     }));
 
-    router.get("/folders/team", requireLogin, Promise.coroutine(function*(req, res) {
+    router.get("/folders/team", requireLogin, handler(function*(req, res) {
         let userSubdivisionIds = util.activeSubdivisionIds(req.user.subdivisions);
-        try {
 
-            let folders = yield Folder.find({
-                team: req.user.team,
-                parentFolder: {
-                    "$exists": false
-                },
-                $or: [{
-                    entireTeam: true
-                }, {
-                    userMembers: req.user._id
-                }, {
-                    subdivisionMembers: {
-                        "$in": userSubdivisionIds
-                    }
-                }]
-            });
+        let folders = yield Folder.find({
+            team: req.user.team,
+            parentFolder: {
+                "$exists": false
+            },
+            $or: [{
+                entireTeam: true
+            }, {
+                userMembers: req.user._id
+            }, {
+                subdivisionMembers: {
+                    "$in": userSubdivisionIds
+                }
+            }]
+        });
 
-            res.json(folders);
+        res.json(folders);
 
-        } catch (err) {
-            console.error(err);
-            res.end("fail");
-        }
     }));
 
-    router.get("/folders/id/:folderId/subfolders", requireLogin, Promise.coroutine(function*(req, res) {
+    router.get("/folders/id/:folderId/subfolders", requireLogin, handler(function*(req, res) {
         let userSubdivisionIds = util.activeSubdivisionIds(req.user.subdivisions);
-        try {
 
-            let folders = yield Folder.find({
-                team: req.user.team,
-                parentFolder: req.params.folderId,
-                $or: [{
-                    entireTeam: true
-                }, {
-                    userMembers: req.user._id
-                }, {
-                    subdivisionMembers: {
-                        "$in": userSubdivisionIds
-                    }
-                }]
-            });
+        let folders = yield Folder.find({
+            team: req.user.team,
+            parentFolder: req.params.folderId,
+            $or: [{
+                entireTeam: true
+            }, {
+                userMembers: req.user._id
+            }, {
+                subdivisionMembers: {
+                    "$in": userSubdivisionIds
+                }
+            }]
+        });
 
-            res.json(folders);
+        res.json(folders);
 
-        } catch (err) {
-            console.error(err);
-            res.end("fail");
-        }
     }));
 
-    router.get("/folders/id/:folderId/files", requireLogin, Promise.coroutine(function*(req, res) {
-        try {
+    router.get("/folders/id/:folderId/files", requireLogin, handler(function*(req, res) {
 
-            let files = yield File.find({ // TODO: check for correct team
-                folder: req.params.folderId
-            });
+        let files = yield File.find({ // TODO: check for correct team
+            folder: req.params.folderId
+        });
 
-            res.json(files);
+        res.json(files);
 
-        } catch (err) {
-            console.error(err);
-            res.end("fail");
-        }
     }));
 
-    router.post("/folders", requireLogin, Promise.coroutine(function*(req, res) {
+    router.post("/folders", requireLogin, handler(function*(req, res) {
 
         if (req.body.name.length >= 22) {
             return res.end("fail");
@@ -138,38 +119,32 @@ module.exports = function(imports) {
             return res.end("fail");
         }
 
-        try {
+        let folder = {
+            name: util.normalizeDisplayedText(req.body.name),
+            team: req.user.team,
+            userMembers: req.body.userMembers,
+            subdivisionMembers: req.body.subdivisionMembers,
+            creator: req.user._id,
+            defaultFolder: false
+        };
 
-            let folder = {
-                name: util.normalizeDisplayedText(req.body.name),
-                team: req.user.team,
-                userMembers: req.body.userMembers,
-                subdivisionMembers: req.body.subdivisionMembers,
-                creator: req.user._id,
-                defaultFolder: false
-            };
-
-            if (req.body.type == "teamFolder") {
-                folder.parentFolder = undefined;
-                folder.ancestors = [];
-            } else if (req.body.type == "subFolder") {
-                folder.parentFolder = req.body.parentFolder;
-                folder.ancestors = req.body.ancestors.concat([req.body.parentFolder]);
-            }
-
-            folder = yield Folder.create(folder);
-
-            res.json(folder);
-
-        } catch (err) {
-            console.error(err);
-            res.end("fail");
+        if (req.body.type == "teamFolder") {
+            folder.parentFolder = undefined;
+            folder.ancestors = [];
+        } else if (req.body.type == "subFolder") {
+            folder.parentFolder = req.body.parentFolder;
+            folder.ancestors = req.body.ancestors.concat([req.body.parentFolder]);
         }
+
+        folder = yield Folder.create(folder);
+
+        res.json(folder);
+
     }));
 
     router.post("/files/upload", requireLogin, multer({
         limits: 50 * 1000000 // 50 megabytes
-    }).single("uploadedFile"), Promise.coroutine(function*(req, res) {
+    }).single("uploadedFile"), handler(function*(req, res) {
 
         let ext = req.file.originalname.substring(req.file.originalname.lastIndexOf(".") + 1).toLowerCase() || "unknown";
 
@@ -185,74 +160,63 @@ module.exports = function(imports) {
 
         req.body.fileName = util.normalizeDisplayedText(req.body.fileName);
 
-        try {
+        let file = yield File.create({
+            name: req.body.fileName,
+            originalName: req.file.originalname,
+            folder: req.body.currentFolderId,
+            size: req.file.size,
+            type: util.extToType(ext),
+            mimetype: mime,
+            creator: req.user._id
+        });
 
-            let file = yield File.create({
-                name: req.body.fileName,
-                originalName: req.file.originalname,
-                folder: req.body.currentFolderId,
-                size: req.file.size,
-                type: util.extToType(ext),
-                mimetype: mime,
-                creator: req.user._id
-            });
+        yield util.uploadToDriveAsync(req.file.buffer, file._id, mime, disposition);
 
-            yield util.uploadToDriveAsync(req.file.buffer, file._id, mime, disposition);
+        if (file.type == "image") {
 
-            if (file.type == "image") {
+            let image = yield lwip.openAsync(req.file.buffer, ext);
 
-                let image = yield lwip.openAsync(req.file.buffer, ext);
+            Promise.promisifyAll(image);
 
-                Promise.promisifyAll(image);
-
-                let hToWRatio = image.height() / image.width();
-                if (hToWRatio >= 1) {
-                    image = yield image.resizeAsync(280, 280 * hToWRatio);
-                } else {
-                    image = yield image.resizeAsync(280 / hToWRatio, 280);
-                }
-
-                Promise.promisifyAll(image);
-                let buffer = yield image.toBufferAsync(ext);
-
-                util.uploadToDriveAsync(buffer, file._id + "-preview", mime, disposition);
+            let hToWRatio = image.height() / image.width();
+            if (hToWRatio >= 1) {
+                image = yield image.resizeAsync(280, 280 * hToWRatio);
+            } else {
+                image = yield image.resizeAsync(280 / hToWRatio, 280);
             }
 
-            res.json(file);
+            Promise.promisifyAll(image);
+            let buffer = yield image.toBufferAsync(ext);
 
-        } catch (err) {
-            console.error(err);
-            res.end("fail");
+            util.uploadToDriveAsync(buffer, file._id + "-preview", mime, disposition);
         }
+
+        res.json(file);
+
     }));
 
-    router.delete("/files/id/:fileId", requireLogin, Promise.coroutine(function*(req, res) {
-        try {
+    router.delete("/files/id/:fileId", requireLogin, handler(function*(req, res) {
 
-            let file = yield File.findOne({
-                _id: req.params.fileId
-            }).populate("folder");
+        let file = yield File.findOne({
+            _id: req.params.fileId
+        }).populate("folder");
 
-            if (req.user._id.toString() != file.creator.toString() &&
-                !util.isUserAdmin(req.user)) {
-                return res.end("fail");
-            }
-
-            yield util.deleteFileFromDriveAsync(req.params.fileId);
-
-            yield file.remove();
-
-            // TODO: this should not be passed by the client, it should be found by the server
-            if (req.query.isImg == "true") {
-                yield util.deleteFileFromDriveAsync(req.params.fileId + "-preview");
-            }
-
-            res.end("success");
-
-        } catch (err) {
-            console.error(err);
-            res.end("fail");
+        if (req.user._id.toString() != file.creator.toString() &&
+            !util.isUserAdmin(req.user)) {
+            return res.end("fail");
         }
+
+        yield util.deleteFileFromDriveAsync(req.params.fileId);
+
+        yield file.remove();
+
+        // TODO: this should not be passed by the client, it should be found by the server
+        if (req.query.isImg == "true") {
+            yield util.deleteFileFromDriveAsync(req.params.fileId + "-preview");
+        }
+
+        res.end("success");
+
     }));
 
     return router;

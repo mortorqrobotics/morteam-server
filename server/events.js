@@ -7,6 +7,7 @@ module.exports = function(imports) {
     let Promise = imports.modules.Promise;
     let util = imports.util;
 
+    let handler = util.handler;
     let requireLogin = util.requireLogin;
     let requireAdmin = util.requireAdmin;
 
@@ -16,7 +17,7 @@ module.exports = function(imports) {
 
     let router = express.Router();
 
-    router.get("/events/year/:year/month/:month", requireLogin, Promise.coroutine(function*(req, res) {
+    router.get("/events/year/:year/month/:month", requireLogin, handler(function*(req, res) {
         let userSubdivisionIds = util.activeSubdivisionIds(req.user.subdivisions);
 
         let year = req.params.year;
@@ -26,63 +27,51 @@ module.exports = function(imports) {
         let start = new Date(year, month - 1, 1, 0, 0, 0); // month is 0 based
         let end = new Date(year, month - 1, numberOfDays, 23, 59, 59); // month is 0 based
 
-        try {
-
-            let events = yield Event.find({
-                team: req.user.team,
-                $or: [{
-                    entireTeam: true
-                }, {
-                    userAttendees: req.user._id
-                }, {
-                    subdivisionAttendees: {
-                        "$in": userSubdivisionIds
-                    }
-                }],
-                date: {
-                    $gte: start,
-                    $lte: end
+        let events = yield Event.find({
+            team: req.user.team,
+            $or: [{
+                entireTeam: true
+            }, {
+                userAttendees: req.user._id
+            }, {
+                subdivisionAttendees: {
+                    "$in": userSubdivisionIds
                 }
-            });
+            }],
+            date: {
+                $gte: start,
+                $lte: end
+            }
+        });
 
-            res.json(events);
+        res.json(events);
 
-        } catch (err) {
-            console.error(err);
-            res.end("fail");
-        }
     }));
 
-    router.get("/events/upcoming", requireLogin, Promise.coroutine(function*(req, res) {
+    router.get("/events/upcoming", requireLogin, handler(function*(req, res) {
         let userSubdivisionIds = util.activeSubdivisionIds(req.user.subdivisions);
 
-        try {
-
-            let events = yield Event.find({
-                team: req.user.team,
-                $or: [{
-                    entireTeam: true
-                }, {
-                    userAttendees: req.user._id
-                }, {
-                    subdivisionAttendees: {
-                        "$in": userSubdivisionIds
-                    }
-                }],
-                date: {
-                    $gte: new Date()
+        let events = yield Event.find({
+            team: req.user.team,
+            $or: [{
+                entireTeam: true
+            }, {
+                userAttendees: req.user._id
+            }, {
+                subdivisionAttendees: {
+                    "$in": userSubdivisionIds
                 }
-            }).sort("date");
+            }],
+            date: {
+                $gte: new Date()
+            }
+        }).sort("date");
 
-            res.json(events);
+        res.json(events);
 
-        } catch (err) {
-            console.error(err);
-            res.end("fail");
-        }
     }));
 
-    router.post("/events", requireLogin, requireAdmin, Promise.coroutine(function*(req, res) {
+    router.post("/events", requireLogin, requireAdmin, handler(function*(req, res) {
 
         req.body.userAttendees = req.body.userAttendees || [];
         req.body.subdivisionAttendees = req.body.subdivisionAttendees || [];
@@ -103,152 +92,126 @@ module.exports = function(imports) {
             event.description = req.body.description;
         }
 
-        try {
+        let users; // TODO: do not query for users unless either email or attendance is true
 
-            let users; // TODO: do not query for users unless either email or attendance is true
+        if (req.body.entireTeam) {
 
-            if (req.body.entireTeam) {
+            event.entireTeam = true;
 
-                event.entireTeam = true;
-
-                users = yield User.find({
-                    team: req.user.team
-                });
-
-            } else {
-
-                event.userAttendees = req.body.userAttendees;
-                event.subdivisionAttendees = req.body.subdivisionAttendees;
-
-                users = yield User.find({
-                    $or: [{
-                        _id: {
-                            $in: req.body.userAttendees
-                        }
-                    }, {
-                        subdivisions: {
-                            $elemMatch: {
-                                "_id": {
-                                    $in: req.body.subdivisionAttendees
-                                }
-                            }
-                        }
-                    }]
-                }, "-password");
-
-            }
-
-            event = yield Event.create(event);
-
-            if (req.body.sendEmail) {
-
-                let list = util.createRecepientList(users);
-
-                yield util.sendEmail({
-                    to: list,
-                    subject: "New Event on " + util.readableDate(event.date) + " - " + event.name,
-                    html: req.user.firstname + " " + req.user.lastname + " has created an event on " + util.readableDate(event.date) + ",<br><br>" + event.name + "<br>" + req.body.description
-                });
-
-            }
-
-            if (req.body.hasAttendance) {
-
-                let attendees = users.map(attendee => ({
-                    user: attendee._id,
-                    status: "absent"
-                }));
-
-                yield AttendanceHandler.create({
-                    event: event._id,
-                    event_date: event.date,
-                    attendees: attendees,
-                    entireTeam: req.body.entireTeam
-                });
-            }
-
-            res.json(event);
-
-        } catch (err) {
-            console.error(err);
-            res.end("fail");
-        }
-    }));
-
-    router.delete("/events/id/:eventId", requireLogin, requireAdmin, Promise.coroutine(function*(req, res) {
-        try {
-
-            // TODO: check for correct team
-            yield Event.findOneAndRemove({
-                _id: req.params.eventId,
+            users = yield User.find({
                 team: req.user.team
             });
 
-            yield AttendanceHandler.findOneAndRemove({
-                event: req.params.eventId
+        } else {
+
+            event.userAttendees = req.body.userAttendees;
+            event.subdivisionAttendees = req.body.subdivisionAttendees;
+
+            users = yield User.find({
+                $or: [{
+                    _id: {
+                        $in: req.body.userAttendees
+                    }
+                }, {
+                    subdivisions: {
+                        $elemMatch: {
+                            "_id": {
+                                $in: req.body.subdivisionAttendees
+                            }
+                        }
+                    }
+                }]
+            }, "-password");
+
+        }
+
+        event = yield Event.create(event);
+
+        if (req.body.sendEmail) {
+
+            let list = util.createRecepientList(users);
+
+            yield util.sendEmail({
+                to: list,
+                subject: "New Event on " + util.readableDate(event.date) + " - " + event.name,
+                html: req.user.firstname + " " + req.user.lastname + " has created an event on " + util.readableDate(event.date) + ",<br><br>" + event.name + "<br>" + req.body.description
             });
 
-            res.end("success");
-
-        } catch (err) {
-            console.error(err);
-            res.end("fail");
         }
-    }));
 
-    router.get("/events/id/:eventId/attendees", requireLogin, requireAdmin, Promise.coroutine(function*(req, res) {
-        try {
+        if (req.body.hasAttendance) {
 
-            let handler = yield AttendanceHandler.findOne({
-                event: req.params.eventId
-            }).populate("attendees.user");
+            let attendees = users.map(attendee => ({
+                user: attendee._id,
+                status: "absent"
+            }));
 
-            res.json(handler.attendees);
-
-        } catch (err) {
-            console.error(err);
-            res.end("fail");
-        }
-    }));
-
-    router.put("/events/id/:eventId/attendance", requireLogin, requireAdmin, Promise.coroutine(function*(req, res) {
-        try {
-
-            yield AttendanceHandler.update({
-                event: req.params.eventId
-            }, {
-                "$set": {
-                    attendees: req.body.updatedAttendees
-                }
+            yield AttendanceHandler.create({
+                event: event._id,
+                event_date: event.date,
+                attendees: attendees,
+                entireTeam: req.body.entireTeam
             });
-
-            res.end("success");
-
-        } catch (err) {
-            console.error(err);
-            res.end("fail");
         }
+
+        res.json(event);
+
+    }));
+
+    router.delete("/events/id/:eventId", requireLogin, requireAdmin, handler(function*(req, res) {
+
+        // TODO: check for correct team
+        yield Event.findOneAndRemove({
+            _id: req.params.eventId,
+            team: req.user.team
+        });
+
+        yield AttendanceHandler.findOneAndRemove({
+            event: req.params.eventId
+        });
+
+        res.end("success");
+
+    }));
+
+    router.get("/events/id/:eventId/attendees", requireLogin, requireAdmin, handler(function*(req, res) {
+
+        let handler = yield AttendanceHandler.findOne({
+            event: req.params.eventId
+        }).populate("attendees.user");
+
+        res.json(handler.attendees);
+
+    }));
+
+    router.put("/events/id/:eventId/attendance", requireLogin, requireAdmin, handler(function*(req, res) {
+
+        yield AttendanceHandler.update({
+            event: req.params.eventId
+        }, {
+            "$set": {
+                attendees: req.body.updatedAttendees
+            }
+        });
+
+        res.end("success");
+
     }));
 
     // TODO: rename this route?
-    router.put("/events/id/:eventId/users/:userId/excuseAbsence", requireLogin, requireAdmin, Promise.coroutine(function*(req, res) {
-        try {
+    router.put("/events/id/:eventId/users/:userId/excuseAbsence", requireLogin, requireAdmin, handler(function*(req, res) {
 
-            yield AttendanceHandler.update({
-                event: req.params.eventId,
-                "attendees.user": req.body.user_id
-            }, {
-                "$set": {
-                    "attendees.$.status": "excused"
-                }
-            });
+        yield AttendanceHandler.update({
+            event: req.params.eventId,
+            "attendees.user": req.body.user_id
+        }, {
+            "$set": {
+                "attendees.$.status": "excused"
+            }
+        });
 
-            res.end("success");
+        res.end("success");
 
-        } catch (err) {
-            console.error(err);
-            res.end("fail");
-        }
     }));
 
     function getPresencesAbsences(attendanceHandlers, userId) {
@@ -272,32 +235,27 @@ module.exports = function(imports) {
         };
     }
 
-    router.get("/users/id/:userId/absences", requireLogin, Promise.coroutine(function*(req, res) {
-        try {
+    router.get("/users/id/:userId/absences", requireLogin, handler(function*(req, res) {
 
-            let dateConstraints = {};
-            if (req.query.startDate) {
-                dateConstraints.$gte = new Date(req.query.startDate);
-            }
-            if (req.query.endDate) {
-                dateConstraints.$lte = new Date(req.query.endDate);
-            } else {
-                dateConstraints.$lte = new Date();
-            }
-
-            let handlers = yield AttendanceHandler.find({
-                event_date: dateConstraints,
-                "attendees.user": req.params.userId
-            }).populate("event").exec();
-
-            let result = getPresencesAbsences(handlers, req.params.userId);
-
-            res.json(result);
-
-        } catch (err) {
-            console.error(err);
-            res.end("fail");
+        let dateConstraints = {};
+        if (req.query.startDate) {
+            dateConstraints.$gte = new Date(req.query.startDate);
         }
+        if (req.query.endDate) {
+            dateConstraints.$lte = new Date(req.query.endDate);
+        } else {
+            dateConstraints.$lte = new Date();
+        }
+
+        let handlers = yield AttendanceHandler.find({
+            event_date: dateConstraints,
+            "attendees.user": req.params.userId
+        }).populate("event").exec();
+
+        let result = getPresencesAbsences(handlers, req.params.userId);
+
+        res.json(result);
+
     }));
 
     return router;
