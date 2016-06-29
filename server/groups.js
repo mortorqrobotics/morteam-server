@@ -5,7 +5,8 @@ module.exports = function(imports) {
     let express = imports.modules.express;
     let Promise = imports.modules.Promise;
     let util = imports.util;
-    let Group = imports.models.NormalGroup;
+    let NormalGroup = imports.models.NormalGroup;
+    let Group = imports.models.Group;
     let requireLogin = util.requireLogin;
 
     let router = express.Router();
@@ -16,7 +17,7 @@ module.exports = function(imports) {
             groups: req.body.groups
         }
         try {
-            group = yield Group.create(group);
+            group = yield NormalGroup.create(group);
             res.json(group);
 
         } catch (err) {
@@ -25,11 +26,10 @@ module.exports = function(imports) {
         }
     }));
 
-
     router.get("/groups", requireLogin, Promise.coroutine(function*(req, res) {
         try {
             let groups = yield Group.find({
-                users: req.user._id
+                members: req.user._id
             });
             res.json(groups);
         } catch (err) {
@@ -38,12 +38,10 @@ module.exports = function(imports) {
         }
     }));
 
-  
-
     router.put("/groups/:id", Promise.coroutine(function*(req, res) {
 
         try {
-            let group = yield Group.update({
+            let group = yield NormalGroup.update({
                 _id: req.params._id
             }, {
                 users: req.body.users,
