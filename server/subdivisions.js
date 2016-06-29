@@ -386,8 +386,8 @@ module.exports = function(imports) {
 	router.get("/subdivisions/id/:subdivId/users", requireLogin, Promise.coroutine(function*(req, res) {
 		try {
 
-			let users = User.find({
-				subdivisions: { $elemMatch: { _id: req.params.subdivId,  accepted: true } }
+			let users = yield User.find({
+				subdivisions: { $elemMatch: { _id: new ObjectId(req.params.subdivId),  accepted: true } }
 			});
 
 			res.json(users);
