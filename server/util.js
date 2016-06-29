@@ -25,11 +25,18 @@ module.exports = function(imports) {
         let daysInWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
         let months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
-        this.activeSubdivisionIds = function(subdivisions) {
-            return subdivisions
-                .filter(subdivision => subdivision.accepted)
-                .map(subdivision => subdivision._id);
-        };
+        this.handler = function(generator) {
+            let func = Promise.coroutine(generator);
+            return function(req, res, next) {
+                return func
+                    .apply(null, arguments)
+                    .catch(function(err) {
+                        console.error(err);
+                        res.end("fail");
+                        // TODO: add real error handling and logging
+                    });
+            };
+        }
 
         // email transport
         this.notify = nodemailer.createTransport({
