@@ -22,14 +22,11 @@ module.exports = function(imports) {
             ref: "Team",
             required: true
         },
-        userAudience: [{
+        audienceGroup: {
             type: ObjectId,
-            ref: "User"
-        }],
-        subdivisionAudience: [{
-            type: ObjectId,
-            ref: "Subdivision"
-        }],
+            ref: "Group",
+            required: true
+        },
         timestamp: {
             type: Date,
             required: true
