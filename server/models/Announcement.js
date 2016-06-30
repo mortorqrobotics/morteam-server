@@ -17,11 +17,6 @@ module.exports = function(imports) {
             type: String,
             required: true
         },
-        team: {
-            type: ObjectId,
-            ref: "Team",
-            required: true
-        },
         audienceGroup: {
             type: ObjectId,
             ref: "Group",
