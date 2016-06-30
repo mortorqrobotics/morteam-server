@@ -36,7 +36,7 @@ module.exports = function(imports) {
 
     }));
 
-    router.put("/groups/:id", handler(function*(req, res) {
+    router.put("/groups/id/:id", requireLogin, handler(function*(req, res) {
 
         let group = yield NormalGroup.update({
             _id: req.params._id
@@ -45,7 +45,7 @@ module.exports = function(imports) {
             groups: req.body.groups
         });
 
-        res.json(group);
+        res.json(group); // TODO: add permissions?
 
     }));
 
