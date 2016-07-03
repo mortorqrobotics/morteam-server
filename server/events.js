@@ -44,7 +44,7 @@ module.exports = function(imports) {
 
         let events = yield Event.find({
             "group.members": req.user._id,
-            
+
             date: {
                 $gte: new Date()
             }
@@ -74,12 +74,12 @@ module.exports = function(imports) {
 
         let group = Group.findOne({
             _id: req.body.groupId
-        }); 
-        
-        let users = group.members;
-       
+        });
 
-        
+        let users = group.members;
+
+
+
 
         if (req.body.sendEmail) {
 
