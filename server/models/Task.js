@@ -16,11 +16,6 @@ module.exports = function(imports) {
             type: String,
             required: false
         },
-        team: {
-            type: ObjectId,
-            ref: "Team",
-            required: true
-        },
         for: {
             type: ObjectId,
             ref: "User"

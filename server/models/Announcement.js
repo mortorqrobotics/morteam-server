@@ -26,7 +26,6 @@ module.exports = function(imports) {
             type: Date,
             required: true
         },
-        entireTeam: Boolean,
         created_at: Date,
         updated_at: Date
     });
