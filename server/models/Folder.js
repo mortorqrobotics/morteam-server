@@ -13,7 +13,7 @@ module.exports = function(imports) {
             required: true
         },
         defaultFolder: Boolean,
-        group:{
+        group: {
             type: ObjectId,
             ref: "Group",
             required: true
