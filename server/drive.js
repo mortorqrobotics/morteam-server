@@ -17,11 +17,11 @@ module.exports = function(imports) {
 
     let Folder = imports.models.Folder;
     let File = imports.models.File;
+    let Group = imports.models.Group;
 
     let router = express.Router();
 
     router.get("/files/id/:fileId", requireLogin, handler(function*(req, res) {
-        let userSubdivisionIds = util.activeSubdivisionIds(req.user.subdivisions);
 
         if (req.params.fileId.indexOf("-preview") == -1) {
 
@@ -56,7 +56,6 @@ module.exports = function(imports) {
     }));
 
     router.get("/folders/team", requireLogin, handler(function*(req, res) {
-        let userSubdivisionIds = util.activeSubdivisionIds(req.user.subdivisions);
 
         let folders = yield Folder.find({
             team: req.user.team,
@@ -64,13 +63,7 @@ module.exports = function(imports) {
                 "$exists": false
             },
             $or: [{
-                entireTeam: true
-            }, {
-                userMembers: req.user._id
-            }, {
-                subdivisionMembers: {
-                    "$in": userSubdivisionIds
-                }
+               "group.members": req.user._id
             }]
         });
 
@@ -79,19 +72,12 @@ module.exports = function(imports) {
     }));
 
     router.get("/folders/id/:folderId/subfolders", requireLogin, handler(function*(req, res) {
-        let userSubdivisionIds = util.activeSubdivisionIds(req.user.subdivisions);
-
         let folders = yield Folder.find({
             team: req.user.team,
             parentFolder: req.params.folderId,
             $or: [{
-                entireTeam: true
-            }, {
-                userMembers: req.user._id
-            }, {
-                subdivisionMembers: {
-                    "$in": userSubdivisionIds
-                }
+                "group.members": req.user._id
+                
             }]
         });
 
@@ -122,8 +108,7 @@ module.exports = function(imports) {
         let folder = {
             name: util.normalizeDisplayedText(req.body.name),
             team: req.user.team,
-            userMembers: req.body.userMembers,
-            subdivisionMembers: req.body.subdivisionMembers,
+            "group.members": req.body.groupMembers,
             creator: req.user._id,
             defaultFolder: false
         };
