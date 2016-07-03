@@ -16,20 +16,11 @@ module.exports = function(imports) {
             type: String,
             required: false
         },
-        team: {
+        group: {
             type: ObjectId,
-            ref: "Team",
+            ref: "Group",
             required: true
-        },
-        userAttendees: [{
-            type: ObjectId,
-            ref: "User"
-        }],
-        subdivisionAttendees: [{
-            type: ObjectId,
-            ref: "Subdivision"
-        }],
-        entireTeam: Boolean,
+        }
         hasAttendance: Boolean,
         date: {
             type: Date,
