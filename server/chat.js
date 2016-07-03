@@ -20,39 +20,25 @@ module.exports = function(imports) {
     // TODO: separate this into separate requests for group and private chats
     router.post("/chats", requireLogin, handler(function*(req, res) {
 
-        let subdivisionMembers = req.body.subdivisionMembers || [];
-        let userMembers = req.body.userMembers || [];
+        let group = req.body.group;
+
 
         if (req.body.type == "private") {
             // private chat
 
             if ((yield Chat.count({
-                    group: false,
-                    team: req.user.team,
-                    $or: [{
-                            userMembers: [req.user._id, req.body.user2]
-                        }, {
-                            userMembers: [req.body.user2, req.user._id]
-                        }] // check to see if private convo already exists
+                    isTwoPeople: true,
+                    "group.members": req.body.group.members
+                        // check to see if already exists
                 })) > 0) {
                 return res.end("exists");
             }
 
+
             let chat = yield Chat.create({
-                userMembers: userMembers,
-                team: req.user.team,
-                group: false
+                group: group,
+                isTwoPeople: true
             });
-
-            // get the user that is not the person making this request
-            let user2Id = util.getUserOtherThanSelf(chat.userMembers, req.user._id.toString());
-            let user = yield User.findOne({
-                _id: user2Id
-            }); // check for team here?
-
-            if (!user) {
-                return res.end("fail");
-            }
 
             res.json({
                 _id: user._id,
@@ -66,15 +52,13 @@ module.exports = function(imports) {
             // group chat
 
             if (req.body.name.length >= 20) { // name character limit
-                return res.end("fail");
+                return res.end("Name has to be 19 characters or fewer.");
             }
 
             let chat = yield Chat.create({
-                team: req.user.team,
                 name: util.normalizeDisplayedText(req.body.name),
-                userMembers: JSON.parse(userMembers),
-                subdivisionMembers: JSON.parse(subdivisionMembers),
-                group: true
+                group: group,
+                isTwoPeople: false
             });
 
             res.json(chat);
@@ -83,29 +67,18 @@ module.exports = function(imports) {
     }));
 
     router.get("/chats", requireLogin, handler(function*(req, res) {
-        // get an array of _ids of subdivisions of which the user is a member. (dat proper grammar doe)
-        let userSubdivisionIds = util.activeSubdivisionIds(req.user.subdivisions);
 
         // find a chat in the current team that also has said user as a member or has a subdivision of which said user is a member.
         let chats = yield Chat.find({
-                team: req.user.team,
-                $or: [{
-                    userMembers: req.user._id
-                }, {
-                    subdivisionMembers: {
-                        $in: userSubdivisionIds
-                    }
-                }]
+                "group.members": req.user._id
             }, {
                 _id: 1,
                 name: 1,
                 group: 1,
-                userMembers: 1,
-                subdivisionMembers: 1,
                 updated_at: 1
             })
             .slice("messages", [0, 1])
-            .populate("userMembers subdivisionMembers")
+            .populate("group")
             .sort("-updated_at")
             .exec();
         // ^ the code above gets the latest message from the chat (for previews in iOS and Android) and orders the list by most recent.
@@ -135,27 +108,13 @@ module.exports = function(imports) {
         // user members only, not subdivision members
 
         let chat = yield Chat.findOne({
-            _id: req.params.chatId,
-            team: req.user.team
-        }, {
-            userMembers: 1,
-            subdivisionMembers: 1
+            _id: req.params.chatId
         });
 
         let users = yield User.find({
-            $or: [{
-                _id: {
-                    $in: chat.userMembers
-                }
-            }, {
-                subdivisions: {
-                    $elemMatch: {
-                        _id: {
-                            $in: chat.subdivisionMembers
-                        }
-                    }
-                }
-            }]
+            _id: {
+                $in: chat.group.members
+            }
         });
 
         res.json(users);
@@ -163,33 +122,19 @@ module.exports = function(imports) {
     }));
 
     router.get("/chats/id/:chatId/allMembers", requireLogin, handler(function*(req, res) {
-        // both user members and subdivision members
 
         let chat = yield Chat.findOne({
-            _id: req.params.chatId,
-            team: req.user.team
-        }, {
-            userMembers: 1,
-            subdivisionMembers: 1,
-            group: 1
+            _id: req.params.chatId
         });
 
-        let userMembers = yield User.find({
+        let members = yield User.find({
             _id: {
-                $in: chat.userMembers
-            }
-        });
-        let subdivisionMembers = yield Subdivision.find({
-            _id: {
-                $in: chat.subdivisionMembers
+                $in: chat.group.members
             }
         });
 
         res.json({
-            members: {
-                userMembers: userMembers,
-                subdivisionMembers: subdivisionMembers
-            },
+            members: members,
             group: chat.group
         });
 
@@ -203,7 +148,6 @@ module.exports = function(imports) {
 
         yield Chat.update({
             _id: req.params.chatId,
-            team: req.user.team
         }, {
             name: util.normalizeDisplayedText(req.body.newName)
         });
@@ -216,7 +160,6 @@ module.exports = function(imports) {
 
         yield Chat.findOneAndRemove({
             _id: req.params.chatId,
-            team: req.user.team
         });
 
         res.end("success");
@@ -227,7 +170,6 @@ module.exports = function(imports) {
 
         yield Chat.update({
             _id: req.params.chatId,
-            team: req.user.team
         }, {
             $push: {
                 messages: {
