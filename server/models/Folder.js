@@ -12,24 +12,12 @@ module.exports = function(imports) {
             type: String,
             required: true
         },
-        team: {
+        defaultFolder: Boolean,
+        group:{
             type: ObjectId,
-            ref: "Team",
+            ref: "Group",
             required: true
         },
-        defaultFolder: Boolean,
-        entireTeam: {
-            type: Boolean,
-            required: false
-        },
-        userMembers: [{
-            type: ObjectId,
-            ref: "User"
-        }],
-        subdivisionMembers: [{
-            type: ObjectId,
-            ref: "Subdivision"
-        }],
         ancestors: [{
             type: ObjectId,
             ref: "Folder",
