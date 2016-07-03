@@ -12,20 +12,13 @@ module.exports = function(imports) {
             type: String,
             required: false
         },
-        team: {
+
+        isTwoPeople: Boolean,
+        group: {
             type: ObjectId,
-            ref: "Team",
-            required: true
+            ref: "Group"
         },
-        group: Boolean,
-        userMembers: [{
-            type: ObjectId,
-            ref: "User"
-        }],
-        subdivisionMembers: [{
-            type: ObjectId,
-            ref: "Subdivision"
-        }],
+
         messages: [{
             author: {
                 type: ObjectId,
