@@ -20,7 +20,7 @@ module.exports = function(imports) {
             type: ObjectId,
             ref: "Group",
             required: true
-        }
+        },
         hasAttendance: Boolean,
         date: {
             type: Date,
