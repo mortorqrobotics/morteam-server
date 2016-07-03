@@ -14,11 +14,12 @@ module.exports = function(imports) {
     let User = imports.models.User;
     let Event = imports.models.Event;
     let AttendanceHandler = imports.models.AttendanceHandler;
+    let Group = imports.models.Group;
 
     let router = express.Router();
 
     router.get("/events/year/:year/month/:month", requireLogin, handler(function*(req, res) {
-        let userSubdivisionIds = util.activeSubdivisionIds(req.user.subdivisions);
+
 
         let year = req.params.year;
         let month = req.params.month;
@@ -28,16 +29,7 @@ module.exports = function(imports) {
         let end = new Date(year, month - 1, numberOfDays, 23, 59, 59); // month is 0 based
 
         let events = yield Event.find({
-            team: req.user.team,
-            $or: [{
-                entireTeam: true
-            }, {
-                userAttendees: req.user._id
-            }, {
-                subdivisionAttendees: {
-                    "$in": userSubdivisionIds
-                }
-            }],
+            "group.members": req.user._id,
             date: {
                 $gte: start,
                 $lte: end
@@ -49,19 +41,10 @@ module.exports = function(imports) {
     }));
 
     router.get("/events/upcoming", requireLogin, handler(function*(req, res) {
-        let userSubdivisionIds = util.activeSubdivisionIds(req.user.subdivisions);
 
         let events = yield Event.find({
-            team: req.user.team,
-            $or: [{
-                entireTeam: true
-            }, {
-                userAttendees: req.user._id
-            }, {
-                subdivisionAttendees: {
-                    "$in": userSubdivisionIds
-                }
-            }],
+            "group.members": req.user._id,
+            
             date: {
                 $gte: new Date()
             }
@@ -73,59 +56,30 @@ module.exports = function(imports) {
 
     router.post("/events", requireAdmin, handler(function*(req, res) {
 
-        req.body.userAttendees = req.body.userAttendees || [];
-        req.body.subdivisionAttendees = req.body.subdivisionAttendees || [];
-
         req.body.hasAttendance = req.body.hasAttendance == "true";
         req.body.sendEmail = req.body.sendEmail == "true";
         req.body.entireTeam = req.body.entireTeam == "true";
 
-        let event = {
+        yield Event.create({
             name: req.body.name,
             date: new Date(req.body.date),
-            team: req.user.team,
+            group: req.body.groupId,
             creator: req.user._id,
             hasAttendance: req.body.hasAttendance
-        };
+        });
 
         if (req.body.description.length > 0) {
             event.description = req.body.description;
         }
 
-        let users; // TODO: do not query for users unless either email or attendance is true
+        let group = Group.findOne({
+            _id: req.body.groupId
+        }); 
+        
+        let users = group.members;
+       
 
-        if (req.body.entireTeam) {
-
-            event.entireTeam = true;
-
-            users = yield User.find({
-                team: req.user.team
-            });
-
-        } else {
-
-            event.userAttendees = req.body.userAttendees;
-            event.subdivisionAttendees = req.body.subdivisionAttendees;
-
-            users = yield User.find({
-                $or: [{
-                    _id: {
-                        $in: req.body.userAttendees
-                    }
-                }, {
-                    subdivisions: {
-                        $elemMatch: {
-                            "_id": {
-                                $in: req.body.subdivisionAttendees
-                            }
-                        }
-                    }
-                }]
-            }, "-password");
-
-        }
-
-        event = yield Event.create(event);
+        
 
         if (req.body.sendEmail) {
 
@@ -149,8 +103,7 @@ module.exports = function(imports) {
             yield AttendanceHandler.create({
                 event: event._id,
                 event_date: event.date,
-                attendees: attendees,
-                entireTeam: req.body.entireTeam
+                attendees: attendees
             });
         }
 
@@ -162,8 +115,7 @@ module.exports = function(imports) {
 
         // TODO: check for correct team
         yield Event.findOneAndRemove({
-            _id: req.params.eventId,
-            team: req.user.team
+            _id: req.params.eventId
         });
 
         yield AttendanceHandler.findOneAndRemove({
