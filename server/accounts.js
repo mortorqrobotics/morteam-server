@@ -175,7 +175,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 
     }));
 
-    router.put("/users/id/:userId/position/:newPosition", requireLogin, requireAdmin, handler(function*(req, res) {
+    router.put("/users/id/:userId/position/:newPosition", requireAdmin, handler(function*(req, res) {
 
         // find target user
         let user = yield User.findOne({
