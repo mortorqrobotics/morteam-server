@@ -13,7 +13,6 @@ module.exports = function(imports) {
 
     let handler = util.handler;
     let requireLogin = util.requireLogin;
-    let requireAdmin = util.requireAdmin;
 
     let Folder = imports.models.Folder;
     let File = imports.models.File;

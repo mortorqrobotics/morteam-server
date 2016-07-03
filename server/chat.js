@@ -156,7 +156,7 @@ module.exports = function(imports) {
 
     }));
 
-    router.delete("/chats/id/:chatId", requireLogin, requireAdmin, handler(function*(req, res) {
+    router.delete("/chats/id/:chatId", requireAdmin, handler(function*(req, res) {
 
         yield Chat.findOneAndRemove({
             _id: req.params.chatId,

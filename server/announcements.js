@@ -10,7 +10,6 @@ module.exports = function(imports) {
 
     let handler = util.handler;
     let requireLogin = util.requireLogin;
-    let requireAdmin = util.requireAdmin;
 
     let Announcement = imports.models.Announcement;
     let User = imports.models.User;
