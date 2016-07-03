@@ -126,17 +126,19 @@ module.exports = function(imports) {
 
         // can be used as middleware to check if user is an admin
         this.requireAdmin = function(req, res, next) {
-            if (self.isUserAdmin(req.user)) {
-                next();
-            } else {
-                self.notify.sendMail({
-                    from: "MorTeam Notification <notify@morteam.com>",
-                    to: "rafezyfarbod@gmail.com",
-                    subject: "MorTeam Security Alert!",
-                    text: "The user " + req.user.firstname + " " + req.user.lastname + " tried to perform administrator tasks. User ID: " + req.user._id
-                });
-                res.end("fail");
-            }
+            requireLogin(req, res, function() {
+                if (self.isUserAdmin(req.user)) {
+                    next();
+                } else {
+                    self.notify.sendMail({
+                        from: "MorTeam Notification <notify@morteam.com>",
+                        to: "rafezyfarbod@gmail.com",
+                        subject: "MorTeam Security Alert!",
+                        text: "The user " + req.user.firstname + " " + req.user.lastname + " tried to perform administrator tasks. User ID: " + req.user._id
+                    });
+                    res.end("fail");
+                }
+            });
         };
 
         // leaders and mentors are considered admins
