@@ -57,12 +57,11 @@ module.exports = function(imports) {
     router.get("/folders/team", requireLogin, handler(function*(req, res) {
 
         let folders = yield Folder.find({
-            team: req.user.team,
             parentFolder: {
                 "$exists": false
             },
             $or: [{
-               "group.members": req.user._id
+                "group.members": req.user._id
             }]
         });
 
@@ -72,11 +71,10 @@ module.exports = function(imports) {
 
     router.get("/folders/id/:folderId/subfolders", requireLogin, handler(function*(req, res) {
         let folders = yield Folder.find({
-            team: req.user.team,
             parentFolder: req.params.folderId,
             $or: [{
                 "group.members": req.user._id
-                
+
             }]
         });
 
@@ -106,7 +104,6 @@ module.exports = function(imports) {
 
         let folder = {
             name: util.normalizeDisplayedText(req.body.name),
-            team: req.user.team,
             "group.members": req.body.groupMembers,
             creator: req.user._id,
             defaultFolder: false
