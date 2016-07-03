@@ -132,7 +132,7 @@ module.exports = function(imports) {
 
     }));
 
-    router.delete("/teams/current/users/id/:userId", requireLogin, requireAdmin, handler(function*(req, res) {
+    router.delete("/teams/current/users/id/:userId", requireAdmin, handler(function*(req, res) {
         // remove a user from a team
 
         let user = yield User.findOne({

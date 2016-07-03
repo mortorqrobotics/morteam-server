@@ -15,7 +15,7 @@ module.exports = function(imports) {
 
     let router = express.Router();
 
-    router.post("/users/id/:userId/tasks", requireLogin, requireAdmin, handler(function*(req, res) {
+    router.post("/users/id/:userId/tasks", requireAdmin, handler(function*(req, res) {
 
         // for iOS and Android
         if (typeof(req.body.due_date) == "string") {

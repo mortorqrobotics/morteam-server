@@ -54,7 +54,7 @@ module.exports = function(imports) {
 
     }));
 
-    router.post("/events", requireLogin, requireAdmin, handler(function*(req, res) {
+    router.post("/events", requireAdmin, handler(function*(req, res) {
 
         req.body.hasAttendance = req.body.hasAttendance == "true";
         req.body.sendEmail = req.body.sendEmail == "true";
@@ -111,7 +111,7 @@ module.exports = function(imports) {
 
     }));
 
-    router.delete("/events/id/:eventId", requireLogin, requireAdmin, handler(function*(req, res) {
+    router.delete("/events/id/:eventId", requireAdmin, handler(function*(req, res) {
 
         // TODO: check for correct team
         yield Event.findOneAndRemove({
@@ -126,7 +126,7 @@ module.exports = function(imports) {
 
     }));
 
-    router.get("/events/id/:eventId/attendees", requireLogin, requireAdmin, handler(function*(req, res) {
+    router.get("/events/id/:eventId/attendees", requireAdmin, handler(function*(req, res) {
 
         let handler = yield AttendanceHandler.findOne({
             event: req.params.eventId
@@ -136,7 +136,7 @@ module.exports = function(imports) {
 
     }));
 
-    router.put("/events/id/:eventId/attendance", requireLogin, requireAdmin, handler(function*(req, res) {
+    router.put("/events/id/:eventId/attendance", requireAdmin, handler(function*(req, res) {
 
         yield AttendanceHandler.update({
             event: req.params.eventId
@@ -151,7 +151,7 @@ module.exports = function(imports) {
     }));
 
     // TODO: rename this route?
-    router.put("/events/id/:eventId/users/:userId/excuseAbsence", requireLogin, requireAdmin, handler(function*(req, res) {
+    router.put("/events/id/:eventId/users/:userId/excuseAbsence", requireAdmin, handler(function*(req, res) {
 
         yield AttendanceHandler.update({
             event: req.params.eventId,
