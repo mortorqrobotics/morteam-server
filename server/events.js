@@ -44,7 +44,6 @@ module.exports = function(imports) {
 
         let events = yield Event.find({
             "group.members": req.user._id,
-
             date: {
                 $gte: new Date()
             }
@@ -78,9 +77,6 @@ module.exports = function(imports) {
 
         let users = group.members;
 
-
-
-
         if (req.body.sendEmail) {
 
             let list = util.createRecepientList(users);
@@ -113,7 +109,8 @@ module.exports = function(imports) {
 
     router.delete("/events/id/:eventId", requireAdmin, handler(function*(req, res) {
 
-        // TODO: check for correct team
+        // TODO: check permissions
+
         yield Event.findOneAndRemove({
             _id: req.params.eventId
         });
@@ -128,6 +125,8 @@ module.exports = function(imports) {
 
     router.get("/events/id/:eventId/attendees", requireAdmin, handler(function*(req, res) {
 
+        // TODO: check permissions
+
         let handler = yield AttendanceHandler.findOne({
             event: req.params.eventId
         }).populate("attendees.user");
@@ -137,6 +136,8 @@ module.exports = function(imports) {
     }));
 
     router.put("/events/id/:eventId/attendance", requireAdmin, handler(function*(req, res) {
+
+        // TODO: check permissions
 
         yield AttendanceHandler.update({
             event: req.params.eventId
@@ -152,6 +153,8 @@ module.exports = function(imports) {
 
     // TODO: rename this route?
     router.put("/events/id/:eventId/users/:userId/excuseAbsence", requireAdmin, handler(function*(req, res) {
+
+        // TODO: should permissions have to be checked here? I think not
 
         yield AttendanceHandler.update({
             event: req.params.eventId,

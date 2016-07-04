@@ -26,10 +26,10 @@ module.exports = function(imports) {
         if (req.body.type == "private") {
             // private chat
 
+            // check to see if already exists
             if ((yield Chat.count({
                     isTwoPeople: true,
                     "group.members": req.body.group.members
-                        // check to see if already exists
                 })) > 0) {
                 return res.end("exists");
             }
@@ -125,13 +125,18 @@ module.exports = function(imports) {
 
         let chat = yield Chat.findOne({
             _id: req.params.chatId
-        });
+        }).populate("group");
 
         let members = yield User.find({
             _id: {
                 $in: chat.group.members
             }
         });
+
+        // TODO: the purpose of this currently is to show users and subdivisions
+        // try clicking on the gear for a chat in morteam
+        // should populate the individual users and groups of a chat
+        // this will all be figured out once information is necessary on the frontend
 
         res.json({
             members: members,
@@ -146,6 +151,8 @@ module.exports = function(imports) {
             return res.end("Name has to be 19 characters or fewer.");
         }
 
+        // TODO: check if the user is a member of the chat
+
         yield Chat.update({
             _id: req.params.chatId,
         }, {
@@ -157,6 +164,9 @@ module.exports = function(imports) {
     }));
 
     router.delete("/chats/id/:chatId", requireAdmin, handler(function*(req, res) {
+
+        // TODO: check if the user has permissions to delete the chat
+        // should they have to be a member of it?
 
         yield Chat.findOneAndRemove({
             _id: req.params.chatId,

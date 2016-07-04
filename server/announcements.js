@@ -18,13 +18,14 @@ module.exports = function(imports) {
     let router = express.Router();
 
     router.post("/announcements", requireLogin, handler(function*(req, res) {
-        let announcement = {
+
+        let announcement = yield Announcement.create({
             author: req.user._id,
             content: req.body.content,
             audienceGroup: req.body.groupId,
             timestamp: new Date()
-        };
-        announcement = yield Announcement.create(announcement);
+        });
+
         res.json(announcement);
 
     }));
@@ -60,10 +61,12 @@ module.exports = function(imports) {
             _id: req.params.announcementId
         });
 
+        // TODO: if the user is an admin, check if they can see the announcement
+
         // check if user is eligible to delete said announcement
         if (req.user._id == announcement.author.toString() || util.isUserAdmin(req.user)) {
             yield announcement.remove();
-            yield Group.remove(req.params.announcementId);
+            yield Group.remove(announcement.audienceGroup);
             res.end("success");
         } else {
             // warn me about attempted hax, bruh

@@ -26,19 +26,13 @@ module.exports = function(imports) {
 
             let file = yield File.findOne({
                 _id: req.params.fileId,
-                "folder.team": req.user.team
+                "folder.group.members": req.user._id
             }).populate("folder");
 
             if (!file) {
                 return res.end("fail");
             }
 
-            if (!((file.folder.team.toString() == req.user.team.toString() && file.folder.entireTeam) ||
-                    file.folder.userMembers.indexOf(req.user._id) > -1 ||
-                    file.folder.subdivisionMembers.hasAnythingFrom(userSubdivisionIds))) {
-
-                return res.end("restricted");
-            }
         }
 
         let url = yield util.driveBucket.getSignedUrlAsync("getObject", {
@@ -60,9 +54,7 @@ module.exports = function(imports) {
             parentFolder: {
                 "$exists": false
             },
-            $or: [{
-                "group.members": req.user._id
-            }]
+            "group.members": req.user._id
         });
 
         res.json(folders);
@@ -70,12 +62,10 @@ module.exports = function(imports) {
     }));
 
     router.get("/folders/id/:folderId/subfolders", requireLogin, handler(function*(req, res) {
+
         let folders = yield Folder.find({
             parentFolder: req.params.folderId,
-            $or: [{
-                "group.members": req.user._id
-
-            }]
+            "group.members": req.user._id
         });
 
         res.json(folders);
@@ -84,8 +74,9 @@ module.exports = function(imports) {
 
     router.get("/folders/id/:folderId/files", requireLogin, handler(function*(req, res) {
 
-        let files = yield File.find({ // TODO: check for correct team
-            folder: req.params.folderId
+        let files = yield File.find({
+            folder: req.params.folderId,
+            "folder.group.members": req.user._id
         });
 
         res.json(files);
@@ -98,13 +89,14 @@ module.exports = function(imports) {
             return res.end("fail");
         }
 
+        // what to do about this
         if (req.body.type != "teamFolder" && req.body.type != "subFolder") {
             return res.end("fail");
         }
 
         let folder = {
             name: util.normalizeDisplayedText(req.body.name),
-            "group.members": req.body.groupMembers,
+            group: req.body.groupId,
             creator: req.user._id,
             defaultFolder: false
         };
@@ -140,6 +132,8 @@ module.exports = function(imports) {
         }
 
         req.body.fileName = util.normalizeDisplayedText(req.body.fileName);
+
+        // TODO: check if the user has access to the folder
 
         let file = yield File.create({
             name: req.body.fileName,
@@ -181,6 +175,8 @@ module.exports = function(imports) {
         let file = yield File.findOne({
             _id: req.params.fileId
         }).populate("folder");
+
+        // TODO: check permissions
 
         if (req.user._id.toString() != file.creator.toString() &&
             !util.isUserAdmin(req.user)) {
