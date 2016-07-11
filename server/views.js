@@ -4,6 +4,7 @@ module.exports = function(imports) {
 
     let express = imports.modules.express;
     let Promise = imports.modules.Promise;
+    let fs = require("fs"); // TODO: put this into initImports
     let util = imports.util;
     let handler = util.handler;
 
@@ -11,29 +12,34 @@ module.exports = function(imports) {
 
     router.get(handler(function*(req, res) {
 
-        let pages = [
-            "signup"
-        ];
+            let pages = {
+                signup: "Signup",
+            };
 
-        let page = pages.find(page => req.path.substring(1).startsWith(page)));
+            let page = Object.keys(pages)
+                .find(page => req.path.substring(1).startsWith(page)));
         if (!page) {
             return next();
         }
 
         res.render("../../morteam-web/src/page.html.ejs", {
-            page: page
+            page: pages[page]
         });
 
     }));
 
-    router.get("script.js", handler(function*(req, res) {
-        let page = req.query.page;
-        res.render("../../morteam-web/src/page.js.ejs", {
-            page: page
-        });
-    }));
+router.get("/js/:page", handler(function*(req, res) {
+    let page = req.params.page;
+    let file = "../../morteam-web/build/" + page + ".js";
+    // TODO: use the pacakge fs-promise
+    fs.exists(file, function(exists) {
+        if (!exists) {
+            return res.end("fail"); // AHHHH
+        }
+        fs.createReadStream(file).pipe(res);
+    });
+}));
 
-    return router;
+return router;
 
 };
-
