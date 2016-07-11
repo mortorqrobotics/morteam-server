@@ -29,7 +29,7 @@ module.exports = function(imports) {
     router.get("/js/:page", handler(function*(req, res) {
         let page = req.params.page;
         let file = "../morteam-web/build/" + page + ".js";
-        // TODO: use the pacakge fs-promise
+        // TODO: use the package fs-promise
         fs.exists(file, function(exists) {
             if (!exists) {
                 return res.end("fail"); // AHHHH
