@@ -10,36 +10,34 @@ module.exports = function(imports) {
 
     let router = express.Router();
 
-    router.get(handler(function*(req, res) {
+    let pages = {
+        signup: "Signup",
+    };
 
-            let pages = {
-                signup: "Signup",
-            };
+    for (let page in pages) {
 
-            let page = Object.keys(pages)
-                .find(page => req.path.substring(1).startsWith(page)));
-        if (!page) {
-            return next();
-        }
+        router.get("/" + page, handler(function*(req, res) {
 
-        res.render("../../morteam-web/src/page.html.ejs", {
-            page: pages[page]
+            res.render("../../morteam-web/src/page.html.ejs", {
+                page: pages[page]
+            });
+
+        }));
+
+    }
+
+    router.get("/js/:page", handler(function*(req, res) {
+        let page = req.params.page;
+        let file = "../morteam-web/build/" + page + ".js";
+        // TODO: use the pacakge fs-promise
+        fs.exists(file, function(exists) {
+            if (!exists) {
+                return res.end("fail"); // AHHHH
+            }
+            fs.createReadStream(file).pipe(res);
         });
-
     }));
 
-router.get("/js/:page", handler(function*(req, res) {
-    let page = req.params.page;
-    let file = "../../morteam-web/build/" + page + ".js";
-    // TODO: use the pacakge fs-promise
-    fs.exists(file, function(exists) {
-        if (!exists) {
-            return res.end("fail"); // AHHHH
-        }
-        fs.createReadStream(file).pipe(res);
-    });
-}));
-
-return router;
+    return router;
 
 };
