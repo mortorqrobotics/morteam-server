@@ -122,11 +122,6 @@ module.exports = function(imports, publicDir, profpicDir) {
             return res.end("exists");
         }
 
-        // TODO: this should not be on the server, only on the client
-        if (req.body.password != req.body.password_confirm) {
-            return res.end("password mismatch");
-        }
-
         let userInfo = {
             username: req.body.username,
             password: req.body.password,
