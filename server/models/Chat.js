@@ -16,7 +16,7 @@ module.exports = function(imports) {
         isTwoPeople: Boolean,
         group: {
             type: ObjectId,
-            ref: "Group",
+            ref: "NormalGroup",
             required: true
         },
 

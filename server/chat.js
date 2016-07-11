@@ -13,7 +13,7 @@ module.exports = function(imports) {
 
     let Chat = imports.models.Chat;
     let User = imports.models.User;
-    let Subdivision = imports.models.Subdivision;
+    let Group = imports.models.Group;
 
     let router = express.Router();
 
@@ -68,7 +68,7 @@ module.exports = function(imports) {
 
     router.get("/chats", requireLogin, handler(function*(req, res) {
 
-        // find a chat in the current team that also has said user as a member or has a subdivision of which said user is a member.
+        // find a chat that has said user as a member
         let chats = yield Chat.find({
                 "group.members": req.user._id
             }, {
@@ -105,7 +105,7 @@ module.exports = function(imports) {
     }));
 
     router.get("/chats/id/:chatId/users", requireLogin, handler(function*(req, res) {
-        // user members only, not subdivision members
+        // user members only, not groups
 
         let chat = yield Chat.findOne({
             _id: req.params.chatId
@@ -127,11 +127,17 @@ module.exports = function(imports) {
             _id: req.params.chatId
         }).populate("group");
 
-        let members = yield User.find({
+        let userMembers = yield User.find({
             _id: {
-                $in: chat.group.members
+                $in: chat.group.users
             }
         });
+
+        let groups = yield Group.find({
+            _id: {
+                $in: chat.group.groups
+            }
+        })
 
         // TODO: the purpose of this currently is to show users and subdivisions
         // try clicking on the gear for a chat in morteam
@@ -139,8 +145,11 @@ module.exports = function(imports) {
         // this will all be figured out once information is necessary on the frontend
 
         res.json({
-            members: members,
-            group: chat.group
+            members: {
+                userMembers: userMembers,
+                groups: groups
+            },
+            isTwoPeople: chat.isTwoPeople
         });
 
     }));
