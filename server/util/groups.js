@@ -2,8 +2,6 @@
 
 module.exports = function(imports) {
 
-    let Promise = imports.modules.Promise;
-
     return {
 
         includesQuery: function(query) {
