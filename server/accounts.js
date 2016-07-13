@@ -324,7 +324,7 @@ module.exports = function(imports, publicDir, profpicDir) {
         // see http://security.stackexchange.com/questions/32589/temporary-passwords-e-mailed-out-as-plain-text
 
         // email user new password
-        let info = yield util.sendEmail({
+        let info = yield util.mail.sendEmail({
             to: req.body.email,
             subject: "New MorTeam Password Request",
             text: "It seems like you requested to reset your password. Your new password is " + newPassword + ". Feel free to reset it after you log in."

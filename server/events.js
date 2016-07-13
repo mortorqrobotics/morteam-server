@@ -79,9 +79,9 @@ module.exports = function(imports) {
 
         if (req.body.sendEmail) {
 
-            let list = util.createRecepientList(users);
+            let list = util.mail.createRecepientList(users);
 
-            yield util.sendEmail({
+            yield util.mail.sendEmail({
                 to: list,
                 subject: "New Event on " + util.readableDate(event.date) + " - " + event.name,
                 html: req.user.firstname + " " + req.user.lastname + " has created an event on " + util.readableDate(event.date) + ",<br><br>" + event.name + "<br>" + req.body.description

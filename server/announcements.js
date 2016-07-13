@@ -70,7 +70,7 @@ module.exports = function(imports) {
             res.end("success");
         } else {
             // warn me about attempted hax, bruh
-            yield util.sendEmail({
+            yield util.mail.sendEmail({
                 to: "rafezyfarbod@gmail.com",
                 subject: "MorTeam Security Alert!",
                 text: "The user " + req.user.firstname + " " + req.user.lastname + " tried to perform administrator tasks. User ID: " + req.user._id

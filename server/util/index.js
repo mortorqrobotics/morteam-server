@@ -9,7 +9,6 @@ module.exports = function(imports) {
     let fs = require("fs");
     let config = imports.config;
     let Autolinker = imports.modules.autolinker;
-    let nodemailer = imports.modules.nodemailer;
     let lwip = imports.modules.lwip;
     let AWS = imports.modules.AWS;
     let AWSConfigPath = require("path").join(__dirname, "aws-config.json");
@@ -19,7 +18,8 @@ module.exports = function(imports) {
     // TODO: split this file up
 
     let util = {};
-    util.groups = require("./groups");
+    util.groups = require("./groups")(imports);
+    util.mail = require("./mail")(imports);
 
     let daysInWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     let months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -35,33 +35,6 @@ module.exports = function(imports) {
                     // TODO: add real error handling and logging
                 });
         };
-    }
-
-    // email transport
-    util.notify = nodemailer.createTransport({
-        service: "Mailgun",
-        auth: {
-            user: config.mailgunUser,
-            pass: config.mailgunPass
-        }
-    });
-    Promise.promisifyAll(util.notify);
-
-    util.sendEmail = function(options) {
-        return new Promise(function(resolve, reject) {
-            util.notify.sendMail({
-                from: "MorTeam Notification <notify@morteam.com>",
-                to: options.to,
-                subject: options.subject,
-                html: options.html
-            }, function(err, info) {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(info);
-                }
-            });
-        });
     };
 
     // define AWS S3 buckets used
@@ -153,7 +126,6 @@ module.exports = function(imports) {
         $or: adminPositions
     };
 
-
     util.userNotFound = function(response) {
         response.writeHead(200, {
             "Content-Type": "text/plain"
@@ -240,19 +212,6 @@ module.exports = function(imports) {
     util.readableDate = function(datestr) {
         let date = new Date(datestr);
         return months[date.getMonth()] + " " + date.getDate() + ", " + date.getFullYear();
-    };
-
-    // creates a list of email adresses seperated by ", " provided an array of user objects
-    util.createRecipientList = function(users) {
-        let result = "";
-        users.forEach(function(user) {
-            result += user.email + ", ";
-            if (user.parentEmail) {
-                result += user.parentEmail + ", "
-            }
-        });
-        result = result.substring(0, result.length - 2);
-        return result;
     };
 
     // determins "type" of file based on extension (is used for color coding files on the client)

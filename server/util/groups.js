@@ -2,17 +2,17 @@
 
 module.exports = function(imports) {
 
-    return {
+    let groups = {};
 
-        includesQuery: function(query) {
-            return {
-                users: query,
-                "groups.members": {
-                    $elemMatch: query,
-                },
-            };
-        },
+    groups.includesQuery = function(query) {
+        return {
+            users: query,
+            "groups.members": {
+                $elemMatch: query,
+            },
+        };
+    };
 
-    }
+    return groups;
 
 };
