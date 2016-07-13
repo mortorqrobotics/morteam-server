@@ -64,7 +64,7 @@ module.exports = function(imports) {
         // TODO: if the user is an admin, check if they can see the announcement
 
         // check if user is eligible to delete said announcement
-        if (req.user._id == announcement.author.toString() || util.isUserAdmin(req.user)) {
+        if (req.user._id == announcement.author.toString() || util.positions.isUserAdmin(req.user)) {
             yield announcement.remove();
             yield Group.remove(announcement.audienceGroup);
             res.end("success");

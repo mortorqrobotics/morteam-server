@@ -190,10 +190,10 @@ module.exports = function(imports, publicDir, profpicDir) {
         let currentPosition = user.position;
 
         if (req.params.userId == req.user._id &&
-            !util.isPositionAdmin(newPosition) &&
+            !util.positions.isPositionAdmin(newPosition) &&
             (yield User.count({
                 team: req.user.team,
-                position: util.adminPositionsQuery
+                position: util.positions.adminPositionsQuery
             })) <= 1) {
 
             return res.end("You are the only leader or mentor on your team, so you cannot demote yourself.");

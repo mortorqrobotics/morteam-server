@@ -181,7 +181,7 @@ module.exports = function(imports) {
         // TODO: check permissions
 
         if (req.user._id.toString() != file.creator.toString() &&
-            !util.isUserAdmin(req.user)) {
+            !util.positions.isUserAdmin(req.user)) {
             return res.end("fail");
         }
 

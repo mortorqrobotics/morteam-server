@@ -144,9 +144,9 @@ module.exports = function(imports) {
             return res.end("fail");
         }
 
-        if (util.isUserAdmin(user) && (yield User.count({
+        if (util.positions.isUserAdmin(user) && (yield User.count({
                 team: req.user.team,
-                position: util.adminPositionsQuery
+                position: util.positions.adminPositionsQuery
             })) <= 1) {
             return res.end("You cannot remove the only Admin on your team.");
         }

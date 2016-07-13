@@ -84,7 +84,7 @@ module.exports = function(imports) {
 
         if (req.user._id != req.body.target_user // TODO: targetUserId instead?
             &&
-            !util.isUserAdmin(req.user)) {
+            !util.positions.isUserAdmin(req.user)) {
 
             return res.end("fail");
 

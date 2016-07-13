@@ -16,6 +16,7 @@ module.exports = function(imports) {
     util.mail = require("./mail")(imports);
     util.s3 = require("./s3")(imports);
     util.images = require("./images")(imports);
+    util.positions = require("./positions")(imports);
 
     let daysInWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     let months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -81,10 +82,10 @@ module.exports = function(imports) {
     // can be used as middleware to check if user is an admin
     util.requireAdmin = function(req, res, next) {
         requireLogin(req, res, function() {
-            if (util.isUserAdmin(req.user)) {
+            if (util.positions.isUserAdmin(req.user)) {
                 next();
             } else {
-                util.notify.sendMail({
+                util.mail.notify.sendMail({
                     from: "MorTeam Notification <notify@morteam.com>",
                     to: "rafezyfarbod@gmail.com",
                     subject: "MorTeam Security Alert!",
@@ -93,19 +94,6 @@ module.exports = function(imports) {
                 res.end("fail");
             }
         });
-    };
-
-    // leaders and mentors are considered admins
-    // if an alumnus is active enough to need admin rights, that makes them a mentor
-    let adminPositions = ["leader", "mentor"];
-    util.isPositionAdmin = function(position) {
-        return adminPositions.indexOf(position) != -1;
-    };
-    util.isUserAdmin = function(user) {
-        return util.isPositionAdmin(user.position);
-    };
-    util.adminPositionsQuery = {
-        $or: adminPositions
     };
 
     util.userNotFound = function(response) {
