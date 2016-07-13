@@ -44,7 +44,7 @@ module.exports = function(imports) {
             return res.end("fail");
         }
 
-        yield util.sendEmail({
+        yield util.mail.sendEmail({
             to: recipient.email,
             subject: "New Task Assigned By " + req.user.firstname + " " + req.user.lastname,
             text: "View your new task at http://www.morteam.com/profiles/id/" + task.for
@@ -84,7 +84,7 @@ module.exports = function(imports) {
 
         if (req.user._id != req.body.target_user // TODO: targetUserId instead?
             &&
-            !util.isUserAdmin(req.user)) {
+            !util.positions.isUserAdmin(req.user)) {
 
             return res.end("fail");
 

@@ -143,12 +143,12 @@ module.exports = function(imports, publicDir, profpicDir) {
             }
 
             // resize image to 60px and upload to AWS S3
-            let buffer = yield util.resizeImageAsync(req.file.buffer, 60, ext);
-            yield util.uploadToProfPicsAsync(buffer, req.body.username + "-60", mime);
+            let buffer = yield util.images.resizeImageAsync(req.file.buffer, 60, ext);
+            yield util.s3.uploadToProfPicsAsync(buffer, req.body.username + "-60", mime);
 
             // resize image to 300px and upload to AWS S3
-            buffer = yield util.resizeImageAsync(req.file.buffer, 300, ext);
-            yield util.uploadToProfPicsAsync(buffer, req.body.username + "-300", mime);
+            buffer = yield util.images.resizeImageAsync(req.file.buffer, 300, ext);
+            yield util.s3.uploadToProfPicsAsync(buffer, req.body.username + "-300", mime);
 
         } else {
             userInfo.profpicpath = "/images/user.jpg"; // default profile picture
@@ -190,10 +190,10 @@ module.exports = function(imports, publicDir, profpicDir) {
         let currentPosition = user.position;
 
         if (req.params.userId == req.user._id &&
-            !util.isPositionAdmin(newPosition) &&
+            !util.positions.isPositionAdmin(newPosition) &&
             (yield User.count({
                 team: req.user.team,
-                position: util.adminPositionsQuery
+                position: util.positions.adminPositionsQuery
             })) <= 1) {
 
             return res.end("You are the only leader or mentor on your team, so you cannot demote yourself.");
@@ -287,10 +287,10 @@ module.exports = function(imports, publicDir, profpicDir) {
 
             // NOTE: for explanations of the functions used here, see util.js
 
-            let buffer = yield util.resizeImageAsync(req.file.buffer, 300, ext);
-            yield util.uploadToProfPicsAsync(buffer, req.user.username + "-300", mime);
-            buffer = yield util.resizeImageAsync(req.file.buffer, 60, ext);
-            yield util.uploadToProfPicsAsync(buffer, req.user.username + "-60", mime);
+            let buffer = yield util.images.resizeImageAsync(req.file.buffer, 300, ext);
+            yield util.s3.uploadToProfPicsAsync(buffer, req.user.username + "-300", mime);
+            buffer = yield util.images.resizeImageAsync(req.file.buffer, 60, ext);
+            yield util.s3.uploadToProfPicsAsync(buffer, req.user.username + "-60", mime);
         }
 
         // update user info in database
@@ -324,7 +324,7 @@ module.exports = function(imports, publicDir, profpicDir) {
         // see http://security.stackexchange.com/questions/32589/temporary-passwords-e-mailed-out-as-plain-text
 
         // email user new password
-        let info = yield util.sendEmail({
+        let info = yield util.mail.sendEmail({
             to: req.body.email,
             subject: "New MorTeam Password Request",
             text: "It seems like you requested to reset your password. Your new password is " + newPassword + ". Feel free to reset it after you log in."

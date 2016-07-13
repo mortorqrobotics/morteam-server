@@ -2,6 +2,8 @@
 
 module.exports = function(imports) {
 
+    // TODO: update this for groups
+
     let ObjectId = imports.modules.mongoose.Types.ObjectId;
     let Promise = imports.modules.Promise;
 

@@ -35,7 +35,7 @@ module.exports = function(imports) {
 
         }
 
-        let url = yield util.driveBucket.getSignedUrlAsync("getObject", {
+        let url = yield util.s3.driveBucket.getSignedUrlAsync("getObject", {
             Key: req.params.fileId,
             Expires: 60
         });
@@ -140,14 +140,16 @@ module.exports = function(imports) {
             originalName: req.file.originalname,
             folder: req.body.currentFolderId,
             size: req.file.size,
-            type: util.extToType(ext),
+            type: util.s3.extToType(ext),
             mimetype: mime,
             creator: req.user._id
         });
 
-        yield util.uploadToDriveAsync(req.file.buffer, file._id, mime, disposition);
+        yield util.s3.uploadToDriveAsync(req.file.buffer, file._id, mime, disposition);
 
         if (file.type == "image") {
+
+            // TODO: move this to util.images
 
             let image = yield lwip.openAsync(req.file.buffer, ext);
 
@@ -163,7 +165,7 @@ module.exports = function(imports) {
             Promise.promisifyAll(image);
             let buffer = yield image.toBufferAsync(ext);
 
-            util.uploadToDriveAsync(buffer, file._id + "-preview", mime, disposition);
+            util.s3.uploadToDriveAsync(buffer, file._id + "-preview", mime, disposition);
         }
 
         res.json(file);
@@ -179,17 +181,17 @@ module.exports = function(imports) {
         // TODO: check permissions
 
         if (req.user._id.toString() != file.creator.toString() &&
-            !util.isUserAdmin(req.user)) {
+            !util.positions.isUserAdmin(req.user)) {
             return res.end("fail");
         }
 
-        yield util.deleteFileFromDriveAsync(req.params.fileId);
+        yield util.s3.deleteFileFromDriveAsync(req.params.fileId);
 
         yield file.remove();
 
         // TODO: this should not be passed by the client, it should be found by the server
         if (req.query.isImg == "true") {
-            yield util.deleteFileFromDriveAsync(req.params.fileId + "-preview");
+            yield util.s3.deleteFileFromDriveAsync(req.params.fileId + "-preview");
         }
 
         res.end("success");
