@@ -7,8 +7,12 @@ module.exports = function(imports) {
 
     let Promise = imports.modules.Promise;
     let AWS = imports.modules.AWS;
+    let fs = require("fs");
     let AWSConfigPath = require("path").join(__dirname, "../aws-config.json");
-    AWS.config.loadFromPath(AWSConfigPath); // comment this line for testing without S3
+            
+    if (fs.existsSync(AWSConfigPath)) {
+        AWS.config.loadFromPath(AWSConfigPath);
+    }
 
     let s3 = {};
 
