@@ -49,7 +49,7 @@ module.exports = function(imports) {
             return next();
         }
 
-        let exceptions = ["/login", "/signup", "/fp", "/favicon.ico"];
+        let exceptions = ["/login", "/signup", "/fp", "/favicon.ico", "/src/bundle.css"];
 
         if (exceptions.indexOf(path) > -1) {
             return next();
