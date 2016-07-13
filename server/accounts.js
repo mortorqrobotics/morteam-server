@@ -144,11 +144,11 @@ module.exports = function(imports, publicDir, profpicDir) {
 
             // resize image to 60px and upload to AWS S3
             let buffer = yield util.resizeImageAsync(req.file.buffer, 60, ext);
-            yield util.uploadToProfPicsAsync(buffer, req.body.username + "-60", mime);
+            yield util.s3.uploadToProfPicsAsync(buffer, req.body.username + "-60", mime);
 
             // resize image to 300px and upload to AWS S3
             buffer = yield util.resizeImageAsync(req.file.buffer, 300, ext);
-            yield util.uploadToProfPicsAsync(buffer, req.body.username + "-300", mime);
+            yield util.s3.uploadToProfPicsAsync(buffer, req.body.username + "-300", mime);
 
         } else {
             userInfo.profpicpath = "/images/user.jpg"; // default profile picture
@@ -288,9 +288,9 @@ module.exports = function(imports, publicDir, profpicDir) {
             // NOTE: for explanations of the functions used here, see util.js
 
             let buffer = yield util.resizeImageAsync(req.file.buffer, 300, ext);
-            yield util.uploadToProfPicsAsync(buffer, req.user.username + "-300", mime);
+            yield util.s3.uploadToProfPicsAsync(buffer, req.user.username + "-300", mime);
             buffer = yield util.resizeImageAsync(req.file.buffer, 60, ext);
-            yield util.uploadToProfPicsAsync(buffer, req.user.username + "-60", mime);
+            yield util.s3.uploadToProfPicsAsync(buffer, req.user.username + "-60", mime);
         }
 
         // update user info in database

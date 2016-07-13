@@ -10,16 +10,12 @@ module.exports = function(imports) {
     let config = imports.config;
     let Autolinker = imports.modules.autolinker;
     let lwip = imports.modules.lwip;
-    let AWS = imports.modules.AWS;
-    let AWSConfigPath = require("path").join(__dirname, "aws-config.json");
-    AWS.config.loadFromPath(AWSConfigPath); // comment this line for testing without S3
     let Promise = imports.modules.Promise;
-
-    // TODO: split this file up
 
     let util = {};
     util.groups = require("./groups")(imports);
     util.mail = require("./mail")(imports);
+    util.s3 = require("./s3")(imports);
 
     let daysInWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     let months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -36,20 +32,6 @@ module.exports = function(imports) {
                 });
         };
     };
-
-    // define AWS S3 buckets used
-    util.profPicBucket = new AWS.S3({
-        params: {
-            Bucket: "profilepics.morteam.com"
-        }
-    });
-    util.driveBucket = new AWS.S3({
-        params: {
-            Bucket: "drive.morteam.com"
-        }
-    });
-    Promise.promisifyAll(util.profPicBucket);
-    Promise.promisifyAll(util.driveBucket);
 
     // quick way to send a 404: not found error
     util.send404 = function(res) {
@@ -212,60 +194,6 @@ module.exports = function(imports) {
     util.readableDate = function(datestr) {
         let date = new Date(datestr);
         return months[date.getMonth()] + " " + date.getDate() + ", " + date.getFullYear();
-    };
-
-    // determins "type" of file based on extension (is used for color coding files on the client)
-    util.extToType = function(ext) {
-        let spreadsheet = ["xls", "xlsx", "numbers", "_xls", "xlsb", "xlsm", "xltx", "xlt"];
-        let word = ["doc", "rtf", "pages", "txt", "docx"];
-        let image = ["png", "jpg", "jpeg", "jif", "jfif", "gif", "raw", "tiff", "bmp", "rif", "tif", "webp"];
-        let keynote = ["key", "ppt", "pptx"];
-        let audio = ["mp4", "webm", "mp3", "wav", "m4a", "avi", "wma", "ogg", "m4p", "ra", "ram", "rm", "mid", "flv", "mkv", "ogv", "mov", "mpg"];
-        if (~spreadsheet.indexOf(ext)) {
-            return "spreadsheet";
-        } else if (~word.indexOf(ext)) {
-            return "word";
-        } else if (~image.indexOf(ext)) {
-            return "image";
-        } else if (~keynote.indexOf(ext)) {
-            return "keynote";
-        } else if (~audio.indexOf(ext)) {
-            return "audio";
-        } else if (ext == "pdf") {
-            return "pdf";
-        } else {
-            return "unknown";
-        }
-    };
-
-    util.uploadToProfPics = function(buffer, destFileName, contentType, callback) {
-        util.profPicBucket.upload({
-            ACL: "public-read",
-            Body: buffer,
-            Key: destFileName.toString(),
-            ContentType: contentType,
-        }).send(callback);
-    };
-
-    util.uploadToDrive = function(buffer, destFileName, contentType, contentDisposition, callback) {
-        util.driveBucket.upload({
-            Body: buffer,
-            Key: destFileName.toString(),
-            ContentType: contentType,
-            ContentDisposition: contentDisposition
-        }).send(callback);
-    };
-
-    util.getFileFromDrive = function(fileName, callback) { //not being used
-        util.driveBucket.getObject({
-            Key: fileName
-        }).send(callback)
-    };
-
-    util.deleteFileFromDrive = function(fileName, callback) {
-        util.driveBucket.deleteObject({
-            Key: fileName
-        }).send(callback)
     };
 
     // ext is the extension without the period up front --> example: NOT ".txt", but rather "txt"
