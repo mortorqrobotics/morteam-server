@@ -81,16 +81,16 @@ module.exports = function(imports) {
     //	router.set("views", require("path").join(__dirname, "/../website"));
 
     // import all modules that handle specific requests
-    app.use(require("./views.js")(imports));
-    app.use(require("./accounts.js")(imports, publicDir, profpicDir));
-    app.use(require("./teams.js")(imports));
-    app.use(require("./groups.js")(imports));
-    app.use(require("./announcements.js")(imports));
-    app.use(require("./chat.js")(imports));
-    app.use(require("./drive.js")(imports));
-    app.use(require("./events.js")(imports));
-    app.use(require("./tasks.js")(imports));
-    require("./sio.js")(imports); // TODO: does something have to be done with this?
+    app.use(require("./views")(imports));
+    app.use(require("./accounts")(imports, publicDir, profpicDir));
+    app.use(require("./teams")(imports));
+    app.use(require("./groups")(imports));
+    app.use(require("./announcements")(imports));
+    app.use(require("./chat")(imports));
+    app.use(require("./drive")(imports));
+    app.use(require("./events")(imports));
+    app.use(require("./tasks")(imports));
+    require("./sio")(imports); // TODO: does something have to be done with this?
 
     // send 404 message for any page that does not exist (IMPORTANT: The order for this does matter. Keep it at the end.)
     app.use("*", function(req, res) { // TODO: should this be get or use?
