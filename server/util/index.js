@@ -9,13 +9,13 @@ module.exports = function(imports) {
     let fs = require("fs");
     let config = imports.config;
     let Autolinker = imports.modules.autolinker;
-    let lwip = imports.modules.lwip;
     let Promise = imports.modules.Promise;
 
     let util = {};
     util.groups = require("./groups")(imports);
     util.mail = require("./mail")(imports);
     util.s3 = require("./s3")(imports);
+    util.images = require("./images")(imports);
 
     let daysInWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     let months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -194,46 +194,6 @@ module.exports = function(imports) {
     util.readableDate = function(datestr) {
         let date = new Date(datestr);
         return months[date.getMonth()] + " " + date.getDate() + ", " + date.getFullYear();
-    };
-
-    // ext is the extension without the period up front --> example: NOT ".txt", but rather "txt"
-    util.resizeImage = function(buffer, size, ext, callback) {
-        lwip.open(buffer, ext, function(err, image) {
-            if (err) {
-                callback(err, undefined);
-            } else {
-                let hToWRatio = image.height() / image.width();
-                if (hToWRatio >= 1) {
-                    image.resize(size, size * hToWRatio, function(err, image) {
-                        if (err) {
-                            callback(err, undefined);
-                        } else {
-                            image.toBuffer(ext, function(err, buffer) {
-                                if (err) {
-                                    callback(err, undefined);
-                                } else {
-                                    callback(undefined, buffer);
-                                }
-                            });
-                        }
-                    });
-                } else {
-                    image.resize(size / hToWRatio, size, function(err, image) {
-                        if (err) {
-                            callback(err, undefined);
-                        } else {
-                            image.toBuffer(ext, function(err, buffer) {
-                                if (err) {
-                                    callback(err, undefined);
-                                } else {
-                                    callback(undefined, buffer);
-                                }
-                            });
-                        }
-                    });
-                }
-            }
-        });
     };
 
     String.prototype.contains = function(arg) {

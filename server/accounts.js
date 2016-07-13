@@ -143,11 +143,11 @@ module.exports = function(imports, publicDir, profpicDir) {
             }
 
             // resize image to 60px and upload to AWS S3
-            let buffer = yield util.resizeImageAsync(req.file.buffer, 60, ext);
+            let buffer = yield util.images.resizeImageAsync(req.file.buffer, 60, ext);
             yield util.s3.uploadToProfPicsAsync(buffer, req.body.username + "-60", mime);
 
             // resize image to 300px and upload to AWS S3
-            buffer = yield util.resizeImageAsync(req.file.buffer, 300, ext);
+            buffer = yield util.images.resizeImageAsync(req.file.buffer, 300, ext);
             yield util.s3.uploadToProfPicsAsync(buffer, req.body.username + "-300", mime);
 
         } else {
@@ -287,9 +287,9 @@ module.exports = function(imports, publicDir, profpicDir) {
 
             // NOTE: for explanations of the functions used here, see util.js
 
-            let buffer = yield util.resizeImageAsync(req.file.buffer, 300, ext);
+            let buffer = yield util.images.resizeImageAsync(req.file.buffer, 300, ext);
             yield util.s3.uploadToProfPicsAsync(buffer, req.user.username + "-300", mime);
-            buffer = yield util.resizeImageAsync(req.file.buffer, 60, ext);
+            buffer = yield util.images.resizeImageAsync(req.file.buffer, 60, ext);
             yield util.s3.uploadToProfPicsAsync(buffer, req.user.username + "-60", mime);
         }
 

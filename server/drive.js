@@ -149,6 +149,8 @@ module.exports = function(imports) {
 
         if (file.type == "image") {
 
+            // TODO: move this to util.images
+
             let image = yield lwip.openAsync(req.file.buffer, ext);
 
             Promise.promisifyAll(image);
