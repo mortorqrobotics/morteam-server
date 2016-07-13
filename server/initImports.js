@@ -33,7 +33,7 @@ module.exports = function(imports) {
     imports.models.Event = require("./models/Event")(imports);
     imports.models.AttendanceHandler = require("./models/AttendanceHandler")(imports);
     imports.models.Folder = require("./models/Folder")(imports);
-    imports.models.File = require("./models/Files")(imports);
+    imports.models.File = require("./models/File")(imports);
     imports.models.Task = require("./models/Task")(imports);
 
     imports.util = require("./util")(imports);

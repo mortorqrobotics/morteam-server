@@ -4,6 +4,7 @@ module.exports = function(imports) {
 
     let Promise = imports.modules.Promise;
     let nodemailer = imports.modules.nodemailer;
+    let config = imports.config;
 
     let mail = {};
 

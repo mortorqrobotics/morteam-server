@@ -54,5 +54,3 @@ module.exports = function(imports) {
     return images;
 
 };
-
-
