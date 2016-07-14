@@ -123,7 +123,7 @@ module.exports = function(imports) {
 
     }));
 
-    router.get("/events/id/:eventId/attendees", requireAdmin, handler(function*(req, res) {
+    router.get("/events/id/:eventId/attendance", requireAdmin, handler(function*(req, res) {
 
         // TODO: check permissions
 

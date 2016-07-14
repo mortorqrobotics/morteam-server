@@ -36,10 +36,10 @@ module.exports = function(imports) {
 
     }));
 
-    router.put("/groups/id/:id", requireLogin, handler(function*(req, res) {
+    router.put("/groups/id/:groupId", requireLogin, handler(function*(req, res) {
 
         let group = yield NormalGroup.update({
-            _id: req.params._id
+            _id: req.params.groupId
         }, {
             users: req.body.users,
             groups: req.body.groups

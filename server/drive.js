@@ -48,7 +48,7 @@ module.exports = function(imports) {
 
     }));
 
-    router.get("/folders/team", requireLogin, handler(function*(req, res) {
+    router.get("/folders", requireLogin, handler(function*(req, res) {
 
         let folders = yield Folder.find({
             parentFolder: {
