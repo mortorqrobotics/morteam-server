@@ -38,10 +38,6 @@ module.exports = function(imports) {
         });
     }));
 
-    router.get("/src/bundle.css", handler(function*(req, res) {
-        fs.createReadStream("../morteam-web/src/bundle.css").pipe(res)
-    }));
-    
     return router;
 
 };
