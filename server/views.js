@@ -12,6 +12,7 @@ module.exports = function(imports) {
 
     let pages = {
         signup: "Signup",
+        login: "Login",
     };
 
     for (let page in pages) {
