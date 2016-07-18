@@ -4,7 +4,7 @@
   "description": "Organization utility for robotics teams",
   "main": "server/server.js",
   "scripts": {
-	  "fmt": "for f in `find server -name '*.js'`; do ./node_modules/js-beautify/js/bin/js-beautify.js --type js -r -n -e \"\\n\" $f; done"
+	  "fmt": "for f in `find server -name '*.js'`; do ./node_modules/js-beautify/js/bin/js-beautify.js --type js -r -n -e \"\\n\" -b collapse-preserve-inline $f; done"
   },
   "dependencies": {
     "autolinker": "^0.22.0",

@@ -28,7 +28,7 @@ module.exports = function(imports) {
                 .apply(null, arguments)
                 .catch(function(err) {
                     console.error(err);
-                    res.end("fail");
+                    res.status(500).end("Internal server error");
                     // TODO: add real error handling and logging
                 });
         };
@@ -57,7 +57,8 @@ module.exports = function(imports) {
 
     // checks if user provided phone number adress is valid
     util.validatePhone = function(phone) {
-        return phone.match(/\d/g).length === 10;
+        let match = phone.match(/\d/g);
+        return match && match.length === 10;
     };
 
     // creates random string of any size

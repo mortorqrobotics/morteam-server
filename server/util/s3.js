@@ -9,7 +9,7 @@ module.exports = function(imports) {
     let AWS = imports.modules.AWS;
     let fs = require("fs");
     let AWSConfigPath = require("path").join(__dirname, "../aws-config.json");
-            
+
     if (fs.existsSync(AWSConfigPath)) {
         AWS.config.loadFromPath(AWSConfigPath);
     }

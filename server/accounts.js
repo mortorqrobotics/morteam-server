@@ -104,22 +104,34 @@ module.exports = function(imports, publicDir, profpicDir) {
         req.body.phone = req.body.phone.replace(/[- )(]/g, "")
 
         // if phone and email are valid (see util.js for validation methods)
-        if (!util.validateEmail(req.body.email) || !util.validatePhone(req.body.phone)) {
-            return res.end("fail: Form data is invalid");
+        if (!util.validateEmail(req.body.email)) {
+            return res.status(400).end("Invalid email");
+        }
+        if (!util.validatePhone(req.body.phone)) {
+            return res.status(400).end("Invalid phone number");
         }
 
         // check if a user with either same username, email, or phone already exists
-        if ((yield User.count({
-                $or: [{
-                    username: req.body.username
-                }, {
-                    email: req.body.email
-                }, {
-                    phone: req.body.phone
-                }]
-            })) > 0) {
-            // user exists
-            return res.end("exists");
+        let same = yield User.findOne({
+            $or: [{
+                username: req.body.username
+            }, {
+                email: req.body.email
+            }, {
+                phone: req.body.phone
+            }]
+        });
+        // this code is eh
+        if (same) {
+            if (same.username == req.body.username) {
+                return res.status(400).end("Username is taken");
+            }
+            if (same.email == req.body.email) {
+                return res.status(400).end("Email is taken");
+            }
+            if (same.phone == req.body.phone) {
+                return res.status(400).end("Phone number is taken");
+            }
         }
 
         let userInfo = {
@@ -154,9 +166,13 @@ module.exports = function(imports, publicDir, profpicDir) {
             userInfo.profpicpath = "/images/user.jpg"; // default profile picture
         }
 
-        yield User.create(userInfo);
+        try {
+            yield User.create(userInfo);
+        } catch (err) {
+            return res.status(400).end("Invalid user info");
+        }
 
-        res.end("success");
+        res.end();
 
     }));
 
