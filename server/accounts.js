@@ -57,14 +57,10 @@ module.exports = function(imports, publicDir, profpicDir) {
             }]
         }).select("+password").populate("team");
 
-        if (!user) {
-            return res.end("inc/username"); // incorrect username
+        if (!user || !(yield user.comparePassword(req.body.password))) {
+            return res.status(401).end("Invalid login credentials");
         }
 
-        let isMatch = yield user.comparePassword(req.body.password);
-        if (!isMatch) {
-            res.end("inc/password"); // incorrect password
-        }
         delete user.password;
 
         // store user info in cookies
