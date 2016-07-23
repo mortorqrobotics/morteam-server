@@ -8,6 +8,8 @@ module.exports = function(imports) {
     let util = imports.util;
     let handler = util.handler;
 
+    let Team = imports.models.Team;
+
     let router = express.Router();
 
     let pages = {
@@ -19,8 +21,13 @@ module.exports = function(imports) {
 
         router.get("/" + page, handler(function*(req, res) {
 
+            if (req.user) {
+                req.user.team = yield Team.findOne(req.user.team);
+            }
+
             res.render("../../morteam-web/src/page.html.ejs", {
-                page: pages[page]
+                userInfo: req.user,
+                page: pages[page],
             });
 
         }));
