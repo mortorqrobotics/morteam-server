@@ -13,7 +13,7 @@ module.exports = function(imports) {
     };
 
     positions.isUserAdmin = function(user) {
-        return util.isPositionAdmin(user.position);
+        return positions.isPositionAdmin(user.position);
     };
 
     positions.adminPositionsQuery = {

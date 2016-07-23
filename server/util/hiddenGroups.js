@@ -2,9 +2,9 @@
 
 module.exports = function(imports) {
 
-    let groups = {};
+    let hiddenGroups = {};
 
-    groups.includesQuery = function(query) {
+    hiddenGroups.includesQuery = function(query) {
         return {
             users: query,
             "groups.members": {
@@ -13,6 +13,6 @@ module.exports = function(imports) {
         };
     };
 
-    return groups;
+    return hiddenGroups;
 
 };

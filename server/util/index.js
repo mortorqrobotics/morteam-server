@@ -12,11 +12,6 @@ module.exports = function(imports) {
     let Promise = imports.modules.Promise;
 
     let util = {};
-    util.groups = require("./groups")(imports);
-    util.mail = require("./mail")(imports);
-    util.s3 = require("./s3")(imports);
-    util.images = require("./images")(imports);
-    util.positions = require("./positions")(imports);
 
     let daysInWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     let months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];

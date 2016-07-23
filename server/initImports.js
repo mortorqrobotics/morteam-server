@@ -27,6 +27,9 @@ module.exports = function(imports) {
     imports.modules.nodemailer = require("nodemailer");
     imports.modules.AWS = require("aws-sdk");
 
+    imports.util = {};
+    imports.util.hiddenGroups = require("./util/hiddenGroups")(imports);
+
     // User, Team, and Subdivision come from mornetwork
     imports.models.Announcement = require("./models/Announcement")(imports);
     imports.models.Chat = require("./models/Chat")(imports);
@@ -36,7 +39,11 @@ module.exports = function(imports) {
     imports.models.File = require("./models/File")(imports);
     imports.models.Task = require("./models/Task")(imports);
 
-    imports.util = require("./util")(imports);
+    imports.util.images = require("./util/images")(imports);
+    imports.util.mail = require("./util/mail")(imports);
+    imports.util.positions = require("./util/positions")(imports);
+    imports.util.s3 = require("./util/s3")(imports);
+    imports.util = Object.assign(imports.util, require("./util")(imports));
 
     // TODO: add config here
 
