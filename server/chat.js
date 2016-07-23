@@ -10,6 +10,7 @@ module.exports = function(imports) {
     let handler = util.handler;
     let requireLogin = util.requireLogin;
     let requireAdmin = util.requireAdmin;
+    let includesQuery = util.hiddenGroups.includesQuery;
 
     let Chat = imports.models.Chat;
     let User = imports.models.User;
@@ -20,32 +21,45 @@ module.exports = function(imports) {
     // TODO: separate this into separate requests for group and private chats
     router.post("/chats", requireLogin, handler(function*(req, res) {
 
-        let group = req.body.group;
-
-
         if (req.body.type == "private") {
             // private chat
+
+            let otherUser = yield User.findOne({
+                _id: req.body.otherUser,
+            });
+            if (!otherUser) {
+                return res.status(400).end("That user does not exist");
+            }
+
+            let users = [
+                req.user._id,
+                otherUser._id,
+            ];
 
             // check to see if already exists
             if ((yield Chat.count({
                     isTwoPeople: true,
-                    "group.members": req.body.group.members
+                    "audience.users": users,
                 })) > 0) {
                 return res.end("exists");
             }
 
 
             let chat = yield Chat.create({
-                group: group,
+                audience: {
+                    groups: [],
+                    users: users,
+                },
                 isTwoPeople: true
             });
 
+            // TODO: rename this stuff for the new client
             res.json({
-                _id: user._id,
-                fn: user.firstname,
-                ln: user.lastname,
-                profpicpath: user.profpicpath,
-                chat_id: chat._id
+                _id: otherUser._id,
+                fn: otherUser.firstname,
+                ln: otherUser.lastname,
+                profpicpath: otherUser.profpicpath,
+                chat_id: chat._id,
             });
 
         } else {
@@ -57,8 +71,8 @@ module.exports = function(imports) {
 
             let chat = yield Chat.create({
                 name: util.normalizeDisplayedText(req.body.name),
-                group: group,
-                isTwoPeople: false
+                audience: req.body.audience,
+                isTwoPeople: false,
             });
 
             res.json(chat);
@@ -70,7 +84,7 @@ module.exports = function(imports) {
 
         // find a chat that has said user as a member
         let chats = yield Chat.find({
-                "group.members": req.user._id
+                audience: includesQuery(req.user._id)
             }, {
                 _id: 1,
                 name: 1,
@@ -78,7 +92,6 @@ module.exports = function(imports) {
                 updated_at: 1
             })
             .slice("messages", [0, 1])
-            .populate("group")
             .sort("-updated_at")
             .exec();
         // ^ the code above gets the latest message from the chat (for previews in iOS and Android) and orders the list by most recent.
@@ -113,7 +126,7 @@ module.exports = function(imports) {
 
         let users = yield User.find({
             _id: {
-                $in: chat.group.members
+                $in: chat.audience.members
             }
         });
 
@@ -125,17 +138,17 @@ module.exports = function(imports) {
 
         let chat = yield Chat.findOne({
             _id: req.params.chatId
-        }).populate("group");
+        });
 
         let userMembers = yield User.find({
             _id: {
-                $in: chat.group.users
+                $in: chat.audience.users
             }
         });
 
         let groups = yield Group.find({
             _id: {
-                $in: chat.group.groups
+                $in: chat.audience.groups
             }
         })
 
@@ -186,6 +199,8 @@ module.exports = function(imports) {
     }));
 
     router.post("/chats/id/:chatId/messages", requireLogin, handler(function*(req, res) {
+
+        // TODO: check if user is a member of the chat...
 
         yield Chat.update({
             _id: req.params.chatId,

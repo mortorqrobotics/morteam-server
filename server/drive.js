@@ -13,6 +13,7 @@ module.exports = function(imports) {
 
     let handler = util.handler;
     let requireLogin = util.requireLogin;
+    let includesQuery = util.hiddenGroups.includesQuery;
 
     let Folder = imports.models.Folder;
     let File = imports.models.File;
@@ -26,7 +27,7 @@ module.exports = function(imports) {
 
             let file = yield File.findOne({
                 _id: req.params.fileId,
-                "folder.group.members": req.user._id
+                "folder.audience": includesQuery(req.user._id),
             }).populate("folder");
 
             if (!file) {
@@ -54,7 +55,7 @@ module.exports = function(imports) {
             parentFolder: {
                 "$exists": false
             },
-            "group.members": req.user._id
+            audience: includesQuery(req.user._id),
         });
 
         res.json(folders);
@@ -65,7 +66,7 @@ module.exports = function(imports) {
 
         let folders = yield Folder.find({
             parentFolder: req.params.folderId,
-            "group.members": req.user._id
+            audience: includesQuery(req.user._id),
         });
 
         res.json(folders);
@@ -76,7 +77,7 @@ module.exports = function(imports) {
 
         let files = yield File.find({
             folder: req.params.folderId,
-            "folder.group.members": req.user._id
+            "folder.audience": includesQuery(req.user._id),
         });
 
         res.json(files);
@@ -96,7 +97,7 @@ module.exports = function(imports) {
 
         let folder = {
             name: util.normalizeDisplayedText(req.body.name),
-            group: req.body.groupId,
+            audience: req.body.audience,
             creator: req.user._id,
             defaultFolder: false
         };
@@ -142,7 +143,7 @@ module.exports = function(imports) {
             size: req.file.size,
             type: util.s3.extToType(ext),
             mimetype: mime,
-            creator: req.user._id
+            creator: req.user._id,
         });
 
         yield util.s3.uploadToDriveAsync(req.file.buffer, file._id, mime, disposition);

@@ -7,19 +7,15 @@ module.exports = function(imports) {
     let Schema = mongoose.Schema;
     let ObjectId = Schema.Types.ObjectId;
 
+    let hiddenGroups = imports.util.hiddenGroups;
+
     let chatSchema = new Schema({
         name: {
             type: String,
             required: false
         },
-
         isTwoPeople: Boolean,
-        group: {
-            type: ObjectId,
-            ref: "NormalGroup",
-            required: true
-        },
-
+        audience: hiddenGroups.schemaType,
         messages: [{
             author: {
                 type: ObjectId,

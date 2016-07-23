@@ -7,6 +7,8 @@ module.exports = function(imports) {
     let Schema = mongoose.Schema;
     let ObjectId = Schema.Types.ObjectId;
 
+    let hiddenGroups = imports.util.hiddenGroups;
+
     let announcementSchema = new Schema({
         author: {
             type: ObjectId,
@@ -17,11 +19,7 @@ module.exports = function(imports) {
             type: String,
             required: true
         },
-        audienceGroup: {
-            type: ObjectId,
-            ref: "Group",
-            required: true
-        },
+        audience: hiddenGroups.schemaType,
         timestamp: {
             type: Date,
             required: true

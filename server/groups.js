@@ -15,6 +15,7 @@ module.exports = function(imports) {
     let router = express.Router();
 
     router.post("/groups", handler(function*(req, res) {
+
         let group = {
             users: req.body.users,
             groups: req.body.groups

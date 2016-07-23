@@ -10,6 +10,8 @@ module.exports = function(imports) {
     let handler = util.handler;
     let requireLogin = util.requireLogin;
     let requireAdmin = util.requireAdmin;
+    let hiddenGroups = util.hiddenGroups;
+    let includesQuery = hiddenGroups.includesQuery;
 
     let User = imports.models.User;
     let Event = imports.models.Event;
@@ -29,7 +31,7 @@ module.exports = function(imports) {
         let end = new Date(year, month - 1, numberOfDays, 23, 59, 59); // month is 0 based
 
         let events = yield Event.find({
-            "group.members": req.user._id,
+            audience: includesQuery(req.user._id),
             date: {
                 $gte: start,
                 $lte: end
@@ -43,7 +45,7 @@ module.exports = function(imports) {
     router.get("/events/upcoming", requireLogin, handler(function*(req, res) {
 
         let events = yield Event.find({
-            "group.members": req.user._id,
+            audience: includesQuery(req.user._id),
             date: {
                 $gte: new Date()
             }
@@ -59,23 +61,21 @@ module.exports = function(imports) {
         req.body.sendEmail = req.body.sendEmail == "true";
         req.body.entireTeam = req.body.entireTeam == "true";
 
-        yield Event.create({
+        let event = {
             name: req.body.name,
             date: new Date(req.body.date),
-            group: req.body.groupId,
+            audience: req.body.audience,
             creator: req.user._id,
-            hasAttendance: req.body.hasAttendance
-        });
+            hasAttendance: req.body.hasAttendance,
+        };
 
         if (req.body.description.length > 0) {
             event.description = req.body.description;
         }
 
-        let group = Group.findOne({
-            _id: req.body.groupId
-        });
+        event = yield Event.create(event);
 
-        let users = group.members;
+        let users = yield hiddenGroups.getUsersIn(event.audience);
 
         if (req.body.sendEmail) {
 

@@ -10,6 +10,7 @@ module.exports = function(imports) {
 
     let handler = util.handler;
     let requireLogin = util.requireLogin;
+    let includesQuery = util.hiddenGroups.includesQuery;
 
     let Announcement = imports.models.Announcement;
     let User = imports.models.User;
@@ -22,8 +23,8 @@ module.exports = function(imports) {
         let announcement = yield Announcement.create({
             author: req.user._id,
             content: req.body.content,
-            audienceGroup: req.body.groupId,
-            timestamp: new Date()
+            audience: req.body.audience,
+            timestamp: new Date(),
         });
 
         res.json(announcement);
@@ -33,7 +34,7 @@ module.exports = function(imports) {
     router.get("/announcements", requireLogin, handler(function*(req, res) {
         // find announcements that the user should be able to see
         let announcements = yield Announcement.find({
-                "audienceGroup.members": req.user._id
+                audience: includesQuery(req.user._id)
             }, {
                 // only respond with _id, author, content and timestamp
                 _id: 1,
@@ -45,7 +46,6 @@ module.exports = function(imports) {
                     // populate author and sort by timestamp, skip and limit are for pagination
             })
             .populate("author")
-            .populate("audienceGroup")
             .sort("-timestamp")
             .skip(Number(req.query.skip))
             .limit(20)
