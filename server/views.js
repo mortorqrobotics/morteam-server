@@ -15,6 +15,8 @@ module.exports = function(imports) {
     let pages = {
         signup: "Signup",
         login: "Login",
+        "": "Index", // this works
+        void: "Void",
     };
 
     for (let page in pages) {
