@@ -41,10 +41,8 @@ module.exports = function(imports) {
                 author: 1,
                 content: 1,
                 timestamp: 1,
-                audienceGroup: 1,
-                entireTeam: 1
-                    // populate author and sort by timestamp, skip and limit are for pagination
-            })
+                audience: 1,
+            }) // populate author and sort by timestamp, skip and limit are for pagination
             .populate("author")
             .sort("-timestamp")
             .skip(Number(req.query.skip))
@@ -66,7 +64,6 @@ module.exports = function(imports) {
         // check if user is eligible to delete said announcement
         if (req.user._id == announcement.author.toString() || util.positions.isUserAdmin(req.user)) {
             yield announcement.remove();
-            yield Group.remove(announcement.audienceGroup);
             res.end("success");
         } else {
             // warn me about attempted hax, bruh

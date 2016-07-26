@@ -225,6 +225,7 @@ module.exports = function(imports, publicDir, profpicDir) {
             regexString += terms[i];
             if (i < terms.length - 1) regexString += "|";
         }
+        // TODO: can this just be replace(" ", "|")?
         let re = new RegExp(regexString, "ig");
 
         // find maximum of 10 users that match the search criteria

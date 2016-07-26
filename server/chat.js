@@ -88,7 +88,7 @@ module.exports = function(imports) {
             }, {
                 _id: 1,
                 name: 1,
-                group: 1,
+                audience: 1,
                 updated_at: 1
             })
             .slice("messages", [0, 1])
