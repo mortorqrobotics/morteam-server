@@ -30,28 +30,38 @@ module.exports = function(imports) {
     router.post("/teams", requireLogin, handler(function*(req, res) {
 
         if (req.user.team) {
-            return res.end("already have a team");
+            return res.status(400).end("You already have a team");
+        }
+
+        let number = parseInt(req.body.number);
+        if (isNaN(number) || number <= 0 || number >= 100000) {
+            return res.status(400).end("Invalid team number");
         }
 
         if (yield Team.findOne({
                 id: req.body.id
             })) {
-            return res.end("fail");
+            return res.status(400).end("Team code is taken");
         }
 
         let team = yield Team.create({
             id: req.body.id,
             name: req.body.name,
-            number: req.body.number
+            number: req.body.number,
         });
 
-        let folder = yield Folder.create({
-            name: "Team Files",
-            team: team._id,
-            entireTeam: true,
-            creator: req.user._id,
-            defaultFolder: true
-        });
+        req.user.team = team._id;
+        req.user.scoutCaptain = true; // should this be present in morteam?
+        req.user.position = "leader"; // TODO: ask the user about this when creating team?
+        yield req.user.save();
+
+//        let folder = yield Folder.create({
+//            name: "Team Files",
+//            team: team._id,
+//            entireTeam: true,
+//            creator: req.user._id,
+//            defaultFolder: true,
+//        });
 
         res.end(team._id.toString());
 
