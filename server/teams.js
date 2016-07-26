@@ -70,7 +70,7 @@ module.exports = function(imports) {
     router.post("/teams/code/:teamCode/join", requireLogin, handler(function*(req, res) {
 
         if (req.user.team) {
-            return res.end("fail");
+            return res.status(400).end("You already have a team");
         }
 
         let team = yield Team.findOne({
@@ -78,42 +78,41 @@ module.exports = function(imports) {
         });
 
         if (!team) {
-            return res.end("fail");
+            return res.status(400).end("Team does not exist");
         }
 
         if (req.user.bannedFromTeams.indexOf(team._id) != -1) {
-            return res.end("fail");
+            return res.status(400).end("You are banned from this team");
         }
 
-        req.user.position = (yield User.findOne({
-            team: team._id
-        })) ? "member" : "leader";
+        req.user.position = "member";
         req.user.team = team._id;
-
-        yield AttendanceHandler.update({
-            entireTeam: true,
-            event_date: {
-                $gte: new Date()
-            },
-            "event.team": team._id
-        }, {
-            "$push": {
-                "attendees": {
-                    user: req.user._id,
-                    status: "absent"
-                }
-            }
-        });
-
         yield req.user.save();
 
-        yield Folder.create({
-            name: "Personal Files",
-            team: team._id,
-            userMembers: req.user._id, // TODO: should this be an [req.user._id] instead?
-            creator: req.user._id,
-            defaultFolder: true
-        });
+        // TODO: figure out what to do with attendance handlers
+//        yield AttendanceHandler.update({
+//            entireTeam: true,
+//            event_date: {
+//                $gte: new Date()
+//            },
+//            "event.team": team._id
+//        }, {
+//            "$push": {
+//                "attendees": {
+//                    user: req.user._id,
+//                    status: "absent"
+//                }
+//            }
+//        });
+
+        // TODO: should personal folders still be created automatically?
+//        yield Folder.create({
+//            name: "Personal Files",
+//            team: team._id,
+//            userMembers: req.user._id, // should this be [req.user._id] instead?
+//            creator: req.user._id,
+//            defaultFolder: true
+//        });
 
         res.end(team._id.toString());
 

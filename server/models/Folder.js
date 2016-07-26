@@ -14,9 +14,9 @@ module.exports = function(imports) {
             type: String,
             required: true
         },
-        defaultFolder: Boolean,
+        defaultFolder: Boolean, // TODO: remove this?
         audience: hiddenGroups.schemaType,
-        ancestors: [{
+        ancestors: [{ // TODO: are we ever going to make this work?
             type: ObjectId,
             ref: "Folder",
             required: false
