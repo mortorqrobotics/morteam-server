@@ -13,7 +13,7 @@ module.exports = function(imports) {
 
     let handler = util.handler;
     let requireLogin = util.requireLogin;
-    let includesQuery = util.hiddenGroups.includesQuery;
+    let audienceQuery = util.hiddenGroups.audienceQuery;
 
     let Folder = imports.models.Folder;
     let File = imports.models.File;
@@ -26,8 +26,13 @@ module.exports = function(imports) {
         if (req.params.fileId.indexOf("-preview") == -1) {
 
             let file = yield File.findOne({
-                _id: req.params.fileId,
-                "folder.audience": includesQuery(req.user._id),
+                $and: [{
+                    _id: req.params.fileId,
+                }, {
+                    folder: audienceQuery(req.user._id),
+
+                    // TODO: I do not think ^that works
+                }]
             }).populate("folder");
 
             if (!file) {
@@ -52,10 +57,13 @@ module.exports = function(imports) {
     router.get("/folders", requireLogin, handler(function*(req, res) {
 
         let folders = yield Folder.find({
-            parentFolder: {
-                "$exists": false
-            },
-            audience: includesQuery(req.user._id),
+            $and: [{
+                    parentFolder: {
+                        $exists: false
+                    }
+                },
+                audienceQuery(req.user._id),
+            ]
         });
 
         res.json(folders);
@@ -65,8 +73,11 @@ module.exports = function(imports) {
     router.get("/folders/id/:folderId/subfolders", requireLogin, handler(function*(req, res) {
 
         let folders = yield Folder.find({
-            parentFolder: req.params.folderId,
-            audience: includesQuery(req.user._id),
+            $and: [{
+                    parentFolder: req.params.folderId,
+                },
+                audienceQuery(req.user._id),
+            ]
         });
 
         res.json(folders);
@@ -76,8 +87,12 @@ module.exports = function(imports) {
     router.get("/folders/id/:folderId/files", requireLogin, handler(function*(req, res) {
 
         let files = yield File.find({
-            folder: req.params.folderId,
-            "folder.audience": includesQuery(req.user._id),
+            $and: [{
+                folder: req.params.folderId,
+            }, {
+                folder: audienceQuery(req.user._id),
+                // TODO: I do not think ^that works
+            }]
         });
 
         res.json(files);

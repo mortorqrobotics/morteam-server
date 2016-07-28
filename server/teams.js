@@ -55,13 +55,13 @@ module.exports = function(imports) {
         req.user.position = "leader"; // TODO: ask the user about this when creating team?
         yield req.user.save();
 
-//        let folder = yield Folder.create({
-//            name: "Team Files",
-//            team: team._id,
-//            entireTeam: true,
-//            creator: req.user._id,
-//            defaultFolder: true,
-//        });
+        //        let folder = yield Folder.create({
+        //            name: "Team Files",
+        //            team: team._id,
+        //            entireTeam: true,
+        //            creator: req.user._id,
+        //            defaultFolder: true,
+        //        });
 
         res.end(team._id.toString());
 
@@ -90,29 +90,29 @@ module.exports = function(imports) {
         yield req.user.save();
 
         // TODO: figure out what to do with attendance handlers
-//        yield AttendanceHandler.update({
-//            entireTeam: true,
-//            event_date: {
-//                $gte: new Date()
-//            },
-//            "event.team": team._id
-//        }, {
-//            "$push": {
-//                "attendees": {
-//                    user: req.user._id,
-//                    status: "absent"
-//                }
-//            }
-//        });
+        //        yield AttendanceHandler.update({
+        //            entireTeam: true,
+        //            event_date: {
+        //                $gte: new Date()
+        //            },
+        //            "event.team": team._id
+        //        }, {
+        //            "$push": {
+        //                "attendees": {
+        //                    user: req.user._id,
+        //                    status: "absent"
+        //                }
+        //            }
+        //        });
 
         // TODO: should personal folders still be created automatically?
-//        yield Folder.create({
-//            name: "Personal Files",
-//            team: team._id,
-//            userMembers: req.user._id, // should this be [req.user._id] instead?
-//            creator: req.user._id,
-//            defaultFolder: true
-//        });
+        //        yield Folder.create({
+        //            name: "Personal Files",
+        //            team: team._id,
+        //            userMembers: req.user._id, // should this be [req.user._id] instead?
+        //            creator: req.user._id,
+        //            defaultFolder: true
+        //        });
 
         res.end(team._id.toString());
 

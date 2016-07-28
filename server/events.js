@@ -11,7 +11,7 @@ module.exports = function(imports) {
     let requireLogin = util.requireLogin;
     let requireAdmin = util.requireAdmin;
     let hiddenGroups = util.hiddenGroups;
-    let includesQuery = hiddenGroups.includesQuery;
+    let audienceQuery = hiddenGroups.audienceQuery;
 
     let User = imports.models.User;
     let Event = imports.models.Event;
@@ -31,11 +31,14 @@ module.exports = function(imports) {
         let end = new Date(year, month - 1, numberOfDays, 23, 59, 59); // month is 0 based
 
         let events = yield Event.find({
-            audience: includesQuery(req.user._id),
-            date: {
-                $gte: start,
-                $lte: end
-            }
+            $and: [{
+                    date: {
+                        $gte: start,
+                        $lte: end
+                    }
+                },
+                audienceQuery(req.user._id),
+            ]
         });
 
         res.json(events);
@@ -45,10 +48,13 @@ module.exports = function(imports) {
     router.get("/events/upcoming", requireLogin, handler(function*(req, res) {
 
         let events = yield Event.find({
-            audience: includesQuery(req.user._id),
-            date: {
-                $gte: new Date()
-            }
+            $and: [{
+                    date: {
+                        $gte: new Date(),
+                    }
+                },
+                audienceQuery(req.user._id),
+            ]
         }).sort("date");
 
         res.json(events);

@@ -10,7 +10,7 @@ module.exports = function(imports) {
     let handler = util.handler;
     let requireLogin = util.requireLogin;
     let requireAdmin = util.requireAdmin;
-    let includesQuery = util.hiddenGroups.includesQuery;
+    let audienceQuery = util.hiddenGroups.audienceQuery;
 
     let Chat = imports.models.Chat;
     let User = imports.models.User;
@@ -83,9 +83,7 @@ module.exports = function(imports) {
     router.get("/chats", requireLogin, handler(function*(req, res) {
 
         // find a chat that has said user as a member
-        let chats = yield Chat.find({
-                audience: includesQuery(req.user._id)
-            }, {
+        let chats = yield Chat.find(audienceQuery(req.user._id), {
                 _id: 1,
                 name: 1,
                 audience: 1,

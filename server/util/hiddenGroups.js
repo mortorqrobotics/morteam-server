@@ -10,12 +10,13 @@ module.exports = function(imports) {
 
     let hiddenGroups = {};
 
-    hiddenGroups.includesQuery = function(query) {
+    hiddenGroups.audienceQuery = function(query) {
         return {
-            users: query,
-            "groups.members": {
-                $elemMatch: query,
-            },
+            $or: [{
+                "audience.users": query,
+            }, {
+                "audience.groups.members": query,
+            }],
         };
     };
 
@@ -44,13 +45,11 @@ module.exports = function(imports) {
         )));
         return yield User.find({
             _id: {
-                $or: [
-                    {
-                        $in: audience.users
-                    }, {
-                        $in: groups.map(group => group.members)
-                    }
-                ]
+                $or: [{
+                    $in: audience.users
+                }, {
+                    $in: groups.map(group => group.members)
+                }]
             }
         });
     });

@@ -10,7 +10,7 @@ module.exports = function(imports) {
 
     let handler = util.handler;
     let requireLogin = util.requireLogin;
-    let includesQuery = util.hiddenGroups.includesQuery;
+    let audienceQuery = util.hiddenGroups.audienceQuery;
 
     let Announcement = imports.models.Announcement;
     let User = imports.models.User;
@@ -32,10 +32,9 @@ module.exports = function(imports) {
     }));
 
     router.get("/announcements", requireLogin, handler(function*(req, res) {
+
         // find announcements that the user should be able to see
-        let announcements = yield Announcement.find({
-                audience: includesQuery(req.user._id)
-            }, {
+        let announcements = yield Announcement.find(audienceQuery(req.user._id), {
                 // only respond with _id, author, content and timestamp
                 _id: 1,
                 author: 1,
