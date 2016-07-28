@@ -18,7 +18,9 @@ module.exports = function(imports) {
 
         let group = {
             users: req.body.users,
-            groups: req.body.groups
+            groups: req.body.groups,
+            name: req.body.name,
+            isPublic: req.body.isPublic
         }
 
         group = yield NormalGroup.create(group);
@@ -31,6 +33,16 @@ module.exports = function(imports) {
 
         let groups = yield Group.find({
             members: req.user._id
+        });
+
+        res.json(groups);
+
+    }));
+
+    router.get("/groups/public", requireLogin, handler(function*(req, res) {
+
+        let groups = yield Group.find({
+            isPublic: true
         });
 
         res.json(groups);
