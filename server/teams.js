@@ -63,7 +63,7 @@ module.exports = function(imports) {
         //            defaultFolder: true,
         //        });
 
-        res.end(team._id.toString());
+        res.json(team);
 
     }));
 
@@ -114,7 +114,7 @@ module.exports = function(imports) {
         //            defaultFolder: true
         //        });
 
-        res.end(team._id.toString());
+        res.json(team);
 
     }));
 
