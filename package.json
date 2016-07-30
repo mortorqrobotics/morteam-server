@@ -4,7 +4,8 @@
   "description": "Organization utility for robotics teams",
   "main": "server/server.js",
   "scripts": {
-	  "fmt": "for f in `find server -name '*.js'`; do ./node_modules/js-beautify/js/bin/js-beautify.js --type js -r -n -e \"\\n\" -b collapse-preserve-inline $f; done"
+    "test": "NODE_ENV=test ./node_modules/.bin/mocha test/index.js",
+    "fmt": "for f in `find server test -name '*.js'`; do ./node_modules/js-beautify/js/bin/js-beautify.js --type js -r -n -e \"\\n\" -b collapse-preserve-inline $f; done"
   },
   "dependencies": {
     "autolinker": "^0.22.0",
@@ -35,6 +36,9 @@
   },
   "homepage": "https://github.com/Farbod909/MorTeam-server-website",
   "devDependencies": {
-    "js-beautify": "^1.6.3"
+    "chai": "^3.5.0",
+    "js-beautify": "^1.6.3",
+    "mocha": "^2.5.3",
+    "supertest-session-promise": "^2.0.3"
   }
 }
