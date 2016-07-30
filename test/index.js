@@ -14,8 +14,7 @@ function mkSession() {
             data = code;
             code = null;
         }
-        return request(app)
-            [method.toLowerCase()](path)
+        return request(app)[method.toLowerCase()](path)
             .set({
                 cookie: cookie,
             })
@@ -37,7 +36,7 @@ function mkSession() {
             });
     }
 }
-        
+
 let session1 = mkSession();
 let session2 = mkSession();
 
@@ -46,6 +45,9 @@ describe("stuff", function() {
     let user1;
     let user2;
     let team;
+    let allTeamGroup;
+    let leaderGroup;
+    let memberGroup;
 
     it("should create the first user", Promise.coroutine(function*() {
         user1 = yield session1("post", "/users", {
@@ -93,6 +95,14 @@ describe("stuff", function() {
         });
     }));
 
+    it("should create an AllTeamGroup and PositionGroups", Promise.coroutine(function*() {
+        let groups = yield session1("get", "/groups");
+        allTeamGroup = groups.find(g => g.__t === "AllTeamGroup");
+        assert.ok(allTeamGroup, "AllTeamGroup exists");
+        leaderGroup = groups.find(g => g.position === "leader");
+        assert.ok(leaderGroup, "leader PositionGroup exists");
+    }));
+
     it("should not let users join a team that does not exist", Promise.coroutine(function*() {
         yield session2("post", "/teams/code/nonexistent/join", 400);
     }));
@@ -100,6 +110,18 @@ describe("stuff", function() {
     it("should let the second user join the team", Promise.coroutine(function*() {
         let joinedTeam = yield session2("post", "/teams/code/partedhair/join");
         assert.equal(team._id, joinedTeam._id);
+    }));
+
+    it("should put the second user in the right groups", Promise.coroutine(function*() {
+        let groups = yield session2("get", "/groups");
+        memberGroup = groups.find(g => g.position === "member");
+        assert.ok(memberGroup, "member PositionGroup exists");
+        assert.ok(groups.some(g => g.__t === "AllTeamGroup"),
+            "second user is in the AllTeamGroup"
+        );
+        assert.notOk(groups.some(g => g.position === "leader"),
+            "members are not in the leader PositionGroup"
+        );
     }));
 
 });
