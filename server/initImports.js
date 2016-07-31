@@ -43,7 +43,7 @@ module.exports = function(imports) {
     imports.util.mail = require("./util/mail")(imports);
     imports.util.positions = require("./util/positions")(imports);
     imports.util.s3 = require("./util/s3")(imports);
-    imports.util = Object.assign(require("./util")(imports), imports.util);
+    require("./util")(imports); // adds stuff to util
 
     // TODO: add config here
 

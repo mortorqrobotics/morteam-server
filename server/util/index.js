@@ -11,7 +11,7 @@ module.exports = function(imports) {
     let Autolinker = imports.modules.autolinker;
     let Promise = imports.modules.Promise;
 
-    let util = {};
+    let util = imports.util;
 
     let daysInWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     let months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
