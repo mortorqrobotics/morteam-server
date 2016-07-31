@@ -16,11 +16,13 @@ module.exports = function(imports) {
 
     router.post("/groups", handler(function*(req, res) {
 
+        // TODO: check if users contains the creator of the group?
+
         let group = {
             users: req.body.users,
             groups: req.body.groups,
             name: req.body.name,
-            isPublic: req.body.isPublic
+            isPublic: req.body.isPublic,
         }
 
         group = yield NormalGroup.create(group);
