@@ -69,7 +69,7 @@ module.exports = function(imports) {
     // can be used as middleware to check if user is logged in
     util.requireLogin = function(req, res, next) {
         if (!req.user) {
-            res.end("fail");
+            res.status(403).end("You are not logged in");
         } else {
             next();
         }
@@ -77,7 +77,7 @@ module.exports = function(imports) {
 
     // can be used as middleware to check if user is an admin
     util.requireAdmin = function(req, res, next) {
-        requireLogin(req, res, function() {
+        util.requireLogin(req, res, function() {
             if (util.positions.isUserAdmin(req.user)) {
                 next();
             } else {
@@ -87,7 +87,7 @@ module.exports = function(imports) {
                     subject: "MorTeam Security Alert!",
                     text: "The user " + req.user.firstname + " " + req.user.lastname + " tried to perform administrator tasks. User ID: " + req.user._id
                 });
-                res.end("fail");
+                res.status(403).end("You are not an admin");
             }
         });
     };

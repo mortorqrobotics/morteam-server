@@ -178,7 +178,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 
     }));
 
-    router.put("/users/id/:userId/position/:newPosition", requireAdmin, handler(function*(req, res) {
+    router.put("/users/id/:userId/position", requireAdmin, handler(function*(req, res) {
 
         // find target user
         let user = yield User.findOne({
@@ -187,12 +187,12 @@ module.exports = function(imports, publicDir, profpicDir) {
         });
 
         if (!user) {
-            return res.end("fail");
+            return res.status(400).end("User not found");
         }
 
-        let newPosition = req.params.newPosition.toLowerCase();
+        let newPosition = req.body.newPosition.toLowerCase();
         if (["member", "leader", "mentor", "alumnus"].indexOf(newPosition) == -1) {
-            return res.end("fail");
+            return res.status(400).end("Invalid position");
         }
 
         let currentPosition = user.position;
@@ -204,14 +204,15 @@ module.exports = function(imports, publicDir, profpicDir) {
                 position: util.positions.adminPositionsQuery
             })) <= 1) {
 
-            return res.end("You are the only leader or mentor on your team, so you cannot demote yourself.");
-
+            return res.status(400).end(
+                "You are the only leader or mentor on your team, so you cannot demote yourself."
+            );
         }
 
         user.position = newPosition;
         yield user.save();
 
-        res.end("success");
+        res.end();
 
     }));
 

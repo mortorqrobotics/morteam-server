@@ -9,7 +9,7 @@ module.exports = function(imports) {
     let adminPositions = ["leader", "mentor"];
 
     positions.isPositionAdmin = function(position) {
-        return adminPositions.indexOf(position) != -1;
+        return adminPositions.indexOf(position) !== -1;
     };
 
     positions.isUserAdmin = function(user) {
