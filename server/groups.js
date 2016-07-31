@@ -38,8 +38,8 @@ module.exports = function(imports) {
         res.json(groups);
 
     }));
-
-    router.get("/normalgroups", requireLogin, handler(function*(req, res) {
+    
+    router.get("/groups/normal", requireLogin, handler(function*(req, res) {
 
         let groups = yield NormalGroup.find({
             members: req.user._id
