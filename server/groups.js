@@ -61,6 +61,21 @@ module.exports = function(imports) {
 
     }));
 
+    router.get("/groups/search", requireLogin, handler(function*(req, res) {
+
+        let regexString = String(req.query.search).trim().replace(/\s/g, "|");
+        let re = new RegExp(regexString, "ig");
+
+        let groups = yield NormalGroup.find({
+            members: req.user._id,
+            name: re
+        });
+        //TODO: make this work for position groups?
+
+        res.json(groups);
+
+    }));
+
     router.put("/groups/id/:groupId", requireLogin, handler(function*(req, res) {
 
         // TODO: add update hook in mornetwork

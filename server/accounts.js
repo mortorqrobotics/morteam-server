@@ -218,15 +218,7 @@ module.exports = function(imports, publicDir, profpicDir) {
 
     router.get("/users/search", requireLogin, handler(function*(req, res) {
 
-        // create array of search terms
-        let terms = String(req.query.search).trim().split(" ");
-        let regexString = "";
-        // create regular expression
-        for (let i = 0; i < terms.length; i++) {
-            regexString += terms[i];
-            if (i < terms.length - 1) regexString += "|";
-        }
-        // TODO: can this just be replace(" ", "|")?
+        let regexString = String(req.query.search).trim().replace(/\s/g, "|");
         let re = new RegExp(regexString, "ig");
 
         // find maximum of 10 users that match the search criteria
