@@ -26,7 +26,7 @@ describe("groups", function() {
     }));
 
     it("should allow creation of NormalGroups with users", coroutine(function*() {
-        this.normalGroup0 = yield sessions[0]("POST", "/groups", {
+        data.normalGroup0 = yield sessions[0]("POST", "/groups", {
             users: data.users.map(user => user._id),
             groups: [],
             name: "UsersOnly",
@@ -40,13 +40,12 @@ describe("groups", function() {
     }));
 
     it("should allow creation of NormalGroups with groups", coroutine(function*() {
-        yield sessions[0]("POST", "/groups", {
+        data.normalGroup1 = yield sessions[0]("POST", "/groups", {
             users: [],
-            groups: [this.normalGroup0._id],
+            groups: [data.normalGroup0._id],
             name: "ContainsGroup",
             isPublic: true,
         });
-        yield delay(100); // is this necessary here?
         let groups0 = yield sessions[0]("GET", "/groups/normal");
         let groups1 = yield sessions[1]("GET", "/groups/normal");
         assert.equal(groups0.length, 2, "user 0 is added to the group");
@@ -54,6 +53,29 @@ describe("groups", function() {
         assert.deepEqual(groups0.map(g => g._id).sort(), groups1.map(g => g._id).sort(),
             "the groups are the same"
         );
+    }));
+
+    it("should remove users from groups", coroutine(function*() {
+        yield sessions[0]("PUT", "/groups/id/" + data.normalGroup0._id, {
+            users: [data.users[0]._id],
+            groups: [],
+        });
+        let groups0 = yield sessions[0]("GET", "/groups/normal");
+        let groups1 = yield sessions[1]("GET", "/groups/normal");
+        assert.equal(groups0.length, 2, "user 0 remained in the groups");
+        assert.equal(groups1.length, 0, "user 1 was removed from the groups");
+    }));
+
+    it("should add users to groups", coroutine(function*() {
+        yield sessions[0]("PUT", "/groups/id/" + data.normalGroup0._id, {
+            users: data.users.map(u => u._id),
+            groups: [],
+        });
+        yield delay(100); // is this necessary here?
+        let groups0 = yield sessions[0]("GET", "/groups/normal");
+        let groups1 = yield sessions[1]("GET", "/groups/normal");
+        assert.equal(groups0.length, 2, "user 0 remained in the groups");
+        assert.equal(groups1.length, 2, "user 1 was added to the groups");
     }));
 
 });
