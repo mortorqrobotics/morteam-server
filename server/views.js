@@ -15,7 +15,7 @@ module.exports = function(imports) {
     let pages = {
         signup: "Signup",
         login: "Login",
-        "": "Index", // this works
+        "": "Home", // this works
         void: "Void",
     };
 
