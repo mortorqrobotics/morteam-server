@@ -31,6 +31,7 @@ module.exports = function(imports) {
             timestamp: new Date(),
         });
 
+        announcement.author = req.user;
         res.json(announcement);
 
     }));
