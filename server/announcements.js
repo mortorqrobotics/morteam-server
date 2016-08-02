@@ -20,6 +20,10 @@ module.exports = function(imports) {
 
     router.post("/announcements", requireLogin, handler(function*(req, res) {
 
+        if (req.body.audience.users.indexOf(req.user._id) === -1) {
+            req.body.audience.users.push(req.user._id);
+        }
+
         let announcement = yield Announcement.create({
             author: req.user._id,
             content: req.body.content,

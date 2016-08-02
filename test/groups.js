@@ -53,6 +53,9 @@ describe("groups", function() {
         assert.deepEqual(groups0.map(g => g._id).sort(), groups1.map(g => g._id).sort(),
             "the groups are the same"
         );
+        assert.equal(groups0.find(g => g._id != data.normalGroup1._id).dependentGroups.length, 1,
+            "dependentGroups is updated correctly"
+        );
     }));
 
     it("should remove users from groups", coroutine(function*() {
@@ -71,7 +74,6 @@ describe("groups", function() {
             users: data.users.map(u => u._id),
             groups: [],
         });
-        yield delay(100); // is this necessary here?
         let groups0 = yield sessions[0]("GET", "/groups/normal");
         let groups1 = yield sessions[1]("GET", "/groups/normal");
         assert.equal(groups0.length, 2, "user 0 remained in the groups");

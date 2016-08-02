@@ -21,20 +21,14 @@ module.exports = function(imports) {
     };
 
     hiddenGroups.schemaType = {
-        users: {
-            type: [{
-                type: ObjectId,
-                ref: "User",
-            }],
-            required: true,
-        },
-        groups: {
-            type: [{
-                type: ObjectId,
-                ref: "Group",
-            }],
-            required: true,
-        },
+        users: [{
+            type: ObjectId,
+            ref: "User",
+        }],
+        groups: [{
+            type: ObjectId,
+            ref: "Group",
+        }],
     };
 
     hiddenGroups.getUsersIn = Promise.coroutine(function*(audience) {
