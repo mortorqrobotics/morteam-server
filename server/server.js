@@ -27,14 +27,15 @@ module.exports = function(imports) {
     Promise.promisifyAll(lwip);
     Promise.promisifyAll(fs);
 
-    const publicDir = require("path").join(__dirname, "../website/public");
-    const profpicDir = "http://profilepics.morteam.com.s3.amazonaws.com/"
+    const publicDir = require("path").join(__dirname, "../../morteam-web/public");
+    const profpicDir = "http://profilepics.morteam.com.s3.amazonaws.com/";
 
     console.log("MorTeam started");
 
     // define the main object passed to mornetwork
     let app = express();
 
+    app.use(express.static(publicDir));
 
     // check to see if user is logged in before continuing any further
     // allow browser to receive images, css, and js files without being logged in
@@ -72,9 +73,6 @@ module.exports = function(imports) {
 
         next();
     });
-
-    // load any file in /website/public (aka publicDir)
-    app.use(express.static(publicDir));
 
     // use EJS as default view engine and specifies location of EJS files
     app.set("view engine", "ejs");
