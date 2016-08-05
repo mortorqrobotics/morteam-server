@@ -40,7 +40,6 @@ describe("account setup", function() {
     }));
 
     it("should create an AllTeamGroup and PositionGroups", coroutine(function*() {
-        yield delay(500)
         let groups = yield sessions[0]("GET", "/groups");
         data.allTeamGroup = groups.find(g => g.__t === "AllTeamGroup");
         assert.ok(data.allTeamGroup, "AllTeamGroup exists");

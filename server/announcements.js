@@ -68,15 +68,15 @@ module.exports = function(imports) {
         // check if user is eligible to delete said announcement
         if (req.user._id == announcement.author.toString() || util.positions.isUserAdmin(req.user)) {
             yield announcement.remove();
-            res.end("success");
+            res.end();
         } else {
             // warn me about attempted hax, bruh
+            res.status(401).end("You do not have permission to do this");
             yield util.mail.sendEmail({
                 to: "rafezyfarbod@gmail.com",
                 subject: "MorTeam Security Alert!",
                 text: "The user " + req.user.firstname + " " + req.user.lastname + " tried to perform administrator tasks. User ID: " + req.user._id
             });
-            res.end("fail");
         }
 
     }));

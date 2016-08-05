@@ -48,5 +48,6 @@ describe("morteam", function() {
 
     require("./setup");
     require("./groups");
+    require("./announcements");
 
 });

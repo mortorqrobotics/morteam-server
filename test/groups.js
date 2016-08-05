@@ -12,13 +12,13 @@ describe("groups", function() {
     it("should update PositionGroup membership", coroutine(function*() {
         yield sessions[0]("PUT",
             "/users/id/" + data.users[1]._id + "/position", {
-                newPosition: "mentor",
+                newPosition: "alumnus",
             }
         );
         yield delay(100);
         let groups = yield sessions[1]("GET", "/groups");
-        assert.ok(groups.some(g => g.position === "mentor"),
-            "user added to mentor PositionGroup"
+        assert.ok(groups.some(g => g.position === "alumnus"),
+            "user added to alumni PositionGroup"
         );
         assert.notOk(groups.some(g => g.position === "member"),
             "use removed from member PositionGroup"
