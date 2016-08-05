@@ -5,6 +5,7 @@ let coroutine = Promise.coroutine;
 let assert = require("chai").assert;
 let sessions = require("./shared").sessions;
 let data = require("./shared").data;
+let delay = require("./delay");
 
 let makeUser = coroutine(function*(session, num) {
     yield session("POST", "/users", {
@@ -39,6 +40,7 @@ describe("account setup", function() {
     }));
 
     it("should create an AllTeamGroup and PositionGroups", coroutine(function*() {
+        yield delay(500)
         let groups = yield sessions[0]("GET", "/groups");
         data.allTeamGroup = groups.find(g => g.__t === "AllTeamGroup");
         assert.ok(data.allTeamGroup, "AllTeamGroup exists");

@@ -29,7 +29,7 @@ module.exports = function(imports) {
                 $and: [{
                     _id: req.params.fileId,
                 }, {
-                    folder: audienceQuery(req.user._id),
+                    folder: audienceQuery(req.user),
 
                     // TODO: I do not think ^that works
                 }]
@@ -62,7 +62,7 @@ module.exports = function(imports) {
                         $exists: false
                     }
                 },
-                audienceQuery(req.user._id),
+                audienceQuery(req.user),
             ]
         });
 
@@ -76,7 +76,7 @@ module.exports = function(imports) {
             $and: [{
                     parentFolder: req.params.folderId,
                 },
-                audienceQuery(req.user._id),
+                audienceQuery(req.user),
             ]
         });
 
@@ -90,7 +90,7 @@ module.exports = function(imports) {
             $and: [{
                 folder: req.params.folderId,
             }, {
-                folder: audienceQuery(req.user._id),
+                folder: audienceQuery(req.user),
                 // TODO: I do not think ^that works
             }]
         });

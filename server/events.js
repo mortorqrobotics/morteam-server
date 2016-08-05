@@ -37,7 +37,7 @@ module.exports = function(imports) {
                         $lte: end
                     }
                 },
-                audienceQuery(req.user._id),
+                audienceQuery(req.user),
             ]
         });
 
@@ -53,7 +53,7 @@ module.exports = function(imports) {
                         $gte: new Date(),
                     }
                 },
-                audienceQuery(req.user._id),
+                audienceQuery(req.user),
             ]
         }).sort("date");
 

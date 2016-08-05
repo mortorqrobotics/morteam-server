@@ -13,9 +13,11 @@ module.exports = function(imports) {
     hiddenGroups.audienceQuery = function(query) {
         return {
             $or: [{
-                "audience.users": query,
+                "audience.users": query._id,
             }, {
-                "audience.groups.members": query,
+                "audience.groups": {
+                    $in: query.groups,
+                },
             }],
         };
     };

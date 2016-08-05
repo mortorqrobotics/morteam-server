@@ -39,7 +39,7 @@ module.exports = function(imports) {
     router.get("/announcements", requireLogin, handler(function*(req, res) {
 
         // find announcements that the user should be able to see
-        let announcements = yield Announcement.find(audienceQuery(req.user._id), {
+        let announcements = yield Announcement.find(audienceQuery(req.user), {
                 // only respond with _id, author, content and timestamp
                 _id: 1,
                 author: 1,

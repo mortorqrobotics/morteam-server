@@ -83,7 +83,7 @@ module.exports = function(imports) {
     router.get("/chats", requireLogin, handler(function*(req, res) {
 
         // find a chat that has said user as a member
-        let chats = yield Chat.find(audienceQuery(req.user._id), {
+        let chats = yield Chat.find(audienceQuery(req.user), {
                 _id: 1,
                 name: 1,
                 audience: 1,

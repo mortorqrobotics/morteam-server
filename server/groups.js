@@ -34,7 +34,9 @@ module.exports = function(imports) {
     router.get("/groups", requireLogin, handler(function*(req, res) {
 
         let groups = yield Group.find({
-            members: req.user._id
+            _id: {
+                $in: req.user.groups,
+            },
         });
 
         res.json(groups);
@@ -44,7 +46,9 @@ module.exports = function(imports) {
     router.get("/groups/normal", requireLogin, handler(function*(req, res) {
 
         let groups = yield NormalGroup.find({
-            members: req.user._id
+            _id: {
+                $in: req.user.groups,
+            },
         });
 
         res.json(groups);
@@ -67,8 +71,10 @@ module.exports = function(imports) {
         let re = new RegExp(regexString, "ig");
 
         let groups = yield NormalGroup.find({
-            members: req.user._id,
-            name: re
+            _id: {
+                $in: req.user.groups,
+            },
+            name: re,
         });
         //TODO: make this work for position groups?
 
@@ -91,7 +97,6 @@ module.exports = function(imports) {
         group.users = req.body.users;
         group.groups = req.body.groups;
         yield group.updateMembers();
-        yield group.save();
 
         res.json(group); // TODO: add permissions?
 
