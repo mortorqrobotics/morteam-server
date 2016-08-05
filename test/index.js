@@ -15,7 +15,7 @@ function mkSession() {
             data = code;
             code = null;
         }
-        return request(app)[method.toLowerCase()](path)
+        return request(app)[method.toLowerCase()]("/api" + path)
             .set({
                 cookie: cookie,
             })

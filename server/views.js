@@ -11,7 +11,7 @@ module.exports = function(imports) {
     let Team = imports.models.Team;
 
     const webDir = require("path").join(__dirname, "../../morteam-web");
-    const publicDir = require("path").join(__dirname, "../../morteam-web/public");
+    const publicDir = webDir + "/public";
     const profpicDir = "http://profilepics.morteam.com.s3.amazonaws.com/";
 
     let router = express.Router();
