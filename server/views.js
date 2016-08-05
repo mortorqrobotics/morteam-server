@@ -10,7 +10,26 @@ module.exports = function(imports) {
 
     let Team = imports.models.Team;
 
+    const webDir = require("path").join(__dirname, "../../morteam-web");
+    const publicDir = require("path").join(__dirname, "../../morteam-web/public");
+    const profpicDir = "http://profilepics.morteam.com.s3.amazonaws.com/";
+
     let router = express.Router();
+    router.use(express.static(publicDir));
+
+    // load default profile picture
+    router.get("/images/user.jpg-60", handler(function*(req, res) {
+        res.sendFile(publicDir + "/images/user.jpg");
+    }));
+
+    router.get("/images/user.jpg-300", handler(function*(req, res) {
+        res.sendFile(publicDir + "/images/user.jpg");
+    }));
+
+    // load user profile picture from AWS S3
+    router.get("/pp/:path", handler(function*(req, res) {
+        res.redirect(profpicDir + req.params.path);
+    }));
 
     let pages = {
         signup: "Signup",
@@ -19,26 +38,40 @@ module.exports = function(imports) {
         void: "Void",
     };
 
-    for (let page in pages) {
-
-        router.get("/" + page, handler(function*(req, res) {
-
-            if (req.user) {
-                req.user.team = yield Team.findOne(req.user.team);
-            }
-
-            res.render("../../morteam-web/src/page.html.ejs", {
-                userInfo: req.user,
-                page: pages[page],
+    let renderPage = Promise.coroutine(function*(res, page, user, options) {
+        if (user) {
+            user.team = yield Team.findOne({
+                _id: user.team,
             });
+        }
+        res.render(webDir + "/src/page.html.ejs", {
+            options: options || {},
+            userInfo: user,
+            page: page,
+        });
+    });
 
+    for (let page in pages) {
+        router.get("/" + page, handler(function*(req, res) {
+            renderPage(res, pages[page], req.user);
         }));
-
     }
+
+    router.get("/profiles/id/:userId", handler(function*(req, res) {
+        renderPage(res, "User", req.user, {
+            userId: req.params.userId,
+        });
+    }));
+
+    router.get("/teams/current", handler(function*(req, res) {
+        renderPage(res, "Team", req.user);
+    }));
+
+//    router.get("
 
     router.get("/js/:page", handler(function*(req, res) {
         let page = req.params.page;
-        let file = "../morteam-web/build/" + page + ".js";
+        let file = webDir + "/build/" + page + ".js";
         // TODO: use the package fs-promise
         fs.exists(file, function(exists) {
             if (!exists) {

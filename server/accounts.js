@@ -1,6 +1,6 @@
 "use strict";
 
-module.exports = function(imports, publicDir, profpicDir) {
+module.exports = function(imports) {
 
     let express = imports.modules.express;
     let lwip = imports.modules.lwip; // image processing module
@@ -17,20 +17,6 @@ module.exports = function(imports, publicDir, profpicDir) {
     let User = imports.models.User;
 
     let router = express.Router();
-
-    // load default profile picture
-    router.get("/images/user.jpg-60", handler(function*(req, res) {
-        res.sendFile(publicDir + "/images/user.jpg");
-    }));
-
-    router.get("/images/user.jpg-300", handler(function*(req, res) {
-        res.sendFile(publicDir + "/images/user.jpg");
-    }));
-
-    // load user profile picture from AWS S3
-    router.get("/pp/:path", handler(function*(req, res) {
-        res.redirect(profpicDir + req.params.path);
-    }));
 
     router.post("/login", handler(function*(req, res) {
         // TODO: maybe move login and logout to separate file?

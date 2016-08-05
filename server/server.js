@@ -27,15 +27,10 @@ module.exports = function(imports) {
     Promise.promisifyAll(lwip);
     Promise.promisifyAll(fs);
 
-    const publicDir = require("path").join(__dirname, "../../morteam-web/public");
-    const profpicDir = "http://profilepics.morteam.com.s3.amazonaws.com/";
-
     console.log("MorTeam started");
 
     // define the main object passed to mornetwork
     let app = express();
-
-    app.use(express.static(publicDir));
 
     // check to see if user is logged in before continuing any further
     // allow browser to receive images, css, and js files without being logged in
@@ -78,17 +73,22 @@ module.exports = function(imports) {
     app.set("view engine", "ejs");
     //	router.set("views", require("path").join(__dirname, "/../website"));
 
-    // import all modules that handle specific requests
     app.use(require("./views")(imports));
-    app.use(require("./accounts")(imports, publicDir, profpicDir));
-    app.use(require("./teams")(imports));
-    app.use(require("./groups")(imports));
-    app.use(require("./announcements")(imports));
-    app.use(require("./chat")(imports));
-    app.use(require("./drive")(imports));
-    app.use(require("./events")(imports));
-    app.use(require("./tasks")(imports));
+
+    let api = express.Router();
+    // import all modules that handle specific requests
+    api.use(require("./accounts")(imports));
+    api.use(require("./teams")(imports));
+    api.use(require("./groups")(imports));
+    api.use(require("./announcements")(imports));
+    api.use(require("./chat")(imports));
+    api.use(require("./drive")(imports));
+    api.use(require("./events")(imports));
+    api.use(require("./tasks")(imports));
+
     require("./sio")(imports); // TODO: does something have to be done with this?
+
+    app.use("/api", api);
 
     // send 404 message for any page that does not exist (IMPORTANT: The order for this does matter. Keep it at the end.)
     app.use("*", function(req, res) { // TODO: should this be get or use?
