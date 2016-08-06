@@ -18,20 +18,24 @@ module.exports = function(imports) {
     router.post("/users/id/:userId/tasks", requireAdmin, handler(function*(req, res) {
 
         // for iOS and Android
-        if (typeof(req.body.due_date) == "string") {
-            req.body.due_date = new Date(req.body.due_date);
+        if (typeof(req.body.dueDate) == "string") {
+            req.body.dueDate = new Date(req.body.dueDate);
+        }
+
+        if (req.body.name == "") {
+            return res.status(400).end("Task name cannot be empty");
         }
 
         let task = {
-            name: req.body.task_name,
+            name: req.body.name,
             for: req.params.userId, // why a reserved word :/
-            due_date: req.body.due_date,
+            dueDate: req.body.dueDate,
             creator: req.user._id,
-            completed: false
+            completed: false,
         };
 
-        if (req.body.task_description) {
-            task.description = req.body.task_description;
+        if (req.body.description) {
+            task.description = req.body.description;
         }
 
         task = yield Task.create(task);
@@ -44,13 +48,13 @@ module.exports = function(imports) {
             return res.status(400).end("The recipient does not exist");
         }
 
+        res.json(task);
+
         yield util.mail.sendEmail({
             to: recipient.email,
             subject: "New Task Assigned By " + req.user.firstname + " " + req.user.lastname,
             text: "View your new task at http://www.morteam.com/profiles/id/" + task.for
         });
-
-        res.json(task);
 
     }));
 
@@ -92,7 +96,7 @@ module.exports = function(imports) {
         yield Task.findOneAndUpdate({
             _id: req.params.taskId
         }, {
-            "$set": {
+            $set: {
                 completed: true
             }
         });

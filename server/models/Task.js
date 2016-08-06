@@ -20,7 +20,7 @@ module.exports = function(imports) {
             type: ObjectId,
             ref: "User"
         },
-        due_date: {
+        dueDate: {
             type: Date,
             required: true
         },

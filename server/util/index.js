@@ -47,12 +47,12 @@ module.exports = function(imports) {
     // checks if user provided email adress is valid
     util.validateEmail = function(email) {
         let re = /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i;
-        return re.test(email);
+        return re.test(String(email));
     };
 
     // checks if user provided phone number adress is valid
     util.validatePhone = function(phone) {
-        let match = phone.match(/\d/g);
+        let match = String(phone).match(/\d/g);
         return match && match.length === 10;
     };
 
