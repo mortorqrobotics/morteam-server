@@ -106,17 +106,6 @@ module.exports = function(imports) {
         response.end("Subdivision not found");
     };
 
-    // makes handling errors very easy
-    // TODO: replace this with something similar and actually use it everywhere
-    util.handleError = function(err, res) {
-        if (err) {
-            console.error(err);
-            fs.appendFile("errors.txt", err.toString());
-            fs.appendFile("errors.txt", "##################");
-            res.end("fail");
-        }
-    };
-
     // checks if user provided phone number adress is valid
     util.validPhoneNum = function(num) { //not being used
         let phone = /^\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$/;

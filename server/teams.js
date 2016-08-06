@@ -150,50 +150,24 @@ module.exports = function(imports) {
         });
 
         if (!user) {
-            return res.end("fail");
+            return res.status(400).end("That user is not on your team");
         }
 
         if (util.positions.isUserAdmin(user) && (yield User.count({
                 team: req.user.team,
                 position: util.positions.adminPositionsQuery
             })) <= 1) {
-            return res.end("You cannot remove the only Admin on your team.");
+            return res.status(400).end("You cannot remove the only Admin on your team");
         }
 
         delete user.team;
         delete user.position;
         delete user.scoutCaptain;
-        user.subdivisions = [];
+        user.subdivisions = []; // TODO: what to do with groups here
         yield user.save(); // TODO: does deleting then saving actually delete stuff?
+        // group stuff automatically removes the user from chats and such
 
-        yield Chat.update({
-            team: req.user.team,
-            userMembers: new ObjectId(req.params.userId)
-        }, {
-            "$pull": {
-                "userMembers": req.params.userId
-            }
-        });
-
-        yield Folder.update({
-            team: req.user.team,
-            userMembers: new ObjectId(req.params.userId)
-        }, {
-            "$pull": {
-                "userMembers": req.params.userId
-            }
-        });
-
-        yield Event.update({
-            team: req.user.team,
-            userAttendees: new ObjectId(req.params.userId)
-        }, {
-            "$pull": {
-                "userAttendees": req.params.userId
-            }
-        });
-
-        res.end("success");
+        res.end();
 
     }));
 

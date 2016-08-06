@@ -41,7 +41,7 @@ module.exports = function(imports) {
                     isTwoPeople: true,
                     "audience.users": users,
                 })) > 0) {
-                return res.end("exists");
+                return res.status(400).end("This chat already exists");
             }
 
 
@@ -66,7 +66,8 @@ module.exports = function(imports) {
             // group chat
 
             if (req.body.name.length >= 20) { // name character limit
-                return res.end("Name has to be 19 characters or fewer.");
+                return res.status(400).end("The chat name has to be 19 characters or fewer");
+                // TODO: get rid of this...
             }
 
             let chat = yield Chat.create({
@@ -168,7 +169,7 @@ module.exports = function(imports) {
     router.put("/chats/group/id/:chatId/name", requireLogin, handler(function*(req, res) {
 
         if (req.body.newName.length >= 20) {
-            return res.end("Name has to be 19 characters or fewer.");
+            return res.status(400).end("Chat name has to be 19 characters or fewer");
         }
 
         // TODO: check if the user is a member of the chat
@@ -179,7 +180,7 @@ module.exports = function(imports) {
             name: util.normalizeDisplayedText(req.body.newName)
         });
 
-        res.end("success");
+        res.end();
 
     }));
 
@@ -192,7 +193,7 @@ module.exports = function(imports) {
             _id: req.params.chatId,
         });
 
-        res.end("success");
+        res.end();
 
     }));
 
@@ -216,7 +217,7 @@ module.exports = function(imports) {
             updated_at: new Date()
         });
 
-        res.end("success");
+        res.end();
 
     }));
 

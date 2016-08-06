@@ -36,7 +36,7 @@ module.exports = function(imports) {
             }).populate("folder");
 
             if (!file) {
-                return res.end("fail");
+                return res.status(404).end("File does not exist");
             }
 
         }
@@ -102,12 +102,14 @@ module.exports = function(imports) {
     router.post("/folders", requireLogin, handler(function*(req, res) {
 
         if (req.body.name.length >= 22) {
-            return res.end("fail");
+            return res.status(400).end("Folder name must be less than 22 characters long");
+            // TODO: get rid of this!
         }
 
         // what to do about this
         if (req.body.type != "teamFolder" && req.body.type != "subFolder") {
-            return res.end("fail");
+            return res.status(400).end("Invalid folder type");
+            // is this even still a thing
         }
 
         let folder = {
@@ -198,7 +200,7 @@ module.exports = function(imports) {
 
         if (req.user._id.toString() != file.creator.toString() &&
             !util.positions.isUserAdmin(req.user)) {
-            return res.end("fail");
+            return res.status(403).end("You do not have permission to do this");
         }
 
         yield util.s3.deleteFileFromDriveAsync(req.params.fileId);
@@ -210,7 +212,7 @@ module.exports = function(imports) {
             yield util.s3.deleteFileFromDriveAsync(req.params.fileId + "-preview");
         }
 
-        res.end("success");
+        res.end();
 
     }));
 

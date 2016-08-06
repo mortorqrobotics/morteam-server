@@ -71,7 +71,7 @@ module.exports = function(imports) {
             res.end();
         } else {
             // warn me about attempted hax, bruh
-            res.status(401).end("You do not have permission to do this");
+            res.status(403).end("You do not have permission to do this");
             yield util.mail.sendEmail({
                 to: "rafezyfarbod@gmail.com",
                 subject: "MorTeam Security Alert!",

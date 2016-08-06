@@ -36,7 +36,7 @@ describe("announcements", function() {
     }));
 
     it("should not let incorrect people delete announcements", coroutine(function*() {
-        yield sessions[1]("DELETE", "/announcements/id/" + data.announcement._id, 401);
+        yield sessions[1]("DELETE", "/announcements/id/" + data.announcement._id, 403);
     }));
 
     it("should let admins and posters delete announcements", coroutine(function*() {

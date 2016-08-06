@@ -41,7 +41,7 @@ module.exports = function(imports) {
         });
 
         if (!recipient) {
-            return res.end("fail");
+            return res.status(400).end("The recipient does not exist");
         }
 
         yield util.mail.sendEmail({
@@ -50,7 +50,7 @@ module.exports = function(imports) {
             text: "View your new task at http://www.morteam.com/profiles/id/" + task.for
         });
 
-        res.end(task._id.toString());
+        res.json(task);
 
     }));
 
@@ -82,11 +82,10 @@ module.exports = function(imports) {
 
         // TODO: is it possible for this route to not take in the target user?
 
-        if (req.user._id != req.body.target_user // TODO: targetUserId instead?
-            &&
-            !util.positions.isUserAdmin(req.user)) {
+        if (req.user._id != req.body.targetUserId
+            && !util.positions.isUserAdmin(req.user)) {
 
-            return res.end("fail");
+            return res.status(403).end("You cannot mark this task as completed");
 
         }
 
@@ -98,7 +97,7 @@ module.exports = function(imports) {
             }
         });
 
-        res.end("success");
+        res.end();
 
     }));
 

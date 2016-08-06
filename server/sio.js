@@ -179,7 +179,6 @@ module.exports = function(imports) {
 
                 } catch (err) {
                     console.error(err);
-                    // res.end("fail");
                 }
             }
         }));

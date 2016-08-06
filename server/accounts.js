@@ -40,7 +40,7 @@ module.exports = function(imports) {
         }).select("+password").populate("team");
 
         if (!user || !(yield user.comparePassword(req.body.password))) {
-            return res.status(401).end("Invalid login credentials");
+            return res.status(400).end("Invalid login credentials");
         }
 
         delete user.password;
@@ -60,9 +60,9 @@ module.exports = function(imports) {
         req.session.destroy(function(err) {
             if (err) {
                 console.error(err);
-                res.end("fail");
+                res.status(500).end("Logout unsuccessful");
             } else {
-                res.end("success");
+                res.end();
             }
         });
     }));
@@ -191,7 +191,7 @@ module.exports = function(imports) {
             })) <= 1) {
 
             return res.status(400).end(
-                "You are the only leader or mentor on your team, so you cannot demote yourself."
+                "You are the only leader or mentor on your team, so you cannot demote yourself"
             );
         }
 
@@ -223,18 +223,13 @@ module.exports = function(imports) {
 
     router.put("/password", requireLogin, handler(function*(req, res) {
 
-        // TODO: this check should only be client side
-        if (req.body.newPassword != req.body.newPasswordConfirm) {
-            return res.end("fail: new passwords do not match");
-        }
-
         let user = yield User.findOne({
             _id: req.user._id
         }, "+password");
 
         // check if old password is correct
         if (!(yield user.comparePassword(req.body.oldPassword))) {
-            return res.end("fail: incorrect password");
+            return res.status(403).end("Your old password is incorrect");
         }
 
         // set and save new password (password is automatically encrypted. see /models/User.js)
@@ -246,11 +241,13 @@ module.exports = function(imports) {
 
     }));
 
-    // TODO: get rid of the form in the client so that this can be PUT
-    router.post("/profile", requireLogin, multer().single("new_prof_pic"), handler(function*(req, res) {
+    router.put("/profile", requireLogin, multer().single("new_prof_pic"), handler(function*(req, res) {
 
-        if (!util.validateEmail(req.body.email) || !util.validatePhone(req.body.phone)) {
-            return res.end("fail");
+        if (!util.validateEmail(req.body.email)) {
+            return res.status(400).end("Invalid email address");
+        }
+        if (!util.validatePhone(req.body.phone)) {
+            return res.status(400).end("Invalid phone number");
         }
 
         req.user.firstname = req.body.firstname;
@@ -284,7 +281,7 @@ module.exports = function(imports) {
         // update user info in database
         yield req.user.save();
 
-        res.end("success");
+        res.json(req.user);
 
     }));
 
@@ -301,7 +298,7 @@ module.exports = function(imports) {
         });
 
         if (!user) {
-            return res.end("does not exist");
+            return res.status(400).end("User not found");
         }
 
         let newPassword = yield user.assignNewPassword();
@@ -319,7 +316,7 @@ module.exports = function(imports) {
         });
         console.log(info);
 
-        res.end("success");
+        res.end();
 
     }));
 
