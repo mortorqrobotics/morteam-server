@@ -36,6 +36,10 @@ module.exports = function(imports) {
         login: "Login",
         "": "Home", // this works
         void: "Void",
+        chat: "Char",
+        drive: "Drive",
+        cal: "Calendar",
+        networks: "Networks",
     };
 
     let renderPage = Promise.coroutine(function*(res, page, user, options) {
@@ -67,7 +71,11 @@ module.exports = function(imports) {
         renderPage(res, "Team", req.user);
     }));
 
-//    router.get("
+    router.get("/groups/id/:groupId", handler(function*(req, res) {
+        renderPage(res, "Group", req.user, {
+            groupId: req.params.groupId,
+        });
+    }));
 
     router.get("/js/:page", handler(function*(req, res) {
         let page = req.params.page;
