@@ -86,8 +86,8 @@ module.exports = function(imports) {
 
         // TODO: is it possible for this route to not take in the target user?
 
-        if (req.user._id != req.body.targetUserId
-            && !util.positions.isUserAdmin(req.user)) {
+        if (req.user._id != req.body.targetUserId &&
+            !util.positions.isUserAdmin(req.user)) {
 
             return res.status(403).end("You cannot mark this task as completed");
 

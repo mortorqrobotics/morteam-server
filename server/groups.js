@@ -42,7 +42,7 @@ module.exports = function(imports) {
         res.json(groups);
 
     }));
-    
+
     router.get("/groups/normal", requireLogin, handler(function*(req, res) {
 
         let groups = yield NormalGroup.find({
@@ -85,12 +85,12 @@ module.exports = function(imports) {
     router.put("/groups/id/:groupId", requireLogin, handler(function*(req, res) {
 
         // TODO: add update hook in mornetwork
-//        let group = yield NormalGroup.update({
-//            _id: req.params.groupId
-//        }, {
-//            users: req.body.users,
-//            groups: req.body.groups
-//        });
+        //        let group = yield NormalGroup.update({
+        //            _id: req.params.groupId
+        //        }, {
+        //            users: req.body.users,
+        //            groups: req.body.groups
+        //        });
         let group = yield NormalGroup.findOne({
             _id: req.params.groupId,
         });

@@ -20,21 +20,23 @@ module.exports = function(imports) {
 
     let router = express.Router();
 
-    router.get("/events/year/:year/month/:month", requireLogin, handler(function*(req, res) {
+    router.get("/events/startYear/:startYear/startMonth/:startMonth/endYear/:endYear/endMonth/:endMonth", requireLogin, handler(function*(req, res) {
 
 
-        let year = req.params.year;
-        let month = req.params.month;
+        let startYear = req.params.startYear;
+        let startMonth = req.params.startMonth;
+        let endYear = parseInt(req.params.endYear);
+        let endMonth = parseInt(req.params.endMonth);
+        // does not work without parseInt...
 
-        let numberOfDays = new Date(year, month, 0).getDate(); // month is 1 based
-        let start = new Date(year, month, 1, 0, 0, 0); // month is 0 based
-        let end = new Date(year, month, numberOfDays, 23, 59, 59); // month is 0 based
+        let start = new Date(startYear, startMonth, 1);
+        let end = new Date(endYear, endMonth + 1, 1);
 
         let events = yield Event.find({
             $and: [{
                     date: {
                         $gte: start,
-                        $lte: end
+                        $lt: end,
                     }
                 },
                 audienceQuery(req.user),

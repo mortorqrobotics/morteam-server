@@ -40,8 +40,7 @@ module.exports = function(imports) {
             })
         )));
         return yield User.find({
-            $or: [
-                {
+            $or: [{
                     _id: {
                         $in: audience.users,
                     },
