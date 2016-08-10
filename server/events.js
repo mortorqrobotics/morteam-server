@@ -27,8 +27,8 @@ module.exports = function(imports) {
         let month = req.params.month;
 
         let numberOfDays = new Date(year, month, 0).getDate(); // month is 1 based
-        let start = new Date(year, month - 1, 1, 0, 0, 0); // month is 0 based
-        let end = new Date(year, month - 1, numberOfDays, 23, 59, 59); // month is 0 based
+        let start = new Date(year, month, 1, 0, 0, 0); // month is 0 based
+        let end = new Date(year, month, numberOfDays, 23, 59, 59); // month is 0 based
 
         let events = yield Event.find({
             $and: [{
@@ -65,7 +65,7 @@ module.exports = function(imports) {
 
         req.body.hasAttendance = req.body.hasAttendance == "true";
         req.body.sendEmail = req.body.sendEmail == "true";
-        req.body.entireTeam = req.body.entireTeam == "true";
+        console.log(req.body.date)
 
         let event = {
             name: req.body.name,

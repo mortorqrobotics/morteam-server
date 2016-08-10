@@ -40,13 +40,18 @@ module.exports = function(imports) {
             })
         )));
         return yield User.find({
-            _id: {
-                $or: [{
-                    $in: audience.users
-                }, {
-                    $in: groups.map(group => group.members)
-                }]
-            }
+            $or: [
+                {
+                    _id: {
+                        $in: audience.users,
+                    },
+                },
+                {
+                    _id: {
+                        $in: groups.map(group => group.members)
+                    },
+                }
+            ]
         });
     });
 
