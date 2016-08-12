@@ -36,7 +36,7 @@ module.exports = function(imports) {
         login: "Login",
         "": "Home", // this works
         void: "Void",
-        chat: "Char",
+        chat: "Chat",
         drive: "Drive",
         cal: "Calendar",
         networks: "Networks",
