@@ -53,7 +53,12 @@ module.exports = function(imports) {
                 isTwoPeople: true
             });
 
-            // TODO: rename this stuff for the new client
+            chat.audience.users = Promise.all(chat.audience.users.map(userId => (
+                User.findOne({
+                    _id: userId,
+                })
+            )));
+
             res.json(chat);
 
         } else {
@@ -69,6 +74,18 @@ module.exports = function(imports) {
                 audience: req.body.audience,
                 isTwoPeople: false,
             });
+
+            chat.audience.users = yield Promise.all(chat.audience.users.map(userId => (
+                User.findOne({
+                    _id: userId,
+                })
+            )));
+
+            chat.audience.groups = yield Promise.all(chat.audience.groups.map(groupId => (
+                Group.findOne({
+                    _id: groupId,
+                })
+            )));
 
             res.json(chat);
         }
