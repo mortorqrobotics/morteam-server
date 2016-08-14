@@ -27,11 +27,18 @@ module.exports = function(imports) {
 				
 				let file = yield File.findOne({
 					_id: req.params.fileId,
-					"folder.team": req.user.team
 				}).populate("folder");
 				
 				if (!file) {
 					return res.end("fail");
+				}
+
+				let folder = Folder.findOne({
+					_id: file.folder,
+				});
+
+				if (folder.team != req.user.team._id) {
+					return res.end("you do not have permission to access this");
 				}
 
 				if (!( (file.folder.team.toString() == req.user.team.toString() && file.folder.entireTeam)

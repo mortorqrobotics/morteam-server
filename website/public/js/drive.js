@@ -287,7 +287,7 @@ $(document).ready(function() {
 						var file = JSON.parse(response)
 						var fileType = file.type;
 						if (file.type == "image") {
-							fileType = "/file/" + file._id + "-preview";
+							fileType = "/files/id/" + file._id + "-preview";
 						} else {
 							fileType = "images/"+file.type+'.png';
 						}
@@ -514,7 +514,7 @@ $(window).load(function() {
 		var b = $(this).find(".doc_delete");
 		var c = $(this).find("input");
 		if (a[0] != b[0] && a[0] != c[0] && a[0] != c[1]) {
-			location = "/file/" + $(this).attr("data-fileid");
+			location = "/files/id/" + $(this).attr("data-fileid");
 		}
 	});
 	$(document).on("click", ".doc_delete", function() {
@@ -531,7 +531,7 @@ $(window).load(function() {
 		});
 		$(frame.find(".yes")).click(function() {
 			var fileId = frame.attr("data-fileid");
-			sendAjax("DELETE", getPath(["file/id", fileId]) + "?isImg=" + frame.hasClass("image"), function(response) {
+			sendAjax("DELETE", getPath(["files/id", fileId]) + "?isImg=" + frame.hasClass("image"), function(response) {
 				if (response == "success") {
 					$grid.isotope('remove', frame).isotope();
 				} else {
