@@ -214,6 +214,9 @@ module.exports = function(imports) {
 
         // TODO: check if user is a member of the chat...
 
+        let now = new Date();
+        let content = util.normalizeDisplayedText(req.body.content);
+
         yield Chat.update({
             _id: req.params.chatId,
         }, {
@@ -221,16 +224,20 @@ module.exports = function(imports) {
                 messages: {
                     $each: [{
                         author: req.user._id,
-                        content: util.normalizeDisplayedText(req.body.content),
-                        timestamp: new Date()
+                        content: content,
+                        timestamp: now,
                     }],
                     $position: 0
                 }
             },
-            updated_at: new Date()
+            updated_at: now,
         });
 
-        res.end();
+        res.json({
+            author: req.user,
+            content: content,
+            timestamp: now,
+        });
 
     }));
 
