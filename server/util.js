@@ -244,15 +244,17 @@ module.exports = function(imports) {
 
 		// creates a list of email adresses seperated by ", " provided an array of user objects
 		this.createRecipientList = function(users) {
-			let result = "";
-			users.forEach(function(user) {
-				result += user.email + ", ";
-				if (user.parentEmail) {
-					result += user.parentEmail + ", "
-				}
-			});
-			result = result.substring(0, result.length-2);
-			return result;
+            const delim = ", ";
+            return users
+                .filter(user => user.position != "alumnus")
+                .map(user => {
+                    let email = user.email;
+                    if (user.parentEmail) {
+                        email += delim + user.parentEmail;
+                    }
+                    return email;
+                })
+                .join(delim);
 		};
 
 		// determins "type" of file based on extension (is used for color coding files on the client)
