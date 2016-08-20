@@ -3,9 +3,9 @@
 let Promise = require("bluebird");
 let coroutine = Promise.coroutine;
 let assert = require("chai").assert;
-let sessions = require("./shared").sessions;
-let data = require("./shared").data;
-let delay = require("./delay");
+let sessions = require("./util/shared").sessions;
+let data = require("./util/shared").data;
+let delay = require("./util/delay");
 
 let makeUser = coroutine(function*(session, num) {
     yield session("POST", "/users", {

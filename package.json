@@ -39,6 +39,7 @@
     "chai": "^3.5.0",
     "js-beautify": "^1.6.3",
     "mocha": "^2.5.3",
+    "supertest": "^2.0.0",
     "supertest-promised": "^1.0.0"
   }
 }

@@ -160,11 +160,11 @@ module.exports = function(imports) {
             return res.status(400).end("You cannot remove the only Admin on your team");
         }
 
-        delete user.team;
-        delete user.position;
-        delete user.scoutCaptain;
-        user.subdivisions = []; // TODO: what to do with groups here
-        yield user.save(); // TODO: does deleting then saving actually delete stuff?
+        user.team = undefined;
+        user.position = undefined;
+        user.scoutCaptain = undefined;
+        // TODO: remove the user from all hidden groups
+        yield user.save();
         // group stuff automatically removes the user from chats and such
 
         res.end();

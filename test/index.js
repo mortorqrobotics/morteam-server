@@ -4,7 +4,7 @@ let assert = require("chai").assert;
 let request = require("supertest-promised");
 let Promise = require("bluebird");
 let coroutine = Promise.coroutine;
-let sessions = require("./shared").sessions;
+let sessions = require("./util/shared").sessions;
 
 let app = require(require("path").join(__dirname, "../../mornetwork/src/server"));
 
@@ -49,5 +49,6 @@ describe("morteam", function() {
     require("./setup");
     require("./groups");
     require("./announcements");
+    require("./removeFromTeam");
 
 });
