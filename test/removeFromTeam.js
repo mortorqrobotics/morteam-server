@@ -25,6 +25,26 @@ describe("removing a user from a team", function() {
         assert.equal(user1.groups.length, 0, "user was removed from all groups");
     }));
 
-    // TODO: add test for removing user from hidden groups
+    before(coroutine(function*() {
+        yield sessions[0]("POST", "/announcements", {
+            content: "stuff",
+            audience: {
+                users: [data.users[0]._id, data.users[1]._id],
+                groups: [],
+            },
+        });
+    }));
+
+    it("should remove the user from announcement hidden groups", coroutine(function*() {
+        let announcements = yield sessions[0]("GET", "/announcements");
+        assert.equal(announcements[0].audience.users.length, 1,
+            "a user was removed from announcement hidden group"
+        );
+        assert.equal(announcements[0].audience.users[0], data.users[0]._id,
+            "the correct user was removed from announcement hidden group"
+        );
+    }));
+
+    // TODO: add tests for more hidden groups other than just in announcements
 
 });

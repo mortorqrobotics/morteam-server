@@ -20,7 +20,7 @@ describe("announcements", function() {
     }));
 
     it("should send the announcements correctly", coroutine(function*() {
-        for (let i of[0, 1]) {
+        for (let i of [0, 1]) {
             let announcements = yield sessions[i]("GET", "/announcements");
             assert.equal(announcements.length, 1,
                 "each user receives exactly one announcement"

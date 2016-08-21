@@ -20,7 +20,7 @@ module.exports = function(imports) {
 
     router.post("/announcements", requireLogin, handler(function*(req, res) {
 
-        if (req.body.audience.users.indexOf(req.user._id) === -1) {
+        if (req.body.audience.users.indexOf(req.user._id.toString()) === -1) {
             req.body.audience.users.push(req.user._id);
         }
 

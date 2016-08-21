@@ -13,6 +13,9 @@ module.exports = function(imports) {
     let User = imports.models.User;
     let Team = imports.models.Team;
     let AttendanceHandler = imports.models.AttendanceHandler;
+    let Announcement = imports.models.Announcement;
+    let Chat = imports.models.Chat;
+    let Event = imports.models.Event;
     let Folder = imports.models.Folder;
 
     let router = express.Router();
@@ -165,7 +168,22 @@ module.exports = function(imports) {
         user.scoutCaptain = undefined;
         // TODO: remove the user from all hidden groups
         yield user.save();
-        // group stuff automatically removes the user from chats and such
+
+        let allModels = [
+            Announcement,
+            Chat,
+            Event,
+            Folder,
+        ];
+        for (let Model of allModels) {
+            yield Model.update({
+                "audience.users": user._id,
+            }, {
+                $pull: {
+                    "audience.users": user._id,
+                }
+            });
+        }
 
         res.end();
 
