@@ -75,6 +75,8 @@ module.exports = function(imports) {
 
     app.use(require("./views")(imports));
 
+    imports.sio = require("./sio")(imports);
+
     let api = express.Router();
     // import all modules that handle specific requests
     api.use(require("./accounts")(imports));
@@ -85,8 +87,6 @@ module.exports = function(imports) {
     api.use(require("./drive")(imports));
     api.use(require("./events")(imports));
     api.use(require("./tasks")(imports));
-
-    require("./sio")(imports); // TODO: does something have to be done with this?
 
     app.use("/api", api);
 

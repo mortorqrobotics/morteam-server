@@ -46,10 +46,12 @@ module.exports = function(imports) {
                     },
                 },
                 {
-                    _id: {
-                        $in: groups.map(group => group.members)
+                    groups: {
+                        $elemMatch: {
+                            $in: audience.groups,
+                        },
                     },
-                }
+                },
             ]
         });
     });
