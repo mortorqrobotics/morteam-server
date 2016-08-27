@@ -2,16 +2,23 @@
 
 module.exports = function(imports) {
 
-    // TODO: make this work https://www.npmjs.com/package/s3rver
-    // we need to be able to test s3 locally
-
     let Promise = imports.modules.Promise;
-    let AWS = imports.modules.AWS;
     let fs = require("fs");
-    let AWSConfigPath = require("path").join(__dirname, "../aws-config.json");
+    let File = imports.models.File;
+    let awsConfigPath = require("path").join(__dirname, "../aws-config.json");
+    let testingBucketPath = require("path").join(__dirname, "../../buckets");
 
-    if (fs.existsSync(AWSConfigPath)) {
-        AWS.config.loadFromPath(AWSConfigPath);
+    // TODO: use NODE_ENV everywhere instead of this
+    let isProduction = fs.existsSync(awsConfigPath);
+
+    let AWS;
+
+    if (isProduction) {
+        AWS = imports.modules.AWS;
+        AWS.config.loadFromPath(awsConfigPath);
+    } else {
+        AWS = imports.modules.AWSMock;
+        AWS.config.basePath = testingBucketPath;
     }
 
     let s3 = {};
@@ -54,13 +61,15 @@ module.exports = function(imports) {
         }
     };
 
+    // TODO: use the promisified version of the bucket objects
+
     s3.uploadToProfPics = function(buffer, destFileName, contentType, callback) {
         s3.profPicBucket.upload({
             ACL: "public-read",
             Body: buffer,
             Key: destFileName.toString(),
             ContentType: contentType,
-        }).send(callback);
+        }, callback);
     };
 
     s3.uploadToDrive = function(buffer, destFileName, contentType, contentDisposition, callback) {
@@ -69,20 +78,50 @@ module.exports = function(imports) {
             Key: destFileName.toString(),
             ContentType: contentType,
             ContentDisposition: contentDisposition
-        }).send(callback);
+        }, callback);
     };
 
     s3.getFileFromDrive = function(fileName, callback) { //not being used
         s3.driveBucket.getObject({
             Key: fileName
-        }).send(callback);
+        }, callback);
     };
 
     s3.deleteFileFromDrive = function(fileName, callback) {
         s3.driveBucket.deleteObject({
             Key: fileName
-        }).send(callback);
+        }, callback);
     };
+
+    // TODO: this kind of logic should not be in this file
+    s3.sendFile = Promise.coroutine(function*(res, fileKey) {
+        // the key of each file in drive is its _id
+        // image previews are stored in drive as _id-preview
+        // a file key is something that can be _id or _id-preview
+        // file id is when it is just an _id
+        if (isProduction) {
+            let url = yield s3.driveBucket.getSignedUrlAsync("getObject", {
+                Key: fileKey,
+                Expires: 60,
+            });
+            res.redirect(url);
+        } else {
+            let suffix = "-preview";
+            let fileId = fileKey;
+            if (fileId.endsWith(suffix)) {
+                fileId = fileId.slice(0, -(suffix.length));
+            }
+            let file = yield File.findOne({
+                _id: fileId,
+            });
+            res.setHeader("Content-type", file.mimetype);
+            fs.createReadStream(require("path").join(
+                testingBucketPath,
+                "drive.morteam.com",
+                fileKey
+            )).pipe(res);
+        }
+    });
 
     Promise.promisifyAll(s3);
 

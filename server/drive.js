@@ -1,5 +1,4 @@
 "use strict";
-
 module.exports = function(imports) {
 
     let express = imports.modules.express;
@@ -21,13 +20,13 @@ module.exports = function(imports) {
 
     let router = express.Router();
 
-    router.get("/files/id/:fileId", requireLogin, handler(function*(req, res) {
+    router.get("/files/id/:fileKey", requireLogin, handler(function*(req, res) {
 
         if (req.params.fileId.indexOf("-preview") == -1) {
 
             let file = yield File.findOne({
                 $and: [{
-                    _id: req.params.fileId,
+                    _id: req.params.fileKey,
                 }, {
                     folder: audienceQuery(req.user),
 
@@ -41,16 +40,7 @@ module.exports = function(imports) {
 
         }
 
-        let url = yield util.s3.driveBucket.getSignedUrlAsync("getObject", {
-            Key: req.params.fileId,
-            Expires: 60
-        });
-        // res.redirect(url); do not use this
-        // this caused a security flaw
-        // the S3 key was included in the url and sent to the user
-        https.get(url, function(response) {
-            response.pipe(res);
-        });
+        yield util.s3.sendFile(res, req.params.fileKey);
 
     }));
 

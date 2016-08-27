@@ -1,5 +1,6 @@
 server/aws-config.json
 **/.DS_Store
 node_modules
+buckets
 **/*.swp
 **/npm-debug.log

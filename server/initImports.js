@@ -26,6 +26,7 @@ module.exports = function(imports) {
     imports.modules.autolinker = require("autolinker");
     imports.modules.nodemailer = require("nodemailer");
     imports.modules.AWS = require("aws-sdk");
+    imports.modules.AWSMock = require("mock-aws-s3");
 
     imports.util = {};
     imports.util.hiddenGroups = require("./util/hiddenGroups")(imports);
