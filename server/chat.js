@@ -11,6 +11,7 @@ module.exports = function(imports) {
     let requireLogin = util.requireLogin;
     let requireAdmin = util.requireAdmin;
     let audienceQuery = util.hiddenGroups.audienceQuery;
+    let sio = imports.sio;
 
     let Chat = imports.models.Chat;
     let User = imports.models.User;
@@ -215,10 +216,12 @@ module.exports = function(imports) {
         // TODO: check if user is a member of the chat...
 
         let now = new Date();
-        let content = util.normalizeDisplayedText(req.body.content);
+//        let content = util.normalizeDisplayedText(req.body.content);
+        let content = req.body.content;
+        let chatId = req.params.chatId;
 
         yield Chat.update({
-            _id: req.params.chatId,
+            _id: chatId,
         }, {
             $push: {
                 messages: {
@@ -233,11 +236,15 @@ module.exports = function(imports) {
             updated_at: now,
         });
 
-        res.json({
+        let message = {
             author: req.user,
             content: content,
             timestamp: now,
-        });
+        };
+
+        res.json(message);
+
+        sio.emitChatMessage(chatId, message);
 
     }));
 

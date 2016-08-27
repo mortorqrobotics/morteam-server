@@ -14,14 +14,35 @@ module.exports = function(imports) {
 
     let io = imports.socketio;
 
+    // { [userId]: [ { sockets: [Socket] } ] }
     let online_clients = {};
+
+    let sio = {};
+
+    sio.emitChatMessage = Promise.coroutine(function*(chatId, message) {
+        let chat = yield Chat.findOne({
+            _id: chatId,
+        });
+        let users = yield util.hiddenGroups.getUsersIn(chat.audience);
+        let userIds = users
+            .map(user => user._id)
+            .filter(userId => userId.toString() in online_clients);
+        for (let userId of userIds) {
+            for (let socket of online_clients[userId].sockets) {
+                io.to(socket).emit("message", {
+                    chatId: chatId,
+                    message: message,
+                });
+            }
+        }
+    });
 
     io.on("connection", Promise.coroutine(function*(socket) {
         let sess = socket.request.session.userId && (yield User.findOne({
             _id: socket.request.session.userId
         }));
         if (sess) {
-            let userSubdivisionIds = util.activeSubdivisionIds(sess.subdivisions);
+            let userSubdivisionIds = sess.groups;
 
             try {
 
@@ -96,95 +117,14 @@ module.exports = function(imports) {
 
         // TODO: if a user has multiple clients and sends a message, display sent message on all clients
 
-        socket.on("message", function(msg) {
-            msg.content = util.normalizeDisplayedText(msg.content);
-            for (let user_id in online_clients) {
-                if (user_id == sess._id) {
-                    continue; // don't send messages to the user that sent them
-                }
-                let client_chats = online_clients[user_id].chats.map(chat_id => chat_id.toString());
-                if (client_chats.indexOf(msg.chat_id) != -1) { // if the user is part of the chat the message was sent to
-                    let message = {
-                        chat_id: msg.chat_id,
-                        author_id: sess._id,
-                        author_fn: sess.firstname,
-                        author_ln: sess.lastname,
-                        author_profpicpath: sess.profpicpath,
-                        content: msg.content,
-                        timestamp: new Date()
-                    };
-                    if (msg.type == "private") {
-                        message.type = "private";
-                    } else {
-                        message.type = "group";
-                        message.chat_name = msg.chat_name;
-                    }
-                    for (let sock of online_clients[user_id].sockets) {
-                        io.to(sock).emit("message", message);
-                    }
-                }
-            }
-        });
-
         socket.on("get clients", function() {
             socket.emit("get clients", Object.keys(online_clients));
         });
 
-        socket.on("new chat", Promise.coroutine(function*(data) {
-            if (data.type == "private") {
-                if (online_clients[data.receiver]) {
-                    online_clients[data.receiver].chats.push(data.chat_id);
-                    io.to(online_clients[data.receiver].sockets).emit("new chat", {
-                        type: "private",
-                        chat_id: data.chat_id,
-                        user_id: sess._id,
-                        firstname: sess.firstname,
-                        lastname: sess.lastname,
-                        profpicpath: sess.profpicpath
-                    });
-                }
-            } else if (data.type == "group") {
-                try {
-
-                    let users = yield User.find({
-                        $or: [{
-                            _id: {
-                                "$in": data.userMembers
-                            }
-                        }, {
-                            subdivisions: {
-                                $elemMatch: {
-                                    _id: {
-                                        "$in": data.subdivisionMembers
-                                    }
-                                }
-                            }
-                        }]
-                    });
-
-                    for (let user of users) {
-                        let userId = user._id.toString();
-                        if (online_clients[userId] != undefined) {
-                            online_clients[userId].chats.push(data.chat_id);
-                            io.to(online_clients[userId].sockets).emit("new chat", {
-                                type: "group",
-                                user_id: sess._id,
-                                userMembers: data.userMembers,
-                                subdivisionMembers: data.subdivisionMembers,
-                                name: data.name,
-                                chat_id: data.chat_id
-                            });
-                        }
-                    }
-
-                } catch (err) {
-                    console.error(err);
-                }
-            }
-        }));
+        // TODO: send new chats over socket.io
 
         socket.on("start typing", function(data) {
-            for (let user_id in online_clients) {
+            for (let user_id of Object.keys(online_clients)) {
                 if (~online_clients[user_id].chats.indexOf(data.chat_id) && user_id != sess._id) {
                     for (let sock of online_clients[user_id].sockets) {
                         io.to(sock).emit("start typing", data);
@@ -194,7 +134,7 @@ module.exports = function(imports) {
         });
 
         socket.on("stop typing", function(data) {
-            for (let user_id in online_clients) {
+            for (let user_id of Object.keys(online_clients)) {
                 if (online_clients[user_id].chats.indexOf(data.chat_id) != -1 && user_id != sess._id) {
                     for (let sock of online_clients[user_id].sockets) {
                         io.to(sock).emit("stop typing", data);
@@ -204,4 +144,6 @@ module.exports = function(imports) {
         });
 
     }));
+
+    return sio;
 };
