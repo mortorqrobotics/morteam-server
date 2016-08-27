@@ -81,9 +81,18 @@ module.exports = function(imports) {
         res.json(groups);
 
     }));
+    
+    router.get("/groups/id/:groupId", requireLogin, handler(function*(req, res) {
+        
+        let group = yield Group.findOne({
+            _id: req.params.groupId,
+        })
+        
+        res.json(group);
+        
+    }));
 
     router.put("/groups/id/:groupId", requireLogin, handler(function*(req, res) {
-
         // TODO: add update hook in mornetwork
         //        let group = yield NormalGroup.update({
         //            _id: req.params.groupId
