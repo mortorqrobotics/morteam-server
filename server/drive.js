@@ -25,17 +25,15 @@ module.exports = function(imports) {
         if (req.params.fileId.indexOf("-preview") == -1) {
 
             let file = yield File.findOne({
-                $and: [{
-                    _id: req.params.fileKey,
-                }, {
-                    folder: audienceQuery(req.user),
-
-                    // TODO: I do not think ^that works
-                }]
+                _id: req.params.fileKey,
             }).populate("folder");
 
             if (!file) {
                 return res.status(404).end("File does not exist");
+            }
+
+            if (!util.hiddenGroups.isUserInAudience(req.user, file.folder.audience)) {
+                return res.status(403).end("You do not have permission to access this");
             }
 
         }
@@ -76,13 +74,20 @@ module.exports = function(imports) {
 
     router.get("/folders/id/:folderId/files", requireLogin, handler(function*(req, res) {
 
+        let folder = yield Folder.findOne({
+            _id: req.params.folderId,
+        });
+
+        if (!folder) {
+            return res.status(404).end("That folder does not exist");
+        }
+
+        if (!util.hiddenGroups.isUserInAudience(req.user, folder.audience)) {
+            return res.status(403).end("You do not have permission to access this");
+        }
+
         let files = yield File.find({
-            $and: [{
-                folder: req.params.folderId,
-            }, {
-                folder: audienceQuery(req.user),
-                // TODO: I do not think ^that works
-            }]
+            folder: req.params.folderId,
         });
 
         res.json(files);

@@ -56,6 +56,13 @@ module.exports = function(imports) {
         });
     });
 
+    hiddenGroups.isUserInAudience = function(user, audience) {
+        return audience.users.indexOf(user._id) !== -1
+            || audience.groups.some(groupId => (
+                user.groups.indexOf(groupId) !== -1
+            ));
+    }
+
     return hiddenGroups;
 
 };
