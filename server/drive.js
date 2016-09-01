@@ -22,7 +22,7 @@ module.exports = function(imports) {
 
     router.get("/files/id/:fileKey", requireLogin, handler(function*(req, res) {
 
-        if (req.params.fileId.indexOf("-preview") == -1) {
+        if (req.params.fileKey.indexOf("-preview") == -1) {
 
             let file = yield File.findOne({
                 _id: req.params.fileKey,
