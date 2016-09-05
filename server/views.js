@@ -39,7 +39,7 @@ module.exports = function(imports) {
         chat: "Chat",
         drive: "Drive",
         cal: "Calendar",
-        networks: "Networks",
+        map: "Map",
     };
 
     let renderPage = Promise.coroutine(function*(res, page, user, options) {
