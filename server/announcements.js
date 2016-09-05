@@ -47,7 +47,7 @@ module.exports = function(imports) {
                 timestamp: 1,
                 audience: 1,
             }) // populate author and sort by timestamp, skip and limit are for pagination
-            .populate("author")
+            .populate("author audience.users audience.groups")
             .sort("-timestamp")
             .skip(Number(req.query.skip))
             .limit(20)
