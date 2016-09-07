@@ -40,7 +40,7 @@ describe("removing a user from a team", function() {
         assert.equal(announcements[0].audience.users.length, 1,
             "a user was removed from announcement hidden group"
         );
-        assert.equal(announcements[0].audience.users[0], data.users[0]._id,
+        assert.equal(announcements[0].audience.users[0]._id, data.users[0]._id,
             "the correct user was removed from announcement hidden group"
         );
     }));
