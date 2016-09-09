@@ -58,7 +58,12 @@ module.exports = function(imports) {
     router.get("/groups/public", requireLogin, handler(function*(req, res) {
 
         let groups = yield Group.find({
-            isPublic: true
+            isPublic: true,
+            _id: {
+                $not: {
+                    $in: req.user.groups,
+                },
+            },
         });
 
         res.json(groups);
