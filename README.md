@@ -644,3 +644,16 @@ socket.emit('new chat', {
 		success: "success"
 ```
 To be continued...
+
+
+
+
+
+--------------------------------------------
+William's WORD
+
+From now on we will be doing git branch, merge and pull request.  No more commiting directly to master
+
+Get yourself familar with the commands
+
+And also code review
