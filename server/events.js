@@ -117,14 +117,12 @@ module.exports = function(imports) {
 
     router.delete("/events/id/:eventId", requireAdmin, handler(function*(req, res) {
 
-        // TODO: check permissions
-
         yield Event.findOneAndRemove({
-            _id: req.params.eventId
+            _id: req.params.eventId,
         });
 
         yield AttendanceHandler.findOneAndRemove({
-            event: req.params.eventId
+            event: req.params.eventId,
         });
 
         res.end("success");
@@ -132,8 +130,6 @@ module.exports = function(imports) {
     }));
 
     router.get("/events/id/:eventId/attendance", requireAdmin, handler(function*(req, res) {
-
-        // TODO: check permissions
 
         let handler = yield AttendanceHandler.findOne({
             event: req.params.eventId
@@ -145,10 +141,11 @@ module.exports = function(imports) {
 
     router.put("/events/id/:eventId/attendance", requireAdmin, handler(function*(req, res) {
 
-        // TODO: check permissions
-
         yield AttendanceHandler.update({
-            event: req.params.eventId
+            $and: [
+                { event: req.params.eventId },
+                audienceQuery(req.user),
+            ],
         }, {
             "$set": {
                 attendees: req.body.updatedAttendees
@@ -159,10 +156,7 @@ module.exports = function(imports) {
 
     }));
 
-    // TODO: rename this route?
     router.put("/events/id/:eventId/users/:userId/excuseAbsence", requireAdmin, handler(function*(req, res) {
-
-        // TODO: should permissions have to be checked here? I think not
 
         yield AttendanceHandler.update({
             event: req.params.eventId,

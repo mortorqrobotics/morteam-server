@@ -75,7 +75,7 @@ module.exports = function(imports) {
 
         let tasks = yield Task.find({
             for: req.params.userId,
-            completed: false
+            completed: false,
         }).populate("creator");
 
         res.json(tasks);
@@ -84,13 +84,8 @@ module.exports = function(imports) {
 
     router.post("/tasks/id/:taskId/markCompleted", requireLogin, handler(function*(req, res) {
 
-        // TODO: is it possible for this route to not take in the target user?
-
-        if (req.user._id != req.body.targetUserId &&
-            !util.positions.isUserAdmin(req.user)) {
-
+        if (!util.positions.isUserAdmin(req.user)) {
             return res.status(403).end("You cannot mark this task as completed");
-
         }
 
         yield Task.findOneAndUpdate({

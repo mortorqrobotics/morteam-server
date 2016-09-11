@@ -132,6 +132,14 @@ module.exports = function(imports) {
         limits: 50 * 1000000 // 50 megabytes
     }).single("uploadedFile"), handler(function*(req, res) {
 
+        let folder = yield Folder.findOne({
+            _id: req.body.currentFolderId,
+        });
+
+        if (!util.hiddenGroups.isUserInAudience(req.user, folder.audience)) {
+            return res.status(403).end("You cannot upload to this folder");
+        }
+
         let ext = req.file.originalname.substring(req.file.originalname.lastIndexOf(".") + 1).toLowerCase() || "unknown";
 
         let mime = extToMime[ext];
@@ -191,8 +199,6 @@ module.exports = function(imports) {
             _id: req.params.fileId
         }).populate("folder");
 
-        // TODO: check permissions
-
         if (req.user._id.toString() != file.creator.toString() &&
             !util.positions.isUserAdmin(req.user)) {
             return res.status(403).end("You do not have permission to do this");
@@ -202,8 +208,7 @@ module.exports = function(imports) {
 
         yield file.remove();
 
-        // TODO: this should not be passed by the client, it should be found by the server
-        if (req.query.isImg == "true") {
+        if (file.type === "image") {
             yield util.s3.deleteFileFromDriveAsync(req.params.fileId + "-preview");
         }
 

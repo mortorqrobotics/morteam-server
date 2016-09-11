@@ -23,7 +23,7 @@ module.exports = function(imports) {
     router.get("/teams/current/users", requireLogin, handler(function*(req, res) {
 
         let users = yield User.find({
-            team: req.user.team
+            team: req.user.team,
         });
 
         res.json(users);
@@ -54,17 +54,17 @@ module.exports = function(imports) {
         });
 
         req.user.team = team._id;
-        req.user.scoutCaptain = true; // should this be present in morteam?
+        req.user.scoutCaptain = true;
         req.user.position = "leader"; // TODO: ask the user about this when creating team?
         yield req.user.save();
 
-        //        let folder = yield Folder.create({
-        //            name: "Team Files",
-        //            team: team._id,
-        //            entireTeam: true,
-        //            creator: req.user._id,
-        //            defaultFolder: true,
-        //        });
+        //let folder = yield Folder.create({
+        //    name: "Team Files",
+        //    team: team._id,
+        //    entireTeam: true,
+        //    creator: req.user._id,
+        //    defaultFolder: true,
+        //});
 
         res.json(team);
 
@@ -158,7 +158,7 @@ module.exports = function(imports) {
 
         if (util.positions.isUserAdmin(user) && (yield User.count({
                 team: req.user.team,
-                position: util.positions.adminPositionsQuery
+                position: util.positions.adminPositionsQuery,
             })) <= 1) {
             return res.status(400).end("You cannot remove the only Admin on your team");
         }

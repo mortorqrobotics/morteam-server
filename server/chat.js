@@ -114,14 +114,16 @@ module.exports = function(imports) {
     }));
 
     router.get("/chats/id/:chatId/messages", requireLogin, handler(function*(req, res) {
-        // TODO: maybe in the future combine this with getUsersInChat to improve performance
 
         let skip = parseInt(req.query.skip);
 
         // loads 20 messages after skip many messages. example: if skip is 0, it loads messages 0-19, if it"s 20, loads 20-39, etc.
         let chat = yield Chat.findOne({
-                _id: req.params.chatId
-            })
+            $and: [
+                { _id: req.params.chatId },
+                audienceQuery(req.user),
+            ],
+        })
             .slice("messages", [skip, 20])
             .populate("messages.author")
             .exec();
@@ -134,7 +136,10 @@ module.exports = function(imports) {
         // user members only, not groups
 
         let chat = yield Chat.findOne({
-            _id: req.params.chatId
+            $and: [
+                { _id: req.params.chatId },
+                audienceQuery(req.user),
+            ],
         });
 
         let users = yield User.find({
@@ -150,7 +155,10 @@ module.exports = function(imports) {
     router.get("/chats/id/:chatId/allMembers", requireLogin, handler(function*(req, res) {
 
         let chat = yield Chat.findOne({
-            _id: req.params.chatId
+            $and: [
+                { _id: req.params.chatId },
+                audienceQuery(req.user),
+            ],
         });
 
         let userMembers = yield User.find({
@@ -173,9 +181,9 @@ module.exports = function(imports) {
         res.json({
             members: {
                 userMembers: userMembers,
-                groups: groups
+                groups: groups,
             },
-            isTwoPeople: chat.isTwoPeople
+            isTwoPeople: chat.isTwoPeople,
         });
 
     }));
@@ -189,9 +197,12 @@ module.exports = function(imports) {
         // TODO: check if the user is a member of the chat
 
         yield Chat.update({
-            _id: req.params.chatId,
+            $and: [
+                { _id: req.params.chatId },
+                audienceQuery(req.user),
+            ],
         }, {
-            name: util.normalizeDisplayedText(req.body.newName)
+            name: req.body.newName,
         });
 
         res.end();
@@ -221,7 +232,10 @@ module.exports = function(imports) {
         let chatId = req.params.chatId;
 
         yield Chat.update({
-            _id: chatId,
+            $and: [
+                { _id: chatId },
+                audienceQuery(req.user),
+            ],
         }, {
             $push: {
                 messages: {
