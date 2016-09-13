@@ -105,7 +105,7 @@ module.exports = function(imports) {
             })
             .slice("messages", [0, 1])
             .sort("-updated_at")
-            .populate("audience.users audience.groups")
+            .populate("messages.author audience.users audience.groups")
             .exec();
         // ^ the code above gets the latest message from the chat (for previews in iOS and Android) and orders the list by most recent.
 
