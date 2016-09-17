@@ -47,16 +47,14 @@ module.exports = function(imports) {
             return res.status(400).end("Team code is taken");
         }
 
-        let team = yield Team.create({
+        let team = yield Team.createTeam({
             id: req.body.id,
             name: req.body.name,
             number: req.body.number,
         });
 
-        req.user.team = team._id;
-        req.user.scoutCaptain = true;
-        req.user.position = "leader"; // TODO: ask the user about this when creating team?
-        yield req.user.save();
+        // TODO: ask user about leader vs mentor when creating team?
+        yield User.addToTeam(req.user._id, team._id, "leader", true);
 
         //let folder = yield Folder.create({
         //    name: "Team Files",
@@ -81,16 +79,14 @@ module.exports = function(imports) {
         });
 
         if (!team) {
-            return res.status(400).end("Team does not exist");
+            return res.status(404).end("Team does not exist");
         }
 
         if (req.user.bannedFromTeams.indexOf(team._id) != -1) {
             return res.status(400).end("You are banned from this team");
         }
 
-        req.user.position = "member";
-        req.user.team = team._id;
-        yield req.user.save();
+        yield User.addToTeam(req.user._id, team._id, "member", false);
 
         // TODO: figure out what to do with attendance handlers
         //        yield AttendanceHandler.update({
@@ -149,7 +145,7 @@ module.exports = function(imports) {
 
         let user = yield User.findOne({
             _id: req.params.userId,
-            team: req.user.team
+            team: req.user.team,
         });
 
         if (!user) {
@@ -163,11 +159,7 @@ module.exports = function(imports) {
             return res.status(400).end("You cannot remove the only Admin on your team");
         }
 
-        user.team = undefined;
-        user.position = undefined;
-        user.scoutCaptain = undefined;
-        // TODO: remove the user from all hidden groups
-        yield user.save();
+        yield User.removeFromTeam(user);
 
         let allModels = [
             Announcement,

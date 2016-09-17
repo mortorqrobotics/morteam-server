@@ -32,7 +32,7 @@ describe("account setup", function() {
     }));
 
     it("should create the team", coroutine(function*() {
-        data.team = yield sessions[0]("POST", "/teams", {
+        data.team0 = yield sessions[0]("POST", "/teams", {
             number: 1515,
             name: "MorTorq",
             id: "partedhair",
@@ -48,12 +48,12 @@ describe("account setup", function() {
     }));
 
     it("should not let users join a team that does not exist", coroutine(function*() {
-        yield sessions[1]("POST", "/teams/code/nonexistent/join", 400);
+        yield sessions[1]("POST", "/teams/code/nonexistent/join", 404);
     }));
 
     it("should let the second user join the team", coroutine(function*() {
         let joinedTeam = yield sessions[1]("POST", "/teams/code/partedhair/join");
-        assert.equal(data.team._id, joinedTeam._id);
+        assert.equal(data.team0._id, joinedTeam._id);
     }));
 
     it("should put the second user in the right groups", coroutine(function*() {
@@ -66,6 +66,14 @@ describe("account setup", function() {
         assert.notOk(groups.some(g => g.position === "leader"),
             "members are not in the leader PositionGroup"
         );
+    }));
+
+    it("should create the second team", coroutine(function*() {
+        data.team1 = yield sessions[2]("POST", "/teams", {
+            number: 1717,
+            name: "Rip",
+            id: "penguineers",
+        });
     }));
 
 });

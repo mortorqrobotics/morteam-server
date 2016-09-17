@@ -41,7 +41,7 @@ function mkSession() {
 describe("morteam", function() {
 
     before(coroutine(function*() {
-        for (let _ of Array(2)) {
+        for (let _ of Array(3)) {
             sessions.push(mkSession());
         }
     }));

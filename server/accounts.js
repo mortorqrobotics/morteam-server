@@ -173,7 +173,7 @@ module.exports = function(imports) {
         });
 
         if (!user) {
-            return res.status(400).end("User not found");
+            return res.status(404).end("User not found");
         }
 
         let newPosition = req.body.newPosition.toLowerCase();
@@ -195,8 +195,7 @@ module.exports = function(imports) {
             );
         }
 
-        user.position = newPosition;
-        yield user.save();
+        yield User.setPosition(user, newPosition);
 
         res.end();
 

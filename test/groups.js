@@ -15,7 +15,6 @@ describe("groups", function() {
                 newPosition: "alumnus",
             }
         );
-        yield delay(100);
         let groups = yield sessions[1]("GET", "/groups");
         assert.ok(groups.some(g => g.position === "alumnus"),
             "user added to alumni PositionGroup"
@@ -26,11 +25,9 @@ describe("groups", function() {
     }));
 
     it("should allow creation of NormalGroups with users", coroutine(function*() {
-        data.normalGroup0 = yield sessions[0]("POST", "/groups", {
-            users: data.users.map(user => user._id),
-            groups: [],
-            name: "UsersOnly",
-            isPublic: true,
+        data.normalGroup0 = yield sessions[0]("POST", "/groups/normal", {
+            users: data.users.slice(0, 2).map(user => user._id),
+            name: "This is a group",
         });
         let groups0 = yield sessions[0]("GET", "/groups/normal");
         let groups1 = yield sessions[1]("GET", "/groups/normal");
@@ -39,45 +36,27 @@ describe("groups", function() {
         assert.equal(groups0[0]._id, groups1[0]._id, "the groups are the same");
     }));
 
-    it("should allow creation of NormalGroups with groups", coroutine(function*() {
-        data.normalGroup1 = yield sessions[0]("POST", "/groups", {
-            users: [],
-            groups: [data.normalGroup0._id],
-            name: "ContainsGroup",
-            isPublic: true,
-        });
-        let groups0 = yield sessions[0]("GET", "/groups/normal");
-        let groups1 = yield sessions[1]("GET", "/groups/normal");
-        assert.equal(groups0.length, 2, "user 0 is added to the group");
-        assert.equal(groups1.length, 2, "user 1 is added to the group");
-        assert.deepEqual(groups0.map(g => g._id).sort(), groups1.map(g => g._id).sort(),
-            "the groups are the same"
-        );
-        assert.equal(groups0.find(g => g._id != data.normalGroup1._id).dependentGroups.length, 1,
-            "dependentGroups is updated correctly"
-        );
-    }));
-
     it("should remove users from groups", coroutine(function*() {
-        yield sessions[0]("PUT", "/groups/id/" + data.normalGroup0._id, {
-            users: [data.users[0]._id],
-            groups: [],
-        });
+        yield sessions[0]("DELETE", "/groups/normal/id/" + data.normalGroup0._id + "/users/id/" + data.users[1]._id);
         let groups0 = yield sessions[0]("GET", "/groups/normal");
         let groups1 = yield sessions[1]("GET", "/groups/normal");
-        assert.equal(groups0.length, 2, "user 0 remained in the groups");
-        assert.equal(groups1.length, 0, "user 1 was removed from the groups");
+        assert.equal(groups0.length, 1, "user 0 remained in the group");
+        assert.equal(groups1.length, 0, "user 1 was removed from the group");
     }));
 
     it("should add users to groups", coroutine(function*() {
-        yield sessions[0]("PUT", "/groups/id/" + data.normalGroup0._id, {
-            users: data.users.map(u => u._id),
-            groups: [],
+        yield sessions[0]("POST", "/groups/normal/id/" + data.normalGroup0._id + "/users", {
+            users: data.users.slice(0, 2).map(u => u._id),
         });
         let groups0 = yield sessions[0]("GET", "/groups/normal");
         let groups1 = yield sessions[1]("GET", "/groups/normal");
-        assert.equal(groups0.length, 2, "user 0 remained in the groups");
-        assert.equal(groups1.length, 2, "user 1 was added to the groups");
+        assert.equal(groups0.length, 1, "user 0 remained in the group");
+        assert.equal(groups1.length, 1, "user 1 was added to the group");
+    }));
+
+    it("should not include users from other teams in AllTeamGroups", coroutine(function*() {
+        let groups = yield sessions[2]("GET", "/groups/other");
+        assert.equal(groups.length, 0, "user 2 has no public groups");
     }));
 
 });

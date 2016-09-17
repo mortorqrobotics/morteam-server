@@ -14,18 +14,17 @@ module.exports = function(imports) {
 
     let router = express.Router();
 
-    router.post("/groups", handler(function*(req, res) {
+    router.post("/groups/normal", handler(function*(req, res) {
 
-        // TODO: check if users contains the creator of the group?
-
-        let group = {
-            users: req.body.users,
-            groups: req.body.groups,
-            name: req.body.name,
-            isPublic: req.body.isPublic,
+        if (req.body.users.indexOf(req.user._id.toString()) === -1) {
+            req.body.users.push(req.user._id);
         }
 
-        group = yield NormalGroup.create(group);
+        let group = yield NormalGroup.createGroup({
+            users: req.body.users,
+            name: req.body.name,
+            team: req.user.team,
+        });
 
         res.json(group);
 
@@ -55,10 +54,10 @@ module.exports = function(imports) {
 
     }));
 
-    router.get("/groups/public", requireLogin, handler(function*(req, res) {
+    router.get("/groups/other", requireLogin, handler(function*(req, res) {
 
-        let groups = yield Group.find({
-            isPublic: true,
+        let groups = yield NormalGroup.find({
+            team: req.user.team,
             _id: {
                 $not: {
                     $in: req.user.groups,
@@ -70,23 +69,6 @@ module.exports = function(imports) {
 
     }));
 
-    router.get("/groups/search", requireLogin, handler(function*(req, res) {
-
-        let regexString = String(req.query.search).trim().replace(/\s/g, "|");
-        let re = new RegExp(regexString, "ig");
-
-        let groups = yield NormalGroup.find({
-            _id: {
-                $in: req.user.groups,
-            },
-            name: re,
-        });
-        //TODO: make this work for position groups?
-
-        res.json(groups);
-
-    }));
-    
     router.get("/groups/id/:groupId", requireLogin, handler(function*(req, res) {
         
         let group = yield Group.findOne({
@@ -95,6 +77,25 @@ module.exports = function(imports) {
         
         res.json(group);
         
+    }));
+
+    // TODO: permissions other than just admin?
+    router.post("/groups/normal/id/:groupId/users", requireAdmin, handler(function*(req, res) {
+
+        yield NormalGroup.addUsers(req.params.groupId, req.body.users);
+
+        res.end();
+        
+        // TODO: update addUsers to use findByIdAndUpdate and { new: true } to return the new audience perhaps
+
+    }));
+
+    router.delete("/groups/normal/id/:groupId/users/id/:userId", requireAdmin, handler(function*(req, res) {
+
+        yield NormalGroup.removeUsers(req.params.groupId, [req.params.userId]);
+
+        res.end();
+
     }));
 
     router.put("/groups/id/:groupId", requireLogin, handler(function*(req, res) {
