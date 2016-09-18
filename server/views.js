@@ -28,7 +28,15 @@ module.exports = function(imports) {
 
     // load user profile picture from AWS S3
     router.get("/pp/:path", handler(function*(req, res) {
-        res.redirect(profpicDir + req.params.path);
+        if (imports.util.s3.isProduction) {
+            res.redirect(profpicDir + req.params.path);
+        } else {
+            res.sendFile(require("path").join(
+                __dirname,
+                "../buckets/profilepics.morteam.com",
+                req.params.path
+            ));
+        }
     }));
 
     let pages = {

@@ -23,6 +23,8 @@ module.exports = function(imports) {
 
     let s3 = {};
 
+    s3.isProduction = isProduction;
+
     // define AWS S3 buckets used
     s3.profPicBucket = new AWS.S3({
         params: {
