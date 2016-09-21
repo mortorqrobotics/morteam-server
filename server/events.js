@@ -15,7 +15,6 @@ module.exports = function(imports) {
 
     let User = imports.models.User;
     let Event = imports.models.Event;
-    let AttendanceHandler = imports.models.AttendanceHandler;
     let Group = imports.models.Group;
 
     let router = express.Router();
@@ -27,7 +26,6 @@ module.exports = function(imports) {
         let startMonth = req.params.startMonth;
         let endYear = parseInt(req.params.endYear);
         let endMonth = parseInt(req.params.endMonth);
-        // does not work without parseInt...
 
         let start = new Date(startYear, startMonth, 1);
         let end = new Date(endYear, endMonth + 1, 1);
@@ -37,10 +35,10 @@ module.exports = function(imports) {
                     date: {
                         $gte: start,
                         $lt: end,
-                    }
+                    },
                 },
                 audienceQuery(req.user),
-            ]
+            ],
         });
 
         res.json(events);
@@ -65,16 +63,15 @@ module.exports = function(imports) {
 
     router.post("/events", requireAdmin, handler(function*(req, res) {
 
-        req.body.hasAttendance = req.body.hasAttendance == "true";
         req.body.sendEmail = req.body.sendEmail == "true";
-        console.log(req.body.date)
 
         let event = {
             name: req.body.name,
             date: new Date(req.body.date),
             audience: req.body.audience,
             creator: req.user._id,
-            hasAttendance: req.body.hasAttendance,
+            hasTakenAttendance: false,
+            attendance: [],
         };
 
         if (req.body.description.length > 0) {
@@ -83,10 +80,10 @@ module.exports = function(imports) {
 
         event = yield Event.create(event);
 
-        let users = yield hiddenGroups.getUsersIn(event.audience);
 
         if (req.body.sendEmail) {
 
+            let users = yield hiddenGroups.getUsersIn(event.audience);
             let list = util.mail.createRecepientList(users);
 
             yield util.mail.sendEmail({
@@ -95,20 +92,6 @@ module.exports = function(imports) {
                 html: req.user.firstname + " " + req.user.lastname + " has created an event on " + util.readableDate(event.date) + ",<br><br>" + event.name + "<br>" + req.body.description
             });
 
-        }
-
-        if (req.body.hasAttendance) {
-
-            let attendees = users.map(attendee => ({
-                user: attendee._id,
-                status: "absent"
-            }));
-
-            yield AttendanceHandler.create({
-                event: event._id,
-                event_date: event.date,
-                attendees: attendees
-            });
         }
 
         res.json(event);
@@ -121,74 +104,83 @@ module.exports = function(imports) {
             _id: req.params.eventId,
         });
 
-        yield AttendanceHandler.findOneAndRemove({
-            event: req.params.eventId,
-        });
-
-        res.end("success");
-
-    }));
-
-    router.get("/events/id/:eventId/attendance", requireAdmin, handler(function*(req, res) {
-
-        let handler = yield AttendanceHandler.findOne({
-            event: req.params.eventId
-        }).populate("attendees.user");
-
-        res.json(handler.attendees);
+        res.end();
 
     }));
 
     router.put("/events/id/:eventId/attendance", requireAdmin, handler(function*(req, res) {
 
-        yield AttendanceHandler.update({
+        yield Event.update({
             $and: [
-                { event: req.params.eventId },
+                { _id: req.params.eventId },
                 audienceQuery(req.user),
             ],
         }, {
-            "$set": {
-                attendees: req.body.updatedAttendees
-            }
+            $set: {
+                attendance: req.body.attendance,
+            },
         });
 
-        res.end("success");
+        res.end();
 
     }));
 
-    router.put("/events/id/:eventId/users/:userId/excuseAbsence", requireAdmin, handler(function*(req, res) {
+    router.put("/events/id/:eventId/excuseAbsences", requireAdmin, handler(function*(req, res) {
 
-        yield AttendanceHandler.update({
-            event: req.params.eventId,
-            "attendees.user": req.body.user_id
-        }, {
-            "$set": {
-                "attendees.$.status": "excused"
-            }
+        let event = yield Event.findOne({
+            _id: req.params.eventId,
         });
 
-        res.end("success");
+        let newEntries = [];
+        for (let userId of req.body.userIds) {
+            let index = event.attendance.findIndex(entry => entry.user.toString() == userId);
+            if (index !== -1) {
+                event.attendance[index].status = "excused";
+            } else {
+                newEntries.push({
+                    user: userId,
+                    status: "excused",
+                });
+            }
+        }
+        Array.prototype.push.apply(event.attendance, newEntries);
+
+        yield event.save();
+
+        res.end();
 
     }));
 
-    function getPresencesAbsences(attendanceHandlers, userId) {
+    router.get("/events/id/:eventId/userList", requireLogin, handler(function*(req, res) {
+
+        let event = yield Event.findOne({
+            _id: req.params.eventId,
+        });
+
+        let users = yield util.hiddenGroups.getUsersIn(event.audience);
+
+        res.json(users);
+
+    }));
+
+    function getPresencesAbsences(events, userId) {
         let absences = [];
         let present = 0;
-        for (let handler of attendanceHandlers) {
-            for (let attendee of handler.attendees) {
-                if (attendee.user == userId) {
+        for (let event of events) {
+            for (let attendee of event.attendance) {
+                if (attendee.user.toString() == userId) {
                     if (attendee.status == "absent") {
-                        absences.push(handler.event);
+                        absences.push(event);
                     } else if (attendee.status == "present") {
                         present++;
                     }
-                    // do nothing if the absense is excused
+                    // do nothing if the absense is excused or if tardy
                 }
             }
         }
         return {
             present: present,
-            absences: absences
+            absences: absences,
         };
     }
 
@@ -204,12 +196,12 @@ module.exports = function(imports) {
             dateConstraints.$lte = new Date();
         }
 
-        let handlers = yield AttendanceHandler.find({
-            event_date: dateConstraints,
-            "attendees.user": req.params.userId
-        }).populate("event").exec();
+        let events = yield Event.find({
+            date: dateConstraints,
+            "attendance.user": req.params.userId,
+        });
 
-        let result = getPresencesAbsences(handlers, req.params.userId);
+        let result = getPresencesAbsences(events, req.params.userId);
 
         res.json(result);
 

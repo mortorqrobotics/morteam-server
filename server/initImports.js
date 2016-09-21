@@ -35,7 +35,6 @@ module.exports = function(imports) {
     imports.models.Announcement = require("./models/Announcement")(imports);
     imports.models.Chat = require("./models/Chat")(imports);
     imports.models.Event = require("./models/Event")(imports);
-    imports.models.AttendanceHandler = require("./models/AttendanceHandler")(imports);
     imports.models.Folder = require("./models/Folder")(imports);
     imports.models.File = require("./models/File")(imports);
     imports.models.Task = require("./models/Task")(imports);

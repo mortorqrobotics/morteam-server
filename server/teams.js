@@ -12,7 +12,6 @@ module.exports = function(imports) {
 
     let User = imports.models.User;
     let Team = imports.models.Team;
-    let AttendanceHandler = imports.models.AttendanceHandler;
     let Announcement = imports.models.Announcement;
     let Chat = imports.models.Chat;
     let Event = imports.models.Event;
@@ -87,22 +86,6 @@ module.exports = function(imports) {
         }
 
         yield User.addToTeam(req.user._id, team._id, "member", false);
-
-        // TODO: figure out what to do with attendance handlers
-        //        yield AttendanceHandler.update({
-        //            entireTeam: true,
-        //            event_date: {
-        //                $gte: new Date()
-        //            },
-        //            "event.team": team._id
-        //        }, {
-        //            "$push": {
-        //                "attendees": {
-        //                    user: req.user._id,
-        //                    status: "absent"
-        //                }
-        //            }
-        //        });
 
         // TODO: should personal folders still be created automatically?
         //        yield Folder.create({

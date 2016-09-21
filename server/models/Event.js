@@ -12,21 +12,34 @@ module.exports = function(imports) {
     let eventSchema = new Schema({
         name: {
             type: String,
-            required: true
+            required: true,
         },
         description: {
             type: String,
-            required: false
+            required: false,
         },
         audience: hiddenGroups.schemaType,
-        hasAttendance: Boolean,
+        hasTakenAttendance: {
+            type: Boolean,
+            required: true,
+        },
+        attendance: [{
+            user: {
+                type: ObjectId,
+                ref: "User",
+            },
+            status: {
+                type: String,
+                enum: ["present", "absent", "excused", "tardy"],
+            },
+        }],
         date: {
             type: Date,
-            required: true
+            required: true,
         },
         creator: {
             type: ObjectId,
-            ref: "User"
+            ref: "User",
         },
         created_at: Date,
         updated_at: Date,
