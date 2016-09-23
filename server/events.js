@@ -125,6 +125,46 @@ module.exports = function(imports) {
 
     }));
 
+    router.post("/events/id/:eventId/startAttendance", requireAdmin, handler(function*(req, res) {
+
+        let event = yield Event.findOne({
+            _id: req.params.eventId,
+        });
+
+        if (!event) {
+            return res.status(400).end("That event does not exist");
+        }
+
+        // TODO: check if it already hasTakenAttendance
+
+        let newAttendees = [];
+        for (let user of (yield util.hiddenGroups.getUsersIn(event.audience))) {
+            if (!event.attendance.some(obj => obj.user.toString == user.toString())) {
+                newAttendees.push({
+                    user: user._id,
+                    status: "absent",
+                });
+            }
+        }
+
+        Array.prototype.push.apply(event.attendance, newAttendees);
+        event.hasTakenAttendance = true;
+        yield event.save();
+
+        res.end();
+
+    }));
+
+    router.get("/events/id/:eventId/attendance", requireAdmin, handler(function*(req, res) {
+
+        let event = yield Event.findOne({
+            _id: req.params.eventId,
+        }).populate("attendance.user");
+
+        res.json(event.attendance);
+
+    }));
+
     router.put("/events/id/:eventId/excuseAbsences", requireAdmin, handler(function*(req, res) {
 
         let event = yield Event.findOne({
