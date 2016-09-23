@@ -26,9 +26,17 @@ module.exports = function(imports) {
             return res.status(400).end("Task name cannot be empty");
         }
 
+        let recipient = yield User.findOne({
+            _id: req.params.userId,
+        });
+
+        if (!recipient) {
+            return res.status(400).end("The recipient does not exist");
+        }
+
         let task = {
             name: req.body.name,
-            for: req.params.userId, // why a reserved word :/
+            for: req.params.userId,
             dueDate: req.body.dueDate,
             creator: req.user._id,
             completed: false,
@@ -40,14 +48,7 @@ module.exports = function(imports) {
 
         task = yield Task.create(task);
 
-        let recipient = yield User.findOne({
-            _id: task.for
-        });
-
-        if (!recipient) {
-            return res.status(400).end("The recipient does not exist");
-        }
-
+        task.creator = req.user;
         res.json(task);
 
         yield util.mail.sendEmail({
