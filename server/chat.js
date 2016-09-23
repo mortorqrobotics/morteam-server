@@ -2,268 +2,266 @@
 
 module.exports = function(imports) {
 
-	let express = imports.modules.express;
-	let ObjectId = imports.modules.mongoose.Types.ObjectId;
-	let Promise = imports.modules.Promise;
-	let util = imports.util;
+    let express = imports.modules.express;
+    let ObjectId = imports.modules.mongoose.Types.ObjectId;
+    let Promise = imports.modules.Promise;
+    let util = imports.util;
 
-	let requireLogin = util.requireLogin;
-	let requireAdmin = util.requireAdmin;
+    let handler = util.handler;
+    let requireLogin = util.requireLogin;
+    let requireAdmin = util.requireAdmin;
+    let audienceQuery = util.hiddenGroups.audienceQuery;
+    let sio = imports.sio;
 
-	let Chat = imports.models.Chat;
-	let User = imports.models.User;
-	let Subdivision = imports.models.Subdivision;
+    let Chat = imports.models.Chat;
+    let User = imports.models.User;
+    let Group = imports.models.Group;
 
-	let router = express.Router();
+    let router = express.Router();
 
-	// TODO: separate this into separate requests for group and private chats
-	router.post("/chats", requireLogin, Promise.coroutine(function*(req, res) {
+    // TODO: separate this into separate requests for group and private chats
+    router.post("/chats", requireLogin, handler(function*(req, res) {
 
-		let subdivisionMembers = req.body.subdivisionMembers || [];
-		let userMembers = req.body.userMembers || [];
+        if (req.body.type == "private") {
+            // private chat
 
-		try {
+            let otherUser = yield User.findOne({
+                _id: req.body.otherUser,
+            });
+            if (!otherUser) {
+                return res.status(400).end("That user does not exist");
+            }
 
-			if (req.body.type == "private") {
-				// private chat
+            let users = [
+                req.user._id,
+                otherUser._id,
+            ];
 
-				if((yield Chat.count({
-					group: false,
-					team: req.user.team,
-					$or: [
-						{ userMembers: [req.user._id, req.body.user2] },
-						{ userMembers: [req.body.user2, req.user._id] }
-					] // check to see if private convo already exists
-				})) > 0) {
-					return res.end("exists");
-				}
+            // check to see if already exists
+            if ((yield Chat.count({
+                    isTwoPeople: true,
+                    "audience.users": users,
+                })) > 0) {
+                return res.status(400).end("This chat already exists");
+            }
 
-				let chat = yield Chat.create({
-					userMembers: userMembers,
-					team: req.user.team,
-					group: false
-				});
 
-				// get the user that is not the person making this request
-				let user2Id = util.getUserOtherThanSelf(chat.userMembers, req.user._id.toString());
-				let user = yield User.findOne({ _id: user2Id }); // check for team here?
+            let chat = yield Chat.create({
+                audience: {
+                    groups: [],
+                    users: users,
+                },
+                isTwoPeople: true
+            });
 
-				if (!user) {
-					return res.end("fail");
-				}
+            chat.audience.users = Promise.all(chat.audience.users.map(userId => (
+                User.findOne({
+                    _id: userId,
+                })
+            )));
 
-				res.json({
-					_id: user._id,
-					fn: user.firstname,
-					ln: user.lastname,
-					profpicpath: user.profpicpath,
-					chat_id: chat._id
-				});
+            res.json(chat);
 
-			} else {
-				// group chat
+        } else {
+            // group chat
 
-				if (req.body.name.length >= 20) { // name character limit
-					return res.end("fail");
-				}
+            if (req.body.name.length >= 20) { // name character limit
+                return res.status(400).end("The chat name has to be 19 characters or fewer");
+                // TODO: get rid of this...
+            }
 
-				let chat = yield Chat.create({
-					team: req.user.team,
-					name: util.normalizeDisplayedText(req.body.name),
-					userMembers: JSON.parse(userMembers),
-					subdivisionMembers: JSON.parse(subdivisionMembers),
-					group: true
-				});
+            let chat = yield Chat.create({
+                name: util.normalizeDisplayedText(req.body.name),
+                audience: req.body.audience,
+                isTwoPeople: false,
+            });
 
-				res.json(chat);
-			}
-		} catch (err) {
-			console.error(err);
-			res.end("fail");
-		}
-	}));
+            chat.audience.users = yield Promise.all(chat.audience.users.map(userId => (
+                User.findOne({
+                    _id: userId,
+                })
+            )));
 
-	router.get("/chats", requireLogin, Promise.coroutine(function*(req, res) {
-		// get an array of _ids of subdivisions of which the user is a member. (dat proper grammar doe)
-		let userSubdivisionIds = util.activeSubdivisionIds(req.user.subdivisions);
+            chat.audience.groups = yield Promise.all(chat.audience.groups.map(groupId => (
+                Group.findOne({
+                    _id: groupId,
+                })
+            )));
 
-		try {
+            res.json(chat);
+        }
 
-			// find a chat in the current team that also has said user as a member or has a subdivision of which said user is a member.
-			let chats = yield Chat.find({
-				team: req.user.team,
-				$or: [
-					{ userMembers: req.user._id },
-					{ subdivisionMembers: { "$in": userSubdivisionIds } }
-				]
-			}, {
-				_id: 1,
-				name: 1,
-				group: 1,
-				userMembers: 1,
-				subdivisionMembers: 1,
-				updated_at: 1
-			}).slice("messages", [0, 1])
-				.populate("userMembers subdivisionMembers")
-				.sort("-updated_at")
-				.exec();
-			// ^ the code above gets the latest message from the chat (for previews in iOS and Android) and orders the list by most recent.
+    }));
 
-			res.json(chats);
+    router.get("/chats", requireLogin, handler(function*(req, res) {
 
-		} catch (err) {
-			console.error(err);
-			res.end("fail");
-		}
-	}));
+        // find a chat that has said user as a member
+        let chats = yield Chat.find(audienceQuery(req.user), {
+                _id: 1,
+                name: 1,
+                audience: 1,
+                isTwoPeople: 1,
+                updated_at: 1
+            })
+            .slice("messages", [0, 1])
+            .sort("-updated_at")
+            .populate("messages.author audience.users audience.groups")
+            .exec();
+        // ^ the code above gets the latest message from the chat (for previews in iOS and Android) and orders the list by most recent.
 
-	router.get("/chats/id/:chatId/messages", requireLogin, Promise.coroutine(function*(req, res) {
-		// TODO: maybe in the future combine this with getUsersInChat to improve performance
+        res.json(chats);
 
-		try {
+    }));
 
-			let skip = parseInt(req.query.skip);
+    router.get("/chats/id/:chatId/messages", requireLogin, handler(function*(req, res) {
 
-			// loads 20 messages after skip many messages. example: if skip is 0, it loads messages 0-19, if it"s 20, loads 20-39, etc.
-			let chat = yield Chat.findOne({ _id: req.params.chatId })
-				.slice("messages", [skip, 20])
-				.populate("messages.author")
-				.exec();
+        let skip = parseInt(req.query.skip);
 
-			res.json(chat.messages);
+        // loads 20 messages after skip many messages. example: if skip is 0, it loads messages 0-19, if it"s 20, loads 20-39, etc.
+        let chat = yield Chat.findOne({
+            $and: [
+                { _id: req.params.chatId },
+                audienceQuery(req.user),
+            ],
+        })
+            .slice("messages", [skip, 20])
+            .populate("messages.author")
+            .exec();
 
-		} catch (err) {
-			console.error(err);
-			res.end("fail");
-		}
-	}));
+        res.json(chat.messages);
 
-	router.get("/chats/id/:chatId/users", requireLogin, Promise.coroutine(function*(req, res) {
-		// user members only, not subdivision members
+    }));
 
-		try {
+    router.get("/chats/id/:chatId/users", requireLogin, handler(function*(req, res) {
+        // user members only, not groups
 
-			let chat = yield Chat.findOne({
-				_id: req.params.chatId,
-				team: req.user.team
-			}, {
-				userMembers: 1,
-				subdivisionMembers: 1
-			});
+        let chat = yield Chat.findOne({
+            $and: [
+                { _id: req.params.chatId },
+                audienceQuery(req.user),
+            ],
+        });
 
-			let users = yield User.find({
-				$or: [
-					{ _id: { "$in": chat.userMembers } },
-					{ subdivisions: { $elemMatch: { _id: { "$in": chat.subdivisionMembers } } } }
-				]
-			});
+        let users = yield User.find({
+            _id: {
+                $in: chat.audience.members
+            }
+        });
 
-			res.json(users);
+        res.json(users);
 
-		} catch (err) {
-			console.error(err);
-			res.end("fail");
-		}
-	}));
+    }));
 
-	router.get("/chats/id/:chatId/allMembers", requireLogin, Promise.coroutine(function*(req, res) {
-		// both user members and subdivision members
+    router.get("/chats/id/:chatId/allMembers", requireLogin, handler(function*(req, res) {
 
-		try {
+        let chat = yield Chat.findOne({
+            $and: [
+                { _id: req.params.chatId },
+                audienceQuery(req.user),
+            ],
+        });
 
-			let chat = yield Chat.findOne({
-				_id: req.params.chatId,
-				team: req.user.team
-			}, {
-				userMembers: 1,
-				subdivisionMembers: 1,
-				group: 1
-			});
+        let userMembers = yield User.find({
+            _id: {
+                $in: chat.audience.users
+            }
+        });
 
-			let userMembers = yield User.find({ _id: { "$in": chat.userMembers } });
-			let subdivisionMembers = yield Subdivision.find({ _id: { "$in": chat.subdivisionMembers } });
+        let groups = yield Group.find({
+            _id: {
+                $in: chat.audience.groups
+            }
+        })
 
-			res.json({
-				members: {
-					userMembers: userMembers,
-					subdivisionMembers: subdivisionMembers
-				},
-				group: chat.group
-			});
+        // TODO: the purpose of this currently is to show users and subdivisions
+        // try clicking on the gear for a chat in morteam
+        // should populate the individual users and groups of a chat
+        // this will all be figured out once information is necessary on the frontend
 
-		} catch (err) {
-			console.error(err);
-			res.end("fail");
-		}
-	}));
+        res.json({
+            members: {
+                userMembers: userMembers,
+                groups: groups,
+            },
+            isTwoPeople: chat.isTwoPeople,
+        });
 
-	router.put("/chats/group/id/:chatId/name", requireLogin, Promise.coroutine(function*(req, res) {
+    }));
 
-		if (req.body.newName.length >= 20) {
-			return res.end("Name has to be 19 characters or fewer.");
-		}
+    router.put("/chats/group/id/:chatId/name", requireLogin, handler(function*(req, res) {
 
-		try {
+        if (req.body.newName.length >= 20) {
+            return res.status(400).end("Chat name has to be 19 characters or fewer");
+        }
 
-			yield Chat.update({
-				_id: req.params.chatId,
-				team: req.user.team
-			}, {
-				name: util.normalizeDisplayedText(req.body.newName)
-			});
+        // TODO: check if the user is a member of the chat
 
-			res.end("success");
+        yield Chat.update({
+            $and: [
+                { _id: req.params.chatId },
+                audienceQuery(req.user),
+            ],
+        }, {
+            name: req.body.newName,
+        });
 
-		} catch (err) {
-			console.error(err);
-			res.end("fail");
-		}
-	}));
+        res.end();
 
-	router.delete("/chats/id/:chatId", requireAdmin, Promise.coroutine(function*(req, res) {
-		try {
+    }));
 
-			yield Chat.findOneAndRemove({
-				_id: req.params.chatId,
-		   		team: req.user.team
-			});
+    router.delete("/chats/id/:chatId", requireAdmin, handler(function*(req, res) {
 
-			return res.end("success");
+        // TODO: check if the user has permissions to delete the chat
+        // should they have to be a member of it?
 
-		} catch (err) {
-			console.error(err);
-			res.end("fail");
-		}
-	}));
+        yield Chat.findOneAndRemove({
+            _id: req.params.chatId,
+        });
 
-	router.post("/chats/id/:chatId/messages", requireLogin, Promise.coroutine(function*(req, res) {
-		try {
-			
-			yield Chat.update({
-				_id: req.params.chatId,
-		   		team: req.user.team
-			}, {
-				"$push": {
-					"messages": {
-						"$each": [ {
-							author: req.user._id,
-				 			content: util.normalizeDisplayedText(req.body.content),
-				  			timestamp: new Date()
-						} ],
-						"$position": 0
-					}
-				},
-				updated_at: new Date()
-			});
+        res.end();
 
-			res.end("success");
+    }));
 
-		} catch (err) {
-			console.error(err);
-			res.end("fail");
-		}
-	}));
+    router.post("/chats/id/:chatId/messages", requireLogin, handler(function*(req, res) {
 
-	return router;
+        // TODO: check if user is a member of the chat...
+
+        let now = new Date();
+//        let content = util.normalizeDisplayedText(req.body.content);
+        let content = req.body.content;
+        let chatId = req.params.chatId;
+
+        yield Chat.update({
+            $and: [
+                { _id: chatId },
+                audienceQuery(req.user),
+            ],
+        }, {
+            $push: {
+                messages: {
+                    $each: [{
+                        author: req.user._id,
+                        content: content,
+                        timestamp: now,
+                    }],
+                    $position: 0
+                }
+            },
+            updated_at: now,
+        });
+
+        let message = {
+            author: req.user,
+            content: content,
+            timestamp: now,
+        };
+
+        res.json(message);
+
+        sio.emitChatMessage(chatId, message);
+
+    }));
+
+    return router;
 
 };

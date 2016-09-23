@@ -2,125 +2,105 @@
 
 module.exports = function(imports) {
 
-	let express = imports.modules.express;
-	let Promise = imports.modules.Promise;
-	let util = imports.util;
+    let express = imports.modules.express;
+    let Promise = imports.modules.Promise;
+    let util = imports.util;
 
-	let requireLogin = util.requireLogin;
-	let requireAdmin = util.requireAdmin;
+    let handler = util.handler;
+    let requireLogin = util.requireLogin;
+    let requireAdmin = util.requireAdmin;
 
-	let Task = imports.models.Task;
-	let User = imports.models.User;
+    let Task = imports.models.Task;
+    let User = imports.models.User;
 
-	let router = express.Router();
+    let router = express.Router();
 
-	router.post("/users/id/:userId/tasks", requireLogin, requireAdmin, Promise.coroutine(function*(req, res) {
+    router.post("/users/id/:userId/tasks", requireAdmin, handler(function*(req, res) {
 
-		// for iOS and Android
-		if (typeof(req.body.due_date) == "string") {
-			req.body.due_date = new Date(req.body.due_date);
-		}
+        // for iOS and Android
+        if (typeof(req.body.dueDate) == "string") {
+            req.body.dueDate = new Date(req.body.dueDate);
+        }
 
-		let task = {
-			name: req.body.task_name,
-			team: req.user.team,
-			for: req.params.userId, // why a reserved word :/
-			due_date: req.body.due_date,
-			creator: req.user._id,
-			completed: false
-		};
+        if (req.body.name == "") {
+            return res.status(400).end("Task name cannot be empty");
+        }
 
-		if (req.body.task_description) {
-			task.description = req.body.task_description;
-		}
+        let recipient = yield User.findOne({
+            _id: req.params.userId,
+        });
 
-		try {
+        if (!recipient) {
+            return res.status(400).end("The recipient does not exist");
+        }
 
-			task = yield Task.create(task);
+        let task = {
+            name: req.body.name,
+            for: req.params.userId,
+            dueDate: req.body.dueDate,
+            creator: req.user._id,
+            completed: false,
+        };
 
-			let recipient = yield User.findOne({
-				_id: task.for
-			});
+        if (req.body.description) {
+            task.description = req.body.description;
+        }
 
-			if (!recipient) {
-				return res.end("fail");
-			}
+        task = yield Task.create(task);
 
-			yield util.sendEmail({
-				to: recipient.email,
-				subject: "New Task Assigned By " + req.user.firstname + " " + req.user.lastname,
-				text: "View your new task at http://www.morteam.com/profiles/id/" + task.for
-			});
+        task.creator = req.user;
+        res.json(task);
 
-			res.end(task._id.toString());
+        yield util.mail.sendEmail({
+            to: recipient.email,
+            subject: "New Task Assigned By " + req.user.firstname + " " + req.user.lastname,
+            text: "View your new task at http://www.morteam.com/profiles/id/" + task.for
+        });
 
-		} catch (err) {
-			console.error(err);
-			res.end("fail");
-		}
-	}));
+    }));
 
-	router.get("/users/id/:userId/tasks/completed", requireLogin, Promise.coroutine(function*(req, res) {
-		try {
+    router.get("/users/id/:userId/tasks/completed", requireLogin, handler(function*(req, res) {
 
-			let tasks = yield Task.find({
-				for: req.params.userId,
-				completed: true
-			}).populate("creator");
+        let tasks = yield Task.find({
+            for: req.params.userId,
+            completed: true
+        }).populate("creator");
 
-			res.json(tasks);
+        res.json(tasks);
 
-		} catch (err) {
-			console.error(err);
-			res.end("fail");
-		}
-	}));
+    }));
 
-	// TODO: should completed and pending tasks be put into one request?
+    // TODO: should completed and pending tasks be put into one request?
 
-	router.get("/users/id/:userId/tasks/pending", requireLogin, Promise.coroutine(function*(req, res) {
-		try {
+    router.get("/users/id/:userId/tasks/pending", requireLogin, handler(function*(req, res) {
 
-			let tasks = yield Task.find({
-				for: req.params.userId,
-				completed: false
-			}).populate("creator");
+        let tasks = yield Task.find({
+            for: req.params.userId,
+            completed: false,
+        }).populate("creator");
 
-			res.json(tasks);
+        res.json(tasks);
 
-		} catch (err) {
-			console.error(err);
-			res.end("fail");
-		}
-	}));
+    }));
 
-	router.post("/tasks/id/:taskId/markCompleted", requireLogin, Promise.coroutine(function*(req, res) {
+    router.post("/tasks/id/:taskId/markCompleted", requireLogin, handler(function*(req, res) {
 
-		// TODO: is it possible for this route to not take in the target user?
+        if (!util.positions.isUserAdmin(req.user)) {
+            return res.status(403).end("You cannot mark this task as completed");
+        }
 
-		if (req.user._id != req.body.target_user // TODO: targetUserId instead?
-				&& !util.isUserAdmin(req.user)) {
+        yield Task.findOneAndUpdate({
+            _id: req.params.taskId
+        }, {
+            $set: {
+                completed: true
+            }
+        });
 
-			return res.end("fail");
+        res.end();
 
-		}
+    }));
 
-		try {
-
-			yield Task.findOneAndUpdate({
-				_id: req.params.taskId
-			}, {
-				"$set": { completed: true }
-			});
-
-			res.end("success");
-
-		} catch (err) {
-			console.error(err);
-			res.end("fail");
-		}
-	}));
-
-	return router;
+    return router;
 
 };

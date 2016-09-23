@@ -1,157 +1,102 @@
 "use strict";
 
-module.exports = function(imports, publicDir, profpicDir) {
+module.exports = function(imports) {
 
-	let express = imports.modules.express;
-	let Promise = imports.modules.Promise;
-	let fs = require("fs");
-	let util = imports.util;
+    let express = imports.modules.express;
+    let Promise = imports.modules.Promise;
+    let fs = require("fs"); // TODO: put this into initImports
+    let util = imports.util;
+    let handler = util.handler;
 
-	let requireLogin = util.requireLogin;
+    let Team = imports.models.Team;
 
-	let User = imports.models.User;
-	let Team = imports.models.Team;
-	let Subdivision = imports.models.Subdivision;
+    const webDir = require("path").join(__dirname, "../../morteam-web");
+    const publicDir = webDir + "/public";
+    const profpicDir = "http://profilepics.morteam.com.s3.amazonaws.com/";
 
-	let router = express.Router();
+    let router = express.Router();
+    router.use(express.static(publicDir));
 
-	function ejsFile(name) {
-		return require("path").join(__dirname, "../website/views", name + ".ejs");
-	}
+    // load default profile picture
+    router.get("/images/user.jpg-60", handler(function*(req, res) {
+        res.sendFile(publicDir + "/images/user.jpg");
+    }));
 
-	// load homepage
-	router.get("/", function(req, res) {
-		res.render(ejsFile("index"));
-	});
+    router.get("/images/user.jpg-300", handler(function*(req, res) {
+        res.sendFile(publicDir + "/images/user.jpg");
+    }));
 
-	// load profile page of any user based on _id
-	router.get("/profiles/id/:userId", Promise.coroutine(function*(req, res) {
-		try {
+    // load user profile picture from AWS S3
+    router.get("/pp/:path", handler(function*(req, res) {
+        if (imports.util.s3.isProduction) {
+            res.redirect(profpicDir + req.params.path);
+        } else {
+            res.sendFile(require("path").join(
+                __dirname,
+                "../buckets/profilepics.morteam.com",
+                req.params.path
+            ));
+        }
+    }));
 
-			let user = yield User.findOne({
-				_id: req.params.userId,
-				team: req.user.team
-			});
+    let pages = {
+        signup: "Signup",
+        login: "Login",
+        "": "Home", // this works
+        void: "Void",
+        chat: "Chat",
+        drive: "Drive",
+        cal: "Calendar",
+        map: "Map",
+    };
 
-			if (!user) {
-				return util.userNotFound(res);
-			}
+    let renderPage = Promise.coroutine(function*(res, page, user, options) {
+        if (user) {
+            user.team = yield Team.findOne({
+                _id: user.team,
+            });
+        }
+        res.render(webDir + "/src/page.html.ejs", {
+            options: options || {},
+            userInfo: user,
+            page: page,
+        });
+    });
 
-			// load user.ejs page with said user's profile info
-			res.render(ejsFile("user"), {
-				firstname: user.firstname,
-				lastname: user.lastname,
-				_id: user._id,
-				email: user.email,
-				phone: user.phone,
-				profpicpath: user.profpicpath,
-				viewedUserPosition: user.position,
-				viewerUserPosition: req.user.position,
-				viewerUserId: req.user._id,
-				created_at: user.created_at
-			});
+    for (let page in pages) {
+        router.get("/" + page, handler(function*(req, res) {
+            renderPage(res, pages[page], req.user);
+        }));
+    }
 
-		} catch (err) {
-			console.error(err);
-			util.send404(res);
-		}
-	}));
+    router.get("/profiles/id/:userId", handler(function*(req, res) {
+        renderPage(res, "User", req.user, {
+            userId: req.params.userId,
+        });
+    }));
 
-	router.get("/subdivisions/id/:subdivId", Promise.coroutine(function*(req, res) {
-		try {
+    router.get("/teams/current", handler(function*(req, res) {
+        renderPage(res, "Team", req.user);
+    }));
 
-			let subdivision = yield Subdivision.findOne({
-				_id: req.params.subdivId,
-				team: req.user.team
-			});
+    router.get("/groups/id/:groupId", handler(function*(req, res) {
+        renderPage(res, "Group", req.user, {
+            groupId: req.params.groupId,
+        });
+    }));
 
-			if (!subdivision) {
-				return util.subdivisionNotFound(res);
-			}
+    router.get("/js/:page", handler(function*(req, res) {
+        let page = req.params.page;
+        let file = webDir + "/build/" + page + ".js";
+        // TODO: use the package fs-promise
+        fs.exists(file, function(exists) {
+            if (!exists) {
+                return res.end("fail"); // AHHHH
+            }
+            fs.createReadStream(file).pipe(res);
+        });
+    }));
 
-			let users = yield User.find({
-				subdivisions: {
-					$elemMatch: {
-						_id: subdivision._id, // TODO: maybe add toString
-						accepted: true
-					}
-				}
-			});
+    return router;
 
-			let isMember = users.some(user => user._id.toString() == req.user._id.toString());
-
-			if (subdivision.type == "public"
-					|| (subdivision.type == "private" && isMember)) {
-
-				return res.render(ejsFile("subdivision"), {
-					name: subdivision.name,
-					type: subdivision.type,
-					team: subdivision.team, // TODO: POSSIBLY CHANGE TO subdivision.team._id
-					admin: util.isUserAdmin(req.user),
-					joined: isMember,
-					members: users,
-					current_user_id: req.user._id
-				});
-
-			} else {
-				res.status(404).end("nothing to see here.");
-			}
-
-		} catch (err) {
-			util.send404(res);
-		}
-	}));
-
-	router.get("/teams/current", requireLogin, Promise.coroutine(function*(req, res) {
-		try {
-
-			let users = yield User.find({
-				team: req.user.team
-			});
-
-			let team = yield Team.findOne({
-				_id: req.user.team
-			});
-
-			res.render(ejsFile("team"), {
-				teamName: team.name,
-				teamNum: team.number,
-				teamId: team._id,
-				members: users,
-				viewerIsAdmin: util.isUserAdmin(req.user)
-			});
-
-		} catch (err) {
-			console.error(err);
-			res.end("fail");
-		}
-	}));
-
-	// TODO: cache static ejs files
-	// automatically serve ejs files that require no parameters
-	router.get("*", function(req, res, next) {
-		let file = req.path.substring(1); // remove leading forward slash
-		let index = file.indexOf("?");
-		if (index != -1) { // in case of url parameters like /a?b=c&d=e
-			file = file.substring(0, index);
-		}
-		if (file.indexOf("/") != -1 || file.indexOf(".") != -1) {
-			// prevent any funny business like /shared/navbar.ejs or /..
-			return next();
-		}
-		if (["subdivision", "team", "user"].indexOf(file) != -1) {
-			// do not load ejs file that require parameters
-			return next();
-		}
-		file = ejsFile(file);
-		fs.exists(file, function(exists) {
-			if (exists) {
-				res.render(file, {});
-			} else {
-				next();
-			}
-		});
-	});
-
-	return router;
 };

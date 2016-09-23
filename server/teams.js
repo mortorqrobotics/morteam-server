@@ -2,229 +2,184 @@
 
 module.exports = function(imports) {
 
-	let express = imports.modules.express;
-	let Promise = imports.modules.Promise;
-	let util = imports.util;
+    let express = imports.modules.express;
+    let Promise = imports.modules.Promise;
+    let util = imports.util;
 
-	let requireLogin = util.requireLogin;
-	let requireAdmin = util.requireAdmin;
+    let handler = util.handler;
+    let requireLogin = util.requireLogin;
+    let requireAdmin = util.requireAdmin;
 
-	let User = imports.models.User;
-	let Team = imports.models.Team;
-	let AttendanceHandler = imports.models.AttendanceHandler;
-	let Folder = imports.models.Folder;
+    let User = imports.models.User;
+    let Team = imports.models.Team;
+    let Announcement = imports.models.Announcement;
+    let Chat = imports.models.Chat;
+    let Event = imports.models.Event;
+    let Folder = imports.models.Folder;
 
-	let router = express.Router();
+    let router = express.Router();
 
-	router.get("/teams/current/users", requireLogin, Promise.coroutine(function*(req, res) {
-		try {
+    router.get("/teams/current/users", requireLogin, handler(function*(req, res) {
 
-			let users = yield User.find({
-				team: req.user.team
-			});
+        let users = yield User.find({
+            team: req.user.team,
+        });
 
-			res.json(users);
+        res.json(users);
 
-		} catch (err) {
-			console.error(err);
-			res.end("fail");
-		}
-	}));
+    }));
 
-	router.post("/teams", requireLogin, Promise.coroutine(function*(req, res) {
-		try {
+    router.post("/teams", requireLogin, handler(function*(req, res) {
 
-			if (req.user.team) {
-				return res.end("already have a team");
-			}
+        if (req.user.team) {
+            return res.status(400).end("You already have a team");
+        }
 
-			if (yield Team.findOne({ id: req.body.id })) {
-				return res.end("fail");
-			}
+        let number = parseInt(req.body.number);
+        if (isNaN(number) || number <= 0 || number >= 100000) {
+            return res.status(400).end("Invalid team number");
+        }
 
-			let team = yield Team.create({
-				id: req.body.id,
-				name: req.body.name,
-				number: req.body.number
-			});
+        if (yield Team.findOne({
+                id: req.body.id
+            })) {
+            return res.status(400).end("Team code is taken");
+        }
 
-			let folder = yield Folder.create({
-				name: "Team Files",
-				team: team._id,
-				entireTeam: true,
-				creator: req.user._id,
-				defaultFolder: true
-			});
+        let team = yield Team.createTeam({
+            id: req.body.id,
+            name: req.body.name,
+            number: req.body.number,
+        });
 
-			res.end(team._id.toString());
+        // TODO: ask user about leader vs mentor when creating team?
+        yield User.addToTeam(req.user._id, team._id, "leader", true);
 
-		} catch (err) {
-			console.error(err);
-			res.end("fail");
-		}
-	}));
+        //let folder = yield Folder.create({
+        //    name: "Team Files",
+        //    team: team._id,
+        //    entireTeam: true,
+        //    creator: req.user._id,
+        //    defaultFolder: true,
+        //});
 
-	router.post("/teams/code/:teamCode/join", requireLogin, Promise.coroutine(function*(req, res) {
-		try {
+        res.json(team);
 
-			if (req.user.team) {
-				return res.end("fail");
-			}
+    }));
 
-			let team = yield Team.findOne({
-				id: req.params.teamCode
-			});
-			
-			if (!team) {
-				return res.end("fail");
-			}
+    router.post("/teams/code/:teamCode/join", requireLogin, handler(function*(req, res) {
 
-			if (req.user.bannedFromTeams.indexOf(team._id) != -1) {
-				return res.end("fail");
-			}
+        if (req.user.team) {
+            return res.status(400).end("You already have a team");
+        }
 
-			req.user.position = (yield User.findOne({ team: team._id })) ? "member" : "leader";
-			req.user.team = team._id;
+        let team = yield Team.findOne({
+            id: req.params.teamCode
+        });
 
-			yield AttendanceHandler.update({
-				entireTeam: true,
-				event_date: { $gte: new Date() },
-				"event.team": team._id
-			}, {"$push": {
-				"attendees": { user: req.user._id, status: "absent" }
-			}});
-			
-			yield req.user.save();
-			
-			yield Folder.create({
-				name: "Personal Files",
-				team: team._id,
-				userMembers: req.user._id, // TODO: should this be an [req.user._id] instead?
-				creator: req.user._id,
-				defaultFolder: true
-			});
+        if (!team) {
+            return res.status(404).end("Team does not exist");
+        }
 
-			res.end(team._id.toString());
+        if (req.user.bannedFromTeams.indexOf(team._id) != -1) {
+            return res.status(400).end("You are banned from this team");
+        }
 
-		} catch (err) {
-			console.log(err);
-			res.end("fail");
-		}
-	}));
+        yield User.addToTeam(req.user._id, team._id, "member", false);
 
-	router.get("/teams/current/number", requireLogin, Promise.coroutine(function*(req, res) {
-		try {
+        // TODO: should personal folders still be created automatically?
+        //        yield Folder.create({
+        //            name: "Personal Files",
+        //            team: team._id,
+        //            userMembers: req.user._id, // should this be [req.user._id] instead?
+        //            creator: req.user._id,
+        //            defaultFolder: true
+        //        });
 
-			let team = yield Team.findOne({
-				_id: req.user.team
-			});
+        res.json(team);
 
-			res.end(String(team.number));
+    }));
 
-		} catch (err) {
-			console.error(err);
-			res.end("fail");
-		}
-	}));
+    router.get("/teams/current/number", requireLogin, handler(function*(req, res) {
 
-	router.get("/teams/number/:teamNum/exists", requireLogin, Promise.coroutine(function*(req, res) {
-		try {
-			
-			if (yield Team.find({ number: parseInt(req.params.teamNum) })) {
-				res.json(teams[0]); // TODO: should this just be "true" instead?
-				// the team is used by the client, instead of being "true" the route should be renamed, getIfExists or something
-			} else {
-				res.end("false");
-			}
+        let team = yield Team.findOne({
+            _id: req.user.team
+        });
 
-		} catch (err) {
-			console.error(err);
-			res.end("fail");
-		}
-	}));
+        res.end(String(team.number));
 
-	router.delete("/teams/current/users/id/:userId", requireLogin, requireAdmin, Promise.coroutine(function*(req, res) {
-		// remove a user from a team
-		try {
+    }));
 
-			let user = yield User.findOne({
-				_id: req.params.userId,
-				team: req.user.team
-			});
+    router.get("/teams/number/:teamNum/exists", requireLogin, handler(function*(req, res) {
 
-			if (!user) {
-				return res.end("fail");
-			}
+        if (yield Team.find({
+                number: parseInt(req.params.teamNum)
+            })) {
+            res.json(teams[0]); // TODO: should this just be "true" instead?
+            // the team is used by the client, instead of being "true" the route should be renamed, getIfExists or something
+        } else {
+            res.end("false");
+        }
 
-			if (util.isUserAdmin(user) && (yield User.count({
-				team: req.user.team,
-				position: util.adminPositionsQuery
-			})) <= 1) {
-				return res.end("You cannot remove the only Admin on your team.");
-			}
+    }));
 
-			delete user.team;
-			delete user.position;
-			delete user.scoutCaptain;
-			user.subdivisions = [];
-			yield user.save(); // TODO: does deleting then saving actually delete stuff?
+    router.delete("/teams/current/users/id/:userId", requireAdmin, handler(function*(req, res) {
+        // remove a user from a team
 
-			yield Chat.update({
-				team: req.user.team,
-				userMembers: new ObjectId(req.params.userId)
-			}, {
-				"$pull": {
-					"userMembers": req.params.userId
-				}
-			});
+        let user = yield User.findOne({
+            _id: req.params.userId,
+            team: req.user.team,
+        });
 
-			yield Folder.update({
-				team: req.user.team,
-				userMembers: new ObjectId(req.params.userId)
-			}, {
-				"$pull": {
-					"userMembers": req.params.userId
-				}
-			});
+        if (!user) {
+            return res.status(400).end("That user is not on your team");
+        }
 
-			yield Event.update({
-				team: req.user.team,
-				userAttendees: new ObjectId(req.params.userId)
-			}, {
-				"$pull": {
-					"userAttendees": req.params.userId
-				}
-			});
+        if (util.positions.isUserAdmin(user) && (yield User.count({
+                team: req.user.team,
+                position: util.positions.adminPositionsQuery,
+            })) <= 1) {
+            return res.status(400).end("You cannot remove the only Admin on your team");
+        }
 
-			res.end("success");
+        yield User.removeFromTeam(user);
 
-		} catch (err) {
-			console.error(err);
-			res.end("fail");
-		}
-	}));
+        let allModels = [
+            Announcement,
+            Chat,
+            Event,
+            Folder,
+        ];
+        for (let Model of allModels) {
+            yield Model.update({
+                "audience.users": user._id,
+            }, {
+                $pull: {
+                    "audience.users": user._id,
+                }
+            });
+        }
 
-	// TODO: does this need to exist?
-	router.get("/users/id/:userId/teamInfo", requireLogin, Promise.coroutine(function*(req, res) {
-		try {
+        res.end();
 
-			let user = yield User.findOne({
-				_id: req.params.userId,
-				team: req.user.team
-			});
+    }));
 
-			res.json({
-				team: user.team,
-				position: user.position,
-				scoutCaptain: user.scoutCaptain
-			});
+    // TODO: does this need to exist?
+    router.get("/users/id/:userId/teamInfo", requireLogin, handler(function*(req, res) {
 
-		} catch (err) {
-			console.error(err);
-			res.end("fail");
-		}
-	}));
+        let user = yield User.findOne({
+            _id: req.params.userId,
+            team: req.user.team
+        });
 
-	return router;
+        res.json({
+            team: user.team,
+            position: user.position,
+            scoutCaptain: user.scoutCaptain
+        });
+
+    }));
+
+    return router;
 
 };

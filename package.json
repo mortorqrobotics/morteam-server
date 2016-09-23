@@ -3,17 +3,22 @@
   "version": "1.0.0-beta.4",
   "description": "Organization utility for robotics teams",
   "main": "server/server.js",
+  "scripts": {
+    "test": "NODE_ENV=test ./node_modules/.bin/mocha test/index.js",
+    "fmt": "for f in `find server test -name '*.js'`; do ./node_modules/js-beautify/js/bin/js-beautify.js --type js -r -n -e \"\\n\" -b collapse-preserve-inline $f; done"
+  },
   "dependencies": {
     "autolinker": "^0.22.0",
     "aws-sdk": "^2.2.10",
     "bcrypt": "^0.8.5",
-	"bluebird": "^3.3.5",
+    "bluebird": "^3.3.5",
     "body-parser": "^1.14.0",
     "connect-mongo": "^0.8.2",
     "ejs": "^2.3.4",
     "express": "^4.13.3",
     "express-session": "^1.11.3",
     "lwip": "^0.0.8",
+    "mock-aws-s3": "^2.3.0",
     "mongoose": "^4.4.6",
     "multer": "^1.0.6",
     "nodemailer": "^1.5.0",
@@ -30,5 +35,12 @@
   "bugs": {
     "url": "https://github.com/Farbod909/MorTeam-server-website/issues"
   },
-  "homepage": "https://github.com/Farbod909/MorTeam-server-website"
+  "homepage": "https://github.com/Farbod909/MorTeam-server-website",
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "js-beautify": "^1.6.3",
+    "mocha": "^2.5.3",
+    "supertest": "^2.0.0",
+    "supertest-promised": "^1.0.0"
+  }
 }

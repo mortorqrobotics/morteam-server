@@ -9,95 +9,92 @@
 // wrap everything for the network
 module.exports = function(imports) {
 
-	imports = require("./initImports")(imports);
+    imports = require("./initImports")(imports);
 
-	let express = imports.modules.express;
-	let fs = require("fs");
-	let http = require("http");
-	let mongoose = imports.modules.mongoose;
-	let ObjectId = mongoose.Types.ObjectId; // this is used to cast strings to MongoDB ObjectIds
-	let multer = imports.modules.multer; // for file uploads
-	let lwip = imports.modules.lwip;
-	let Promise = imports.modules.Promise;
-	let util = imports.util;
+    let express = imports.modules.express;
+    let fs = require("fs");
+    let http = require("http");
+    let mongoose = imports.modules.mongoose;
+    let ObjectId = mongoose.Types.ObjectId; // this is used to cast strings to MongoDB ObjectIds
+    let multer = imports.modules.multer; // for file uploads
+    let lwip = imports.modules.lwip;
+    let Promise = imports.modules.Promise;
+    let util = imports.util;
 
-	let requireLogin = util.requireLogin;
+    let requireLogin = util.requireLogin;
 
-	Promise.promisifyAll(util);
-	Promise.promisifyAll(lwip);
-	Promise.promisifyAll(fs);
+    Promise.promisifyAll(util);
+    Promise.promisifyAll(lwip);
+    Promise.promisifyAll(fs);
 
+    console.log("MorTeam started");
 
-	const publicDir = require("path").join(__dirname, "../website/public");
-	const profpicDir = "http://profilepics.morteam.com.s3.amazonaws.com/"
+    // define the main object passed to mornetwork
+    let app = express();
 
-	console.log("MorTeam started");
+    // check to see if user is logged in before continuing any further
+    // allow browser to receive images, css, and js files without being logged in
+    // allow browser to receive some pages such as login.html, signup.html, etc. without being logged in
+    app.use(function(req, res, next) {
+        if (req.method != "GET") { // TODO: can this just be app.get then?
+            return next();
+        }
 
-	// define the main object passed to mornetwork
-	let app = express();
+        let path = req.path;
+        if (path.startsWith("/css/") || path.startsWith("/js/") || path.startsWith("/img/")) {
+            return next();
+        }
 
+        let exceptions = ["/login", "/signup", "/fp", "/favicon.ico", "/src/bundle.css"];
 
-	// check to see if user is logged in before continuing any further
-	// allow browser to receive images, css, and js files without being logged in
-	// allow browser to receive some pages such as login.html, signup.html, etc. without being logged in
-	app.use(function(req, res, next) {
-		if (req.method != "GET") { // TODO: can this just be app.get then?
-			return next();
-		}
+        if (exceptions.indexOf(path) > -1) {
+            return next();
+        }
 
-		let path = req.path;
-		if (path.startsWith("/css/") || path.startsWith("/js/") || path.startsWith("/img/")) {
-			return next();
-		}
+        if (req.url == "/void") {
+            if (!req.user || req.user.team) {
+                return res.redirect("/");
+            }
+            return next();
+        }
 
-		let exceptions = ["/login", "/signup", "/fp", "/favicon.ico"];
+        if (!req.user) {
+            return res.redirect("/login");
+        }
 
-		if ( exceptions.indexOf(path) > -1 ) {
-			return next();
-		}
+        if (!req.user.team) {
+            return res.redirect("/void");
+        }
 
-		if (req.url == "/void") {
-			if (!req.user || req.user.team) {
-				return res.redirect("/");
-			}
-			return next();
-		}
+        next();
+    });
 
-		if (!req.user) {
-			return res.redirect("/login");
-		}
+    // use EJS as default view engine and specifies location of EJS files
+    app.set("view engine", "ejs");
+    //	router.set("views", require("path").join(__dirname, "/../website"));
 
-		if (!req.user.team) {
-			return res.redirect("/void");
-		}
+    app.use(require("./views")(imports));
 
-		next();
-	});
+    imports.sio = require("./sio")(imports);
 
-	// load any file in /website/public (aka publicDir)
-	app.use(express.static(publicDir));
+    let api = express.Router();
+    // import all modules that handle specific requests
+    api.use(require("./accounts")(imports));
+    api.use(require("./teams")(imports));
+    api.use(require("./groups")(imports));
+    api.use(require("./announcements")(imports));
+    api.use(require("./chat")(imports));
+    api.use(require("./drive")(imports));
+    api.use(require("./events")(imports));
+    api.use(require("./tasks")(imports));
 
-	// use EJS as default view engine and specifies location of EJS files
-	app.set("view engine", "ejs");
-//	router.set("views", require("path").join(__dirname, "/../website"));
+    app.use("/api", api);
 
-	// import all modules that handle specific requests
-	app.use(require("./views.js")(imports));
-	app.use(require("./accounts.js")(imports, publicDir, profpicDir));
-	app.use(require("./teams.js")(imports));
-	app.use(require("./subdivisions.js")(imports));
-	app.use(require("./announcements.js")(imports));
-	app.use(require("./chat.js")(imports));
-	app.use(require("./drive.js")(imports));
-	app.use(require("./events.js")(imports));
-	app.use(require("./tasks.js")(imports));
-	require("./sio.js")(imports); // TODO: does something have to be done with this?
+    // send 404 message for any page that does not exist (IMPORTANT: The order for this does matter. Keep it at the end.)
+    app.use("*", function(req, res) { // TODO: should this be get or use?
+        util.send404(res);
+    });
 
-	// send 404 message for any page that does not exist (IMPORTANT: The order for this does matter. Keep it at the end.)
-	app.use("*", function(req, res) { // TODO: should this be get or use?
-		util.send404(res);
-	});
-
-	return app;
+    return app;
 
 };
