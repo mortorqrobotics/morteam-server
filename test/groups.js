@@ -42,6 +42,8 @@ describe("groups", function() {
         let groups1 = yield sessions[1]("GET", "/groups/normal");
         assert.equal(groups0.length, 1, "user 0 remained in the group");
         assert.equal(groups1.length, 0, "user 1 was removed from the group");
+        let group = yield sessions[0]("GET", "/groups/id/" + data.normalGroup0._id);
+        assert.equal(group.users.length, 1, "the user was removed");
     }));
 
     it("should add users to groups", coroutine(function*() {
@@ -52,6 +54,8 @@ describe("groups", function() {
         let groups1 = yield sessions[1]("GET", "/groups/normal");
         assert.equal(groups0.length, 1, "user 0 remained in the group");
         assert.equal(groups1.length, 1, "user 1 was added to the group");
+        let group = yield sessions[0]("GET", "/groups/id/" + data.normalGroup0._id);
+        assert.equal(group.users.length, 2, "the user was added");
     }));
 
     it("should not include users from other teams in AllTeamGroups", coroutine(function*() {

@@ -5,6 +5,7 @@ module.exports = function(imports) {
     let express = imports.modules.express;
     let Promise = imports.modules.Promise;
     let util = imports.util;
+    let User = imports.models.User;
     let NormalGroup = imports.models.NormalGroup;
     let Group = imports.models.Group;
 
@@ -73,10 +74,20 @@ module.exports = function(imports) {
         
         let group = yield Group.findOne({
             _id: req.params.groupId,
-        })
+        });
         
         res.json(group);
         
+    }));
+
+    router.get("/groups/normal/id/:groupId/users", requireLogin, handler(function*(req, res) {
+
+        let users = yield User.find({
+            groups: req.params.groupId,
+        });
+
+        res.json(users);
+
     }));
 
     // TODO: permissions other than just admin?
@@ -90,7 +101,13 @@ module.exports = function(imports) {
 
     }));
 
-    router.delete("/groups/normal/id/:groupId/users/id/:userId", requireAdmin, handler(function*(req, res) {
+    router.delete("/groups/normal/id/:groupId/users/id/:userId", requireLogin, handler(function*(req, res) {
+
+        if (req.user._id.toString() != req.params.userId
+            && !util.positions.isUserAdmin(req.user)
+        ) {
+            return res.status(403).end("You are not an administrator");
+        }
 
         yield NormalGroup.removeUsers(req.params.groupId, [req.params.userId]);
 
