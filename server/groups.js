@@ -101,6 +101,22 @@ module.exports = function(imports) {
 
     }));
 
+    router.post("/groups/normal/id/:groupId/join", requireLogin, handler(function*(req, res) {
+
+        let normalGroup = yield NormalGroup.findOne({
+            _id: req.params.groupId,
+        });
+
+        if (!normalGroup || normalGroup.team.toString() != req.user.team.toString()) {
+            return res.status(403).end("Invalid group");
+        }
+
+        yield NormalGroup.addUsers(req.params.groupId, [req.user._id]);
+
+        res.end();
+
+    }));
+
     router.delete("/groups/normal/id/:groupId/users/id/:userId", requireLogin, handler(function*(req, res) {
 
         if (req.user._id.toString() != req.params.userId
