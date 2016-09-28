@@ -19,34 +19,14 @@ module.exports = function(imports) {
 
     let sio = {};
 
-    sio.emitChatMessage = Promise.coroutine(function*(chatId, message) {
-        let chat = yield Chat.findOne({
-            _id: chatId,
-        });
-        let users = yield util.hiddenGroups.getUsersIn(chat.audience);
-        let userIds = users
-            .map(user => user._id)
-            .filter(userId => userId.toString() in online_clients);
-        for (let userId of userIds) {
-            for (let socket of online_clients[userId].sockets) {
-                io.to(socket).emit("message", {
-                    chatId: chatId,
-                    message: message,
-                });
-            }
-        }
-    });
-
     io.on("connection", Promise.coroutine(function*(socket) {
         let sess = socket.request.session.userId && (yield User.findOne({
             _id: socket.request.session.userId
         }));
         if (sess) {
-            let userSubdivisionIds = sess.groups;
-
             try {
 
-                if (!(sess._id in online_clients)) {
+                if (!(sess._id in online_clients)) { // later
 
                     let chats = yield Chat.find({
                         team: sess.team,
@@ -54,7 +34,7 @@ module.exports = function(imports) {
                             userMembers: new ObjectId(sess._id)
                         }, {
                             subdivisionMembers: {
-                                "$in": userSubdivisionIds
+                                "$in": sess.groups,
                             }
                         }]
                     }, {
@@ -114,6 +94,61 @@ module.exports = function(imports) {
                 }
             }
         });
+
+        socket.on("sendMessage", util.handler(function*(data) {
+
+            let now = new Date();
+    //        let content = util.normalizeDisplayedText(data.content);
+            let content = data.content;
+            let chatId = data.chatId;
+
+            yield Chat.update({
+                $and: [
+                    { _id: chatId },
+                    util.hiddenGroups.audienceQuery(sess),
+                ],
+            }, {
+                $push: {
+                    messages: {
+                        $each: [{
+                            author: sess._id,
+                            content: content,
+                            timestamp: now,
+                        }],
+                        $position: 0
+                    }
+                },
+                updated_at: now,
+            });
+
+            let message = {
+                author: sess,
+                content: content,
+                timestamp: now,
+            };
+
+            let chat = yield Chat.findOne({
+                _id: chatId,
+            });
+            let users = yield util.hiddenGroups.getUsersIn(chat.audience);
+            let userIds = users
+                .map(user => user._id)
+                .filter(userId => userId.toString() in online_clients);
+            for (let userId of userIds) {
+                for (let sock of online_clients[userId.toString()].sockets) {
+                    if (sock !== socket.id) {
+                        io.to(sock).emit("message", {
+                            chatId: chatId,
+                            message: message,
+                        });
+                    }
+                }
+            }
+            socket.emit("message-sent", {
+                chatId: chatId,
+            });
+
+        }));
 
         // TODO: if a user has multiple clients and sends a message, display sent message on all clients
 

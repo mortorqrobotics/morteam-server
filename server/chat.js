@@ -222,46 +222,6 @@ module.exports = function(imports) {
 
     }));
 
-    router.post("/chats/id/:chatId/messages", requireLogin, handler(function*(req, res) {
-
-        // TODO: check if user is a member of the chat...
-
-        let now = new Date();
-//        let content = util.normalizeDisplayedText(req.body.content);
-        let content = req.body.content;
-        let chatId = req.params.chatId;
-
-        yield Chat.update({
-            $and: [
-                { _id: chatId },
-                audienceQuery(req.user),
-            ],
-        }, {
-            $push: {
-                messages: {
-                    $each: [{
-                        author: req.user._id,
-                        content: content,
-                        timestamp: now,
-                    }],
-                    $position: 0
-                }
-            },
-            updated_at: now,
-        });
-
-        let message = {
-            author: req.user,
-            content: content,
-            timestamp: now,
-        };
-
-        res.json(message);
-
-        sio.emitChatMessage(chatId, message);
-
-    }));
-
     return router;
 
 };
