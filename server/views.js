@@ -48,6 +48,7 @@ module.exports = function(imports) {
         drive: "Drive",
         cal: "Calendar",
         map: "Map",
+        fp: "Fp",
     };
 
     let renderPage = Promise.coroutine(function*(res, page, user, options) {
