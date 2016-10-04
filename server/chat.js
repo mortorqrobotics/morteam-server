@@ -22,8 +22,7 @@ module.exports = function(imports) {
     // TODO: separate this into separate requests for group and private chats
     router.post("/chats", requireLogin, handler(function*(req, res) {
 
-        if (req.body.type == "private") {
-            // private chat
+        if (req.body.isTwoPeople) {
 
             let otherUser = yield User.findOne({
                 _id: req.body.otherUser,
@@ -32,38 +31,34 @@ module.exports = function(imports) {
                 return res.status(400).end("That user does not exist");
             }
 
-            let users = [
-                req.user._id,
-                otherUser._id,
-            ];
-
             // check to see if already exists
             if ((yield Chat.count({
                     isTwoPeople: true,
-                    "audience.users": users,
+                    "audience.users": [req.body.otherUser, req.user._id],
                 })) > 0) {
                 return res.status(400).end("This chat already exists");
             }
 
-
             let chat = yield Chat.create({
                 audience: {
                     groups: [],
-                    users: users,
+                    users: [req.body.otherUser, req.user._id],
                 },
-                isTwoPeople: true
+                isTwoPeople: true,
             });
 
-            chat.audience.users = Promise.all(chat.audience.users.map(userId => (
-                User.findOne({
-                    _id: userId,
-                })
-            )));
+            chat.audience.users = [req.user, otherUser];
 
             res.json(chat);
 
         } else {
             // group chat
+
+            if (req.body.audience.users.indexOf(req.user._id) === -1
+                || !req.user.groups.some(groupId => req.body.audience.groups.indexOf(groupId) !== -1)
+            ) {
+                req.body.audience.users.push(req.user._id);
+            }
 
             if (req.body.name.length >= 20) { // name character limit
                 return res.status(400).end("The chat name has to be 19 characters or fewer");
@@ -71,22 +66,13 @@ module.exports = function(imports) {
             }
 
             let chat = yield Chat.create({
-                name: util.normalizeDisplayedText(req.body.name),
+                name: req.body.name,
                 audience: req.body.audience,
                 isTwoPeople: false,
             });
 
-            chat.audience.users = yield Promise.all(chat.audience.users.map(userId => (
-                User.findOne({
-                    _id: userId,
-                })
-            )));
-
-            chat.audience.groups = yield Promise.all(chat.audience.groups.map(groupId => (
-                Group.findOne({
-                    _id: groupId,
-                })
-            )));
+            chat.audience.users = yield User.find({ _id: { $in: req.body.users } });
+            chat.audience.groups = yield Group.find({ _id: { $in: req.body.groups } });
 
             res.json(chat);
         }
