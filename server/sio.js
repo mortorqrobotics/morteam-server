@@ -98,8 +98,8 @@ module.exports = function(imports) {
         socket.on("sendMessage", util.handler(function*(data) {
 
             let now = new Date();
-    //        let content = util.normalizeDisplayedText(data.content);
-            let content = data.content;
+            let content = util.normalizeDisplayedText(data.content);
+//            let content = data.content;
             let chatId = data.chatId;
 
             yield Chat.update({
@@ -146,6 +146,7 @@ module.exports = function(imports) {
             }
             socket.emit("message-sent", {
                 chatId: chatId,
+                content: content,
             });
 
         }));
