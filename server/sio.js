@@ -28,18 +28,7 @@ module.exports = function(imports) {
 
                 if (!(sess._id in online_clients)) { // later
 
-                    let chats = yield Chat.find({
-                        team: sess.team,
-                        $or: [{
-                            userMembers: new ObjectId(sess._id)
-                        }, {
-                            subdivisionMembers: {
-                                "$in": sess.groups,
-                            }
-                        }]
-                    }, {
-                        _id: 1
-                    });
+                    let chats = yield Chat.find(util.hiddenGroups.audienceQuery(sess));
 
                     let chatIds = chats.map(chat => chat._id.toString());
 
@@ -161,7 +150,7 @@ module.exports = function(imports) {
 
         socket.on("start typing", function(data) {
             for (let user_id of Object.keys(online_clients)) {
-                if (~online_clients[user_id].chats.indexOf(data.chat_id) && user_id != sess._id) {
+                if (~online_clients[user_id].chats.indexOf(data.chatId) && user_id != sess._id) {
                     for (let sock of online_clients[user_id].sockets) {
                         io.to(sock).emit("start typing", data);
                     }
@@ -171,7 +160,7 @@ module.exports = function(imports) {
 
         socket.on("stop typing", function(data) {
             for (let user_id of Object.keys(online_clients)) {
-                if (online_clients[user_id].chats.indexOf(data.chat_id) != -1 && user_id != sess._id) {
+                if (online_clients[user_id].chats.indexOf(data.chatId) != -1 && user_id != sess._id) {
                     for (let sock of online_clients[user_id].sockets) {
                         io.to(sock).emit("stop typing", data);
                     }
