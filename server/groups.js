@@ -7,6 +7,7 @@ module.exports = function(imports) {
     let util = imports.util;
     let User = imports.models.User;
     let NormalGroup = imports.models.NormalGroup;
+    let MultiTeamGroup = imports.models.MultiTeamGroup;
     let Group = imports.models.Group;
 
     let handler = util.handler;
@@ -71,13 +72,13 @@ module.exports = function(imports) {
     }));
 
     router.get("/groups/id/:groupId", requireLogin, handler(function*(req, res) {
-        
+
         let group = yield Group.findOne({
             _id: req.params.groupId,
         });
-        
+
         res.json(group);
-        
+
     }));
 
     router.get("/groups/normal/id/:groupId/users", requireLogin, handler(function*(req, res) {
@@ -96,7 +97,7 @@ module.exports = function(imports) {
         yield NormalGroup.addUsers(req.params.groupId, req.body.users);
 
         res.end();
-        
+
         // TODO: update addUsers to use findByIdAndUpdate and { new: true } to return the new audience perhaps
 
     }));
@@ -128,6 +129,16 @@ module.exports = function(imports) {
         yield NormalGroup.removeUsers(req.params.groupId, [req.params.userId]);
 
         res.end();
+
+    }));
+
+    router.post("/groups/multiTeam", handler(function*(req, res) {
+
+        let group = yield MultiTeamGroup.createGroup({
+            teams: req.body.teams,
+        });
+
+        res.json(group);
 
     }));
 
