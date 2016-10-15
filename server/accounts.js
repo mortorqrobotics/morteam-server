@@ -303,15 +303,16 @@ module.exports = function(imports) {
         let newPassword = yield user.assignNewPassword();
         yield user.save();
 
-        // TODO: WE ARE EMAILING PASSWORDS IN PLAINTEXT
+        // TODO: we are emailing passwords in plaintext
         // they are temporary passwords but still
         // see http://security.stackexchange.com/questions/32589/temporary-passwords-e-mailed-out-as-plain-text
+        // should be an access token instead of the actual password
 
         // email user new password
         let info = yield util.mail.sendEmail({
             to: req.body.email,
             subject: "New MorTeam Password Request",
-            text: "It seems like you requested to reset your password. Your new password is " + newPassword + ". Feel free to reset it after you log in."
+            html: "It seems like you requested to reset your password. Your new password is " + newPassword + ". Feel free to reset it after you log in.",
         });
         console.log(info);
 
