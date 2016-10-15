@@ -39,7 +39,7 @@ module.exports = function(imports) {
                 },
                 audienceQuery(req.user),
             ],
-        });
+        }).sort("date");
 
         res.json(events);
 
