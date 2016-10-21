@@ -12,6 +12,8 @@ module.exports = function(imports) {
 
     let handler = util.handler;
     let requireLogin = util.requireLogin;
+    let checkBody = util.middlechecker.checkBody;
+    let types = util.middlechecker.types;
     let audienceQuery = util.hiddenGroups.audienceQuery;
 
     let Folder = imports.models.Folder;
@@ -20,7 +22,7 @@ module.exports = function(imports) {
 
     let router = express.Router();
 
-    router.get("/files/id/:fileKey", requireLogin, handler(function*(req, res) {
+    router.get("/files/id/:fileKey", checkBody(), requireLogin, handler(function*(req, res) {
 
         if (req.params.fileKey.indexOf("-preview") == -1) {
 
@@ -42,7 +44,7 @@ module.exports = function(imports) {
 
     }));
 
-    router.get("/folders", requireLogin, handler(function*(req, res) {
+    router.get("/folders", checkBody(), requireLogin, handler(function*(req, res) {
 
         let folders = yield Folder.find({
             $and: [{
@@ -58,7 +60,7 @@ module.exports = function(imports) {
 
     }));
 
-    router.get("/folders/id/:folderId/subfolders", requireLogin, handler(function*(req, res) {
+    router.get("/folders/id/:folderId/subfolders", checkBody(), requireLogin, handler(function*(req, res) {
 
         let folders = yield Folder.find({
             $and: [{
@@ -72,7 +74,7 @@ module.exports = function(imports) {
 
     }));
 
-    router.get("/folders/id/:folderId/files", requireLogin, handler(function*(req, res) {
+    router.get("/folders/id/:folderId/files", checkBody(), requireLogin, handler(function*(req, res) {
 
         let folder = yield Folder.findOne({
             _id: req.params.folderId,
@@ -94,7 +96,11 @@ module.exports = function(imports) {
 
     }));
 
-    router.post("/folders", requireLogin, handler(function*(req, res) {
+    router.post("/folders", checkBody({
+        name: types.string,
+        type: types.enum(["teamFolder"]), // TODO: no "subFolder" option, clean this up
+        audience: types.audience,
+    }), requireLogin, handler(function*(req, res) {
 
         if (req.body.name.length >= 22) {
             return res.status(400).end("Folder name must be less than 22 characters long");
@@ -102,10 +108,10 @@ module.exports = function(imports) {
         }
 
         // what to do about this
-        if (req.body.type != "teamFolder" && req.body.type != "subFolder") {
-            return res.status(400).end("Invalid folder type");
-            // is this even still a thing
-        }
+        // if (req.body.type != "teamFolder" && req.body.type != "subFolder") {
+        //     return res.status(400).end("Invalid folder type");
+        // }
+        // is this even still a thing
 
         let folder = {
             name: util.normalizeDisplayedText(req.body.name),
@@ -114,13 +120,13 @@ module.exports = function(imports) {
             defaultFolder: false
         };
 
-        if (req.body.type == "teamFolder") {
+        // if (req.body.type == "teamFolder") {
             folder.parentFolder = undefined;
             folder.ancestors = [];
-        } else if (req.body.type == "subFolder") {
-            folder.parentFolder = req.body.parentFolder;
-            folder.ancestors = req.body.ancestors.concat([req.body.parentFolder]);
-        }
+        // } else if (req.body.type == "subFolder") {
+        //     folder.parentFolder = req.body.parentFolder;
+        //     folder.ancestors = req.body.ancestors.concat([req.body.parentFolder]);
+        // }
 
         folder = yield Folder.create(folder);
 
@@ -128,7 +134,10 @@ module.exports = function(imports) {
 
     }));
 
-    router.post("/files/upload", requireLogin, multer({
+    router.post("/files/upload", checkBody({
+        currentFolderId: types.objectId(Folder),
+        fileName: types.string,
+    }), requireLogin, multer({
         limits: 50 * 1000000 // 50 megabytes
     }).single("uploadedFile"), handler(function*(req, res) {
 
@@ -193,7 +202,7 @@ module.exports = function(imports) {
 
     }));
 
-    router.delete("/files/id/:fileId", requireLogin, handler(function*(req, res) {
+    router.delete("/files/id/:fileId", checkBody(), requireLogin, handler(function*(req, res) {
 
         let file = yield File.findOne({
             _id: req.params.fileId

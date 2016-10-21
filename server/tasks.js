@@ -9,13 +9,19 @@ module.exports = function(imports) {
     let handler = util.handler;
     let requireLogin = util.requireLogin;
     let requireAdmin = util.requireAdmin;
+    let checkBody = util.middlechecker.checkBody;
+    let types = util.middlechecker.types;
 
     let Task = imports.models.Task;
     let User = imports.models.User;
 
     let router = express.Router();
 
-    router.post("/users/id/:userId/tasks", requireAdmin, handler(function*(req, res) {
+    router.post("/users/id/:userId/tasks", checkBody({
+        dueDate: types.string,
+        name: types.string,
+        description: types.string,
+    }), requireAdmin, handler(function*(req, res) {
 
         // for iOS and Android
         if (typeof(req.body.dueDate) == "string") {
@@ -59,7 +65,7 @@ module.exports = function(imports) {
 
     }));
 
-    router.get("/users/id/:userId/tasks/completed", requireLogin, handler(function*(req, res) {
+    router.get("/users/id/:userId/tasks/completed", checkBody(), requireLogin, handler(function*(req, res) {
 
         let tasks = yield Task.find({
             for: req.params.userId,
@@ -72,7 +78,7 @@ module.exports = function(imports) {
 
     // TODO: should completed and pending tasks be put into one request?
 
-    router.get("/users/id/:userId/tasks/pending", requireLogin, handler(function*(req, res) {
+    router.get("/users/id/:userId/tasks/pending", checkBody(), requireLogin, handler(function*(req, res) {
 
         let tasks = yield Task.find({
             for: req.params.userId,
@@ -83,7 +89,7 @@ module.exports = function(imports) {
 
     }));
 
-    router.post("/tasks/id/:taskId/markCompleted", requireLogin, handler(function*(req, res) {
+    router.post("/tasks/id/:taskId/markCompleted", checkBody(), requireLogin, handler(function*(req, res) {
 
         if (!util.positions.isUserAdmin(req.user)) {
             return res.status(403).end("You cannot mark this task as completed");

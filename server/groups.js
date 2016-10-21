@@ -6,6 +6,7 @@ module.exports = function(imports) {
     let Promise = imports.modules.Promise;
     let util = imports.util;
     let User = imports.models.User;
+    let Team = imports.models.Team;
     let NormalGroup = imports.models.NormalGroup;
     let MultiTeamGroup = imports.models.MultiTeamGroup;
     let Group = imports.models.Group;
@@ -13,10 +14,15 @@ module.exports = function(imports) {
     let handler = util.handler;
     let requireLogin = util.requireLogin;
     let requireAdmin = util.requireAdmin;
+    let checkBody = util.middlechecker.checkBody;
+    let types = util.middlechecker.types;
 
     let router = express.Router();
 
-    router.post("/groups/normal", handler(function*(req, res) {
+    router.post("/groups/normal", checkBody({
+        users: [types.objectId(User)],
+        name: types.string,
+    }), handler(function*(req, res) {
 
         if (req.body.users.indexOf(req.user._id.toString()) === -1) {
             req.body.users.push(req.user._id);
@@ -32,7 +38,7 @@ module.exports = function(imports) {
 
     }));
 
-    router.get("/groups", requireLogin, handler(function*(req, res) {
+    router.get("/groups", checkBody(), requireLogin, handler(function*(req, res) {
 
         let groups = yield Group.find({
             _id: {
@@ -44,7 +50,7 @@ module.exports = function(imports) {
 
     }));
 
-    router.get("/groups/normal", requireLogin, handler(function*(req, res) {
+    router.get("/groups/normal", checkBody(), requireLogin, handler(function*(req, res) {
 
         let groups = yield NormalGroup.find({
             _id: {
@@ -56,7 +62,7 @@ module.exports = function(imports) {
 
     }));
 
-    router.get("/groups/other", requireLogin, handler(function*(req, res) {
+    router.get("/groups/other", checkBody(), requireLogin, handler(function*(req, res) {
 
         let groups = yield NormalGroup.find({
             team: req.user.team,
@@ -71,7 +77,7 @@ module.exports = function(imports) {
 
     }));
 
-    router.get("/groups/id/:groupId", requireLogin, handler(function*(req, res) {
+    router.get("/groups/id/:groupId", checkBody(), requireLogin, handler(function*(req, res) {
 
         let group = yield Group.findOne({
             _id: req.params.groupId,
@@ -81,7 +87,7 @@ module.exports = function(imports) {
 
     }));
 
-    router.get("/groups/normal/id/:groupId/users", requireLogin, handler(function*(req, res) {
+    router.get("/groups/normal/id/:groupId/users", checkBody(), requireLogin, handler(function*(req, res) {
 
         let users = yield User.find({
             groups: req.params.groupId,
@@ -92,7 +98,9 @@ module.exports = function(imports) {
     }));
 
     // TODO: permissions other than just admin?
-    router.post("/groups/normal/id/:groupId/users", requireAdmin, handler(function*(req, res) {
+    router.post("/groups/normal/id/:groupId/users", checkBody({
+        users: [types.objectId(User)],
+    }), requireAdmin, handler(function*(req, res) {
 
         yield NormalGroup.addUsers(req.params.groupId, req.body.users);
 
@@ -102,7 +110,7 @@ module.exports = function(imports) {
 
     }));
 
-    router.post("/groups/normal/id/:groupId/join", requireLogin, handler(function*(req, res) {
+    router.post("/groups/normal/id/:groupId/join", checkBody(), requireLogin, handler(function*(req, res) {
 
         let normalGroup = yield NormalGroup.findOne({
             _id: req.params.groupId,
@@ -132,7 +140,9 @@ module.exports = function(imports) {
 
     }));
 
-    router.post("/groups/multiTeam", handler(function*(req, res) {
+    router.post("/groups/multiTeam", checkBody({
+        teams: [types.objectId(Team)],
+    }), handler(function*(req, res) {
 
         let group = yield MultiTeamGroup.createGroup({
             teams: req.body.teams,

@@ -9,6 +9,8 @@ module.exports = function(imports) {
     let handler = util.handler;
     let requireLogin = util.requireLogin;
     let requireAdmin = util.requireAdmin;
+    let checkBody = util.middlechecker.checkBody;
+    let types = util.middlechecker.types;
 
     let User = imports.models.User;
     let Team = imports.models.Team;
@@ -19,7 +21,7 @@ module.exports = function(imports) {
 
     let router = express.Router();
 
-    router.get("/teams/current/users", requireLogin, handler(function*(req, res) {
+    router.get("/teams/current/users", checkBody(), requireLogin, handler(function*(req, res) {
 
         let users = yield User.find({
             team: req.user.team,
@@ -29,7 +31,11 @@ module.exports = function(imports) {
 
     }));
 
-    router.post("/teams", requireLogin, handler(function*(req, res) {
+    router.post("/teams", checkBody({
+        number: types.any,
+        id: types.string,
+        name: types.string,
+    }), requireLogin, handler(function*(req, res) {
 
         if (req.user.team) {
             return res.status(400).end("You already have a team");
@@ -67,7 +73,7 @@ module.exports = function(imports) {
 
     }));
 
-    router.post("/teams/code/:teamCode/join", requireLogin, handler(function*(req, res) {
+    router.post("/teams/code/:teamCode/join", checkBody(), requireLogin, handler(function*(req, res) {
 
         if (req.user.team) {
             return res.status(400).end("You already have a team");
@@ -100,7 +106,7 @@ module.exports = function(imports) {
 
     }));
 
-    router.get("/teams/current/number", requireLogin, handler(function*(req, res) {
+    router.get("/teams/current/number", checkBody(), requireLogin, handler(function*(req, res) {
 
         let team = yield Team.findOne({
             _id: req.user.team
@@ -110,7 +116,7 @@ module.exports = function(imports) {
 
     }));
 
-    router.get("/teams/number/:teamNum/exists", requireLogin, handler(function*(req, res) {
+    router.get("/teams/number/:teamNum/exists", checkBody(), requireLogin, handler(function*(req, res) {
 
         if (yield Team.find({
                 number: parseInt(req.params.teamNum)
@@ -123,7 +129,7 @@ module.exports = function(imports) {
 
     }));
 
-    router.delete("/teams/current/users/id/:userId", requireAdmin, handler(function*(req, res) {
+    router.delete("/teams/current/users/id/:userId", checkBody(), requireAdmin, handler(function*(req, res) {
         // remove a user from a team
 
         let user = yield User.findOne({
@@ -165,7 +171,7 @@ module.exports = function(imports) {
     }));
 
     // TODO: does this need to exist?
-    router.get("/users/id/:userId/teamInfo", requireLogin, handler(function*(req, res) {
+    router.get("/users/id/:userId/teamInfo", checkBody(), requireLogin, handler(function*(req, res) {
 
         let user = yield User.findOne({
             _id: req.params.userId,

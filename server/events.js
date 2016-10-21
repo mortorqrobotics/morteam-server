@@ -10,6 +10,8 @@ module.exports = function(imports) {
     let handler = util.handler;
     let requireLogin = util.requireLogin;
     let requireAdmin = util.requireAdmin;
+    let checkBody = util.middlechecker.checkBody;
+    let types = util.middlechecker.types;
     let hiddenGroups = util.hiddenGroups;
     let audienceQuery = hiddenGroups.audienceQuery;
 
@@ -19,7 +21,7 @@ module.exports = function(imports) {
 
     let router = express.Router();
 
-    router.get("/events/startYear/:startYear/startMonth/:startMonth/endYear/:endYear/endMonth/:endMonth", requireLogin, handler(function*(req, res) {
+    router.get("/events/startYear/:startYear/startMonth/:startMonth/endYear/:endYear/endMonth/:endMonth", checkBody(), requireLogin, handler(function*(req, res) {
 
 
         let startYear = req.params.startYear;
@@ -45,7 +47,7 @@ module.exports = function(imports) {
 
     }));
 
-    router.get("/events/upcoming", requireLogin, handler(function*(req, res) {
+    router.get("/events/upcoming", checkBody(), requireLogin, handler(function*(req, res) {
 
         let events = yield Event.find({
             $and: [{
@@ -61,9 +63,12 @@ module.exports = function(imports) {
 
     }));
 
-    router.post("/events", requireAdmin, handler(function*(req, res) {
-
-        req.body.sendEmail = req.body.sendEmail == "true";
+    router.post("/events", checkBody({
+        sendEmail: types.boolean,
+        name: types.string,
+        audience: types.audience,
+        description: types.string,
+    }), requireAdmin, handler(function*(req, res) {
 
         let event = {
             name: req.body.name,
@@ -98,7 +103,7 @@ module.exports = function(imports) {
 
     }));
 
-    router.delete("/events/id/:eventId", requireAdmin, handler(function*(req, res) {
+    router.delete("/events/id/:eventId", checkBody(), requireAdmin, handler(function*(req, res) {
 
         yield Event.findOneAndRemove({
             _id: req.params.eventId,
@@ -108,7 +113,9 @@ module.exports = function(imports) {
 
     }));
 
-    router.put("/events/id/:eventId/attendance", requireAdmin, handler(function*(req, res) {
+    router.put("/events/id/:eventId/attendance", checkBody({
+        attendance: types.attendance,
+    }), requireAdmin, handler(function*(req, res) {
 
         yield Event.update({
             $and: [
@@ -125,7 +132,7 @@ module.exports = function(imports) {
 
     }));
 
-    router.post("/events/id/:eventId/startAttendance", requireAdmin, handler(function*(req, res) {
+    router.post("/events/id/:eventId/startAttendance", checkBody(), requireAdmin, handler(function*(req, res) {
 
         let event = yield Event.findOne({
             _id: req.params.eventId,
@@ -155,7 +162,7 @@ module.exports = function(imports) {
 
     }));
 
-    router.get("/events/id/:eventId/attendance", requireAdmin, handler(function*(req, res) {
+    router.get("/events/id/:eventId/attendance", checkBody(), requireAdmin, handler(function*(req, res) {
 
         let event = yield Event.findOne({
             _id: req.params.eventId,
@@ -165,7 +172,9 @@ module.exports = function(imports) {
 
     }));
 
-    router.put("/events/id/:eventId/excuseAbsences", requireAdmin, handler(function*(req, res) {
+    router.put("/events/id/:eventId/excuseAbsences", checkBody({
+        userIds: [types.objectId(User)],
+    }), requireAdmin, handler(function*(req, res) {
 
         let event = yield Event.findOne({
             _id: req.params.eventId,
@@ -191,7 +200,7 @@ module.exports = function(imports) {
 
     }));
 
-    router.get("/events/id/:eventId/userList", requireLogin, handler(function*(req, res) {
+    router.get("/events/id/:eventId/userList", checkBody(), requireLogin, handler(function*(req, res) {
 
         let event = yield Event.findOne({
             _id: req.params.eventId,
@@ -224,7 +233,10 @@ module.exports = function(imports) {
         };
     }
 
-    router.get("/users/id/:userId/absences", requireLogin, handler(function*(req, res) {
+    router.get("/users/id/:userId/absences", checkBody({
+        startDate: types.maybe(types.string),
+        endDate: types.maybe(types.string),
+    }), requireLogin, handler(function*(req, res) {
 
         let dateConstraints = {};
         if (req.query.startDate) {

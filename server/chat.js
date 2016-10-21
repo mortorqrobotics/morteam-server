@@ -10,6 +10,8 @@ module.exports = function(imports) {
     let handler = util.handler;
     let requireLogin = util.requireLogin;
     let requireAdmin = util.requireAdmin;
+    let checkBody = util.middlechecker.checkBody;
+    let types = util.middlechecker.types;
     let audienceQuery = util.hiddenGroups.audienceQuery;
     let sio = imports.sio;
 
@@ -20,7 +22,14 @@ module.exports = function(imports) {
     let router = express.Router();
 
     // TODO: separate this into separate requests for group and private chats
-    router.post("/chats", requireLogin, handler(function*(req, res) {
+    router.post("/chats", checkBody(types.union([{
+        isTwoPeople: types.value(true),
+        otherUser: types.objectId(User),
+    }, {
+        isTwoPeople: types.value(false),
+        audience: types.audience,
+        name: types.string,
+    }])), requireLogin, handler(function*(req, res) {
 
         if (req.body.isTwoPeople) {
 
@@ -79,7 +88,7 @@ module.exports = function(imports) {
 
     }));
 
-    router.get("/chats", requireLogin, handler(function*(req, res) {
+    router.get("/chats", checkBody(), requireLogin, handler(function*(req, res) {
 
         // find a chat that has said user as a member
         let chats = yield Chat.find(audienceQuery(req.user), {
@@ -99,7 +108,9 @@ module.exports = function(imports) {
 
     }));
 
-    router.get("/chats/id/:chatId/messages", requireLogin, handler(function*(req, res) {
+    router.get("/chats/id/:chatId/messages", checkBody({
+        skip: types.string,
+    }), requireLogin, handler(function*(req, res) {
 
         let skip = parseInt(req.query.skip);
 
@@ -118,7 +129,7 @@ module.exports = function(imports) {
 
     }));
 
-    router.get("/chats/id/:chatId/users", requireLogin, handler(function*(req, res) {
+    router.get("/chats/id/:chatId/users", checkBody(), requireLogin, handler(function*(req, res) {
         // user members only, not groups
 
         let chat = yield Chat.findOne({
@@ -138,7 +149,7 @@ module.exports = function(imports) {
 
     }));
 
-    router.get("/chats/id/:chatId/allMembers", requireLogin, handler(function*(req, res) {
+    router.get("/chats/id/:chatId/allMembers", checkBody(), requireLogin, handler(function*(req, res) {
 
         let chat = yield Chat.findOne({
             $and: [
@@ -174,7 +185,9 @@ module.exports = function(imports) {
 
     }));
 
-    router.put("/chats/group/id/:chatId/name", requireLogin, handler(function*(req, res) {
+    router.put("/chats/group/id/:chatId/name", checkBody({
+        newName: types.string,
+    }), requireLogin, handler(function*(req, res) {
 
         if (req.body.newName.length >= 20) {
             return res.status(400).end("Chat name has to be 19 characters or fewer");
@@ -195,7 +208,7 @@ module.exports = function(imports) {
 
     }));
 
-    router.delete("/chats/id/:chatId", requireAdmin, handler(function*(req, res) {
+    router.delete("/chats/id/:chatId", checkBody(), requireAdmin, handler(function*(req, res) {
 
         // TODO: check if the user has permissions to delete the chat
         // should they have to be a member of it?

@@ -10,6 +10,8 @@ module.exports = function(imports) {
 
     let handler = util.handler;
     let requireLogin = util.requireLogin;
+    let checkBody = util.middlechecker.checkBody;
+    let types = util.middlechecker.types;
     let audienceQuery = util.hiddenGroups.audienceQuery;
 
     let Announcement = imports.models.Announcement;
@@ -18,7 +20,10 @@ module.exports = function(imports) {
 
     let router = express.Router();
 
-    router.post("/announcements", requireLogin, handler(function*(req, res) {
+    router.post("/announcements", checkBody({
+        content: types.string,
+        audience: types.audience,
+    }), requireLogin, handler(function*(req, res) {
 
         if (req.body.audience.users.indexOf(req.user._id.toString()) === -1) {
             req.body.audience.users.push(req.user._id);
@@ -36,7 +41,9 @@ module.exports = function(imports) {
 
     }));
 
-    router.get("/announcements", requireLogin, handler(function*(req, res) {
+    router.get("/announcements", checkBody({
+        skip: types.integer,
+    }), requireLogin, handler(function*(req, res) {
 
         // find announcements that the user should be able to see
         let announcements = yield Announcement.find(audienceQuery(req.user), {
@@ -49,7 +56,7 @@ module.exports = function(imports) {
             }) // populate author and sort by timestamp, skip and limit are for pagination
             .populate("author audience.users audience.groups")
             .sort("-timestamp")
-            .skip(Number(req.query.skip))
+            .skip(req.query.skip)
             .limit(20)
             .exec();
 
@@ -57,7 +64,7 @@ module.exports = function(imports) {
 
     }));
 
-    router.delete("/announcements/id/:announcementId", requireLogin, handler(function*(req, res) {
+    router.delete("/announcements/id/:announcementId", checkBody(), requireLogin, handler(function*(req, res) {
 
         let announcement = yield Announcement.findOne({
             _id: req.params.announcementId

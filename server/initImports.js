@@ -12,7 +12,7 @@ module.exports = function(imports) {
         imports.config = {
             "mailgunUser": "user@morteam.com",
             "malgunPass": "password",
-            "dbName": "morteam"
+            "dbName": "morteam",
         };
         fs.writeFileSync(configPath, JSON.stringify(imports.config, null, "\t"));
         console.log("Generated default config.json");
@@ -31,7 +31,7 @@ module.exports = function(imports) {
     imports.util = {};
     imports.util.hiddenGroups = require("./util/hiddenGroups")(imports);
 
-    // User, Team, and Subdivision come from mornetwork
+    // User, Team, and Group stuff comes from mornetwork
     imports.models.Announcement = require("./models/Announcement")(imports);
     imports.models.Chat = require("./models/Chat")(imports);
     imports.models.Event = require("./models/Event")(imports);
@@ -41,6 +41,7 @@ module.exports = function(imports) {
 
     imports.util.images = require("./util/images")(imports);
     imports.util.mail = require("./util/mail")(imports);
+    imports.util.middlechecker = require("./util/middlechecker")(imports);
     imports.util.positions = require("./util/positions")(imports);
     imports.util.s3 = require("./util/s3")(imports);
     require("./util")(imports); // adds stuff to util

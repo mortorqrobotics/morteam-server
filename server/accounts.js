@@ -13,12 +13,18 @@ module.exports = function(imports) {
     let handler = util.handler;
     let requireLogin = util.requireLogin;
     let requireAdmin = util.requireAdmin;
+    let checkBody = util.middlechecker.checkBody;
+    let types = util.middlechecker.types;
 
     let User = imports.models.User;
 
     let router = express.Router();
 
-    router.post("/login", handler(function*(req, res) {
+    router.post("/login", checkBody({
+        rememberMe: types.boolean,
+        username: types.string,
+        password: types.string,
+    }), handler(function*(req, res) {
         // TODO: maybe move login and logout to separate file?
 
         // IMPORTANT: req.body.username can either be a username or an email
@@ -55,7 +61,7 @@ module.exports = function(imports) {
 
     }));
 
-    router.post("/logout", requireLogin, handler(function*(req, res) {
+    router.post("/logout", checkBody(), requireLogin, handler(function*(req, res) {
         // destroy user session cookie
         req.session.destroy(function(err) {
             if (err) {
@@ -72,7 +78,14 @@ module.exports = function(imports) {
         limits: {
             fileSize: 10 * 1024 * 1024
         }
-    }).single("profpic"), handler(function*(req, res) {
+    }).single("profpic"), checkBody({
+        username: types.string,
+        password: types.string,
+        firstname: types.string,
+        lastname: types.string,
+        phone: types.string,
+        email: types.string,
+    }), handler(function*(req, res) {
 
         // capitalize names
         req.body.firstname = req.body.firstname.capitalize();
@@ -154,7 +167,7 @@ module.exports = function(imports) {
 
     }));
 
-    router.get("/users/id/:userId", requireLogin, handler(function*(req, res) {
+    router.get("/users/id/:userId", checkBody(), requireLogin, handler(function*(req, res) {
 
         let user = yield User.findOne({
             _id: req.params.userId
@@ -164,7 +177,9 @@ module.exports = function(imports) {
 
     }));
 
-    router.put("/users/id/:userId/position", requireAdmin, handler(function*(req, res) {
+    router.put("/users/id/:userId/position", checkBody({
+        newPosition: types.string,
+    }), requireAdmin, handler(function*(req, res) {
 
         // find target user
         let user = yield User.findOne({
@@ -201,7 +216,9 @@ module.exports = function(imports) {
 
     }));
 
-    router.get("/users/search", requireLogin, handler(function*(req, res) {
+    router.get("/users/search", checkBody({
+        search: types.string,
+    }), requireLogin, handler(function*(req, res) {
 
         let regexString = String(req.query.search).trim().replace(/\s/g, "|");
         let re = new RegExp(regexString, "ig");
@@ -220,7 +237,10 @@ module.exports = function(imports) {
 
     }));
 
-    router.put("/password", requireLogin, handler(function*(req, res) {
+    router.put("/password", checkBody({
+        oldPassword: types.string,
+        newPassword: types.string,
+    }), requireLogin, handler(function*(req, res) {
 
         let user = yield User.findOne({
             _id: req.user._id
@@ -240,7 +260,13 @@ module.exports = function(imports) {
 
     }));
 
-    router.put("/profile", requireLogin, multer().single("new_prof_pic"), handler(function*(req, res) {
+    router.put("/profile", checkBody({
+        firstname: types.string,
+        lastname: types.string,
+        email: types.string,
+        phone: types.string,
+        parentEmail: types.string,
+    }), requireLogin, multer().single("new_prof_pic"), handler(function*(req, res) {
 
         if (!util.validateEmail(req.body.email)) {
             return res.status(400).end("Invalid email address");
@@ -285,11 +311,14 @@ module.exports = function(imports) {
     }));
 
     // get information about the currently logged in user
-    router.get("/users/self", requireLogin, handler(function*(req, res) {
+    router.get("/users/self", checkBody(), requireLogin, handler(function*(req, res) {
         res.json(req.user);
     }));
 
-    router.post("/forgotPassword", handler(function*(req, res) {
+    router.post("/forgotPassword", checkBody({
+        email: types.string,
+        username: types.string,
+    }), handler(function*(req, res) {
 
         let user = yield User.findOne({
             email: req.body.email,
