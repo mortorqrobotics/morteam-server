@@ -42,7 +42,7 @@ module.exports = function(imports) {
     }));
 
     router.get("/announcements", checkBody({
-        skip: types.integer,
+        skip: types.string,
     }), requireLogin, handler(function*(req, res) {
 
         // find announcements that the user should be able to see
@@ -56,7 +56,7 @@ module.exports = function(imports) {
             }) // populate author and sort by timestamp, skip and limit are for pagination
             .populate("author audience.users audience.groups")
             .sort("-timestamp")
-            .skip(req.query.skip)
+            .skip(parseInt(req.query.skip))
             .limit(20)
             .exec();
 
