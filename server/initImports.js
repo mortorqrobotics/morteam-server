@@ -25,6 +25,7 @@ module.exports = function(imports) {
     imports.modules.Promise = require("bluebird");
     imports.modules.autolinker = require("autolinker");
     imports.modules.nodemailer = require("nodemailer");
+	imports.modules.request = require("request-promise");
     imports.modules.AWS = require("aws-sdk");
     imports.modules.AWSMock = require("mock-aws-s3");
 

@@ -4,6 +4,7 @@ module.exports = function(imports) {
 
     let express = imports.modules.express;
     let Promise = imports.modules.Promise;
+	let request = imports.modules.request;
     let util = imports.util;
 
     let handler = util.handler;
@@ -169,6 +170,21 @@ module.exports = function(imports) {
         res.end();
 
     }));
+	
+	router.get("/teams/number/:number/info", requireLogin, handler(function* (req, res) {
+		
+		let result = yield request({
+			uri: "http://www.thebluealliance.com/api/v2/team/frc" + req.params.number,
+			headers: { "X-TBA-App-Id": "frc1515:MorMap:1" },
+		});
+		try {
+			res.json(JSON.parse(result));
+		} catch (err) {
+			res.status(500).end("failed parsing TBA json");
+		}
+		
+	}));
+
 
     // TODO: does this need to exist?
     router.get("/users/id/:userId/teamInfo", checkBody(), requireLogin, handler(function*(req, res) {
