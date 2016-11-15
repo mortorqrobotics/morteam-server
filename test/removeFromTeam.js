@@ -36,7 +36,9 @@ describe("removing a user from a team", function() {
     }));
 
     it("should remove the user from announcement hidden groups", coroutine(function*() {
-        let announcements = yield sessions[0]("GET", "/announcements");
+        let announcements = yield sessions[0]("GET", "/announcements", {
+            skip: 0,
+        });
         assert.equal(announcements[0].audience.users.length, 1,
             "a user was removed from announcement hidden group"
         );

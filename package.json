@@ -4,7 +4,7 @@
   "description": "Organization utility for robotics teams",
   "main": "server/server.js",
   "scripts": {
-    "test": "NODE_ENV=test ./node_modules/.bin/mocha test/index.js",
+    "test": "NODE_ENV=test ./node_modules/.bin/mocha --bail test/index.js",
     "fmt": "for f in `find server test -name '*.js'`; do ./node_modules/js-beautify/js/bin/js-beautify.js --type js -r -n -e \"\\n\" -b collapse-preserve-inline $f; done"
   },
   "dependencies": {

@@ -15,6 +15,10 @@ function mkSession() {
             data = code;
             code = null;
         }
+        if (["get", "delete"].indexOf(method.toLowerCase()) !== -1 && data) {
+            path += "?" + require("querystring").stringify(data);
+            data = null;
+        }
         return request(app)[method.toLowerCase()]("/api" + path)
             .set({
                 cookie: cookie,
@@ -24,14 +28,16 @@ function mkSession() {
             .then(obj => {
                 let cookies = obj.req.res.headers["set-cookie"];
                 if (cookies && cookies[0]) {
-                    cookie = cookies[0].match(/connect\.sid=[^;]+/)[0];
+                    cookie = cookies[0].match(/connect\.sid=[^;]*/)[0];
                 }
                 return obj;
             })
             .then(obj => {
-                try {
+                if ("content-type" in obj.res.headers
+                    && obj.res.headers["content-type"].includes("application/json")
+                ) {
                     return JSON.parse(obj.res.text);
-                } catch (err) {
+                } else {
                     return obj.res.text;
                 }
             });

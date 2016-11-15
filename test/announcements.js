@@ -14,14 +14,16 @@ describe("announcements", function() {
             content: "hello",
             audience: {
                 users: [],
-                groups: [data.normalGroup0],
+                groups: [data.normalGroup0._id],
             },
         });
     }));
 
     it("should send the announcements correctly", coroutine(function*() {
         for (let i of [0, 1]) {
-            let announcements = yield sessions[i]("GET", "/announcements");
+            let announcements = yield sessions[i]("GET", "/announcements", {
+                skip: 0,
+            });
             assert.equal(announcements.length, 1,
                 "each user receives exactly one announcement"
             );
@@ -42,8 +44,10 @@ describe("announcements", function() {
     it("should let admins and posters delete announcements", coroutine(function*() {
         yield sessions[0]("DELETE", "/announcements/id/" + data.announcement._id);
         delete data.announcement;
-        for (let i of[0, 1]) {
-            let announcements = yield sessions[i]("GET", "/announcements");
+        for (let i of [0, 1]) {
+            let announcements = yield sessions[i]("GET", "/announcements", {
+                skip: 0,
+            });
             assert.equal(announcements.length, 0,
                 "the announcement was deleted"
             );
