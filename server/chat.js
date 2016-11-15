@@ -210,7 +210,7 @@ module.exports = function(imports) {
     }));
 
     router.delete("/chats/id/:chatId", checkBody(), requireLogin , handler(function*(req, res) {
-        let chat = yield chat.findOne({
+        let chat = yield Chat.findOne({
             _id: req.params.chatId,
         });
         if(
@@ -220,9 +220,10 @@ module.exports = function(imports) {
             || util.positions.isUserAdmin(req.user) 
             || req.user._id.toString() === chat.creator.toString()
         ){
+            
             yield chat.remove(); 
         }
-        else{
+        else {
             res.status(403).end("You do not have permission");
         }
         res.end();
