@@ -76,6 +76,7 @@ module.exports = function(imports) {
 
             let chat = yield Chat.create({
                 name: req.body.name,
+                creator: req.user._id,
                 audience: req.body.audience,
                 isTwoPeople: false,
             });
@@ -208,17 +209,24 @@ module.exports = function(imports) {
 
     }));
 
-    router.delete("/chats/id/:chatId", checkBody(), requireAdmin, handler(function*(req, res) {
-
-        // TODO: check if the user has permissions to delete the chat
-        // should they have to be a member of it?
-
-        yield Chat.findOneAndRemove({
+    router.delete("/chats/id/:chatId", checkBody(), requireLogin , handler(function*(req, res) {
+        let chat = yield Chat.findOne({
             _id: req.params.chatId,
         });
-
+        if(
+            (chat.isTwoPeople 
+                && (chat.audience.users[0].toString() == req.user._id.toString() 
+                || chat.audience.users[1].toString()) == req.user._id.toString()) 
+            || util.positions.isUserAdmin(req.user) 
+            || req.user._id.toString() === chat.creator.toString()
+        ){
+            
+            yield chat.remove(); 
+        }
+        else {
+            res.status(403).end("You do not have permission");
+        }
         res.end();
-
     }));
 
     return router;

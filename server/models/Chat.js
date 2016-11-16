@@ -15,6 +15,11 @@ module.exports = function(imports) {
             required: false
         },
         isTwoPeople: Boolean,
+        creator: {
+            type: ObjectId,
+            ref: "User",
+            required: false, 
+        },
         audience: hiddenGroups.schemaType,
         messages: [{
             author: {
