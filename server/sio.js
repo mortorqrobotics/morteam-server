@@ -126,10 +126,20 @@ module.exports = function(imports) {
             for (let userId of userIds) {
                 for (let sock of online_clients[userId.toString()].sockets) {
                     if (sock !== socket.id) {
-                        io.to(sock).emit("message", {
-                            chatId: chatId,
-                            message: message,
-                        });
+                        if (chat.isTwoPeople) {
+                            io.to(sock).emit("message", {
+                                chatId: chatId,
+                                message: message,
+                                type: "pair",
+                            });
+                        } else {
+                            io.to(sock).emit("message", {
+                                chatId: chatId,
+                                message: message,
+                                type: "group",
+                                name: chat.name,
+                            });
+                        }
                     }
                 }
             }
