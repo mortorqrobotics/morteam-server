@@ -28,7 +28,9 @@ module.exports = function(imports) {
 
                 if (!(sess._id in online_clients)) { // later
 
-                    let chats = yield Chat.find(util.hiddenGroups.audienceQuery(sess));
+                    let chats = yield Chat.find(util.hiddenGroups.audienceQuery(sess), {
+                        _id: 1,
+                    });
 
                     let chatIds = chats.map(chat => chat._id.toString());
 
