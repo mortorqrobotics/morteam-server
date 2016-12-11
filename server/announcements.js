@@ -29,14 +29,30 @@ module.exports = function(imports) {
             req.body.audience.users.push(req.user._id);
         }
 
-        let announcement = yield Announcement.create({
-            author: req.user._id,
-            content: req.body.content,
-            audience: req.body.audience,
-            timestamp: new Date(),
-        });
+        let arr = yield Promise.all([
+            Announcement.create({
+                author: req.user._id,
+                content: req.body.content,
+                audience: req.body.audience,
+                timestamp: new Date(),
+            }),
+            User.find({
+                _id: {
+                    $in: req.body.audience.users,
+                },
+            }),
+            Group.find({
+                _id: {
+                    $in: req.body.audience.groups,
+                },
+            }),
+        ]);
 
+        let announcement = arr[0];
+        announcement = announcement.toObject();
+        announcement.audience = { users: arr[1], groups: arr[2] };
         announcement.author = req.user;
+
         res.json(announcement);
 
     }));
