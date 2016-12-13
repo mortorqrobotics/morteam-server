@@ -120,13 +120,16 @@ module.exports = function(imports) {
 
             let chat = yield Chat.findOne({
                 _id: chatId,
+            }, {
+                audience: 1,
+                isTwoPeople: 1,
             });
             let users = yield util.hiddenGroups.getUsersIn(chat.audience);
             let userIds = users
-                .map(user => user._id)
-                .filter(userId => userId.toString() in online_clients);
+                .map(user => user._id.toString())
+                .filter(userId => userId in online_clients);
             for (let userId of userIds) {
-                for (let sock of online_clients[userId.toString()].sockets) {
+                for (let sock of online_clients[userId].sockets) {
                     if (sock !== socket.id) {
                         if (chat.isTwoPeople) {
                             io.to(sock).emit("message", {

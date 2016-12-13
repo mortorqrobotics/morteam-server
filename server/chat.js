@@ -93,12 +93,13 @@ module.exports = function(imports) {
 
         // find a chat that has said user as a member
         let chats = yield Chat.find(audienceQuery(req.user), {
-                _id: 1,
-                name: 1,
-                audience: 1,
-                isTwoPeople: 1,
-                updated_at: 1
-            })
+            _id: 1,
+            name: 1,
+            audience: 1,
+            isTwoPeople: 1,
+            updated_at: 1,
+            messages: 1,
+        })
             .slice("messages", [0, 1])
             .sort("-updated_at")
             .populate("messages.author audience.users audience.groups")
@@ -122,6 +123,7 @@ module.exports = function(imports) {
                 audienceQuery(req.user),
             ],
         })
+            .select("+messages")
             .slice("messages", [skip, 20])
             .populate("messages.author")
             .exec();
@@ -138,6 +140,8 @@ module.exports = function(imports) {
                 { _id: req.params.chatId },
                 audienceQuery(req.user),
             ],
+        }, {
+            audience: 1,
         });
 
         let users = yield User.find({
@@ -157,6 +161,9 @@ module.exports = function(imports) {
                 { _id: req.params.chatId },
                 audienceQuery(req.user),
             ],
+        }, {
+            audience: 1,
+            isTwoPeople: 1,
         });
 
         let userMembers = yield User.find({

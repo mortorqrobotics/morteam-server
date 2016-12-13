@@ -21,14 +21,17 @@ module.exports = function(imports) {
             required: false, 
         },
         audience: hiddenGroups.schemaType,
-        messages: [{
-            author: {
-                type: ObjectId,
-                ref: "User"
-            },
-            content: String,
-            timestamp: Date
-        }],
+        messages: {
+            type: [{
+                author: {
+                    type: ObjectId,
+                    ref: "User"
+                },
+                content: String,
+                timestamp: Date,
+            }],
+            select: false,
+        },
         created_at: Date,
         updated_at: Date,
     });
