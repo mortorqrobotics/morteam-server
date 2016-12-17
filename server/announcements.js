@@ -55,6 +55,17 @@ module.exports = function(imports) {
 
         res.json(announcement);
 
+        if (util.positions.isUserAdmin(req.user)) {
+            let users = yield util.hiddenGroups.getUsersIn(announcement.audience);
+            let recipients = util.mail.createRecipientList(users);
+            let info = yield util.mail.sendEmail({
+                to: recipients,
+                subject: "New Announcement By " + req.user.firstname + " " + req.user.lastname,
+                html: announcement.content,
+            });
+            console.log(info)
+        }
+
     }));
 
     router.get("/announcements", checkBody({

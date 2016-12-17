@@ -5,6 +5,7 @@ module.exports = function(imports) {
     let Promise = imports.modules.Promise;
     let nodemailer = imports.modules.nodemailer;
     let config = imports.config;
+    let defaultConfig = imports.defaultConfig;
 
     let mail = {};
 
@@ -19,21 +20,30 @@ module.exports = function(imports) {
     Promise.promisifyAll(mail.notify);
 
     mail.sendEmail = function(options) {
-        return new Promise(function(resolve, reject) {
-            mail.notify.sendMail({
-                from: "MorTeam Notification <notify@morteam.com>",
-                to: options.to,
-                subject: options.subject,
-                html: options.html
-            }, function(err, info) {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(info);
-                }
+        if (config.mailgunUser === defaultConfig.mailgunUser 
+            && config.mailgunPass === defaultConfig.mailgunPass
+        ) {
+            return new Promise(resolve => { 
+                console.log(options); 
+                resolve(); 
             });
-        });
-    };
+        } else {
+            return new Promise(function(resolve, reject) {
+                mail.notify.sendMail({
+                    from: "MorTeam Notification <notify@morteam.com>",
+                    to: options.to,
+                    subject: options.subject,
+                    html: options.html
+                }, function(err, info) {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve(info);
+                    }
+                });
+            });
+        }
+    }
 
     // TODO: automatically do this in mail.sendEmail?
     // creates a list of email adresses seperated by ", " provided an array of user objects

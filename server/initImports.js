@@ -1,7 +1,11 @@
 "use strict";
 
 module.exports = function(imports) {
-
+    imports.defaultConfig = {
+        "mailgunUser": "user@morteam.com",
+        "malgunPass": "password",
+        "dbName": "morteam",
+    };
     // initialize default config file if it does not exist
     let fs = require("fs");
     // config contains password and sensitive information
@@ -9,11 +13,7 @@ module.exports = function(imports) {
     if (fs.existsSync(configPath)) {
         imports.config = require(configPath);
     } else {
-        imports.config = {
-            "mailgunUser": "user@morteam.com",
-            "malgunPass": "password",
-            "dbName": "morteam",
-        };
+        imports.config = imports.defaultConfig;
         fs.writeFileSync(configPath, JSON.stringify(imports.config, null, "\t"));
         console.log("Generated default config.json");
     }
