@@ -19,6 +19,7 @@ module.exports = function(imports) {
     let Chat = imports.models.Chat;
     let Event = imports.models.Event;
     let Folder = imports.models.Folder;
+    let AllTeamGroup = imports.models.AllTeamGroup;
 
     let router = express.Router();
 
@@ -62,13 +63,15 @@ module.exports = function(imports) {
         // TODO: ask user about leader vs mentor when creating team?
         yield User.addToTeam(req.user._id, team._id, "leader", true);
 
-        //let folder = yield Folder.create({
-        //    name: "Team Files",
-        //    team: team._id,
-        //    entireTeam: true,
-        //    creator: req.user._id,
-        //    defaultFolder: true,
-        //});
+        let group = yield AllTeamGroup.findOne({
+            team: team._id
+        })
+
+        yield Folder.create({
+            name: "Team Files",
+            audience: { groups: [group._id] },
+            defaultFolder: true,
+        });
 
         res.json(team);
 

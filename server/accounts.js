@@ -17,6 +17,7 @@ module.exports = function(imports) {
     let types = util.middlechecker.types;
 
     let User = imports.models.User;
+    let Folder = imports.models.Folder;
 
     let router = express.Router();
 
@@ -157,11 +158,18 @@ module.exports = function(imports) {
             userInfo.profpicpath = "/images/user.jpg"; // default profile picture
         }
 
+        let user;
         try {
-            yield User.create(userInfo);
+            user = yield User.create(userInfo);
         } catch (err) {
             return res.status(400).end("Invalid user info");
         }
+
+        yield Folder.create({
+            name: "Personal Files",
+            audience: { users: [user._id] },
+            defaultFolder: true,
+        });
 
         res.end();
 
