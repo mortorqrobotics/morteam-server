@@ -45,7 +45,7 @@ module.exports = function(imports) {
             return next();
         }
 
-        let exceptions = ["/login", "/signup", "/fp", "/favicon.ico", "/src/bundle.css"];
+        let exceptions = ["/login", "/signup", "/fp", "/favicon.ico", "/credits.html"];
 
         if (exceptions.indexOf(path) > -1) {
             return next();
