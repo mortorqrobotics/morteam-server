@@ -134,12 +134,12 @@ module.exports = function(imports) {
 
     }));
 
-    router.post("/files/upload", checkBody({
+    router.post("/files/upload", multer({
+        limits: 50 * 1000000 // 50 megabytes
+    }).single("uploadedFile"), checkBody({
         currentFolderId: types.objectId(Folder),
         fileName: types.string,
-    }), requireLogin, multer({
-        limits: 50 * 1000000 // 50 megabytes
-    }).single("uploadedFile"), handler(function*(req, res) {
+    }), requireLogin, handler(function*(req, res) {
 
         let folder = yield Folder.findOne({
             _id: req.body.currentFolderId,

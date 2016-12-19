@@ -268,13 +268,13 @@ module.exports = function(imports) {
 
     }));
 
-    router.put("/profile", checkBody({
+    router.put("/profile", multer().single("new_prof_pic"), checkBody({
         firstname: types.string,
         lastname: types.string,
         email: types.string,
         phone: types.string,
         parentEmail: types.string,
-    }), requireLogin, multer().single("new_prof_pic"), handler(function*(req, res) {
+    }), requireLogin, handler(function*(req, res) {
 
         if (!util.validateEmail(req.body.email)) {
             return res.status(400).end("Invalid email address");
