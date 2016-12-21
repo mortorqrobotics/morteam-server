@@ -226,10 +226,8 @@ module.exports = function(imports) {
             || util.positions.isUserAdmin(req.user) 
             || req.user._id.toString() === chat.creator.toString())
         ){
-                
             yield chat.remove(); 
-        }
-        else {
+        } else {
             res.status(403).end("You do not have permission");
         }
         res.end();
