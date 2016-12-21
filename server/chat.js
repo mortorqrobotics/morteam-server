@@ -13,6 +13,7 @@ module.exports = function(imports) {
     let checkBody = util.middlechecker.checkBody;
     let types = util.middlechecker.types;
     let audienceQuery = util.hiddenGroups.audienceQuery;
+    let isUserInAudience = util.hiddenGroups.isUserInAudience;
     let sio = imports.sio;
 
     let Chat = imports.models.Chat;
@@ -220,7 +221,7 @@ module.exports = function(imports) {
         let chat = yield Chat.findOne({
             _id: req.params.chatId,
         });
-        if(chat.audience.indexOf(req.user._id) !== -1
+        if(isUserInAudience(req.user, chat.audience)
             && (chat.isTwoPeople  
             || util.positions.isUserAdmin(req.user) 
             || req.user._id.toString() === chat.creator.toString())
