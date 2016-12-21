@@ -99,13 +99,13 @@ module.exports = function(imports) {
             isTwoPeople: 1,
             updated_at: 1,
             messages: 1,
+            creator: 1,
         })
             .slice("messages", [0, 1])
             .sort("-updated_at")
             .populate("messages.author audience.users audience.groups")
             .exec();
         // ^ the code above gets the latest message from the chat (for previews in iOS and Android) and orders the list by most recent.
-
         res.json(chats);
 
     }));
