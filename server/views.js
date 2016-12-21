@@ -10,21 +10,10 @@ module.exports = function(imports) {
 
     let Team = imports.models.Team;
 
-    const webDir = require("path").join(__dirname, "../../morteam-web");
-    const publicDir = webDir + "/public";
-    const profpicDir = "http://profilepics.morteam.com.s3.amazonaws.com/";
+    let webDir = imports.webDir;
+    let profpicDir = imports.profpicDir;
 
     let router = express.Router();
-    router.use(express.static(publicDir));
-
-    // load default profile picture
-    router.get("/images/user.jpg-60", handler(function*(req, res) {
-        res.sendFile(publicDir + "/images/user.jpg");
-    }));
-
-    router.get("/images/user.jpg-300", handler(function*(req, res) {
-        res.sendFile(publicDir + "/images/user.jpg");
-    }));
 
     // load user profile picture from AWS S3
     router.get("/pp/:path", handler(function*(req, res) {

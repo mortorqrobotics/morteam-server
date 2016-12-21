@@ -32,6 +32,17 @@ module.exports = function(imports) {
     // define the main object passed to mornetwork
     let app = express();
 
+    let publicDir = imports.publicDir;
+    app.use(express.static(publicDir));
+
+    // load default profile picture
+    app.get("/images/user.jpg-60", (req, res) => {
+        res.sendFile(publicDir + "/images/user.jpg");
+    });
+    app.get("/images/user.jpg-300", (req, res) => {
+        res.sendFile(publicDir + "/images/user.jpg");
+    });
+
     // check to see if user is logged in before continuing any further
     // allow browser to receive images, css, and js files without being logged in
     // allow browser to receive some pages such as login.html, signup.html, etc. without being logged in
@@ -41,17 +52,22 @@ module.exports = function(imports) {
         }
 
         let path = req.path;
-        if (path.startsWith("/css/") || path.startsWith("/js/") || path.startsWith("/img/")) {
+
+        if (path.startsWith("/js")) {
             return next();
         }
 
-        let exceptions = ["/login", "/signup", "/fp", "/favicon.ico", "/credits.html"];
+        let exceptions = [
+            "/login",
+            "/signup",
+            "/fp",
+        ];
 
         if (exceptions.indexOf(path) > -1) {
             return next();
         }
 
-        if (req.url == "/void") {
+        if (path == "/void") {
             if (!req.user || req.user.team) {
                 return res.redirect("/");
             }
