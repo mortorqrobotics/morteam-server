@@ -227,10 +227,10 @@ module.exports = function(imports) {
             || req.user._id.toString() === chat.creator.toString())
         ){
             yield chat.remove(); 
+            res.end();
         } else {
             res.status(403).end("You do not have permission");
         }
-        res.end();
     }));
 
     return router;
