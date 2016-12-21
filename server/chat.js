@@ -220,14 +220,12 @@ module.exports = function(imports) {
         let chat = yield Chat.findOne({
             _id: req.params.chatId,
         });
-        if(
-            (chat.isTwoPeople 
-                && (chat.audience.users[0].toString() == req.user._id.toString() 
-                || chat.audience.users[1].toString()) == req.user._id.toString()) 
+        if(chat.audience.indexOf(req.user._id) !== -1
+            && (chat.isTwoPeople  
             || util.positions.isUserAdmin(req.user) 
-            || req.user._id.toString() === chat.creator.toString()
+            || req.user._id.toString() === chat.creator.toString())
         ){
-            
+                
             yield chat.remove(); 
         }
         else {
