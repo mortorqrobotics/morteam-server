@@ -13,6 +13,7 @@ module.exports = function(imports) {
     let checkBody = util.middlechecker.checkBody;
     let types = util.middlechecker.types;
     let audienceQuery = util.hiddenGroups.audienceQuery;
+    let isUserInAudience = util.hiddenGroups.isUserInAudience;
     let sio = imports.sio;
 
     let Chat = imports.models.Chat;
@@ -220,20 +221,16 @@ module.exports = function(imports) {
         let chat = yield Chat.findOne({
             _id: req.params.chatId,
         });
-        if(
-            (chat.isTwoPeople 
-                && (chat.audience.users[0].toString() == req.user._id.toString() 
-                || chat.audience.users[1].toString()) == req.user._id.toString()) 
+        if(isUserInAudience(req.user, chat.audience)
+            && (chat.isTwoPeople  
             || util.positions.isUserAdmin(req.user) 
-            || req.user._id.toString() === chat.creator.toString()
+            || req.user._id.toString() === chat.creator.toString())
         ){
-            
             yield chat.remove(); 
-        }
-        else {
+            res.end();
+        } else {
             res.status(403).end("You do not have permission");
         }
-        res.end();
     }));
 
     return router;
