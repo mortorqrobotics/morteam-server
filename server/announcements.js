@@ -63,7 +63,6 @@ module.exports = function(imports) {
                 subject: "New Announcement By " + req.user.firstname + " " + req.user.lastname,
                 html: announcement.content,
             });
-            console.log(info)
         }
 
     }));
