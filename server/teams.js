@@ -154,21 +154,46 @@ module.exports = function(imports) {
 
         yield User.removeFromTeam(user);
 
-        let allModels = [
-            Announcement,
-            Chat,
-            Event,
-            Folder,
-        ];
-        for (let Model of allModels) {
-            yield Model.update({
+        yield Promise.all([
+            Announcement.update({
                 "audience.users": user._id,
             }, {
                 $pull: {
                     "audience.users": user._id,
                 }
-            });
-        }
+            }, {
+                multi: true,
+            }),
+            Event.update({
+                "audience.users": user._id,
+            }, {
+                $pull: {
+                    "audience.users": user._id,
+                }
+            }, {
+                multi: true,
+            }),
+            Chat.update({
+                "audience.users": user._id,
+                isTwoPeople: false,
+            }, {
+                $pull: {
+                    "audience.users": user._id,
+                }
+            }, {
+                multi: true,
+            }),
+            Folder.update({
+                "audience.users": user._id,
+                defaultFolder: false,
+            }, {
+                $pull: {
+                    "audience.users": user._id,
+                }
+            }, {
+                multi: true,
+            }),
+        ]);
 
         res.end();
 
