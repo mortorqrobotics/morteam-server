@@ -71,35 +71,26 @@ describe("removing a user from a team", function() {
         let announcements = yield sessions[0]("GET", "/announcements", {
             skip: 0,
         });
-        assert.equal(announcements[0].audience.users.length, 1,
-            "a user was removed from announcement hidden group"
-        );
-        assert.equal(announcements[0].audience.users[0]._id, data.users[0]._id,
-            "the correct user was removed from announcement hidden group"
+        assert.equal(announcements[0].audience.users.map(u => u._id), data.users[0]._id,
+            "the user was removed from announcement hidden group"
         );
     }));
 
     it("should remove the user from event hidden groups", coroutine(function*() {
         let date = new Date();
         let events = yield sessions[0]("GET",
-            `/events/startYear/${date.getFullYear() - 1}/startMonth/0
-                /endYear/${date.getFullYear() + 1}/endMonth/0`);
-        assert.equal(events[0].audience.users.length, 1,
-            "a user was removed from event hidden group"
-        );
-        assert.equal(events[0].audience.users[0], data.users[0]._id,
-            "the correct user was removed from event hidden group"
+            "/events/startYear/" + (date.getFullYear() - 1) + "/startMonth/0/endYear/"
+            + (date.getFullYear() + 1) + "/endMonth/0");
+        assert.equal(events[0].audience.users, data.users[0]._id,
+            "the user was removed from event hidden group"
         );
     }));
 
     it("should remove the user from group chat hidden groups", coroutine(function*() {
         let chats = yield sessions[0]("GET", "/chats");
         let groupChat = chats.find(chat => !chat.isTwoPeople);
-        assert.equal(groupChat.audience.users.length, 1,
-            "a user was removed from group chat hidden group"
-        );
-        assert.equal(groupChat.audience.users[0]._id, data.users[0]._id,
-            "the correct user was removed from group chat hidden group"
+        assert.equal(groupChat.audience.users.map(u => u._id), data.users[0]._id,
+            "the user was removed from group chat hidden group"
         );
     }));
 
@@ -114,11 +105,8 @@ describe("removing a user from a team", function() {
     it("should remove the user from folder hidden groups", coroutine(function*() {
         let folders = yield sessions[0]("GET", "/folders");
         let folder = folders.find(folder => !folder.defaultFolder);
-        assert.equal(folder.audience.users.length, 1,
-            "a user was removed from folder hidden group"
-        );
-        assert.equal(folder.audience.users[0], data.users[0]._id,
-            "the correct user was removed from folder hidden group"
+        assert.equal(folder.audience.users, data.users[0]._id,
+            "the user was removed from folder hidden group"
         );
     }));
 
