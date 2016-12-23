@@ -29,7 +29,14 @@ describe("removing a user from a team", function() {
     before(coroutine(function*() {
         yield Promise.all([
             sessions[0]("POST", "/announcements", {
-                content: "stuff",
+                content: "stuff1",
+                audience: {
+                    users: [data.users[0]._id, data.users[1]._id],
+                    groups: [],
+                },
+            }),
+            sessions[0]("POST", "/announcements", {
+                content: "stuff2",
                 audience: {
                     users: [data.users[0]._id, data.users[1]._id],
                     groups: [],
@@ -74,6 +81,9 @@ describe("removing a user from a team", function() {
         });
         assert.equal(announcements[0].audience.users.map(u => u._id), data.users[0]._id,
             "the user was removed from announcement hidden group"
+        );
+        assert.equal(announcements[1].audience.users.map(u => u._id), data.users[0]._id,
+            "the user was removed from both announcement hidden groups"
         );
     }));
 
