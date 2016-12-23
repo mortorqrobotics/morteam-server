@@ -123,6 +123,7 @@ module.exports = function(imports) {
             }, {
                 audience: 1,
                 isTwoPeople: 1,
+                name: 1,
             });
             let users = yield util.hiddenGroups.getUsersIn(chat.audience);
             let userIds = users
