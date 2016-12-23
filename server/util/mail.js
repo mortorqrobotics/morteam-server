@@ -24,7 +24,9 @@ module.exports = function(imports) {
             && config.mailgunPass === defaultConfig.mailgunPass
         ) {
             return new Promise(resolve => { 
-                console.log(options); 
+                if (process.env.NODE_ENV !== "test") {
+                    console.log(options);
+                }
                 resolve(); 
             });
         } else {

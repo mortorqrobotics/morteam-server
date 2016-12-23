@@ -6,6 +6,7 @@ let assert = require("chai").assert;
 let sessions = require("./util/shared").sessions;
 let data = require("./util/shared").data;
 let delay = require("./util/delay");
+let Folder = require("./util/models").Folder;
 
 describe("removing a user from a team", function() {
 
@@ -26,27 +27,109 @@ describe("removing a user from a team", function() {
     }));
 
     before(coroutine(function*() {
-        yield sessions[0]("POST", "/announcements", {
-            content: "stuff",
-            audience: {
-                users: [data.users[0]._id, data.users[1]._id],
-                groups: [],
-            },
-        });
+        yield Promise.all([
+            sessions[0]("POST", "/announcements", {
+                content: "stuff1",
+                audience: {
+                    users: [data.users[0]._id, data.users[1]._id],
+                    groups: [],
+                },
+            }),
+            sessions[0]("POST", "/announcements", {
+                content: "stuff2",
+                audience: {
+                    users: [data.users[0]._id, data.users[1]._id],
+                    groups: [],
+                },
+            }),
+            sessions[0]("POST", "/events", {
+                sendEmail: false,
+                name: "thing",
+                description: "stuff",
+                date: new Date(),
+                audience: {
+                    users: [data.users[0]._id, data.users[1]._id],
+                    groups: [],
+                },
+            }),
+            sessions[0]("POST", "/chats", {
+                isTwoPeople: true,
+                otherUser: data.users[1]._id,
+            }),
+            sessions[0]("POST", "/chats", {
+                isTwoPeople: false,
+                name: "thing",
+                audience: {
+                    users: [data.users[1]._id], //user 0 is added as req.user
+                    groups: [],
+                },
+            }),
+            sessions[0]("POST", "/folders", {
+                name: "stuffs",
+                type: "teamFolder",
+                audience: {
+                    users: [data.users[0]._id, data.users[1]._id],
+                    groups: [],
+                },
+            }),
+        ])
     }));
 
     it("should remove the user from announcement hidden groups", coroutine(function*() {
         let announcements = yield sessions[0]("GET", "/announcements", {
             skip: 0,
         });
-        assert.equal(announcements[0].audience.users.length, 1,
-            "a user was removed from announcement hidden group"
+        assert.deepEqual(announcements[0].audience.users.map(u => u._id), [data.users[0]._id],
+            "the user was removed from announcement hidden group"
         );
-        assert.equal(announcements[0].audience.users[0]._id, data.users[0]._id,
-            "the correct user was removed from announcement hidden group"
+        assert.deepEqual(announcements[1].audience.users.map(u => u._id), [data.users[0]._id],
+            "the user was removed from both announcement hidden groups"
         );
     }));
 
-    // TODO: add tests for more hidden groups other than just in announcements
+    it("should remove the user from event hidden groups", coroutine(function*() {
+        let date = new Date();
+        let events = yield sessions[0]("GET",
+            "/events/startYear/" + (date.getFullYear() - 1) + "/startMonth/0/endYear/"
+            + (date.getFullYear() + 1) + "/endMonth/0");
+        assert.deepEqual(events[0].audience.users, [data.users[0]._id],
+            "the user was removed from event hidden group"
+        );
+    }));
+
+    it("should remove the user from group chat hidden groups", coroutine(function*() {
+        let chats = yield sessions[0]("GET", "/chats");
+        let groupChat = chats.find(chat => !chat.isTwoPeople);
+        assert.deepEqual(groupChat.audience.users.map(u => u._id), [data.users[0]._id],
+            "the user was removed from group chat hidden group"
+        );
+    }));
+
+    it("should not remove the user from private chat hidden groups", coroutine(function*() {
+        let chats = yield sessions[0]("GET", "/chats");
+        let privateChat = chats.find(chat => chat.isTwoPeople);
+        assert.equal(privateChat.audience.users.length, 2,
+            "no user was removed from private chat hidden group"
+        );
+    }));
+
+    it("should remove the user from folder hidden groups", coroutine(function*() {
+        let folders = yield sessions[0]("GET", "/folders");
+        let folder = folders.find(folder => !folder.defaultFolder);
+        assert.deepEqual(folder.audience.users, [data.users[0]._id],
+            "the user was removed from folder hidden group"
+        );
+    }));
+
+    it("should not remove the user from Personal Files folder hidden group", coroutine(function*() {
+        let folder = yield Folder.find({
+            defaultFolder: true,
+            name: "Personal Files",
+            "audience.users": [data.users[1]._id]
+        });
+        assert.notDeepEqual(folder, [],
+            "the user was not removed from Personal Files folder hidden group"
+        );
+    }));
 
 });

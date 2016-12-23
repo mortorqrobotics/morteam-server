@@ -221,11 +221,11 @@ module.exports = function(imports) {
         let chat = yield Chat.findOne({
             _id: req.params.chatId,
         });
-        if(isUserInAudience(req.user, chat.audience)
+        if (isUserInAudience(req.user, chat.audience)
             && (chat.isTwoPeople  
             || util.positions.isUserAdmin(req.user) 
             || req.user._id.toString() === chat.creator.toString())
-        ){
+        ) {
             yield chat.remove(); 
             res.end();
         } else {
