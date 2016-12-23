@@ -53,6 +53,7 @@ module.exports = function(imports) {
 
     // TODO: add config here
 
+    module.exports.imports = imports;
     return imports;
 
 };

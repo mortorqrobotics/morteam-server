@@ -6,6 +6,7 @@ let assert = require("chai").assert;
 let sessions = require("./util/shared").sessions;
 let data = require("./util/shared").data;
 let delay = require("./util/delay");
+let Folder = require("./util/models").Folder;
 
 describe("removing a user from a team", function() {
 
@@ -111,11 +112,13 @@ describe("removing a user from a team", function() {
     }));
 
     it("should not remove the user from Personal Files folder hidden group", coroutine(function*() {
-        let folders = yield sessions[0]("GET", "/folders");
-        let personalFolder = folders.find(folder =>
-            folder.defaultFolder && folder.name === "Personal Files");
-        assert.equal(personalFolder.audience.users.length, 1,
-            "no user was removed from Personal Files folder hidden group"
+        let folder = yield Folder.find({
+            defaultFolder: true,
+            name: "Personal Files",
+            "audience.users": [data.users[1]._id]
+        });
+        assert.notDeepEqual(folder, [],
+            "the user was not removed from Personal Files folder hidden group"
         );
     }));
 
