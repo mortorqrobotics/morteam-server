@@ -153,9 +153,9 @@ module.exports = function(imports) {
         }
 
         if (!util.positions.isUserAdmin(req.user)
-            && (user._id.toString() !== req.user._id.toString()))
-        {
-            return res.status(400).end("You cannot remove other users from your team if you are not an Admin");
+            && (user._id.toString() !== req.user._id.toString())
+        ) {
+            return res.status(403).end("You cannot remove other users from your team if you are not an Admin");
         }
 
         yield User.removeFromTeam(user);
