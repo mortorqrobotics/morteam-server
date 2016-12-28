@@ -17,7 +17,7 @@ module.exports = function(imports) {
     };
 
     positions.adminPositionsQuery = {
-        $or: adminPositions
+        $in: adminPositions
     };
 
     return positions;

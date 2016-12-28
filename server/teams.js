@@ -133,7 +133,7 @@ module.exports = function(imports) {
 
     }));
 
-    router.delete("/teams/current/users/id/:userId", checkBody(), requireAdmin, handler(function*(req, res) {
+    router.delete("/teams/current/users/id/:userId", checkBody(), handler(function*(req, res) {
         // remove a user from a team
 
         let user = yield User.findOne({
@@ -150,6 +150,12 @@ module.exports = function(imports) {
                 position: util.positions.adminPositionsQuery,
             })) <= 1) {
             return res.status(400).end("You cannot remove the only Admin on your team");
+        }
+
+        if (!util.positions.isUserAdmin(req.user)
+            && (user._id.toString() !== req.user._id.toString()))
+        {
+            return res.status(400).end("You cannot remove other users from your team if you are not an Admin");
         }
 
         yield User.removeFromTeam(user);
