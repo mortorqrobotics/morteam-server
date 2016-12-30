@@ -68,6 +68,16 @@ module.exports = function(imports) {
     router.get("/teams/current", handler(function*(req, res) {
         renderPage(res, "Team", req.user);
     }));
+    
+    router.get("/teams/number/:teamNumber", handler(function*(req, res) {
+        let team = yield Team.findOne({
+            number: parseInt(req.params.teamNumber),
+        });
+        renderPage(res, "OtherTeam", req.user, {
+            teamNumber: req.params.teamNumber,
+            team: team,
+        });
+    }));
 
     router.get("/groups/id/:groupId", handler(function*(req, res) {
         renderPage(res, "Group", req.user, {
