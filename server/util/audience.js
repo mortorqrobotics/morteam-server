@@ -23,17 +23,23 @@ module.exports = function(imports) {
     };
 
     audience.schemaType = {
-        users: [{
-            type: ObjectId,
-            ref: "User",
-        }],
-        groups: [{
-            type: ObjectId,
-            ref: "Group",
-        }],
-        isMultiTeam: {
-            type: Boolean,
-            default: false,
+        type: {
+            users: [{
+                type: ObjectId,
+                ref: "User",
+            }],
+            groups: [{
+                type: ObjectId,
+                ref: "Group",
+            }],
+            isMultiTeam: {
+                type: Boolean,
+                default: false,
+            },
+        },
+        validate: {
+            validator: (value) => !value.isMultiTeam || value.users.length === 0,
+            message: "Users must be empty in a multiteam audience",
         },
     };
 
