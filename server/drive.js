@@ -14,7 +14,7 @@ module.exports = function(imports) {
     let requireLogin = util.requireLogin;
     let checkBody = util.middlechecker.checkBody;
     let types = util.middlechecker.types;
-    let audienceQuery = util.hiddenGroups.audienceQuery;
+    let audienceQuery = util.audience.audienceQuery;
 
     let Folder = imports.models.Folder;
     let File = imports.models.File;
@@ -34,7 +34,7 @@ module.exports = function(imports) {
                 return res.status(404).end("File does not exist");
             }
 
-            if (!util.hiddenGroups.isUserInAudience(req.user, file.folder.audience)) {
+            if (!util.audience.isUserInAudience(req.user, file.folder.audience)) {
                 return res.status(403).end("You do not have permission to access this");
             }
 
@@ -84,7 +84,7 @@ module.exports = function(imports) {
             return res.status(404).end("That folder does not exist");
         }
 
-        if (!util.hiddenGroups.isUserInAudience(req.user, folder.audience)) {
+        if (!util.audience.isUserInAudience(req.user, folder.audience)) {
             return res.status(403).end("You do not have permission to access this");
         }
 
@@ -145,7 +145,7 @@ module.exports = function(imports) {
             _id: req.body.currentFolderId,
         });
 
-        if (!util.hiddenGroups.isUserInAudience(req.user, folder.audience)) {
+        if (!util.audience.isUserInAudience(req.user, folder.audience)) {
             return res.status(403).end("You cannot upload to this folder");
         }
 

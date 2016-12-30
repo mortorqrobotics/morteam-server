@@ -12,7 +12,7 @@ module.exports = function(imports) {
     let requireLogin = util.requireLogin;
     let checkBody = util.middlechecker.checkBody;
     let types = util.middlechecker.types;
-    let audienceQuery = util.hiddenGroups.audienceQuery;
+    let audienceQuery = util.audience.audienceQuery;
 
     let Announcement = imports.models.Announcement;
     let User = imports.models.User;
@@ -56,7 +56,7 @@ module.exports = function(imports) {
         res.json(announcement);
 
         if (util.positions.isUserAdmin(req.user)) {
-            let users = yield util.hiddenGroups.getUsersIn(announcement.audience);
+            let users = yield util.audience.getUsersIn(announcement.audience);
             let recipients = util.mail.createRecipientList(users);
             let info = yield util.mail.sendEmail({
                 to: recipients,

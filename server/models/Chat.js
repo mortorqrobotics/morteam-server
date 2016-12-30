@@ -7,7 +7,7 @@ module.exports = function(imports) {
     let Schema = mongoose.Schema;
     let ObjectId = Schema.Types.ObjectId;
 
-    let hiddenGroups = imports.util.hiddenGroups;
+    let audience = imports.util.audience;
 
     let chatSchema = new Schema({
         name: {
@@ -20,7 +20,7 @@ module.exports = function(imports) {
             ref: "User",
             required: false, 
         },
-        audience: hiddenGroups.schemaType,
+        audience: audience.schemaType,
         messages: {
             type: [{
                 author: {

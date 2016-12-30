@@ -12,8 +12,8 @@ module.exports = function(imports) {
     let requireAdmin = util.requireAdmin;
     let checkBody = util.middlechecker.checkBody;
     let types = util.middlechecker.types;
-    let audienceQuery = util.hiddenGroups.audienceQuery;
-    let isUserInAudience = util.hiddenGroups.isUserInAudience;
+    let audienceQuery = util.audience.audienceQuery;
+    let isUserInAudience = util.audience.isUserInAudience;
     let sio = imports.sio;
 
     let Chat = imports.models.Chat;

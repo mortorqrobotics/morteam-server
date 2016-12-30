@@ -28,7 +28,7 @@ module.exports = function(imports) {
 
                 if (!(sess._id in online_clients)) { // later
 
-                    let chats = yield Chat.find(util.hiddenGroups.audienceQuery(sess), {
+                    let chats = yield Chat.find(util.audience.audienceQuery(sess), {
                         _id: 1,
                     });
 
@@ -96,7 +96,7 @@ module.exports = function(imports) {
             yield Chat.update({
                 $and: [
                     { _id: chatId },
-                    util.hiddenGroups.audienceQuery(sess),
+                    util.audience.audienceQuery(sess),
                 ],
             }, {
                 $push: {
@@ -125,7 +125,7 @@ module.exports = function(imports) {
                 isTwoPeople: 1,
                 name: 1,
             });
-            let users = yield util.hiddenGroups.getUsersIn(chat.audience);
+            let users = yield util.audience.getUsersIn(chat.audience);
             let userIds = users
                 .map(user => user._id.toString())
                 .filter(userId => userId in online_clients);
