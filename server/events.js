@@ -12,8 +12,8 @@ module.exports = function(imports) {
     let requireAdmin = util.requireAdmin;
     let checkBody = util.middlechecker.checkBody;
     let types = util.middlechecker.types;
-    let hiddenGroups = util.hiddenGroups;
-    let audienceQuery = hiddenGroups.audienceQuery;
+    let audience = util.audience;
+    let audienceQuery = audience.audienceQuery;
 
     let User = imports.models.User;
     let Event = imports.models.Event;
@@ -88,7 +88,7 @@ module.exports = function(imports) {
 
         if (req.body.sendEmail) {
 
-            let users = yield hiddenGroups.getUsersIn(event.audience);
+            let users = yield audience.getUsersIn(event.audience);
             let list = util.mail.createRecepientList(users);
 
             yield util.mail.sendEmail({
@@ -145,7 +145,7 @@ module.exports = function(imports) {
         // TODO: check if it already hasTakenAttendance
 
         let newAttendees = [];
-        for (let user of (yield util.hiddenGroups.getUsersIn(event.audience))) {
+        for (let user of (yield util.audience.getUsersIn(event.audience))) {
             if (!event.attendance.some(obj => obj.user.toString == user.toString())) {
                 newAttendees.push({
                     user: user._id,
@@ -206,7 +206,7 @@ module.exports = function(imports) {
             _id: req.params.eventId,
         });
 
-        let users = yield util.hiddenGroups.getUsersIn(event.audience);
+        let users = yield util.audience.getUsersIn(event.audience);
 
         res.json(users);
 

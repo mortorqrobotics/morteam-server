@@ -34,7 +34,7 @@ module.exports = function(imports) {
     imports.modules.AWSMock = require("mock-aws-s3");
 
     imports.util = {};
-    imports.util.hiddenGroups = require("./util/hiddenGroups")(imports);
+    imports.util.audience = require("./util/audience")(imports);
 
     // User, Team, and Group stuff comes from mornetwork
     imports.models.Announcement = require("./models/Announcement")(imports);

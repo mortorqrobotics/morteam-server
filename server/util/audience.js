@@ -8,9 +8,9 @@ module.exports = function(imports) {
     let Group = imports.models.Group;
     let User = imports.models.User;
 
-    let hiddenGroups = {};
+    let audience = {};
 
-    hiddenGroups.audienceQuery = function(query) {
+    audience.audienceQuery = function(query) {
         return {
             $or: [{
                 "audience.users": query._id,
@@ -22,7 +22,7 @@ module.exports = function(imports) {
         };
     };
 
-    hiddenGroups.schemaType = {
+    audience.schemaType = {
         users: [{
             type: ObjectId,
             ref: "User",
@@ -33,7 +33,7 @@ module.exports = function(imports) {
         }],
     };
 
-    hiddenGroups.getUsersIn = Promise.coroutine(function*(audience) {
+    audience.getUsersIn = Promise.coroutine(function*(audience) {
         let groups = yield Promise.all(audience.groups.map(groupId => (
             Group.findOne({
                 _id: groupId
@@ -56,13 +56,13 @@ module.exports = function(imports) {
         });
     });
 
-    hiddenGroups.isUserInAudience = function(user, audience) {
+    audience.isUserInAudience = function(user, audience) {
         return audience.users.indexOf(user._id) !== -1
             || audience.groups.some(groupId => (
                 user.groups.indexOf(groupId) !== -1
             ));
     }
 
-    return hiddenGroups;
+    return audience;
 
 };

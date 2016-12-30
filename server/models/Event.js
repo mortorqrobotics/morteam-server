@@ -7,7 +7,7 @@ module.exports = function(imports) {
     let Schema = mongoose.Schema;
     let ObjectId = Schema.Types.ObjectId;
 
-    let hiddenGroups = imports.util.hiddenGroups;
+    let audience = imports.util.audience;
 
     let eventSchema = new Schema({
         name: {
@@ -18,7 +18,7 @@ module.exports = function(imports) {
             type: String,
             required: false,
         },
-        audience: hiddenGroups.schemaType,
+        audience: audience.schemaType,
         hasTakenAttendance: {
             type: Boolean,
             required: true,

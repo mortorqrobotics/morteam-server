@@ -7,7 +7,7 @@ module.exports = function(imports) {
     let Schema = mongoose.Schema;
     let ObjectId = Schema.Types.ObjectId;
 
-    let hiddenGroups = imports.util.hiddenGroups;
+    let audience = imports.util.audience;
 
     let folderSchema = new Schema({
         name: {
@@ -15,7 +15,7 @@ module.exports = function(imports) {
             required: true
         },
         defaultFolder: Boolean, // TODO: remove this?
-        audience: hiddenGroups.schemaType,
+        audience: audience.schemaType,
         ancestors: [{ // TODO: are we ever going to make this work?
             type: ObjectId,
             ref: "Folder",
