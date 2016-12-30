@@ -31,6 +31,10 @@ module.exports = function(imports) {
             type: ObjectId,
             ref: "Group",
         }],
+        isMultiTeam: {
+            type: Boolean,
+            default: false,
+        },
     };
 
     audience.getUsersIn = Promise.coroutine(function*(audience) {
