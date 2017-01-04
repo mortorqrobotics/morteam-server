@@ -249,14 +249,18 @@ module.exports = function(imports) {
             return res.status(400).end("This team does not exist in the morteam database.");
         }
         
+        if (req.user.team.toString() === req.params.teamId) {
+             return res.status(403).end("You cannot contact your own team");
+        }
+        
         let positionGroups = yield PositionGroup.find({
             team: req.params.teamId,
-            position:  util.positions.adminPositionQuery,
+            position: util.positions.adminPositionsQuery,
         });
-        
+    
         let reqPositionGroups = yield PositionGroup.find({
             team: req.user.team,
-            position:  util.positions.adminPositionQuery,
+            position: util.positions.adminPositionsQuery,
         });
         
         let chat = yield Chat.create({
@@ -265,15 +269,13 @@ module.exports = function(imports) {
             creator: req.user._id,
             isTwoPeople: false,
         });
-        
-        let users = User.find({
+     
+        let users = yield User.find({
             team: req.params.teamId,
-            position: util.positions.adminPositionQuery,
+            position: util.positions.adminPositionsQuery,
         });
         
-        let emails = users.map(function(user) {
-            return user.email;
-        });
+        let emails = users.map(user => user.email);
         
         yield util.mail.sendEmail({
             to: emails,
