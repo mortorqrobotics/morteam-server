@@ -20,6 +20,7 @@ module.exports = function(imports) {
     let Event = imports.models.Event;
     let Folder = imports.models.Folder;
     let AllTeamGroup = imports.models.AllTeamGroup;
+    let PositionGroup = imports.models.PositionGroup;
 
     let router = express.Router();
 
@@ -234,6 +235,54 @@ module.exports = function(imports) {
             scoutCaptain: user.scoutCaptain
         });
 
+    }));
+    
+    router.post("/teams/id/:teamId/contact", checkBody({
+        content: types.string,
+    }), requireAdmin, handler(function*(req, res) {
+        
+        let team = yield Team.findOne({
+            _id: req.params.teamId,
+        });
+        
+        if (!team) {
+            return res.status(400).end("This team does not exist in the morteam database.");
+        }
+        
+        let positionGroups = yield PositionGroup.find({
+            team: req.params.teamId,
+            position:  util.positions.adminPositionQuery,
+        });
+        
+        let reqPositionGroups = yield PositionGroup.find({
+            team: req.user.team,
+            position:  util.positions.adminPositionQuery,
+        });
+        
+        let chat = yield Chat.create({
+            name: "Team " + req.user.team.number + " and " + team.number,
+            audience: {users: [], groups: [positionGroups, reqPositionGroups], isMultiTeam: true},
+            creator: req.user._id,
+            isTwoPeople: false,
+        });
+        
+        let users = User.find({
+            team: req.params.teamId,
+            position: util.positions.adminPositionQuery,
+        });
+        
+        let emails = users.map(function(user) {
+            return user.email;
+        });
+        
+        yield util.mail.sendEmail({
+            to: emails,
+            subject: "You have been contacted by team " + req.user.team.number + " on morteam.",
+            html: req.body.content + " " + "www.morteam.com/chat?id=" + chat._id,
+        });
+        
+        res.end();
+            
     }));
 
     return router;
