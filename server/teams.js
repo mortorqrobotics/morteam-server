@@ -254,22 +254,17 @@ module.exports = function(imports) {
         }
         
         let positionGroups = yield PositionGroup.find({
-            team: req.params.teamId,
-            position: util.positions.adminPositionsQuery,
-        });
-    
-        let reqPositionGroups = yield PositionGroup.find({
-            team: req.user.team,
+            team: {$in: [req.params.teamId, req.user.team]},
             position: util.positions.adminPositionsQuery,
         });
         
         let chat = yield Chat.create({
             name: "Team " + req.user.team.number + " and " + team.number,
-            audience: {users: [], groups: [positionGroups, reqPositionGroups], isMultiTeam: true},
+            audience: {users: [], groups: positionGroups, isMultiTeam: true},
             creator: req.user._id,
             isTwoPeople: false,
         });
-     
+        
         let users = yield User.find({
             team: req.params.teamId,
             position: util.positions.adminPositionsQuery,
@@ -277,9 +272,14 @@ module.exports = function(imports) {
         
         let emails = users.map(user => user.email);
         
+        
+        let reqTeam = Team.findOne({
+            _id: req.user.id,
+        });
+        
         yield util.mail.sendEmail({
             to: emails,
-            subject: "You have been contacted by team " + req.user.team.number + " on morteam.",
+            subject: "You have been contacted by team " + reqTeam.number + " on morteam.",
             html: req.body.content + " " + "www.morteam.com/chat?id=" + chat._id,
         });
         
