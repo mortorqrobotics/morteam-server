@@ -146,7 +146,7 @@ module.exports = function(imports) {
 
         let newAttendees = [];
         for (let user of (yield util.audience.getUsersIn(event.audience))) {
-            if (!event.attendance.some(obj => obj.user.toString == user.toString())) {
+            if (!event.attendance.some(obj => obj.user.toString() == user._id.toString())) {
                 newAttendees.push({
                     user: user._id,
                     status: "absent",
