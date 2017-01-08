@@ -89,7 +89,7 @@ module.exports = function(imports) {
         if (req.body.sendEmail) {
 
             let users = yield audience.getUsersIn(event.audience);
-            let list = util.mail.createRecepientList(users);
+            let list = util.mail.createRecipientList(users);
 
             yield util.mail.sendEmail({
                 to: list,
