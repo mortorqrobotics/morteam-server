@@ -60,12 +60,15 @@ module.exports = function(imports) {
             chat.audience.users = [req.user, otherUser];
 
             res.json(chat);
+            yield sio.createChat(chat);
 
         } else {
             // group chat
 
             if (req.body.audience.users.indexOf(req.user._id) === -1
-                || !req.user.groups.some(groupId => req.body.audience.groups.indexOf(groupId) !== -1)
+                || !req.user.groups.some(groupId => (
+                    req.body.audience.groups.indexOf(groupId.toString()) !== -1
+                ))
             ) {
                 req.body.audience.users.push(req.user._id);
             }
@@ -82,10 +85,10 @@ module.exports = function(imports) {
                 isTwoPeople: false,
             });
 
-            chat.audience.users = yield User.find({ _id: { $in: req.body.users } });
-            chat.audience.groups = yield Group.find({ _id: { $in: req.body.groups } });
+            chat = yield Chat.populate(chat, "audience.users audience.groups");
 
             res.json(chat);
+            yield sio.createChat(chat);
         }
 
     }));
@@ -222,11 +225,11 @@ module.exports = function(imports) {
             _id: req.params.chatId,
         });
         if (isUserInAudience(req.user, chat.audience)
-            && (chat.isTwoPeople  
-            || util.positions.isUserAdmin(req.user) 
+            && (chat.isTwoPeople
+            || util.positions.isUserAdmin(req.user)
             || req.user._id.toString() === chat.creator.toString())
         ) {
-            yield chat.remove(); 
+            yield chat.remove();
             res.end();
         } else {
             res.status(403).end("You do not have permission");

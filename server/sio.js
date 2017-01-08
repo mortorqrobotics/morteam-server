@@ -15,7 +15,7 @@ module.exports = function(imports) {
     let io = imports.socketio;
 
     // { [userId]: [ { sockets: [Socket] } ] }
-    let online_clients = {};
+    let onlineClients = {};
 
     let sio = {};
 
@@ -26,7 +26,7 @@ module.exports = function(imports) {
         if (sess) {
             try {
 
-                if (!(sess._id in online_clients)) { // later
+                if (!(sess._id in onlineClients)) { // later
 
                     let chats = yield Chat.find(util.audience.audienceQuery(sess), {
                         _id: 1,
@@ -34,21 +34,21 @@ module.exports = function(imports) {
 
                     let chatIds = chats.map(chat => chat._id.toString());
 
-                    for (let user_id in online_clients) {
-                        if (online_clients[user_id].chats.hasAnythingFrom(chatIds)) {
-                            for (let sock of online_clients[user_id].sockets) {
+                    for (let user_id in onlineClients) {
+                        if (onlineClients[user_id].chats.hasAnythingFrom(chatIds)) {
+                            for (let sock of onlineClients[user_id].sockets) {
                                 io.to(sock).emit("joined", {
                                     _id: sess._id
                                 });
                             }
                         }
                     }
-                    online_clients[sess._id] = {
+                    onlineClients[sess._id] = {
                         chats: chatIds,
                         sockets: []
                     };
                 }
-                online_clients[sess._id].sockets.push(socket.id);
+                onlineClients[sess._id].sockets.push(socket.id);
 
             } catch (err) {
                 console.error(err);
@@ -56,25 +56,25 @@ module.exports = function(imports) {
         }
 
         socket.on("disconnect", function() {
-            if (!sess || !(sess._id in online_clients)) {
-                // TODO: sometimes online_clients[sess._id] doesnt exist
+            if (!sess || !(sess._id in onlineClients)) {
+                // TODO: sometimes onlineClients[sess._id] doesnt exist
                 // (maybe because it takes time for the mongo query to execute
-                // and add user chats to the online_clients object at the sess._id index)
+                // and add user chats to the onlineClients object at the sess._id index)
                 return;
             }
 
-            let index = online_clients[sess._id].sockets.indexOf(socket.id);
+            let index = onlineClients[sess._id].sockets.indexOf(socket.id);
             if (index != -1) {
-                online_clients[sess._id].sockets.splice(index, 1); // remove the socket from the list of sockets for the user
+                onlineClients[sess._id].sockets.splice(index, 1); // remove the socket from the list of sockets for the user
 
-                if (online_clients[sess._id].sockets.length == 0) { // if no clients remain for the user
+                if (onlineClients[sess._id].sockets.length == 0) { // if no clients remain for the user
 
-                    let chatIds = online_clients[sess._id].chats;
-                    delete online_clients[sess._id]; // remove from online clients
+                    let chatIds = onlineClients[sess._id].chats;
+                    delete onlineClients[sess._id]; // remove from online clients
 
-                    for (let user_id in online_clients) { // notify other clients that they went offline
-                        if (online_clients[user_id].chats.hasAnythingFrom(chatIds)) { // if they have any chats in common
-                            for (let sock of online_clients[user_id].sockets) {
+                    for (let user_id in onlineClients) { // notify other clients that they went offline
+                        if (onlineClients[user_id].chats.hasAnythingFrom(chatIds)) { // if they have any chats in common
+                            for (let sock of onlineClients[user_id].sockets) {
                                 io.to(sock).emit("left", {
                                     _id: sess._id
                                 });
@@ -128,9 +128,9 @@ module.exports = function(imports) {
             let users = yield util.audience.getUsersIn(chat.audience);
             let userIds = users
                 .map(user => user._id.toString())
-                .filter(userId => userId in online_clients);
+                .filter(userId => userId in onlineClients);
             for (let userId of userIds) {
-                for (let sock of online_clients[userId].sockets) {
+                for (let sock of onlineClients[userId].sockets) {
                     if (sock !== socket.id) {
                         if (chat.isTwoPeople) {
                             io.to(sock).emit("message", {
@@ -159,15 +159,15 @@ module.exports = function(imports) {
         // TODO: if a user has multiple clients and sends a message, display sent message on all clients
 
         socket.on("get clients", function() {
-            socket.emit("get clients", Object.keys(online_clients));
+            socket.emit("get clients", Object.keys(onlineClients));
         });
 
         // TODO: send new chats over socket.io
 
         socket.on("start typing", function(data) {
-            for (let user_id of Object.keys(online_clients)) {
-                if (~online_clients[user_id].chats.indexOf(data.chatId) && user_id != sess._id) {
-                    for (let sock of online_clients[user_id].sockets) {
+            for (let user_id of Object.keys(onlineClients)) {
+                if (~onlineClients[user_id].chats.indexOf(data.chatId) && user_id != sess._id) {
+                    for (let sock of onlineClients[user_id].sockets) {
                         io.to(sock).emit("start typing", data);
                     }
                 }
@@ -175,9 +175,11 @@ module.exports = function(imports) {
         });
 
         socket.on("stop typing", function(data) {
-            for (let user_id of Object.keys(online_clients)) {
-                if (online_clients[user_id].chats.indexOf(data.chatId) != -1 && user_id != sess._id) {
-                    for (let sock of online_clients[user_id].sockets) {
+            for (let userId of Object.keys(onlineClients)) {
+                if (onlineClients[userId].chats.indexOf(data.chatId) != -1
+                    && userId != sess._id
+                ) {
+                    for (let sock of onlineClients[userId].sockets) {
                         io.to(sock).emit("stop typing", data);
                     }
                 }
@@ -185,6 +187,22 @@ module.exports = function(imports) {
         });
 
     }));
+
+    sio.createChat = Promise.coroutine(function*(chat) {
+        let users = yield util.audience.getUsersIn({
+            users: chat.audience.users.map(u => u._id),
+            groups: chat.audience.groups.map(g => g._id),
+        });
+        for (let user of users) {
+            if (user._id in onlineClients) {
+                for (let sock of onlineClients[user._id].sockets) {
+                    io.to(sock).emit("newChat", {
+                        chat: chat,
+                    });
+                }
+            }
+        }
+    });
 
     return sio;
 };

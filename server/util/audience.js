@@ -36,16 +36,16 @@ module.exports = function(imports) {
     audience.getUsersIn = Promise.coroutine(function*(audience) {
         let groups = yield Promise.all(audience.groups.map(groupId => (
             Group.findOne({
-                _id: groupId
+                _id: groupId,
             })
         )));
         return yield User.find({
-            $or: [{
+            $or: [
+                {
                     _id: {
                         $in: audience.users,
                     },
-                },
-                {
+                }, {
                     groups: {
                         $elemMatch: {
                             $in: audience.groups,
