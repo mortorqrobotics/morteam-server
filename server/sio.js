@@ -204,5 +204,19 @@ module.exports = function(imports) {
         }
     });
 
+    sio.deleteChat = Promise.coroutine(function*(chat) {
+        console.log(chat, util)
+        let users = yield util.audience.getUsersIn(chat.audience);
+        for (let user of users) {
+            if (user._id in onlineClients) {
+                for (let sock of onlineClients[user._id].sockets) {
+                    io.to(sock).emit("deleteChat", {
+                        chatId: chat._id,
+                    });
+                }
+            }
+        }
+    });
+
     return sio;
 };

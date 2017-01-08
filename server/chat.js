@@ -59,8 +59,8 @@ module.exports = function(imports) {
 
             chat.audience.users = [req.user, otherUser];
 
-            res.json(chat);
             yield sio.createChat(chat);
+            res.json(chat);
 
         } else {
             // group chat
@@ -87,8 +87,8 @@ module.exports = function(imports) {
 
             chat = yield Chat.populate(chat, "audience.users audience.groups");
 
-            res.json(chat);
             yield sio.createChat(chat);
+            res.json(chat);
         }
 
     }));
@@ -221,19 +221,27 @@ module.exports = function(imports) {
     }));
 
     router.delete("/chats/id/:chatId", checkBody(), requireLogin , handler(function*(req, res) {
+
         let chat = yield Chat.findOne({
             _id: req.params.chatId,
         });
-        if (isUserInAudience(req.user, chat.audience)
-            && (chat.isTwoPeople
+
+        if (!chat) {
+            return res.status(400).end("This chat does not exist");
+        }
+
+        if (!isUserInAudience(req.user, chat.audience)
+            && !(chat.isTwoPeople
             || util.positions.isUserAdmin(req.user)
             || req.user._id.toString() === chat.creator.toString())
         ) {
-            yield chat.remove();
-            res.end();
-        } else {
-            res.status(403).end("You do not have permission");
+            return res.status(403).end("You do not have permission");
         }
+
+        yield chat.remove();
+        yield sio.deleteChat(chat);
+        res.end();
+
     }));
 
     return router;
