@@ -19,6 +19,18 @@ module.exports = function(imports) {
 
     let sio = {};
 
+    let emitToAudience = Promise.coroutine(function*(audience, name, data, except) {
+        except = except || "";
+        let users = yield util.audience.getUsersIn(audience);
+        for (let user of users) {
+            if (user._id in onlineClients && user._id != except.toString()) {
+                for (let sock of onlineClients[user._id].sockets) {
+                    io.to(sock).emit(name, data);
+                }
+            }
+        }
+    });
+
     io.on("connection", Promise.coroutine(function*(socket) {
         let sess = socket.request.session.userId && (yield User.findOne({
             _id: socket.request.session.userId
@@ -125,30 +137,22 @@ module.exports = function(imports) {
                 isTwoPeople: 1,
                 name: 1,
             });
-            let users = yield util.audience.getUsersIn(chat.audience);
-            let userIds = users
-                .map(user => user._id.toString())
-                .filter(userId => userId in onlineClients);
-            for (let userId of userIds) {
-                for (let sock of onlineClients[userId].sockets) {
-                    if (sock !== socket.id) {
-                        if (chat.isTwoPeople) {
-                            io.to(sock).emit("message", {
-                                chatId: chatId,
-                                message: message,
-                                type: "pair",
-                            });
-                        } else {
-                            io.to(sock).emit("message", {
-                                chatId: chatId,
-                                message: message,
-                                type: "group",
-                                name: chat.name,
-                            });
-                        }
-                    }
-                }
+
+            if (chat.isTwoPeople) {
+                emitToAudience(chat.audience, "message", {
+                    chatId: chatId,
+                    message: message,
+                    type: "pair",
+                }, sess._id);
+            } else {
+                emitToAudience(chat.audience, "message", {
+                    chatId: chatId,
+                    message: message,
+                    type: "group",
+                    name: chat.name,
+                }, sess._id);
             }
+
             socket.emit("message-sent", {
                 chatId: chatId,
                 content: content,
@@ -189,34 +193,27 @@ module.exports = function(imports) {
     }));
 
     sio.createChat = Promise.coroutine(function*(chat) {
-        let users = yield util.audience.getUsersIn({
+        return yield emitToAudience({
             users: chat.audience.users.map(u => u._id),
             groups: chat.audience.groups.map(g => g._id),
+        }, "addChat", {
+            chat: chat,
         });
-        for (let user of users) {
-            if (user._id in onlineClients) {
-                for (let sock of onlineClients[user._id].sockets) {
-                    io.to(sock).emit("newChat", {
-                        chat: chat,
-                    });
-                }
-            }
-        }
     });
 
     sio.deleteChat = Promise.coroutine(function*(chat) {
-        console.log(chat, util)
-        let users = yield util.audience.getUsersIn(chat.audience);
-        for (let user of users) {
-            if (user._id in onlineClients) {
-                for (let sock of onlineClients[user._id].sockets) {
-                    io.to(sock).emit("deleteChat", {
-                        chatId: chat._id,
-                    });
-                }
-            }
-        }
+        return yield emitToAudience(chat.audience, "deleteChat", {
+            chatId: chat._id,
+        });
+    });
+
+    sio.renameChat = Promise.coroutine(function*(chat) {
+        return yield emitToAudience(chat.audience, "renameChat", {
+            chatId: chat._id,
+            name: chat.name,
+        });
     });
 
     return sio;
+
 };

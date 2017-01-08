@@ -205,17 +205,22 @@ module.exports = function(imports) {
             return res.status(400).end("Chat name has to be 19 characters or fewer");
         }
 
-        // TODO: check if the user is a member of the chat
-
-        yield Chat.update({
+        let chat = yield Chat.findOne({
             $and: [
                 { _id: req.params.chatId },
                 audienceQuery(req.user),
             ],
-        }, {
-            name: req.body.newName,
         });
 
+        if (!chat) {
+            return res.status(404).end("This chat does not exist");
+        }
+
+        chat.name = req.body.newName;
+
+        yield chat.save();
+
+        yield sio.renameChat(chat);
         res.end();
 
     }));
@@ -227,7 +232,7 @@ module.exports = function(imports) {
         });
 
         if (!chat) {
-            return res.status(400).end("This chat does not exist");
+            return res.status(404).end("This chat does not exist");
         }
 
         if (!isUserInAudience(req.user, chat.audience)
