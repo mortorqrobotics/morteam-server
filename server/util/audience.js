@@ -23,7 +23,7 @@ module.exports = function(imports) {
     };
 
     audience.schemaType = {
-        type: {
+        type: new imports.modules.mongoose.Schema({
             users: [{
                 type: ObjectId,
                 ref: "User",
@@ -36,7 +36,7 @@ module.exports = function(imports) {
                 type: Boolean,
                 default: false,
             },
-        },
+        }),
         validate: {
             validator: (value) => !value.isMultiTeam || value.users.length === 0,
             message: "Users must be empty in a multiteam audience",
