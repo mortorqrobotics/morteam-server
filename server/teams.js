@@ -253,16 +253,20 @@ module.exports = function(imports) {
              return res.status(403).end("You cannot contact your own team");
         }
         
+        let reqTeam = yield Team.findOne({
+            _id: req.user.team,
+        });
+        
         let positionGroups = yield PositionGroup.find({
             team: {$in: [req.params.teamId, req.user.team]},
             position: util.positions.adminPositionsQuery,
         });
         
         let chat = yield Chat.create({
-            name: "Team " + req.user.team.number + " and " + team.number,
+            name: "Teams " + reqTeam.number + " and " + team.number,
             audience: {users: [], groups: positionGroups, isMultiTeam: true},
             creator: req.user._id,
-            isTwoPeople: false,
+            isTwoPeople: false, 
         });
         
         let users = yield User.find({
@@ -271,11 +275,6 @@ module.exports = function(imports) {
         });
         
         let emails = users.map(user => user.email);
-        
-        
-        let reqTeam = Team.findOne({
-            _id: req.user.id,
-        });
         
         yield util.mail.sendEmail({
             to: emails,
