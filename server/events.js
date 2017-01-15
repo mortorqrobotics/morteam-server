@@ -21,8 +21,10 @@ module.exports = function(imports) {
 
     let router = express.Router();
 
-    router.get("/events/startYear/:startYear/startMonth/:startMonth/endYear/:endYear/endMonth/:endMonth", checkBody(), requireLogin, handler(function*(req, res) {
+    // no need to take attendance for mentors and alumni
+    const attendancePositions = ["member", "leader"];
 
+    router.get("/events/startYear/:startYear/startMonth/:startMonth/endYear/:endYear/endMonth/:endMonth", checkBody(), requireLogin, handler(function*(req, res) {
 
         let startYear = req.params.startYear;
         let startMonth = req.params.startMonth;
@@ -144,8 +146,19 @@ module.exports = function(imports) {
 
         // TODO: check if it already hasTakenAttendance
 
+        let users = yield User.find({
+            $and: [
+                util.audience.inAudienceQuery(event.audience),
+                {
+                    position: {
+                        $in: attendancePositions,
+                    },
+                },
+            ],
+        });
+
         let newAttendees = [];
-        for (let user of (yield util.audience.getUsersIn(event.audience))) {
+        for (let user of users) {
             if (!event.attendance.some(obj => obj.user.toString() == user._id.toString())) {
                 newAttendees.push({
                     user: user._id,
@@ -206,7 +219,16 @@ module.exports = function(imports) {
             _id: req.params.eventId,
         });
 
-        let users = yield util.audience.getUsersIn(event.audience);
+        let users = yield User.find({
+            $and: [
+                util.audience.inAudienceQuery(event.audience),
+                {
+                    position: {
+                        $in: attendancePositions,
+                    },
+                },
+            ],
+        });
 
         res.json(users);
 

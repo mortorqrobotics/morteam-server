@@ -33,13 +33,8 @@ module.exports = function(imports) {
         }],
     };
 
-    audience.getUsersIn = Promise.coroutine(function*(audience) {
-        let groups = yield Promise.all(audience.groups.map(groupId => (
-            Group.findOne({
-                _id: groupId,
-            })
-        )));
-        return yield User.find({
+    audience.inAudienceQuery = function(audience) {
+        return {
             $or: [
                 {
                     _id: {
@@ -53,14 +48,18 @@ module.exports = function(imports) {
                     },
                 },
             ]
-        });
+        };
+    };
+
+    audience.getUsersIn = Promise.coroutine(function*(audience) {
+        return yield User.find(audience.inAudienceQuery(audience));
     });
 
     audience.isUserInAudience = function(user, audience) {
         return audience.users.indexOf(user._id) !== -1
-            || audience.groups.some(groupId => (
+            || audience.groups.some(groupId =>
                 user.groups.indexOf(groupId) !== -1
-            ));
+            );
     }
 
     return audience;
