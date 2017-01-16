@@ -51,8 +51,8 @@ module.exports = function(imports) {
         };
     };
 
-    audience.getUsersIn = Promise.coroutine(function*(audience) {
-        return yield User.find(audience.inAudienceQuery(audience));
+    audience.getUsersIn = Promise.coroutine(function*(au) {
+        return yield User.find(audience.inAudienceQuery(au));
     });
 
     audience.isUserInAudience = function(user, audience) {
