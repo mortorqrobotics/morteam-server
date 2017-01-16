@@ -75,17 +75,7 @@ module.exports = function(imports) {
         });
     }));
 
-    router.get("/js/:page", handler(function*(req, res) {
-        let page = req.params.page;
-        let file = webDir + "/build/" + page + ".js";
-        // TODO: use the package fs-promise
-        fs.exists(file, function(exists) {
-            if (!exists) {
-                return res.end("fail"); // AHHHH
-            }
-            fs.createReadStream(file).pipe(res);
-        });
-    }));
+    router.use("/js", express.static(webDir + "/build"));
 
     return router;
 
