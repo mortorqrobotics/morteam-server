@@ -25,25 +25,27 @@ module.exports = function(imports) {
         audience: types.audience,
     }), requireLogin, handler(function*(req, res) {
 
-        if (req.body.audience.users.indexOf(req.user._id.toString()) === -1) {
-            req.body.audience.users.push(req.user._id);
+        let audience = req.body.audience;
+
+        if (!util.audience.isUserInAudience(req.user, audience)) {
+            audience.users.push(req.user._id);
         }
 
         let arr = yield Promise.all([
             Announcement.create({
                 author: req.user._id,
                 content: req.body.content,
-                audience: req.body.audience,
+                audience: audience,
                 timestamp: new Date(),
             }),
             User.find({
                 _id: {
-                    $in: req.body.audience.users,
+                    $in: audience.users,
                 },
             }),
             Group.find({
                 _id: {
-                    $in: req.body.audience.groups,
+                    $in: audience.groups,
                 },
             }),
         ]);
