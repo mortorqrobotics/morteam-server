@@ -120,6 +120,17 @@ module.exports = function(imports) {
         res.end(String(team.number));
 
     }));
+    
+    router.get("/teams/number/:teamNum/", checkBody(), requireLogin, handler(function*(req, res) {
+        let team = yield Team.findOne({
+            number: req.params.teamNum,
+        });
+        if(team){
+            res.json(team);
+        } else {
+            return res.status(400).end("This team does not exist");
+        }
+    }));
 
     router.get("/teams/number/:teamNum/exists", checkBody(), requireLogin, handler(function*(req, res) {
 
