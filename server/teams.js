@@ -120,7 +120,7 @@ module.exports = function(imports) {
         res.end(String(team.number));
 
     }));
-    
+
     router.get("/teams/number/:teamNum/", checkBody(), requireLogin, handler(function*(req, res) {
         let team = yield Team.findOne({
             number: req.params.teamNum,
@@ -216,9 +216,9 @@ module.exports = function(imports) {
         res.end();
 
     }));
-	
+
 	router.get("/teams/number/:number/info", requireLogin, handler(function* (req, res) {
-		
+
 		let result = yield request({
 			uri: "http://www.thebluealliance.com/api/v2/team/frc" + req.params.number,
 			headers: { "X-TBA-App-Id": "frc1515:MorMap:1" },
@@ -228,7 +228,7 @@ module.exports = function(imports) {
 		} catch (err) {
 			res.status(500).end("failed parsing TBA json");
 		}
-		
+
 	}));
 
 
@@ -247,54 +247,55 @@ module.exports = function(imports) {
         });
 
     }));
-    
+
     router.post("/teams/id/:teamId/contact", checkBody({
         content: types.string,
     }), requireAdmin, handler(function*(req, res) {
-        
+
         let team = yield Team.findOne({
             _id: req.params.teamId,
         });
-        
+
         if (!team) {
             return res.status(400).end("This team does not exist in the morteam database.");
         }
-        
+
         if (req.user.team.toString() === req.params.teamId) {
              return res.status(403).end("You cannot contact your own team");
         }
-        
+
         let reqTeam = yield Team.findOne({
             _id: req.user.team,
         });
-        
+
         let positionGroups = yield PositionGroup.find({
             team: {$in: [req.params.teamId, req.user.team]},
             position: util.positions.adminPositionsQuery,
         });
-        
+
         let chat = yield Chat.create({
             name: "Teams " + reqTeam.number + " and " + team.number,
             audience: {users: [], groups: positionGroups, isMultiTeam: true},
             creator: req.user._id,
-            isTwoPeople: false, 
+            isTwoPeople: false,
+            messages: [{author: req.user, content: req.body.content, timestamp: new Date()}]
         });
-        
+
         let users = yield User.find({
             team: req.params.teamId,
             position: util.positions.adminPositionsQuery,
         });
-        
+
         let emails = users.map(user => user.email);
-        
+
         yield util.mail.sendEmail({
             to: emails,
             subject: "You have been contacted by team " + reqTeam.number + " on morteam.",
             html: req.body.content + " " + "www.morteam.com/chat?id=" + chat._id,
         });
-        
+
         res.end();
-            
+
     }));
 
     return router;
