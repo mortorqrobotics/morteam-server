@@ -79,15 +79,16 @@ module.exports = function(imports) {
             creator: req.user._id,
             hasTakenAttendance: false,
             attendance: [],
+            wasEmailSent: req.body.sendEmail,
         };
 
         if (req.body.description.length > 0) {
             event.description = req.body.description;
         }
 
-        if (req.body.sendEmail) {
+        event = yield Event.create(event);
 
-            event.wasEmailSent = true;
+        if (req.body.sendEmail) {
             let users = yield audience.getUsersIn(event.audience);
             let list = util.mail.createRecipientList(users);
 
@@ -98,8 +99,6 @@ module.exports = function(imports) {
             });
 
         }
-
-        event = yield Event.create(event);
 
         res.json(event);
 

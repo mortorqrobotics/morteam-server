@@ -41,10 +41,7 @@ module.exports = function(imports) {
             type: ObjectId,
             ref: "User",
         },
-        wasEmailSent: {
-            type: Boolean,
-            default: false,
-        },
+        wasEmailSent: Boolean,
         created_at: Date,
         updated_at: Date,
     });
