@@ -109,8 +109,14 @@ module.exports = function(imports) {
         let event = yield Event.findOne({
             _id: req.params.eventId,
         });
-
-        if (event.wasEmailSent) {
+        const date = Date.now();
+        if (event.wasEmailSent
+          && event.date > date
+          || (event.date.getFullYear() === date.getFullYear()
+              && event.date.getMonth() === date.getMonth()
+              && event.date.getDay() === date.getDay()
+          )
+        ) {
           let users = yield audience.getUsersIn(event.audience);
           let list = util.mail.createRecipientList(users);
 
