@@ -85,11 +85,9 @@ module.exports = function(imports) {
             event.description = req.body.description;
         }
 
-        event = yield Event.create(event);
-
-
         if (req.body.sendEmail) {
 
+            event.wasEmailSent = true;
             let users = yield audience.getUsersIn(event.audience);
             let list = util.mail.createRecipientList(users);
 
@@ -101,15 +99,31 @@ module.exports = function(imports) {
 
         }
 
+        event = yield Event.create(event);
+
         res.json(event);
 
     }));
 
     router.delete("/events/id/:eventId", checkBody(), requireAdmin, handler(function*(req, res) {
 
-        yield Event.findOneAndRemove({
+        let event = yield Event.findOne({
             _id: req.params.eventId,
         });
+
+        if (event.wasEmailSent) {
+          let users = yield audience.getUsersIn(event.audience);
+          let list = util.mail.createRecipientList(users);
+
+          yield util.mail.sendEmail({
+              to: list,
+              subject: "Event " + util.readableDate(event.date) + " - " + event.name + "cancelled",
+              html: req.user.firstname + " " + req.user.lastname + " has cancelled the event named "
+                  + event.name + " that took place on " + util.readableDate(event.date) + "."
+          });
+        }
+
+        yield event.remove();
 
         res.end();
 
