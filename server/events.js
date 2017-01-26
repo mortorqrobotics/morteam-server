@@ -113,7 +113,7 @@ module.exports = function(imports) {
         if (event.wasEmailSent
           && (event.date > date
           || (event.date.getFullYear() === date.getFullYear()
-              && event.date.getMonth() === date.getMonth()  
+              && event.date.getMonth() === date.getMonth()
               && event.date.getDay() === date.getDay()
           ))
         ) {
