@@ -111,11 +111,11 @@ module.exports = function(imports) {
         });
         const date = Date.now();
         if (event.wasEmailSent
-          && event.date > date
-          || ((event.date.getFullYear() === date.getFullYear())
-              && (event.date.getMonth() === date.getMonth())
-              && (event.date.getDay() === date.getDay())
-          )
+          && (event.date > date
+          || (event.date.getFullYear() === date.getFullYear()
+              && event.date.getMonth() === date.getMonth()  
+              && event.date.getDay() === date.getDay()
+          ))
         ) {
           let users = yield audience.getUsersIn(event.audience);
           let list = util.mail.createRecipientList(users);
