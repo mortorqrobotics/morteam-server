@@ -223,10 +223,11 @@ module.exports = function(imports) {
 			uri: "http://www.thebluealliance.com/api/v2/team/frc" + req.params.number,
 			headers: { "X-TBA-App-Id": "frc1515:MorMap:1" },
 		});
+
 		try {
 			res.json(JSON.parse(result));
 		} catch (err) {
-			res.status(500).end("failed parsing TBA json");
+			res.status(404).end("The specified team does not exist");
 		}
 
 	}));
