@@ -27,9 +27,7 @@ module.exports = function(imports) {
 
         let audience = req.body.audience;
 
-        if (!util.audience.isUserInAudience(req.user, audience)) {
-            audience.users.push(req.user._id);
-        }
+        util.audience.ensureIncludes(audience, req.user);
 
         let arr = yield Promise.all([
             Announcement.create({

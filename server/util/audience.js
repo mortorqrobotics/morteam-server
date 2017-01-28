@@ -60,7 +60,19 @@ module.exports = function(imports) {
             || audience.groups.some(groupId =>
                 user.groups.indexOf(groupId) !== -1
             );
-    }
+    };
+
+    audience.ensureIncludes = function(audience, user) {
+        if (audience.users.some(userId =>
+            userId.toString() === user._id.toString()) === -1
+            || !user.groups.some(groupId =>
+                audience.groups.some(gid =>
+                    gid.toString() === groupId.toString()) !== -1)
+        ) {
+            audience.users.push(user._id);
+        }
+        return audience;
+    };
 
     return audience;
 

@@ -72,6 +72,8 @@ module.exports = function(imports) {
         description: types.string,
     }), requireAdmin, handler(function*(req, res) {
 
+        util.audience.ensureIncludes(req.body.audience, req.user);
+
         let event = {
             name: req.body.name,
             date: new Date(req.body.date),
