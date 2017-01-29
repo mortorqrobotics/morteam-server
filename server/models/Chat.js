@@ -23,7 +23,7 @@ module.exports = function(imports) {
             required: false,
         },
         audience: audience.schemaType,
-        readMessages: [{
+        unreadMessages: [{
             userId: String,
             number: Number,
         }],
@@ -52,11 +52,8 @@ module.exports = function(imports) {
     });
 
     chatSchema.pre("save", coroutine(function*(next) {
-        console.log("test")
         let users = yield audience.getUsersIn(this.audience);
-        console.log(users);
-        this.readMessages = users.map(user => ({ userId: user._id, number: 0 }));
-        console.log(this.readMessages);
+        this.unreadMessages = users.map(user => ({ userId: user._id, number: 0 }));
         next();
     }));
 
