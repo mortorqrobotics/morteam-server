@@ -13,11 +13,16 @@ module.exports = function(imports) {
     let configPath = require("path").join(__dirname, "config.json");
     if (fs.existsSync(configPath)) {
         imports.config = require(configPath);
+        for (let key in imports.defaultConfig) {
+            if (!(key in imports.config)) {
+                imports.config[key] = imports.defaultConfig[key];
+            }
+        }
     } else {
         imports.config = imports.defaultConfig;
-        fs.writeFileSync(configPath, JSON.stringify(imports.config, null, "\t"));
         console.log("Generated default config.json");
     }
+    fs.writeFileSync(configPath, JSON.stringify(imports.config, null, "\t"));
 
     imports.webDir = require("path").join(__dirname, "../../morteam-web");
     imports.publicDir = imports.webDir + "/public";
