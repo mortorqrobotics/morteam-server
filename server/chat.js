@@ -132,9 +132,17 @@ module.exports = function(imports) {
             .populate("messages.author")
             .exec();
 
-        let index = chat.unreadMessages.findIndex(elem => elem.userId === req.user._id.toString());
-        chat.unreadMessages[index].number = 0;
-        yield chat.save();
+        yield Chat.update({
+            $and: [{
+                _id: req.params.chatId
+            }, {
+                "unreadMessages.userId": req.user._id
+            },
+                audienceQuery(req.user),
+            ],
+        }, {
+            $set: { "unreadMessages.$.number": 0 }
+        })
 
         res.json(chat.messages);
 

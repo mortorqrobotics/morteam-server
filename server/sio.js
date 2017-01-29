@@ -136,7 +136,23 @@ module.exports = function(imports) {
                 audience: 1,
                 isTwoPeople: 1,
                 name: 1,
+                unreadMessages: 1,
             });
+
+            for (let elem of chat.unreadMessages) {
+                if (elem.userId !== sess._id.toString()) {
+                    yield Chat.update({
+                        $and: [
+                            { _id: chatId },
+                            { "unreadMessages.userId": elem.userId },
+                            util.audience.audienceQuery(sess),
+                        ],
+                        $isolated: 1,
+                    }, {
+                        $inc: { "unreadMessages.$.number": 1 },
+                    })
+                }
+            }
 
             if (chat.isTwoPeople) {
                 emitToAudience(chat.audience, "message", {
