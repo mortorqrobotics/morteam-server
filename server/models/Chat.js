@@ -3,6 +3,8 @@
 module.exports = function(imports) {
 
     let mongoose = imports.modules.mongoose;
+    let Promise = imports.modules.Promise;
+    let coroutine = imports.models.coroutine;
 
     let Schema = mongoose.Schema;
     let ObjectId = Schema.Types.ObjectId;
@@ -18,9 +20,13 @@ module.exports = function(imports) {
         creator: {
             type: ObjectId,
             ref: "User",
-            required: false, 
+            required: false,
         },
         audience: audience.schemaType,
+        readMessages: [{
+            userId: String,
+            number: Number,
+        }],
         messages: {
             type: [{
                 author: {
@@ -44,6 +50,15 @@ module.exports = function(imports) {
         }
         next();
     });
+
+    chatSchema.pre("save", coroutine(function*(next) {
+        console.log("test")
+        let users = yield audience.getUsersIn(this.audience);
+        console.log(users);
+        this.readMessages = users.map(user => ({ userId: user._id, number: 0 }));
+        console.log(this.readMessages);
+        next();
+    }));
 
     let Chat = mongoose.model("Chat", chatSchema);
 

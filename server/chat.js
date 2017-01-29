@@ -132,6 +132,12 @@ module.exports = function(imports) {
             .populate("messages.author")
             .exec();
 
+        let index = chat.readMessages.findIndex(elem => elem.userId.toString() === req.user._id.toString());
+        console.log(index)
+        console.log(chat.readMessages[index])
+        chat.readMessages[index].number = chat.messages.length;
+        yield chat.update();
+
         res.json(chat.messages);
 
     }));
@@ -225,7 +231,7 @@ module.exports = function(imports) {
 
     }));
 
-    router.delete("/chats/id/:chatId", checkBody(), requireLogin , handler(function*(req, res) {
+    router.delete("/chats/id/:chatId", checkBody(), requireLogin, handler(function*(req, res) {
 
         let chat = yield Chat.findOne({
             _id: req.params.chatId,
@@ -247,6 +253,18 @@ module.exports = function(imports) {
         yield sio.deleteChat(chat);
         res.end();
 
+    }));
+
+    router.get("/chats/id/:chatId/unread", checkBody(), requireLogin, handler(function*(req, res) {
+
+        let chat = yield Chat.findOne({
+            _id: req.params.chatId,
+        });
+
+
+        let index = chat.readMessages.findIndex(elem => elem.user.toString() === req.user._id);
+
+       res.end(chat.messages.length - chat.readMessages[index].number);
     }));
 
     return router;
