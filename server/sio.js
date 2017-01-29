@@ -176,6 +176,19 @@ module.exports = function(imports) {
 
         }));
 
+        socket.on("read message", util.handler(function*(data) {
+            let chatId = data.chatId;
+            yield Chat.update({
+                $and: [
+                    { _id: chatId },
+                    { "unreadMessages.userId": sess._id },
+                    util.audience.audienceQuery(sess),
+                ],
+            }, {
+                $set: { "unreadMessages.$.number": 0 },
+            })
+        }))
+
         // TODO: if a user has multiple clients and sends a message, display sent message on all clients
 
         socket.on("get clients", function() {
