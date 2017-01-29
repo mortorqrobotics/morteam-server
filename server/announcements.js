@@ -3,7 +3,6 @@
 module.exports = function(imports) {
 
     let express = imports.modules.express;
-    let Autolinker = imports.modules.autolinker;
     let ObjectId = imports.modules.mongoose.Types.ObjectId;
     let Promise = imports.modules.Promise;
     let util = imports.util;
@@ -30,10 +29,12 @@ module.exports = function(imports) {
 
         util.audience.ensureIncludes(audience, req.user);
 
+        let content = util.normalizeDisplayedText(req.body.content);
+
         let arr = yield Promise.all([
             Announcement.create({
                 author: req.user._id,
-                content: req.body.content,
+                content: content,
                 audience: audience,
                 timestamp: new Date(),
             }),
