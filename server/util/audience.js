@@ -63,11 +63,10 @@ module.exports = function(imports) {
     };
 
     audience.ensureIncludes = function(audience, user) {
-        if (audience.users.some(userId =>
-            userId.toString() === user._id.toString()) === -1
-            || !user.groups.some(groupId =>
+        if (!audience.users.some(userId => userId.toString() === user._id.toString())
+            && !user.groups.some(groupId =>
                 audience.groups.some(gid =>
-                    gid.toString() === groupId.toString()) !== -1)
+                    gid.toString() === groupId.toString()))
         ) {
             audience.users.push(user._id);
         }

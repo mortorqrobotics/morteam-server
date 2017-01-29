@@ -25,6 +25,7 @@ module.exports = function(imports) {
         rememberMe: types.boolean,
         username: types.string,
         password: types.string,
+        mobileDeviceToken: types.maybe(types.string),
     }), handler(function*(req, res) {
         // TODO: maybe move login and logout to separate file?
 
@@ -50,6 +51,13 @@ module.exports = function(imports) {
             return res.status(400).end("Invalid login credentials");
         }
 
+        if (req.body.mobileDeviceToken
+            && user.mobileDeviceTokens.indexOf(req.body.mobileDeviceToken) === -1
+        ) {
+            user.mobileDeviceTokens.push(req.body.mobileDeviceToken);
+            yield user.save();
+        }
+
         delete user.password;
 
         // store user info in cookies
@@ -62,12 +70,24 @@ module.exports = function(imports) {
 
     }));
 
-    router.post("/logout", checkBody(), requireLogin, handler(function*(req, res) {
+    router.post("/logout", checkBody({
+        mobileDeviceToken: types.maybe(types.string),
+    }), requireLogin, handler(function*(req, res) {
         // destroy user session cookie
         req.session.destroy(function(err) {
             if (err) {
                 console.error(err);
                 res.status(500).end("Logout unsuccessful");
+            } else if (req.body.mobileDeviceToken) {
+                let index = req.user.mobileDeviceTokens.indexOf(req.body.mobileDeviceToken);
+                if (index !== -1) {
+                    req.user.mobileDeviceTokens.splice(index, 1);
+                    req.user.save().then(() => {
+                        res.end();
+                    });
+                } else {
+                    res.end();
+                }
             } else {
                 res.end();
             }
