@@ -5,6 +5,7 @@ module.exports = function(imports) {
         "mailgunUser": "user@morteam.com",
         "malgunPass": "password",
         "dbName": "morteam",
+        "fcmApiKey": "",
     };
     // initialize default config file if it does not exist
     let fs = require("fs");
@@ -32,6 +33,7 @@ module.exports = function(imports) {
 	imports.modules.request = require("request-promise");
     imports.modules.AWS = require("aws-sdk");
     imports.modules.AWSMock = require("mock-aws-s3");
+    imports.modules.FCM = require("fcm-node");
 
     imports.util = {};
     imports.util.audience = require("./util/audience")(imports);
@@ -44,6 +46,7 @@ module.exports = function(imports) {
     imports.models.File = require("./models/File")(imports);
     imports.models.Task = require("./models/Task")(imports);
 
+    imports.util.fcm = require("./util/fcm")(imports);
     imports.util.images = require("./util/images")(imports);
     imports.util.mail = require("./util/mail")(imports);
     imports.util.middlechecker = require("./util/middlechecker")(imports);

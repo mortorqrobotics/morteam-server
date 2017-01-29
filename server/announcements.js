@@ -7,6 +7,7 @@ module.exports = function(imports) {
     let ObjectId = imports.modules.mongoose.Types.ObjectId;
     let Promise = imports.modules.Promise;
     let util = imports.util;
+    let fcm = util.fcm;
 
     let handler = util.handler;
     let requireLogin = util.requireLogin;
@@ -48,9 +49,10 @@ module.exports = function(imports) {
             }),
         ]);
 
-        let announcement = arr[0];
-        announcement = announcement.toObject();
-        announcement.audience = { users: arr[1], groups: arr[2] };
+        let announcement = arr[0].toObject();
+        let users = arr[1];
+        let groups = arr[2];
+        announcement.audience = { users: users, groups: groups };
         announcement.author = req.user;
 
         res.json(announcement);
@@ -64,6 +66,13 @@ module.exports = function(imports) {
                 html: announcement.content,
             });
         }
+
+        yield fcm.sendMessage(users, {
+            notification: {
+                title: "New Announcement",
+                body: req.user.firstname + " " + req.user.lastname + " has posted an announcement",
+            },
+        });
 
     }));
 
