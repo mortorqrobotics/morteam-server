@@ -293,7 +293,8 @@ module.exports = function(imports) {
         yield util.mail.sendEmail({
             to: emails,
             subject: "You have been contacted by team " + reqTeam.number + " on morteam.",
-            html: req.body.content + " Click " + "<a href=www.morteam.com/chat?id=" + chat._id + ">here</a>!",
+            html: req.body.content + " Click " + "<a href=www.morteam.com/chat?id="
+                + chat._id + ">here</a> to view your conversation!",
         });
 
         res.end(String(chat._id));
