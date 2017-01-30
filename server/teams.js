@@ -295,7 +295,7 @@ module.exports = function(imports) {
             html: req.body.content + " Click " + "<a href=www.morteam.com/chat?id=" + chat._id + ">here</a>!",
         });
 
-        res.end();
+        res.end(String(chat._id));
 
     }));
 
