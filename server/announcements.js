@@ -3,10 +3,11 @@
 module.exports = function(imports) {
 
     let express = imports.modules.express;
-    let Autolinker = imports.modules.autolinker;
     let ObjectId = imports.modules.mongoose.Types.ObjectId;
+    let Autolinker = imports.modules.autolinker;
     let Promise = imports.modules.Promise;
     let util = imports.util;
+    let fcm = util.fcm;
 
     let handler = util.handler;
     let requireLogin = util.requireLogin;
@@ -25,32 +26,35 @@ module.exports = function(imports) {
         audience: types.audience,
     }), requireLogin, handler(function*(req, res) {
 
-        if (req.body.audience.users.indexOf(req.user._id.toString()) === -1) {
-            req.body.audience.users.push(req.user._id);
-        }
+        let audience = req.body.audience;
+
+        util.audience.ensureIncludes(audience, req.user);
+
+        let content = Autolinker.link(req.body.content);
 
         let arr = yield Promise.all([
             Announcement.create({
                 author: req.user._id,
-                content: req.body.content,
-                audience: req.body.audience,
+                content: content,
+                audience: audience,
                 timestamp: new Date(),
             }),
             User.find({
                 _id: {
-                    $in: req.body.audience.users,
+                    $in: audience.users,
                 },
             }),
             Group.find({
                 _id: {
-                    $in: req.body.audience.groups,
+                    $in: audience.groups,
                 },
             }),
         ]);
 
-        let announcement = arr[0];
-        announcement = announcement.toObject();
-        announcement.audience = { users: arr[1], groups: arr[2] };
+        let announcement = arr[0].toObject();
+        let users = arr[1];
+        let groups = arr[2];
+        announcement.audience = { users: users, groups: groups };
         announcement.author = req.user;
 
         res.json(announcement);
@@ -64,6 +68,13 @@ module.exports = function(imports) {
                 html: announcement.content,
             });
         }
+
+        yield fcm.sendMessage(users, {
+            notification: {
+                title: "New Announcement",
+                body: req.user.firstname + " " + req.user.lastname + " has posted an announcement",
+            },
+        });
 
     }));
 

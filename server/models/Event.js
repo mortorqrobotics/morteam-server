@@ -41,6 +41,7 @@ module.exports = function(imports) {
             type: ObjectId,
             ref: "User",
         },
+        wasEmailSent: Boolean,
         created_at: Date,
         updated_at: Date,
     });

@@ -43,19 +43,14 @@ module.exports = function(imports) {
         },
     };
 
-    audience.getUsersIn = Promise.coroutine(function*(audience) {
-        let groups = yield Promise.all(audience.groups.map(groupId => (
-            Group.findOne({
-                _id: groupId
-            })
-        )));
-        return yield User.find({
-            $or: [{
+    audience.inAudienceQuery = function(audience) {
+        return {
+            $or: [
+                {
                     _id: {
                         $in: audience.users,
                     },
-                },
-                {
+                }, {
                     groups: {
                         $elemMatch: {
                             $in: audience.groups,
@@ -63,15 +58,30 @@ module.exports = function(imports) {
                     },
                 },
             ]
-        });
+        };
+    };
+
+    audience.getUsersIn = Promise.coroutine(function*(au) {
+        return yield User.find(audience.inAudienceQuery(au));
     });
 
     audience.isUserInAudience = function(user, audience) {
         return audience.users.indexOf(user._id) !== -1
-            || audience.groups.some(groupId => (
+            || audience.groups.some(groupId =>
                 user.groups.indexOf(groupId) !== -1
-            ));
-    }
+            );
+    };
+
+    audience.ensureIncludes = function(audience, user) {
+        if (!audience.users.some(userId => userId.toString() === user._id.toString())
+            && !user.groups.some(groupId =>
+                audience.groups.some(gid =>
+                    gid.toString() === groupId.toString()))
+        ) {
+            audience.users.push(user._id);
+        }
+        return audience;
+    };
 
     return audience;
 

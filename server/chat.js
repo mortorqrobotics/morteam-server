@@ -59,16 +59,13 @@ module.exports = function(imports) {
 
             chat.audience.users = [req.user, otherUser];
 
+            yield sio.createChat(chat);
             res.json(chat);
 
         } else {
             // group chat
 
-            if (req.body.audience.users.indexOf(req.user._id) === -1
-                || !req.user.groups.some(groupId => req.body.audience.groups.indexOf(groupId) !== -1)
-            ) {
-                req.body.audience.users.push(req.user._id);
-            }
+            util.audience.ensureIncludes(req.body.audience, req.user);
 
             if (req.body.name.length >= 20) { // name character limit
                 return res.status(400).end("The chat name has to be 19 characters or fewer");
@@ -82,9 +79,9 @@ module.exports = function(imports) {
                 isTwoPeople: false,
             });
 
-            chat.audience.users = yield User.find({ _id: { $in: req.body.users } });
-            chat.audience.groups = yield Group.find({ _id: { $in: req.body.groups } });
+            chat = yield Chat.populate(chat, "audience.users audience.groups");
 
+            yield sio.createChat(chat);
             res.json(chat);
         }
 
@@ -202,35 +199,48 @@ module.exports = function(imports) {
             return res.status(400).end("Chat name has to be 19 characters or fewer");
         }
 
-        // TODO: check if the user is a member of the chat
-
-        yield Chat.update({
+        let chat = yield Chat.findOne({
             $and: [
                 { _id: req.params.chatId },
                 audienceQuery(req.user),
             ],
-        }, {
-            name: req.body.newName,
         });
 
+        if (!chat) {
+            return res.status(404).end("This chat does not exist");
+        }
+
+        chat.name = req.body.newName;
+
+        yield chat.save();
+
+        yield sio.renameChat(chat);
         res.end();
 
     }));
 
     router.delete("/chats/id/:chatId", checkBody(), requireLogin , handler(function*(req, res) {
+
         let chat = yield Chat.findOne({
             _id: req.params.chatId,
         });
-        if (isUserInAudience(req.user, chat.audience)
-            && (chat.isTwoPeople  
-            || util.positions.isUserAdmin(req.user) 
+
+        if (!chat) {
+            return res.status(404).end("This chat does not exist");
+        }
+
+        if (!isUserInAudience(req.user, chat.audience)
+            && !(chat.isTwoPeople
+            || util.positions.isUserAdmin(req.user)
             || req.user._id.toString() === chat.creator.toString())
         ) {
-            yield chat.remove(); 
-            res.end();
-        } else {
-            res.status(403).end("You do not have permission");
+            return res.status(403).end("You do not have permission");
         }
+
+        yield chat.remove();
+        yield sio.deleteChat(chat);
+        res.end();
+
     }));
 
     return router;

@@ -20,14 +20,14 @@ module.exports = function(imports) {
     Promise.promisifyAll(mail.notify);
 
     mail.sendEmail = function(options) {
-        if (config.mailgunUser === defaultConfig.mailgunUser 
+        if (config.mailgunUser === defaultConfig.mailgunUser
             && config.mailgunPass === defaultConfig.mailgunPass
         ) {
-            return new Promise(resolve => { 
+            return new Promise(resolve => {
                 if (process.env.NODE_ENV !== "test") {
                     console.log(options);
                 }
-                resolve(); 
+                resolve();
             });
         } else {
             return new Promise(function(resolve, reject) {
@@ -52,9 +52,11 @@ module.exports = function(imports) {
     mail.createRecipientList = function(users) {
         let result = "";
         users.forEach(function(user) {
-            result += user.email + ", ";
-            if (user.parentEmail) {
-                result += user.parentEmail + ", "
+            if (user.position !== "alumnus") {
+                result += user.email + ", ";
+                if (user.parentEmail) {
+                    result += user.parentEmail + ", "
+                }
             }
         });
         result = result.substring(0, result.length - 2);

@@ -25,6 +25,7 @@ module.exports = function(imports) {
         rememberMe: types.boolean,
         username: types.string,
         password: types.string,
+        mobileDeviceToken: types.maybe(types.string),
     }), handler(function*(req, res) {
         // TODO: maybe move login and logout to separate file?
 
@@ -50,6 +51,13 @@ module.exports = function(imports) {
             return res.status(400).end("Invalid login credentials");
         }
 
+        if (req.body.mobileDeviceToken
+            && user.mobileDeviceTokens.indexOf(req.body.mobileDeviceToken) === -1
+        ) {
+            user.mobileDeviceTokens.push(req.body.mobileDeviceToken);
+            yield user.save();
+        }
+
         delete user.password;
 
         // store user info in cookies
@@ -62,12 +70,24 @@ module.exports = function(imports) {
 
     }));
 
-    router.post("/logout", checkBody(), requireLogin, handler(function*(req, res) {
+    router.post("/logout", checkBody({
+        mobileDeviceToken: types.maybe(types.string),
+    }), requireLogin, handler(function*(req, res) {
         // destroy user session cookie
         req.session.destroy(function(err) {
             if (err) {
                 console.error(err);
                 res.status(500).end("Logout unsuccessful");
+            } else if (req.body.mobileDeviceToken) {
+                let index = req.user.mobileDeviceTokens.indexOf(req.body.mobileDeviceToken);
+                if (index !== -1) {
+                    req.user.mobileDeviceTokens.splice(index, 1);
+                    req.user.save().then(() => {
+                        res.end();
+                    });
+                } else {
+                    res.end();
+                }
             } else {
                 res.end();
             }
@@ -324,13 +344,15 @@ module.exports = function(imports) {
     }));
 
     router.post("/forgotPassword", checkBody({
-        email: types.string,
-        username: types.string,
+        emailOrUsername: types.string,
     }), handler(function*(req, res) {
 
         let user = yield User.findOne({
-            email: req.body.email,
-            username: req.body.username
+            $or: [{
+                email: req.body.emailOrUsername,
+            }, {
+                username: req.body.emailOrUsername,
+            }],
         });
 
         if (!user) {
@@ -347,7 +369,7 @@ module.exports = function(imports) {
 
         // email user new password
         let info = yield util.mail.sendEmail({
-            to: req.body.email,
+            to: user.email,
             subject: "New MorTeam Password Request",
             html: "It seems like you requested to reset your password. Your new password is " + newPassword + ". Feel free to reset it after you log in.",
         });

@@ -21,8 +21,10 @@ module.exports = function(imports) {
 
     let router = express.Router();
 
-    router.get("/events/startYear/:startYear/startMonth/:startMonth/endYear/:endYear/endMonth/:endMonth", checkBody(), requireLogin, handler(function*(req, res) {
+    // no need to take attendance for mentors and alumni
+    const attendancePositions = ["member", "leader"];
 
+    router.get("/events/startYear/:startYear/startMonth/:startMonth/endYear/:endYear/endMonth/:endMonth", checkBody(), requireLogin, handler(function*(req, res) {
 
         let startYear = req.params.startYear;
         let startMonth = req.params.startMonth;
@@ -70,6 +72,8 @@ module.exports = function(imports) {
         description: types.string,
     }), requireAdmin, handler(function*(req, res) {
 
+        util.audience.ensureIncludes(req.body.audience, req.user);
+
         let event = {
             name: req.body.name,
             date: new Date(req.body.date),
@@ -77,6 +81,7 @@ module.exports = function(imports) {
             creator: req.user._id,
             hasTakenAttendance: false,
             attendance: [],
+            wasEmailSent: req.body.sendEmail,
         };
 
         if (req.body.description.length > 0) {
@@ -85,11 +90,9 @@ module.exports = function(imports) {
 
         event = yield Event.create(event);
 
-
         if (req.body.sendEmail) {
-
             let users = yield audience.getUsersIn(event.audience);
-            let list = util.mail.createRecepientList(users);
+            let list = util.mail.createRecipientList(users);
 
             yield util.mail.sendEmail({
                 to: list,
@@ -105,9 +108,29 @@ module.exports = function(imports) {
 
     router.delete("/events/id/:eventId", checkBody(), requireAdmin, handler(function*(req, res) {
 
-        yield Event.findOneAndRemove({
+        let event = yield Event.findOne({
             _id: req.params.eventId,
         });
+        const date = Date.now();
+        if (event.wasEmailSent
+          && (event.date > date
+          || (event.date.getFullYear() === date.getFullYear()
+              && event.date.getMonth() === date.getMonth()
+              && event.date.getDay() === date.getDay()
+          ))
+        ) {
+          let users = yield audience.getUsersIn(event.audience);
+          let list = util.mail.createRecipientList(users);
+
+          yield util.mail.sendEmail({
+              to: list,
+              subject: "Event " + util.readableDate(event.date) + " - " + event.name + "cancelled",
+              html: req.user.firstname + " " + req.user.lastname + " has cancelled the event named "
+                  + event.name + " that took place on " + util.readableDate(event.date) + "."
+          });
+        }
+
+        yield event.remove();
 
         res.end();
 
@@ -144,9 +167,20 @@ module.exports = function(imports) {
 
         // TODO: check if it already hasTakenAttendance
 
+        let users = yield User.find({
+            $and: [
+                util.audience.inAudienceQuery(event.audience),
+                {
+                    position: {
+                        $in: attendancePositions,
+                    },
+                },
+            ],
+        });
+
         let newAttendees = [];
-        for (let user of (yield util.audience.getUsersIn(event.audience))) {
-            if (!event.attendance.some(obj => obj.user.toString == user.toString())) {
+        for (let user of users) {
+            if (!event.attendance.some(obj => obj.user.toString() == user._id.toString())) {
                 newAttendees.push({
                     user: user._id,
                     status: "absent",
@@ -206,7 +240,16 @@ module.exports = function(imports) {
             _id: req.params.eventId,
         });
 
-        let users = yield util.audience.getUsersIn(event.audience);
+        let users = yield User.find({
+            $and: [
+                util.audience.inAudienceQuery(event.audience),
+                {
+                    position: {
+                        $in: attendancePositions,
+                    },
+                },
+            ],
+        });
 
         res.json(users);
 

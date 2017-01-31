@@ -121,7 +121,7 @@ module.exports = function(imports) {
                 testingBucketPath,
                 "drive.morteam.com",
                 fileKey
-            )).pipe(res);
+            )).on("error", console.log).pipe(res);
         }
     });
 
