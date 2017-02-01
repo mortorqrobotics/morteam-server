@@ -111,7 +111,7 @@ module.exports = function(imports) {
         let event = yield Event.findOne({
             _id: req.params.eventId,
         });
-        const date = Date.now();
+        const date = new Date();
         if (event.wasEmailSent
           && (event.date > date
           || (event.date.getFullYear() === date.getFullYear()
