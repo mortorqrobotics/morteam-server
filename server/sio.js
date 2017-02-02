@@ -139,6 +139,8 @@ module.exports = function(imports) {
                 unreadMessages: 1,
             });
 
+            chat.save();
+
             for (let elem of chat.unreadMessages) {
                 if (elem.userId !== sess._id.toString()) {
                     yield Chat.update({
@@ -178,6 +180,13 @@ module.exports = function(imports) {
 
         socket.on("read message", util.handler(function*(data) {
             let chatId = data.chatId;
+
+            let chat = yield Chat.findOne({
+                _id: chatId,
+            })
+
+            chat.save();
+
             yield Chat.update({
                 $and: [
                     { _id: chatId },

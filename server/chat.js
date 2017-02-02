@@ -132,6 +132,8 @@ module.exports = function(imports) {
             .populate("messages.author")
             .exec();
 
+        chat.save();
+
         yield Chat.update({
             $and: [{
                 _id: req.params.chatId

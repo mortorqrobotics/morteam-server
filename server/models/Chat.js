@@ -53,7 +53,11 @@ module.exports = function(imports) {
 
     chatSchema.pre("save", coroutine(function*(next) {
         let users = yield audience.getUsersIn(this.audience);
-        this.unreadMessages = users.map(user => ({ userId: user._id, number: 0 }));
+        for (let user of users) {
+            if (this.unreadMessages.findIndex(elem => elem.userId === user._id.toString()) === -1) {
+                this.unreadMessages.push({ userId: user._id.toString(), number: this.messages.length })
+            }
+        }
         next();
     }));
 
