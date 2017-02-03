@@ -51,15 +51,15 @@ module.exports = function(imports) {
         next();
     });
 
-    chatSchema.pre("save", coroutine(function*(next) {
+    chatSchema.methods.updateUnread = coroutine(function*() {
         let users = yield audience.getUsersIn(this.audience);
         for (let user of users) {
             if (this.unreadMessages.findIndex(elem => elem.userId === user._id.toString()) === -1) {
-                this.unreadMessages.push({ userId: user._id.toString(), number: this.messages.length })
+                this.unreadMessages.push({ userId: user._id.toString(), number: 0 })
             }
         }
-        next();
-    }));
+        this.save();
+    });
 
     let Chat = mongoose.model("Chat", chatSchema);
 

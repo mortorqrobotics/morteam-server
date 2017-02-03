@@ -85,6 +85,8 @@ module.exports = function(imports) {
                 isTwoPeople: false,
             });
 
+            yield chat.updateUnread();
+
             chat = yield Chat.populate(chat, "audience.users audience.groups");
 
             yield sio.createChat(chat);
@@ -132,16 +134,14 @@ module.exports = function(imports) {
             .populate("messages.author")
             .exec();
 
-        chat.save();
+        yield chat.updateUnread();
 
         yield Chat.update({
             $and: [{
                 _id: req.params.chatId
             }, {
                 "unreadMessages.userId": req.user._id
-            },
-                audienceQuery(req.user),
-            ],
+            }],
         }, {
             $set: { "unreadMessages.$.number": 0 }
         })

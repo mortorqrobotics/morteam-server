@@ -139,7 +139,7 @@ module.exports = function(imports) {
                 unreadMessages: 1,
             });
 
-            chat.save();
+            yield chat.updateUnread();
 
             for (let elem of chat.unreadMessages) {
                 if (elem.userId !== sess._id.toString()) {
@@ -147,7 +147,6 @@ module.exports = function(imports) {
                         $and: [
                             { _id: chatId },
                             { "unreadMessages.userId": elem.userId },
-                            util.audience.audienceQuery(sess),
                         ],
                         $isolated: 1,
                     }, {
@@ -185,13 +184,12 @@ module.exports = function(imports) {
                 _id: chatId,
             })
 
-            chat.save();
+            yield chat.updateUnread();
 
             yield Chat.update({
                 $and: [
                     { _id: chatId },
                     { "unreadMessages.userId": sess._id },
-                    util.audience.audienceQuery(sess),
                 ],
             }, {
                 $set: { "unreadMessages.$.number": 0 },
