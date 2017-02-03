@@ -8,6 +8,7 @@ module.exports = function(imports) {
     let User = imports.models.User;
     let Team = imports.models.Team;
     let NormalGroup = imports.models.NormalGroup;
+    let AllTeamGroup = imports.models.AllTeamGroup;
     let MultiTeamGroup = imports.models.MultiTeamGroup;
     let Group = imports.models.Group;
 
@@ -72,6 +73,14 @@ module.exports = function(imports) {
                 },
             },
         });
+
+        res.json(groups);
+
+    }));
+
+    router.get("/groups/allTeam", checkBody(), requireLogin, handler(function*(req, res) {
+
+        let groups = yield AllTeamGroup.find().populate("team");
 
         res.json(groups);
 
