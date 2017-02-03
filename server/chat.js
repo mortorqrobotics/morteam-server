@@ -64,7 +64,6 @@ module.exports = function(imports) {
 
         } else {
             // group chat
-
             util.audience.ensureIncludes(req.body.audience, req.user);
 
             if (req.body.name.length >= 20) { // name character limit

@@ -74,6 +74,7 @@ module.exports = function(imports) {
 
     audience.ensureIncludes = function(audience, user) {
         if (!audience.users.some(userId => userId.toString() === user._id.toString())
+            && !audience.isMultiTeam
             && !user.groups.some(groupId =>
                 audience.groups.some(gid =>
                     gid.toString() === groupId.toString()))

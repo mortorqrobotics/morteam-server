@@ -18,7 +18,7 @@ module.exports = function(imports) {
         creator: {
             type: ObjectId,
             ref: "User",
-            required: false, 
+            required: false,
         },
         audience: audience.schemaType,
         messages: {
@@ -37,6 +37,7 @@ module.exports = function(imports) {
     });
 
     chatSchema.pre("save", function(next) {
+        console.log(this.audience)
         let now = new Date();
         this.updated_at = now;
         if (!this.created_at) {
