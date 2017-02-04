@@ -42,20 +42,23 @@ module.exports = function(imports) {
         updated_at: Date,
     });
 
-    chatSchema.pre("save", function(next) {
+    chatSchema.pre("save", coroutine(function*(next) {
         let now = new Date();
         this.updated_at = now;
         if (!this.created_at) {
             this.created_at = now;
         }
         if (this.isNew) {
-            this.updateUnread();
+            yield this.updateUnread();
         }
         next();
-    });
+    }));
 
     chatSchema.methods.updateUnread = coroutine(function*() {
-        let users = yield audience.getUsersIn(this.audience);
+        let users = audience.userList;
+        if (!this.audience.userList) {
+            users = yield audience.getUsersIn(this.audience);
+        }
         for (let user of users) {
             if (this.unreadMessages.findIndex(elem => elem.userId === user._id.toString()) === -1) {
                 this.unreadMessages.push({ userId: user._id.toString(), number: 0 })
