@@ -52,11 +52,10 @@ module.exports = function(imports) {
     };
 
     audience.getUsersIn = Promise.coroutine(function*(au, saveUserList) {
-        let users = yield User.find(audience.inAudienceQuery(au));
-        if (saveUserList) {
-            audience.userList = users;
+        if (noCache || !au.cachedUserList) {
+            au.cachedUserList = yield User.find(audience.inAudienceQuery(au));
         }
-        return users;
+        return au.cachedUserList;
     });
 
     audience.isUserInAudience = function(user, audience) {

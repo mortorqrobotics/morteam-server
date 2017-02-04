@@ -21,7 +21,7 @@ module.exports = function(imports) {
 
     let emitToAudience = Promise.coroutine(function*(audience, name, data, except) {
         except = except || "";
-        let users = yield util.audience.getUsersIn(audience, true);
+        let users = yield util.audience.getUsersIn(audience);
         for (let user of users) {
             if (user._id in onlineClients && user._id != except.toString()) {
                 for (let sock of onlineClients[user._id].sockets) {
