@@ -85,8 +85,6 @@ module.exports = function(imports) {
                 isTwoPeople: false,
             });
 
-            yield chat.updateUnread();
-
             chat = yield Chat.populate(chat, "audience.users audience.groups");
 
             yield sio.createChat(chat);

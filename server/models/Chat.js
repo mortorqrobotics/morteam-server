@@ -48,6 +48,9 @@ module.exports = function(imports) {
         if (!this.created_at) {
             this.created_at = now;
         }
+        if (this.isNew) {
+            this.updateUnread();
+        }
         next();
     });
 
