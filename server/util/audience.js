@@ -51,7 +51,7 @@ module.exports = function(imports) {
         };
     };
 
-    audience.getUsersIn = Promise.coroutine(function*(au, saveUserList) {
+    audience.getUsersIn = Promise.coroutine(function*(au, noCache) {
         if (noCache || !au.cachedUserList) {
             au.cachedUserList = yield User.find(audience.inAudienceQuery(au));
         }
