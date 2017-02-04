@@ -144,11 +144,11 @@ module.exports = function(imports) {
 
             let promises = [];
             for (let elem of chat.unreadMessages) {
-                if (elem.userId !== sess._id.toString()) {
+                if (elem.user.toString() !== sess._id.toString()) {
                     promises.push(Chat.update({
                         $and: [
                             { _id: chatId },
-                            { "unreadMessages.userId": elem.userId },
+                            { "unreadMessages.user": elem.user },
                         ],
                     }, {
                         $inc: { "unreadMessages.$.number": 1 },
@@ -193,7 +193,7 @@ module.exports = function(imports) {
             yield Chat.update({
                 $and: [
                     { _id: chatId },
-                    { "unreadMessages.userId": sess._id },
+                    { "unreadMessages.user": sess._id },
                 ],
             }, {
                 $set: { "unreadMessages.$.number": 0 },

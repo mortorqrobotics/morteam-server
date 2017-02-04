@@ -24,7 +24,10 @@ module.exports = function(imports) {
         },
         audience: audience.schemaType,
         unreadMessages: [{
-            userId: String,
+            user: {
+                type: ObjectId,
+                ref: "User",
+            },
             number: Number,
         }],
         messages: {
@@ -57,8 +60,11 @@ module.exports = function(imports) {
     chatSchema.methods.updateUnread = coroutine(function*() {
         let users = yield audience.getUsersIn(this.audience);
         for (let user of users) {
-            if (this.unreadMessages.findIndex(elem => elem.userId === user._id.toString()) === -1) {
-                this.unreadMessages.push({ userId: user._id.toString(), number: 0 })
+            if (this.unreadMessages.findIndex(elem =>
+                    elem.user.toString() === user._id.toString()) === -1
+            ) {
+                this.unreadMessages.push({ user: user._id, number: 0 })
+
             }
         }
     });

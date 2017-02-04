@@ -139,7 +139,7 @@ module.exports = function(imports) {
             $and: [{
                 _id: req.params.chatId
             }, {
-                "unreadMessages.userId": req.user._id
+                "unreadMessages.user": req.user._id
             }],
         }, {
             $set: { "unreadMessages.$.number": 0 }
