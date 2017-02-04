@@ -133,6 +133,7 @@ module.exports = function(imports) {
             .exec();
 
         yield chat.updateUnread();
+        yield chat.save();
 
         yield Chat.update({
             $and: [{

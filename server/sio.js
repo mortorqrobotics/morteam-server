@@ -140,6 +140,7 @@ module.exports = function(imports) {
             });
 
             yield chat.updateUnread();
+            yield chat.save();
 
             let promises = [];
             for (let elem of chat.unreadMessages) {
@@ -187,6 +188,7 @@ module.exports = function(imports) {
             })
 
             yield chat.updateUnread();
+            yield chat.save();
 
             yield Chat.update({
                 $and: [
