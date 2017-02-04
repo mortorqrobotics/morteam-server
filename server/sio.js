@@ -141,19 +141,21 @@ module.exports = function(imports) {
 
             yield chat.updateUnread();
 
+            let promises = [];
             for (let elem of chat.unreadMessages) {
                 if (elem.userId !== sess._id.toString()) {
-                    yield Chat.update({
+                    promises.push(Chat.update({
                         $and: [
                             { _id: chatId },
                             { "unreadMessages.userId": elem.userId },
                         ],
-                        $isolated: 1,
                     }, {
                         $inc: { "unreadMessages.$.number": 1 },
-                    })
+                    }))
                 }
             }
+
+            yield Promise.all(promises);
 
             if (chat.isTwoPeople) {
                 emitToAudience(chat.audience, "message", {
