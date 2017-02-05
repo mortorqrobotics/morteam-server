@@ -10,6 +10,7 @@ module.exports = function(imports) {
     let NormalGroup = imports.models.NormalGroup;
     let AllTeamGroup = imports.models.AllTeamGroup;
     let MultiTeamGroup = imports.models.MultiTeamGroup;
+    let PositionGroup = imports.models.PositionGroup;
     let Group = imports.models.Group;
 
     let handler = util.handler;
@@ -81,6 +82,18 @@ module.exports = function(imports) {
     router.get("/groups/allTeam", checkBody(), requireLogin, handler(function*(req, res) {
 
         let groups = yield AllTeamGroup.find().populate("team");
+
+        res.json(groups);
+
+    }));
+
+    router.get("/groups/position/:teams", checkBody(), requireLogin, handler(function*(req, res) {
+        let teams = JSON.parse(req.params.teams);
+
+        let groups = yield PositionGroup.find({
+            team: {$in: teams},
+            position: util.positions.adminPositionsQuery,
+        });
 
         res.json(groups);
 
