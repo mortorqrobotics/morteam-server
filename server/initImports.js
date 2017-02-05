@@ -49,6 +49,7 @@ module.exports = function(imports) {
     imports.models.Event = require("./models/Event")(imports);
     imports.models.Folder = require("./models/Folder")(imports);
     imports.models.File = require("./models/File")(imports);
+    imports.models.FileToken = require("./models/FileToken")(imports);
     imports.models.Task = require("./models/Task")(imports);
 
     imports.util.fcm = require("./util/fcm")(imports);

@@ -18,29 +18,101 @@ module.exports = function(imports) {
 
     let Folder = imports.models.Folder;
     let File = imports.models.File;
+    let FileToken = imports.models.FileToken;
     let Group = imports.models.Group;
 
     let router = express.Router();
 
-    router.get("/files/id/:fileKey", checkBody(), requireLogin, handler(function*(req, res) {
+    let checkFilePermissions = Promise.coroutine(function*(user, fileKey) {
 
-        if (req.params.fileKey.indexOf("-preview") == -1) {
+        if (fileKey.indexOf("-preview") === -1) {
 
             let file = yield File.findOne({
-                _id: req.params.fileKey,
+                _id: fileKey,
             }).populate("folder");
 
             if (!file) {
-                return res.status(404).end("File does not exist");
+                throw {
+                    code: 404,
+                    text: "File does not exist",
+                };
             }
 
-            if (!util.audience.isUserInAudience(req.user, file.folder.audience)) {
-                return res.status(403).end("You do not have permission to access this");
+            if (!util.audience.isUserInAudience(user, file.folder.audience)) {
+                throw {
+                    code: 403,
+                    text: "You do not have permission to access this",
+                };
             }
 
         }
+    });
+
+    router.get("/files/id/:fileKey", checkBody(), requireLogin, handler(function*(req, res) {
+
+        try {
+            yield checkFilePermissions(req.user, req.params.fileKey);
+        } catch (obj) {
+            return res.status(obj.code).end(obj.text);
+        }
 
         yield util.s3.sendFile(res, req.params.fileKey);
+
+    }));
+
+    router.post("/files/id/:fileKey/tempToken", checkBody(), requireLogin, handler(function*(req, res) {
+
+        let fileKey = req.params.fileKey;
+
+        try {
+            yield checkFilePermissions(req.user, fileKey);
+        } catch (obj) {
+            return res.status(obj.code).end(obj.text);
+        }
+
+        let fileId = fileKey;
+        let isPreview = false;
+
+        let index = fileKey.indexOf("-preview");
+        if (index !== -1) {
+            fileId = fileKey.substring(0, index);
+            isPreview = true;
+        }
+
+        let fileToken = yield FileToken.create({
+            file: fileId,
+            isPreview: isPreview,
+        });
+
+        console.log(fileToken.token)
+        res.end(fileToken.token);
+
+    }));
+
+    // login is not required for this; that is its point
+    router.get("/files/token/:token", checkBody(), handler(function*(req, res) {
+
+        let fileToken = yield FileToken.findOne({
+            token: req.params.token,
+            viewed: false,
+            created_at: {
+                $gt: new Date(Date.now() - FileToken.timeoutMillis),
+            },
+        });
+
+        if (!fileToken) {
+            return res.status(403).end("File token not found");
+        }
+
+        fileToken.viewed = true;
+        yield fileToken.save();
+
+        let fileKey = fileToken.file.toString();
+        if (fileToken.isPreview) {
+            fileKey += "-preview";
+        }
+
+        yield util.s3.sendFile(res, fileKey);
 
     }));
 

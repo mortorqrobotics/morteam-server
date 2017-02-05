@@ -53,7 +53,7 @@ module.exports = function(imports) {
 
         let path = req.path;
 
-        if (path.startsWith("/js")) {
+        if (path.startsWith("/js") || path.startsWith("/api")) {
             return next();
         }
 
