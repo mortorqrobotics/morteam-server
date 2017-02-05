@@ -57,14 +57,21 @@ module.exports = function(imports) {
         next();
     }));
 
-    chatSchema.methods.updateUnread = coroutine(function*() {
-        let users = yield audience.getUsersIn(this.audience);
-        for (let user of users) {
+    chatSchema.methods.updateUnread = coroutine(function*(userId) {
+        if (userId) {
             if (this.unreadMessages.findIndex(elem =>
-                    elem.user.toString() === user._id.toString()) === -1
+                    elem.user.toString() === userId.toString()) === -1
             ) {
-                this.unreadMessages.push({ user: user._id, number: 0 })
-
+                this.unreadMessages.push({ user: userId, number: 0 })
+            }
+        } else {
+            let users = yield audience.getUsersIn(this.audience);
+            for (let user of users) {
+                if (this.unreadMessages.findIndex(elem =>
+                        elem.user.toString() === user._id.toString()) === -1
+                ) {
+                    this.unreadMessages.push({ user: user._id, number: 0 })
+                }
             }
         }
     });

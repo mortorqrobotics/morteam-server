@@ -187,7 +187,7 @@ module.exports = function(imports) {
                 _id: chatId,
             })
 
-            yield chat.updateUnread();
+            yield chat.updateUnread(sess._id);
             yield chat.save();
 
             yield Chat.update({

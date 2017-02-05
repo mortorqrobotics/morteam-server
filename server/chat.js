@@ -132,19 +132,6 @@ module.exports = function(imports) {
             .populate("messages.author")
             .exec();
 
-        yield chat.updateUnread();
-        yield chat.save();
-
-        yield Chat.update({
-            $and: [{
-                _id: req.params.chatId
-            }, {
-                "unreadMessages.user": req.user._id
-            }],
-        }, {
-            $set: { "unreadMessages.$.number": 0 }
-        })
-
         res.json(chat.messages);
 
     }));
