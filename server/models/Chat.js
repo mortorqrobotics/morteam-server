@@ -57,7 +57,7 @@ module.exports = function(imports) {
         next();
     }));
 
-    chatSchema.methods.updateUnread = coroutine(function*(userId) {
+    chatSchema.methods.updateUnread = Promise.coroutine(function*(userId) {
         if (userId) {
             if (this.unreadMessages.findIndex(elem =>
                     elem.user.toString() === userId.toString()) === -1
