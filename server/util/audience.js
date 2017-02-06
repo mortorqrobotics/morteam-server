@@ -61,8 +61,11 @@ module.exports = function(imports) {
         };
     };
 
-    audience.getUsersIn = Promise.coroutine(function*(au) {
-        return yield User.find(audience.inAudienceQuery(au));
+    audience.getUsersIn = Promise.coroutine(function*(au, noCache) {
+        if (noCache || !au.cachedUserList) {
+            au.cachedUserList = yield User.find(audience.inAudienceQuery(au));
+        }
+        return au.cachedUserList;
     });
 
     audience.isUserInAudience = function(user, audience) {

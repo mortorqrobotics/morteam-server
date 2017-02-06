@@ -136,7 +136,27 @@ module.exports = function(imports) {
                 audience: 1,
                 isTwoPeople: 1,
                 name: 1,
+                unreadMessages: 1,
             });
+
+            yield chat.updateUnread();
+            yield chat.save();
+
+            let promises = [];
+            for (let elem of chat.unreadMessages) {
+                if (elem.user.toString() !== sess._id.toString()) {
+                    promises.push(Chat.update({
+                        $and: [
+                            { _id: chatId },
+                            { "unreadMessages.user": elem.user },
+                        ],
+                    }, {
+                        $inc: { "unreadMessages.$.number": 1 },
+                    }))
+                }
+            }
+
+            yield Promise.all(promises);
 
             if (chat.isTwoPeople) {
                 emitToAudience(chat.audience, "message", {
@@ -159,6 +179,26 @@ module.exports = function(imports) {
             });
 
         }));
+
+        socket.on("read message", util.handler(function*(data) {
+            let chatId = data.chatId;
+
+            let chat = yield Chat.findOne({
+                _id: chatId,
+            })
+
+            yield chat.updateUnread(sess._id);
+            yield chat.save();
+
+            yield Chat.update({
+                $and: [
+                    { _id: chatId },
+                    { "unreadMessages.user": sess._id },
+                ],
+            }, {
+                $set: { "unreadMessages.$.number": 0 },
+            })
+        }))
 
         // TODO: if a user has multiple clients and sends a message, display sent message on all clients
 
