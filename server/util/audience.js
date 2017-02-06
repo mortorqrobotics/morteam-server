@@ -2,11 +2,14 @@
 
 module.exports = function(imports) {
 
+    let util = imports.util;
     let ObjectId = imports.modules.mongoose.Schema.Types.ObjectId;
     let Promise = imports.modules.Promise;
 
     let Group = imports.models.Group;
     let User = imports.models.User;
+    let AllTeamGroup = imports.models.AllTeamGroup;
+    let PositionGroup = imports.models.PositionGroup;
 
     let audience = {};
 
@@ -72,17 +75,35 @@ module.exports = function(imports) {
             );
     };
 
-    audience.ensureIncludes = function(audience, user) {
+    audience.ensureIncludes = Promise.coroutine(function*(audience, user) {
         if (!audience.users.some(userId => userId.toString() === user._id.toString())
-            && !audience.isMultiTeam
             && !user.groups.some(groupId =>
                 audience.groups.some(gid =>
                     gid.toString() === groupId.toString()))
         ) {
-            audience.users.push(user._id);
+            if (!audience.isMultiTeam) {
+                audience.users.push(user._id);
+            } else {
+                let group = yield AllTeamGroup.findOne({
+                    _id: { $in: audience.groups}
+                });
+                if (group) {
+                    group = yield AllTeamGroup.findOne({
+                        team: user.team,
+                    })
+                    audience.groups.push(group._id);
+                } else {
+                    let positionGroups = yield PositionGroup.find({
+                        team: user.team,
+                        position: util.positions.adminPositionsQuery,
+                    });
+                    console.log(positionGroups)
+                    positionGroups.forEach(g => audience.groups.push(g._id));
+                }
+            }
         }
         return audience;
-    };
+    });
 
     return audience;
 

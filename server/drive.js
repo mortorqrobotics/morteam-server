@@ -107,7 +107,7 @@ module.exports = function(imports) {
             // TODO: get rid of this!
         }
 
-        util.audience.ensureIncludes(req.body.audience, req.user);
+        yield util.audience.ensureIncludes(req.body.audience, req.user);
 
         // what to do about this
         // if (req.body.type != "teamFolder" && req.body.type != "subFolder") {

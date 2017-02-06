@@ -64,7 +64,7 @@ module.exports = function(imports) {
 
         } else {
             // group chat
-            util.audience.ensureIncludes(req.body.audience, req.user);
+            yield util.audience.ensureIncludes(req.body.audience, req.user);
 
             if (req.body.name.length >= 20) { // name character limit
                 return res.status(400).end("The chat name has to be 19 characters or fewer");
