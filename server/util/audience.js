@@ -97,7 +97,6 @@ module.exports = function(imports) {
                         team: user.team,
                         position: util.positions.adminPositionsQuery,
                     });
-                    console.log(positionGroups)
                     positionGroups.forEach(g => audience.groups.push(g._id));
                 }
             }
