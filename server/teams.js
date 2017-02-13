@@ -125,7 +125,7 @@ module.exports = function(imports) {
         let team = yield Team.findOne({
             number: req.params.teamNum,
         });
-        if(team){
+        if (team) {
             res.json(team);
         } else {
             return res.status(400).end("This team does not exist");

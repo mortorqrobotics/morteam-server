@@ -102,7 +102,16 @@ module.exports = function(imports) {
             .sort("-updated_at")
             .populate("messages.author audience.users audience.groups")
             .exec();
-        // ^ the code above gets the latest message from the chat (for previews in iOS and Android) and orders the list by most recent.
+            // ^ the code above gets the latest message from the chat (for previews in iOS and Android) and orders the list by most recent.
+
+        for (let chat of chats) {
+            if (chat.audience.isMultiTeam) {
+                chat.audience.groups = yield Group.find({
+                    _id: { $in: chat.audience.groups.map(group => group._id) },
+                }).populate("team")
+            }
+        }
+
         res.json(chats);
 
     }));
