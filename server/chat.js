@@ -19,6 +19,7 @@ module.exports = function(imports) {
     let Chat = imports.models.Chat;
     let User = imports.models.User;
     let Group = imports.models.Group;
+    let Team = imports.models.Team;
 
     let router = express.Router();
 
@@ -106,12 +107,14 @@ module.exports = function(imports) {
 
         for (let chat of chats) {
             if (chat.audience.isMultiTeam) {
-                chat.audience.groups = yield Group.find({
-                    _id: { $in: chat.audience.groups.map(group => group._id) },
-                }).populate("team")
+                let teams = yield Promise.all(chat.audience.groups.map(group => Team.findOne({
+                    _id: group.team
+                })));
+                for (let i = 0; i < chat.audience.groups.length; i++) {
+                    chat.audience.groups[i].team = teams[i];
+                }
             }
         }
-
         res.json(chats);
 
     }));
