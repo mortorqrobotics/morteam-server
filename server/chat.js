@@ -230,7 +230,7 @@ module.exports = function(imports) {
 
     }));
 
-    router.delete("/chats/id/:chatId", checkBody(), requireLogin , handler(function*(req, res) {
+    router.delete("/chats/id/:chatId", checkBody(), requireLogin, handler(function*(req, res) {
 
         let chat = yield Chat.findOne({
             _id: req.params.chatId,
