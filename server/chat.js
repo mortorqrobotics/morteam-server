@@ -19,6 +19,7 @@ module.exports = function(imports) {
     let Chat = imports.models.Chat;
     let User = imports.models.User;
     let Group = imports.models.Group;
+    let Team = imports.models.Team;
 
     let router = express.Router();
 
@@ -64,8 +65,7 @@ module.exports = function(imports) {
 
         } else {
             // group chat
-
-            util.audience.ensureIncludes(req.body.audience, req.user);
+            yield util.audience.ensureIncludes(req.body.audience, req.user);
 
             if (req.body.name.length >= 20) { // name character limit
                 return res.status(400).end("The chat name has to be 19 characters or fewer");
@@ -103,7 +103,18 @@ module.exports = function(imports) {
             .sort("-updated_at")
             .populate("messages.author audience.users audience.groups")
             .exec();
-        // ^ the code above gets the latest message from the chat (for previews in iOS and Android) and orders the list by most recent.
+            // ^ the code above gets the latest message from the chat (for previews in iOS and Android) and orders the list by most recent.
+
+        for (let chat of chats) {
+            if (chat.audience.isMultiTeam) {
+                let teams = yield Promise.all(chat.audience.groups.map(group => Team.findOne({
+                    _id: group.team
+                })));
+                for (let i = 0; i < chat.audience.groups.length; i++) {
+                    chat.audience.groups[i].team = teams[i];
+                }
+            }
+        }
         res.json(chats);
 
     }));
