@@ -22,7 +22,7 @@ module.exports = function(imports) {
     let router = express.Router();
 
     router.post("/login", checkBody({
-        rememberMe: types.boolean,
+        rememberMe: types.union([types.boolean, types.string]),
         username: types.string,
         password: types.string,
         mobileDeviceToken: types.maybe(types.string),
@@ -31,9 +31,8 @@ module.exports = function(imports) {
 
         // IMPORTANT: req.body.username can either be a username or an email
 
-        // v this if statement though
-        // because you can"t send booleans via HTTP
-        if (req.body.rememberMe == "true") {
+        // what even is this
+        if (req.body.rememberMe === "true" || req.body.rememberMe === true) {
             req.body.rememberMe = true;
         } else {
             req.body.rememberMe = false;
