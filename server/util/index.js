@@ -9,6 +9,7 @@ module.exports = function(imports) {
     let fs = require("fs");
     let config = imports.config;
     let Autolinker = imports.modules.autolinker;
+    let Team = imports.models.Team;
     let Promise = imports.modules.Promise;
 
     let util = imports.util;
@@ -168,6 +169,17 @@ module.exports = function(imports) {
         let date = new Date(datestr);
         return months[date.getMonth()] + " " + date.getDate() + ", " + date.getFullYear();
     };
+
+    util.populateTeams = Promise.coroutine(function*(obj) {
+        if (obj.audience.isMultiTeam) {
+            let teams = yield Promise.all(obj.audience.groups.map(group => Team.findOne({
+                _id: group.team
+            })));
+            for (let i = 0; i < obj.audience.groups.length; i++) {
+                obj.audience.groups[i].team = teams[i];
+            }
+        }
+    });
 
     String.prototype.contains = function(arg) {
         return this.indexOf(arg) > -1;

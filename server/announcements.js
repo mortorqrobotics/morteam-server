@@ -28,7 +28,7 @@ module.exports = function(imports) {
 
         let audience = req.body.audience;
 
-        util.audience.ensureIncludes(audience, req.user);
+        yield util.audience.ensureIncludes(audience, req.user);
 
         let content = Autolinker.link(req.body.content);
 
@@ -54,9 +54,11 @@ module.exports = function(imports) {
         let announcement = arr[0].toObject();
         let users = arr[1];
         let groups = arr[2];
-        announcement.audience = { users: users, groups: groups };
+        let isMultiTeam = audience.isMultiTeam;
+        announcement.audience = { users: users, groups: groups, isMultiTeam: isMultiTeam };
         announcement.author = req.user;
 
+        yield util.populateTeams(announcement);
         res.json(announcement);
 
         if (util.positions.isUserAdmin(req.user)) {
@@ -96,6 +98,10 @@ module.exports = function(imports) {
             .skip(parseInt(req.query.skip))
             .limit(20)
             .exec();
+
+        for (let announcement of announcements) {
+            yield util.populateTeams(announcement);
+        }
 
         res.json(announcements);
 

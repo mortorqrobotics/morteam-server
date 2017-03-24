@@ -60,6 +60,7 @@ module.exports = function(imports) {
 
             chat.audience.users = [req.user, otherUser];
 
+            yield util.populateTeams(chat);
             yield sio.createChat(chat);
             res.json(chat);
 
@@ -104,17 +105,10 @@ module.exports = function(imports) {
             .populate("messages.author audience.users audience.groups")
             .exec();
             // ^ the code above gets the latest message from the chat (for previews in iOS and Android) and orders the list by most recent.
-
         for (let chat of chats) {
-            if (chat.audience.isMultiTeam) {
-                let teams = yield Promise.all(chat.audience.groups.map(group => Team.findOne({
-                    _id: group.team
-                })));
-                for (let i = 0; i < chat.audience.groups.length; i++) {
-                    chat.audience.groups[i].team = teams[i];
-                }
-            }
+            yield util.populateTeams(chat);
         }
+
         res.json(chats);
 
     }));
