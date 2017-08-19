@@ -139,9 +139,6 @@ module.exports = function(imports) {
                 unreadMessages: 1,
             });
 
-            yield chat.updateUnread();
-            yield chat.save();
-
             let promises = [];
             for (let elem of chat.unreadMessages) {
                 if (elem.user.toString() !== sess._id.toString()) {
@@ -186,9 +183,6 @@ module.exports = function(imports) {
             let chat = yield Chat.findOne({
                 _id: chatId,
             })
-
-            yield chat.updateUnread(sess._id);
-            yield chat.save();
 
             yield Chat.update({
                 $and: [
