@@ -12,6 +12,7 @@ module.exports = function(imports) {
     let MultiTeamGroup = imports.models.MultiTeamGroup;
     let PositionGroup = imports.models.PositionGroup;
     let Group = imports.models.Group;
+    let Chat = imports.models.Chat;
 
     let handler = util.handler;
     let requireLogin = util.requireLogin;
@@ -141,6 +142,19 @@ module.exports = function(imports) {
         if (!normalGroup || normalGroup.team.toString() != req.user.team.toString()) {
             return res.status(403).end("Invalid group");
         }
+
+        let chats = yield Chat.find({
+            "audience.groups": {
+                $elemMatch: { $eq: normalGroup._id }
+            }
+        });
+
+        let promises = [];
+        chats.forEach(chat => {
+            promises.push(chat.updateUnread(req.user._id));
+            promises.push(chat.save());
+        });
+        yield Promise.all(promises);
 
         yield NormalGroup.addUsers(req.params.groupId, [req.user._id]);
 

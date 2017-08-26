@@ -107,6 +107,23 @@ module.exports = function(imports) {
         //            defaultFolder: true
         //        });
 
+        let group = yield AllTeamGroup.findOne({
+            team: team._id
+        });
+
+        let chats = yield Chat.find({
+            "audience.groups": {
+                $elemMatch: { $eq: group._id }
+            }
+        });
+
+        let promises = [];
+        chats.forEach(chat => {
+            promises.push(chat.updateUnread(req.user._id));
+            promises.push(chat.save());
+        });
+        yield Promise.all(promises);
+
         res.json(team);
 
     }));
