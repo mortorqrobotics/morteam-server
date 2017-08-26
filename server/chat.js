@@ -108,6 +108,7 @@ module.exports = function(imports) {
             // ^ the code above gets the latest message from the chat (for previews in iOS and Android) and orders the list by most recent.
         for (let chat of chats) {
             yield util.populateTeams(chat);
+            yield chat.updateUnread();
         }
 
         res.json(chats);
