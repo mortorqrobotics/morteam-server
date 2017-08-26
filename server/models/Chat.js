@@ -64,7 +64,7 @@ module.exports = function(imports) {
             if (this.unreadMessages.findIndex(elem =>
                     elem.user.toString() === userId.toString()) === -1
             ) {
-                this.unreadMessages.push({ user: userId, number: 0 })
+                this.unreadMessages.push({ user: userId, number: this.messages.length })
             }
         } else {
             let users = yield audience.getUsersIn(this.audience);
@@ -72,7 +72,7 @@ module.exports = function(imports) {
                 if (this.unreadMessages.findIndex(elem =>
                         elem.user.toString() === user._id.toString()) === -1
                 ) {
-                    this.unreadMessages.push({ user: user._id, number: 0 })
+                    this.unreadMessages.push({ user: user._id, number: this.messages.length })
                 }
             }
         }
