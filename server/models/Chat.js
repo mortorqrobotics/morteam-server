@@ -47,7 +47,9 @@ module.exports = function(imports) {
 
     chatSchema.pre("save", coroutine(function*(next) {
         let now = new Date();
-        this.updated_at = now;
+        if (!this.unchangedUpdatedAt) {
+            this.updated_at = now;
+        }
         if (!this.created_at) {
             this.created_at = now;
         }
@@ -74,6 +76,8 @@ module.exports = function(imports) {
                 }
             }
         }
+        this.unchangedUpdatedAt = true;
+        this.save();
     });
 
     let Chat = mongoose.model("Chat", chatSchema);
