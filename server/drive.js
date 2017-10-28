@@ -134,6 +134,28 @@ module.exports = function(imports) {
 
         res.json(folder);
 
+    }))
+
+    router.delete("/folders/id/:folderId", checkBody(), requireLogin, handler(function*(req, res) {
+
+        let folder = yield Folder.findOne({
+            _id: req.params.folderId
+        });
+
+        if (folder.defaultFolder) {
+            return res.status(403).end("You cannot delete a default folder");
+        }
+
+        if (req.user._id.toString() != folder.creator.toString() &&
+            !util.positions.isUserAdmin(req.user)
+           ) {
+            return res.status(403).end("You do not have permission to do this");
+        }
+
+        yield folder.remove();
+
+        res.end();
+
     }));
 
     router.post("/files/upload", multer({
