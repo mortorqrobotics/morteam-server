@@ -54,7 +54,7 @@ module.exports = function(imports) {
                 },
                 audienceQuery(req.user),
             ]
-        });
+        }).populate("audience.users audience.groups");
 
         res.json(folders);
 
@@ -133,6 +133,65 @@ module.exports = function(imports) {
         folder = yield Folder.create(folder);
 
         res.json(folder);
+
+    }))
+
+    router.delete("/folders/id/:folderId", checkBody(), requireLogin, handler(function*(req, res) {
+
+        let folder = yield Folder.findOne({
+            _id: req.params.folderId
+        });
+
+        if (folder.defaultFolder) {
+            return res.status(403).end("You cannot delete a default folder");
+        }
+
+        if (req.user._id.toString() != folder.creator.toString() &&
+            !util.positions.isUserAdmin(req.user)
+           ) {
+            return res.status(403).end("You do not have permission to do this");
+        }
+
+        yield folder.remove();
+
+        res.end();
+
+    }));
+
+    router.put("/folders/id/:folderId/name", checkBody({
+        newName: types.string,
+    }), requireLogin, handler(function*(req, res) {
+
+        if (req.body.newName.length >= 20) {
+            return res.status(400).end("Folder name has to be 19 characters or fewer");
+        }
+
+        let folder = yield Folder.findOne({
+            $and: [
+                { _id: req.params.folderId },
+                audienceQuery(req.user),
+            ],
+        });
+
+        if (!folder) {
+            return res.status(404).end("This folder does not exist");
+        }
+
+        if (folder.defaultFolder) {
+            return res.status(403).end("You cannot rename a default folder");
+        }
+
+        if (req.user._id.toString() != folder.creator.toString() &&
+            !util.positions.isUserAdmin(req.user)
+        ) {
+            return res.status(403).end("You do not have permission");
+        }
+
+        folder.name = req.body.newName;
+
+        yield folder.save();
+
+        res.end();
 
     }));
 
