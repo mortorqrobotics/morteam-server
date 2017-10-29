@@ -177,6 +177,16 @@ module.exports = function(imports) {
             return res.status(404).end("This folder does not exist");
         }
 
+        if (folder.defaultFolder) {
+            return res.status(403).end("You cannot rename a default folder");
+        }
+
+        if (req.user._id.toString() != folder.creator.toString() &&
+            !util.positions.isUserAdmin(req.user)
+        ) {
+            return res.status(403).end("You do not have permission");
+        }
+
         folder.name = req.body.newName;
 
         yield folder.save();
@@ -184,7 +194,6 @@ module.exports = function(imports) {
         res.end();
 
     }));
-
 
     router.post("/files/upload", multer({
         limits: 50 * 1000000 // 50 megabytes
