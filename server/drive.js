@@ -54,7 +54,7 @@ module.exports = function(imports) {
                 },
                 audienceQuery(req.user),
             ]
-        });
+        }).populate("audience.users audience.groups");
 
         res.json(folders);
 
@@ -157,6 +157,34 @@ module.exports = function(imports) {
         res.end();
 
     }));
+
+    router.put("/folders/id/:folderId/name", checkBody({
+        newName: types.string,
+    }), requireLogin, handler(function*(req, res) {
+
+        if (req.body.newName.length >= 20) {
+            return res.status(400).end("Folder name has to be 19 characters or fewer");
+        }
+
+        let folder = yield Folder.findOne({
+            $and: [
+                { _id: req.params.folderId },
+                audienceQuery(req.user),
+            ],
+        });
+
+        if (!folder) {
+            return res.status(404).end("This folder does not exist");
+        }
+
+        folder.name = req.body.newName;
+
+        yield folder.save();
+
+        res.end();
+
+    }));
+
 
     router.post("/files/upload", multer({
         limits: 50 * 1000000 // 50 megabytes
