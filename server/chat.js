@@ -159,6 +159,32 @@ module.exports = function(imports) {
 
     }));
 
+    router.put("/chats/id/:chatId/audience", checkBody({
+        audience: types.audience,
+    }), requireLogin, handler(function*(req, res) {
+        let chat = yield Chat.findOne({
+            _id: req.params.chatId
+        });
+
+        if (req.user._id.toString() != chat.creator.toString()
+            && !util.positions.isUserAdmin(req.user)
+        ) {
+            return res.status(403).end("You do not have permission");
+        }
+
+        yield Chat.update({
+            _id: req.params.chatId,
+        }, {
+            $addToSet: {
+                "audience.users": { $each: req.body.audience.users },
+                "audience.groups": { $each: req.body.audience.groups },
+            }
+        });
+
+        res.end();
+
+    }));
+
     router.get("/chats/id/:chatId/allMembers", checkBody(), requireLogin, handler(function*(req, res) {
 
         let chat = yield Chat.findOne({
