@@ -31,12 +31,8 @@ module.exports = function(imports) {
 
         // IMPORTANT: req.body.username can either be a username or an email
 
-        // what even is this
-        if (req.body.rememberMe === "true" || req.body.rememberMe === true) {
-            req.body.rememberMe = true;
-        } else {
-            req.body.rememberMe = false;
-        }
+        // thanks Ben
+        req.body.rememberMe = (req.body.rememberMe == true);
 
         let user = yield User.findOne({
             $or: [{
