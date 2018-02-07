@@ -60,7 +60,7 @@ module.exports = function(imports) {
         yield util.mail.sendEmail({
             to: recipient.email,
             subject: "New Task Assigned By " + req.user.firstname + " " + req.user.lastname,
-            text: "View your new task at http://www.morteam.com/profiles/id/" + task.for
+            text: "View your new task at https://www.morteam.com/profiles/id/" + task.for
         });
 
     }));

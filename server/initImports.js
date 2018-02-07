@@ -26,7 +26,7 @@ module.exports = function(imports) {
 
     imports.webDir = require("path").join(__dirname, "../../morteam-web");
     imports.publicDir = imports.webDir + "/public";
-    imports.profpicDir = "http://profilepics.morteam.com.s3.amazonaws.com/";
+    imports.profpicDir = "https://s3-us-west-2.amazonaws.com/profilepics.morteam.com/";
 
     // mongoose comes from mornetwork
     imports.modules.express = require("express");

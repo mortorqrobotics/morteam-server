@@ -221,7 +221,7 @@ module.exports = function(imports) {
 
 		try {
 		    let result = yield request({
-			    uri: "http://www.thebluealliance.com/api/v2/team/frc" + req.params.number,
+			    uri: "https://www.thebluealliance.com/api/v2/team/frc" + req.params.number,
 			    headers: { "X-TBA-App-Id": "frc1515:MorMap:1" },
 		    });
 

@@ -1,7 +1,7 @@
 "use strict";
 
 /**
- * The server for http://www.morteam.com
+ * The server for https://www.morteam.com
  * @author      Farbod Rafezy <rafezyfarbod@gmail.com>
  * @version     1.0.0-beta.4
  */
