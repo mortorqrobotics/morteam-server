@@ -33,7 +33,7 @@ module.exports = function(imports) {
             return new Promise(function(resolve, reject) {
                 mail.notify.sendMail({
                     from: "MorTeam Notification <notify@morteam.com>",
-                    to: options.to,
+                    bcc: options.to,
                     subject: options.subject,
                     html: options.html
                 }, function(err, info) {
