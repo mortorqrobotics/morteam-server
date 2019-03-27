@@ -189,7 +189,7 @@ module.exports = function(imports) {
         let emailVerif = yield util.mail.sendEmail({
             to: req.body.email,
             subject: "MorTeam Email Verification",
-             html: "Welcome to MorTeam. Please verify your email by going to https://morteam.com/users/" + User.email_token + "/verify/",
+            html: "Welcome to MorTeam. Please verify your email by going to https://morteam.com/users/token/" + user.email_token + "/verify/",
         });
         console.log(emailVerif);
         res.end();
@@ -379,13 +379,17 @@ module.exports = function(imports) {
         res.end();
 
     }));
-    
-    router.put("/users/:email_token/verify", checkBody(), handler(function*(req, res) {
-        let user = yield User.findOneAndUpdate(
-            {"email_token" : req.params.email_token},
-            {$set: { "email_confirmed" : true } }
-        ); 
+
+    router.put("/users/token/:emailToken/verify", checkBody(), handler(function*(req, res) {
+
+        let user = yield User.findOneAndUpdate({
+            email_token : req.params.emailToken,
+        }, { 
+            $set: { email_confirmed : true },
+        });
+
         res.end();
+
     }));
     
     return router;
