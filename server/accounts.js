@@ -3,7 +3,6 @@
 module.exports = function(imports) {
 
     let express = imports.modules.express;
-    let lwip = imports.modules.lwip; // image processing module
     let multer = imports.modules.multer; // for file uploads
     let ObjectId = imports.modules.mongoose.Types.ObjectId;
     let Promise = imports.modules.Promise;
