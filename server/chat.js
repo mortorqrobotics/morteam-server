@@ -173,7 +173,7 @@ module.exports = function(imports) {
             return res.status(403).end("You do not have permission");
         }
 
-        yield Chat.update({
+        yield Chat.updateOne({
             _id: req.params.chatId,
         }, {
             $addToSet: {
@@ -206,7 +206,7 @@ module.exports = function(imports) {
             return res.status(403).end("You cannot delete all the members of a group chat");
         }
 
-        yield Chat.update({
+        yield Chat.updateOne({
             _id: req.params.chatId,
         }, {
             $pull: {

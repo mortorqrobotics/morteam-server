@@ -140,7 +140,7 @@ module.exports = function(imports) {
         attendance: types.attendance,
     }), requireAdmin, handler(function*(req, res) {
 
-        yield Event.update({
+        yield Event.updateOne({
             $and: [
                 { _id: req.params.eventId },
                 audienceQuery(req.user),
