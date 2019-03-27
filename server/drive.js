@@ -5,7 +5,6 @@ module.exports = function(imports) {
     let ObjectId = imports.modules.mongoose.Types.ObjectId;
     let multer = imports.modules.multer;
     let extToMime = require("./extToMime.json");
-    // let lwip = imports.modules.lwip;
     let Promise = imports.modules.Promise;
     let https = require("https");
     let util = imports.util;
@@ -239,24 +238,8 @@ module.exports = function(imports) {
         yield util.s3.uploadToDriveAsync(req.file.buffer, file._id, mime, disposition);
 
         if (file.type == "image") {
-
-            // TODO: move this to util.images
-            //
-            // let image = yield lwip.openAsync(req.file.buffer, ext);
-            //
-            // Promise.promisifyAll(image);
-            //
-            // let hToWRatio = image.height() / image.width();
-            // if (hToWRatio >= 1) {
-            //     image = yield image.resizeAsync(280, 280 * hToWRatio);
-            // } else {
-            //     image = yield image.resizeAsync(280 / hToWRatio, 280);
-            // }
-            //
-            // Promise.promisifyAll(image);
-            // let buffer = yield image.toBufferAsync(ext);
-            //
-            // util.s3.uploadToDriveAsync(buffer, file._id + "-preview", mime, disposition);
+            let buffer = yield util.images.resizeImage(req.file.buffer, 280);
+            yield util.s3.uploadToDriveAsync(buffer, file._id + "-preview", mime, disposition);
         }
 
         res.json(file);
