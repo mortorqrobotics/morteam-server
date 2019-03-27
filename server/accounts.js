@@ -380,14 +380,14 @@ module.exports = function(imports) {
 
     }));
     
-
     router.put("/users/:email_token/verify", checkBody(), handler(function*(req, res) {
         let user = yield User.findOneAndUpdate(
             {"email_token" : req.params.email_token},
-            {$set: { "email_confirmed" : true }
+            {$set: { "email_confirmed" : true } }
         ); 
         res.end();
-    };
+    }));
+    
     return router;
 
 };
