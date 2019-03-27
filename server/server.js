@@ -17,14 +17,12 @@ module.exports = function(imports) {
     let mongoose = imports.modules.mongoose;
     let ObjectId = mongoose.Types.ObjectId; // this is used to cast strings to MongoDB ObjectIds
     let multer = imports.modules.multer; // for file uploads
-    let lwip = imports.modules.lwip;
     let Promise = imports.modules.Promise;
     let util = imports.util;
 
     let requireLogin = util.requireLogin;
 
     Promise.promisifyAll(util);
-    Promise.promisifyAll(lwip);
     Promise.promisifyAll(fs);
 
     console.log("MorTeam started");

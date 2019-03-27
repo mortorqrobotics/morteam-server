@@ -31,7 +31,7 @@ module.exports = function(imports) {
     // mongoose comes from mornetwork
     imports.modules.express = require("express");
     imports.modules.multer = require("multer");
-    imports.modules.lwip = require("lwip");
+    imports.modules.sharp = require("sharp");
     imports.modules.Promise = require("bluebird");
     imports.modules.autolinker = require("autolinker");
     imports.modules.nodemailer = require("nodemailer");

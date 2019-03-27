@@ -173,7 +173,7 @@ module.exports = function(imports) {
         yield User.removeFromTeam(user);
 
         yield Promise.all([
-            Announcement.update({
+            Announcement.updateMany({
                 "audience.users": user._id,
             }, {
                 $pull: {
@@ -182,7 +182,7 @@ module.exports = function(imports) {
             }, {
                 multi: true,
             }),
-            Event.update({
+            Event.updateMany({
                 "audience.users": user._id,
             }, {
                 $pull: {
@@ -191,7 +191,7 @@ module.exports = function(imports) {
             }, {
                 multi: true,
             }),
-            Chat.update({
+            Chat.updateMany({
                 "audience.users": user._id,
                 isTwoPeople: false,
             }, {
@@ -201,7 +201,7 @@ module.exports = function(imports) {
             }, {
                 multi: true,
             }),
-            Folder.update({
+            Folder.updateMany({
                 "audience.users": user._id,
                 defaultFolder: false,
             }, {

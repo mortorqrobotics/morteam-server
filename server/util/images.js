@@ -2,54 +2,28 @@
 
 module.exports = function(imports) {
 
-    // TODO: switch to this https://www.npmjs.com/package/lwip-promise
-
     let Promise = imports.modules.Promise;
-    let lwip = imports.modules.lwip;
+    let sharp = imports.modules.sharp;
 
     let images = {};
 
     // ext is the extension without the period up front --> example: NOT ".txt", but rather "txt"
-    images.resizeImage = function(buffer, size, ext, callback) {
-        lwip.open(buffer, ext, function(err, image) {
-            if (err) {
-                callback(err, undefined);
-            } else {
-                let hToWRatio = image.height() / image.width();
+    images.resizeImage = Promise.coroutine(function*(buffer, size) {
+        let image = sharp(buffer);
+        image.metadata()
+            .then(metadata => {
+                let hToWRatio = metadata.height / metadata.width;
+                let height = size, width = size;
                 if (hToWRatio >= 1) {
-                    image.resize(size, size * hToWRatio, function(err, image) {
-                        if (err) {
-                            callback(err, undefined);
-                        } else {
-                            image.toBuffer(ext, function(err, buffer) {
-                                if (err) {
-                                    callback(err, undefined);
-                                } else {
-                                    callback(undefined, buffer);
-                                }
-                            });
-                        }
-                    });
+                    height *= hToWRatio;
                 } else {
-                    image.resize(size / hToWRatio, size, function(err, image) {
-                        if (err) {
-                            callback(err, undefined);
-                        } else {
-                            image.toBuffer(ext, function(err, buffer) {
-                                if (err) {
-                                    callback(err, undefined);
-                                } else {
-                                    callback(undefined, buffer);
-                                }
-                            });
-                        }
-                    });
+                    width /= hToWRatio;
                 }
-            }
-        });
-    };
-
-    Promise.promisifyAll(images);
+                return image.resize(Math.floor(width), height).toBuffer();
+            })
+            .catch(err => console.error(err));
+        return image;
+    });
 
     return images;
 
