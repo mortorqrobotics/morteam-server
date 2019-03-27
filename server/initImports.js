@@ -3,7 +3,7 @@
 module.exports = function(imports) {
     imports.defaultConfig = {
         "mailgunUser": "user@morteam.com",
-        "malgunPass": "password",
+        "mailgunPass": "password",
         "dbName": "morteam",
         "fcmApiKey": "",
     };

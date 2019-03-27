@@ -184,13 +184,15 @@ module.exports = function(imports) {
             audience: { users: [user._id] },
             defaultFolder: true,
         });
-        yield user.assignEmailVerif();
-        let emailVerif = yield util.mail.sendEmail({
+
+        let emailToken = yield user.assignEmailVerif();
+        let info = yield util.mail.sendEmail({
             to: req.body.email,
             subject: "MorTeam Email Verification",
-            html: "Welcome to MorTeam. Please verify your email by going to https://morteam.com/users/token/" + user.email_token + "/verify/",
+            html: "Welcome to MorTeam. Please verify your email by going to https://morteam.com/users/token/" + emailToken + "/verify/",
         });
-        console.log(emailVerif);
+        console.log(info);
+
         res.end();
 
     }));
