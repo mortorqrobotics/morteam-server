@@ -1,1 +1,1 @@
-module.exports = require("../../server/initImports").imports.models;
+module.exports = require("../../src/initImports").imports.models;

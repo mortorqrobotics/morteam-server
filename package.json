@@ -2,7 +2,7 @@
   "name": "MorTeam",
   "version": "1.0.0-beta.4",
   "description": "Organization utility for robotics teams",
-  "main": "server/server.js",
+  "main": "src/server.js",
   "scripts": {
     "test": "NODE_ENV=test ./node_modules/.bin/mocha --bail test/index.js",
     "fmt": "for f in `find server test -name '*.js'`; do ./node_modules/js-beautify/js/bin/js-beautify.js --type js -r -n -e \"\\n\" -b collapse-preserve-inline $f; done"
@@ -23,16 +23,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Farbod909/MorTeam-server-website.git"
+    "url": "https://github.com/mortorqrobotics/morteam-server.git"
   },
   "keywords": [
     "MorTeam"
   ],
   "author": "Farbod Rafezy <rafezyfarbod@gmail.com>",
   "bugs": {
-    "url": "https://github.com/Farbod909/MorTeam-server-website/issues"
+    "url": "https://github.com/mortorqrobotics/morteam-server/issues"
   },
-  "homepage": "https://github.com/Farbod909/MorTeam-server-website",
+  "homepage": "https://github.com/mortorqrobotics/morteam-server",
   "devDependencies": {
     "chai": "^3.5.0",
     "js-beautify": "^1.6.3",
