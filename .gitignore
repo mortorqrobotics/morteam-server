@@ -1,4 +1,4 @@
-server/aws-config.json
+src/aws-config.json
 **/.DS_Store
 node_modules
 buckets
