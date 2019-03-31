@@ -119,6 +119,22 @@ module.exports = function(imports) {
 
     }));
 
+    router.delete("/groups/normal/id/:groupId", checkBody(), requireAdmin, handler(function*(req, res) {
+
+        let group = yield NormalGroup.findOne({
+            _id: req.params.groupId,
+        });
+
+        if (!group) {
+            return res.status(404).end("This group does not exist");
+        }
+
+        yield group.remove();
+        res.end();
+
+    }));
+
+
     // TODO: permissions other than just admin?
     router.post("/groups/normal/id/:groupId/users", checkBody({
         users: [types.objectId(User)],
