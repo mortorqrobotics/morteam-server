@@ -11,6 +11,8 @@
     "autolinker": "^1.4.2",
     "aws-sdk": "^2.429.0",
     "bluebird": "^3.5.0",
+    "cookie-parser": "^1.4.4",
+    "csurf": "^1.10.0",
     "ejs": "^2.5.6",
     "express": "^4.15.2",
     "fcm-node": "^1.4.0",
