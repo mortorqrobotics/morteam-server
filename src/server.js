@@ -19,13 +19,9 @@ module.exports = function(imports) {
     let multer = imports.modules.multer; // for file uploads
     let Promise = imports.modules.Promise;
     let util = imports.util;
-    let csrf = require("csurf");
-    let cookieParser = require("cookie-parser");
+
     let requireLogin = util.requireLogin;
 
-    let csrfMiddleware = csrf({
-        cookie: true
-    });
     Promise.promisifyAll(util);
     Promise.promisifyAll(fs);
 
@@ -44,8 +40,7 @@ module.exports = function(imports) {
     app.get("/images/user.jpg-300", (req, res) => {
         res.sendFile(publicDir + "/images/user.jpg");
     });
-    app.use(cookieParser());
-    app.use(csrfMiddleware);
+
     // check to see if user is logged in before continuing any further
     // allow browser to receive images, css, and js files without being logged in
     // allow browser to receive some pages such as login.html, signup.html, etc. without being logged in
@@ -53,8 +48,7 @@ module.exports = function(imports) {
         if (req.method != "GET") { // TODO: can this just be app.get then?
             return next();
         }
-        res.cookie('XSRF--TOKEN', req.csrfToken());
-	res.locals.csrftoken = req.csrfToken();
+
         let path = req.path;
 
         if (path.startsWith("/js")) {
